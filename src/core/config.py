@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     setup_mode: SetupMode = "development"
     log_level: str = Field(default="INFO")
     brawlhalla_api_key: SecretStr
+    snapshot_interval_hours: float = Field(default=6.0, gt=0)
 
 
 def load_settings() -> Settings:

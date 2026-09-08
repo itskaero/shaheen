@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # application in the Discord Developer Portal.
 INTENTS = discord.Intents.all()
 
-STARTUP_EXTENSIONS = ("bot.cogs.setup", "bot.cogs.link", "bot.cogs.profile")
+STARTUP_EXTENSIONS = ("bot.cogs.setup", "bot.cogs.link", "bot.cogs.profile", "bot.cogs.clan")
 
 
 class ShaheenBot(commands.Bot):

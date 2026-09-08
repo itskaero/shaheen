@@ -16,13 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.exceptions import IntegrationError, NotFoundError
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.shaheen_member import ShaheenMember
+from database.repositories.achievement_repository import AchievementRepository
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError, BrawlhallaNotFound
 from integrations.brawlhalla.models import SearchResult
 from integrations.brawlhalla.service import BrawlhallaService
+from services.achievements import FIRST_LINK
 
 
 @dataclass
@@ -30,6 +33,7 @@ class LinkOutcome:
     member: ShaheenMember
     player: BrawlhallaPlayer
     previous_player_name: str | None
+    first_link_awarded: bool = False
 
 
 class LinkService:
@@ -40,6 +44,8 @@ class LinkService:
         self._members = ShaheenMemberRepository(session)
         self._players = BrawlhallaPlayerRepository(session)
         self._links = MemberPlayerLinkRepository(session)
+        self._achievements = AchievementRepository(session)
+        self._awards = MemberAchievementRepository(session)
 
     async def resolve_candidate(self, identifier: str) -> SearchResult:
         """Resolve a user-supplied identifier to a Brawlhalla player.
@@ -100,7 +106,23 @@ class LinkService:
         )
         await self._links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
 
-        return LinkOutcome(member=member, player=player, previous_player_name=previous_player_name)
+        first_link_awarded = await self._award_first_link(member)
+
+        return LinkOutcome(
+            member=member,
+            player=player,
+            previous_player_name=previous_player_name,
+            first_link_awarded=first_link_awarded,
+        )
+
+    async def _award_first_link(self, member: ShaheenMember) -> bool:
+        catalog_row = await self._achievements.get_by_key(FIRST_LINK.key)
+        if catalog_row is None:
+            return False  # migrations not run yet; don't block linking over it
+        awarded = await self._awards.award(
+            shaheen_member_id=member.id, achievement_id=catalog_row.id
+        )
+        return awarded is not None
 
     async def unlink(self, *, guild_id: int, discord_id: int) -> BrawlhallaPlayer | None:
         """Returns the player that was unlinked, or None if nothing was linked."""

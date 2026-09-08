@@ -22,12 +22,12 @@
 - [x] /legends
 
 ## Phase 3 — Clan
-- [ ] scheduled snapshots
-- [ ] internal leaderboard
-- [ ] rating history
-- [ ] achievements
-- [ ] Hall of Fame
-- [ ] milestone announcements
+- [x] scheduled snapshots
+- [x] internal leaderboard
+- [x] rating history
+- [x] achievements
+- [x] Hall of Fame
+- [x] milestone announcements
 
 ## Phase 4 — Competition
 - [ ] challenges

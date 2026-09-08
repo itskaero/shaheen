@@ -7,7 +7,10 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.models.discord_user import DiscordUser
 from database.models.member_player_link import MemberPlayerLink
+from database.models.shaheen_member import ShaheenMember
 
 
 class MemberPlayerLinkRepository:
@@ -42,3 +45,22 @@ class MemberPlayerLinkRepository:
             return None
         active.unlinked_at = datetime.now(UTC)
         return active
+
+    async def list_active_for_guild(
+        self, guild_id: int
+    ) -> list[tuple[ShaheenMember, BrawlhallaPlayer, int]]:
+        """Every member in this guild with an active Brawlhalla link.
+
+        Returns (member, player, discord_id) — discord_id is selected
+        directly rather than via ShaheenMember.discord_user's lazy
+        relationship, which isn't safe to touch after the session closes.
+        """
+        stmt = (
+            select(ShaheenMember, BrawlhallaPlayer, DiscordUser.discord_id)
+            .join(MemberPlayerLink, MemberPlayerLink.shaheen_member_id == ShaheenMember.id)
+            .join(BrawlhallaPlayer, BrawlhallaPlayer.id == MemberPlayerLink.brawlhalla_player_id)
+            .join(DiscordUser, DiscordUser.id == ShaheenMember.discord_user_id)
+            .where(ShaheenMember.guild_id == guild_id, MemberPlayerLink.unlinked_at.is_(None))
+        )
+        result = await self._session.execute(stmt)
+        return [(member, player, discord_id) for member, player, discord_id in result]

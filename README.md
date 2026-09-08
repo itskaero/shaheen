@@ -7,9 +7,12 @@ Brawlhalla clan.
 
 ## Status
 
-Private / in development. Phase 1 (foundation + `/setup`) and Phase 2
-(Brawlhalla identity: `/link`, `/unlink`, `/profile`, `/rank`, `/stats`,
-`/legends`) are implemented.
+Private / in development. Implemented so far:
+- Phase 1 — foundation + `/setup`
+- Phase 2 — Brawlhalla identity: `/link`, `/unlink`, `/profile`, `/rank`,
+  `/stats`, `/legends`
+- Phase 3 — clan: scheduled rating/Legend snapshots, `/leaderboard`,
+  `/achievements`, `/history`, Hall of Fame + milestone announcements
 
 ## Getting started
 

@@ -5,8 +5,9 @@ from collections.abc import AsyncIterator
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from database.models import Base
+from database.models import Achievement, Base
 from database.session import create_session_factory
+from services.achievements import CATALOG
 
 
 @pytest.fixture
@@ -26,3 +27,17 @@ async def session(
 ) -> AsyncIterator[AsyncSession]:
     async with session_factory() as s:
         yield s
+
+
+@pytest.fixture
+async def achievement_catalog(session: AsyncSession) -> dict[str, Achievement]:
+    """Seeds services.achievements.CATALOG, mirroring the Phase 3 migration's seed data."""
+    rows = {}
+    for definition in CATALOG:
+        row = Achievement(
+            key=definition.key, name=definition.name, description=definition.description
+        )
+        session.add(row)
+        rows[definition.key] = row
+    await session.flush()
+    return rows

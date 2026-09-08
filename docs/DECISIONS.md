@@ -233,3 +233,72 @@ Reason: `docs/BRAWLHALLA_API.md` requires caching and avoiding unnecessary
 calls; a single-guild bot with modest command volume doesn't need
 distributed caching, and `CLAUDE.md`'s "no major framework/dependency
 without justification" rule applies here.
+
+## ADR-028 — Snapshot scheduling: in-process discord.py task loop
+Decision: The scheduled snapshot job runs as a `discord.ext.tasks.loop`
+owned by a cog, started in `cog_load` and stopped in `cog_unload`, on a
+configurable `SNAPSHOT_INTERVAL_HOURS` (default 6). No external scheduler,
+queue, or worker process is introduced.
+
+Reason: `CLAUDE.md`'s tech baseline has no job-queue dependency, and a
+single-guild bot with a small member count doesn't need one; discord.py
+already ships a robust, in-process periodic-task primitive.
+
+## ADR-029 — Snapshots cover both ranked and Legend stats
+Decision: Each snapshot cycle writes one `RankingSnapshot` (from
+`/player/{id}/ranked`) and one `LegendSnapshot` per played Legend (from
+`/player/{id}/stats`.legends) for every member with an active Brawlhalla
+link. Rows are append-only, never overwritten (docs/DATABASE.md).
+
+Reason: `docs/DATABASE.md` lists both `RankingSnapshot` and
+`LegendSnapshot` as Phase 3 entities and `docs/BRAWLHALLA_API.md`'s
+History section asks for "relevant values" generally, not ranked-only.
+
+## ADR-030 — Achievement catalog v1 and where it's evaluated
+Decision: v1 ships five achievements, defined in code
+(`services/achievements.py`) and seeded into the `achievements` table by
+the Phase 3 migration (reference data, not user data):
+- `first_link` — linked a Brawlhalla account (awarded immediately by
+  `/link`, not the scheduled job)
+- `games_100` / `games_500` — lifetime games played crosses 100 / 500
+- `tier_platinum` / `tier_diamond_plus` — ranked tier reaches Platinum /
+  Diamond or higher
+
+The last four are evaluated once per member per scheduled snapshot cycle,
+against the freshly fetched stats, and granted at most once each
+(`MemberAchievement` is unique on member+achievement). Achievements are
+strictly one-time unlocks; a repeatable event like reaching a new career-
+peak rating is a milestone announcement (docs/ROADMAP.md's separate
+"milestone announcements" item), not an achievement, and is not stored as
+a `MemberAchievement` row.
+
+Reason: Owner decision ("you decide, v1"); this is a small, easy-to-extend
+starter set computed entirely from data Shaheen already tracks, with no
+invented mechanic beyond what docs/DATABASE.md's `Achievement` /
+`MemberAchievement` schema already implies.
+
+## ADR-031 — Ranked tier comparison is a best-effort ordered list
+Decision: `tier_platinum`/`tier_diamond_plus` compare the API's free-text
+`tier` string (e.g. "Diamond III") against a hardcoded tier-name order
+(Tin < Bronze < Silver < Gold < Platinum < Diamond < Diamond+ < Valhallan).
+An unrecognized tier string never raises — the achievement is simply not
+granted that cycle and is picked up once the name is recognized (e.g.
+after the list is updated) or reconciled manually.
+
+Reason: The Brawlhalla API returns tier as display text, not a stable
+enum, and this project's own verification of the live API was already
+limited (ADR-022) — failing open (skip, don't crash the snapshot job) is
+safer than guessing wrong and blocking every player's snapshot.
+
+## ADR-032 — Hall of Fame announcements come from the snapshot job
+Decision: Newly-awarded achievements and new career-peak ratings detected
+during a snapshot cycle are posted as branded embeds to the
+🥇 hall-of-fame channel (looked up via `ProvisionedResource`, same as
+`/setup`'s idempotency ledger). If `/setup` hasn't run yet and the channel
+isn't provisioned, the snapshot job logs and skips the announcement rather
+than failing.
+
+Reason: Ties `docs/ROADMAP.md`'s "achievements", "Hall of Fame", and
+"milestone announcements" items together through the mechanism that
+already exists (`docs/DISCORD_SPEC.md`'s hall-of-fame channel,
+`ProvisionedResource` lookups from Phase 1) instead of inventing a new one.
