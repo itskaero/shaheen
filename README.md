@@ -23,7 +23,9 @@ Private / in development. Implemented so far:
 - Phase 6 — public frontend: a static, on-brand website (`web/`) — home,
   clan, leaderboard, and player profile/rating-history pages — that calls
   the Phase 5 API directly from the browser. Free to host: the site on
-  GitHub Pages, the API + database on Render's free tier.
+  GitHub Pages, the API + database on Render's free tier. Themed directly
+  around the clan's own Discord banner (docs/DECISIONS.md ADR-047):
+  tier-colored rank badges, player avatars, rank medals, glass-panel cards.
 
 ## Getting started
 
@@ -45,6 +47,11 @@ uv run uvicorn api.app:app --app-dir src --reload
 ```
 
 (Docker Compose also starts it as the `web` service, on port 8000.)
+
+The homepage hero and every inner-page banner strip use the clan's own
+Discord banner artwork (`web/assets/img/banner.jpg` / `.webp`). To swap in
+an updated banner, replace both files (keep the ~2.5:1 width:height ratio)
+— no other change needed.
 
 To preview the static frontend locally, point `web/assets/js/config.js`'s
 `API_BASE_URL` at your running API (`http://127.0.0.1:8000` by default),

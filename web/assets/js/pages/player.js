@@ -38,20 +38,31 @@
 
       const achievements = profile.achievements.length
         ? `<ul class="badge-list">${profile.achievements
-            .map((a) => `<li><strong>${escapeHtml(a.name)}</strong> — ${escapeHtml(a.description)}</li>`)
+            .map(
+              (a) =>
+                `<li><span class="badge-icon">🏅</span><span><strong>${escapeHtml(a.name)}</strong> — ${escapeHtml(a.description)}</span></li>`
+            )
             .join("")}</ul>`
         : '<p class="state-msg">No achievements yet.</p>';
 
       content.innerHTML = `
         <div class="card">
-          <h2 style="margin-top: 0; font-family: 'Cinzel', 'Poppins', serif;">${escapeHtml(profile.player_name)}</h2>
-          <p class="page-subtitle" style="margin-bottom: 0;">
-            ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}
-          </p>
+          <div class="profile-head">
+            ${avatarHtml(profile.player_name, 64)}
+            <div>
+              <h2>${escapeHtml(profile.player_name)}</h2>
+              <p class="page-subtitle" style="margin: 0.25rem 0 0;">
+                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div class="stat-grid">
-          <div class="stat"><span class="value">${formatTier(profile.tier)}</span><span class="label">Tier</span></div>
+          <div class="stat">
+            <span style="display: block; margin-bottom: 0.35rem;">${tierBadge(profile.tier)}</span>
+            <span class="label">Tier</span>
+          </div>
           <div class="stat"><span class="value">${formatNumber(profile.rating)}</span><span class="label">Rating</span></div>
           <div class="stat"><span class="value">${formatNumber(profile.peak_rating)}</span><span class="label">Peak Rating</span></div>
         </div>

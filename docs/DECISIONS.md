@@ -495,3 +495,26 @@ image's own bot entrypoint (`python -m src.main`, which works differently
 since `src/__init__.py` makes it an importable package from `/app`). Fixed
 at the source in all three places rather than adding a `PYTHONPATH` env
 var, since `--app-dir` is uvicorn's own documented mechanism for this.
+
+## ADR-047 — Frontend visual redesign: the clan's own banner art as the theme
+Decision: The homepage hero is the clan's actual Discord server banner
+(`web/assets/img/banner.{jpg,webp}`, owner-provided), not the previous
+generic gradient hero. Inner pages carry the same artwork as a cropped
+`.page-banner` strip (falling back to a themed gradient on narrow
+viewports, where the banner's 2.5:1 aspect ratio can't crop cleanly
+without cutting into its own logotype). The rest of the UI — tier badges,
+rank medals, deterministic player avatars, glass-panel cards with a gold
+accent line, glow-on-hover — was redesigned around that artwork's palette
+and around the data density of stats sites like corehalla.com, rather than
+the plainer flat-card layout Phase 6 shipped with.
+
+Reason: Owner feedback — the original design read as generic/lackluster
+next to the clan's own branding, and asked for something closer to a
+Brawlhalla stats site, "built around the discord server theme." Using the
+real banner is the most direct way to make the site feel like *this*
+clan's site rather than a template; tier/rank/avatar treatment is standard
+UX for a competitive stats site and was previously missing entirely (the
+leaderboard was a plain text table). Verified end-to-end with Playwright
+screenshots (desktop + mobile, all four pages) before shipping, including
+iterating on the banner crop position after the first pass showed the
+logotype getting cut off mid-word.

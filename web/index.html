@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shaheen — Pakistan Brawlhalla Clan</title>
   <meta name="description" content="Shaheen is a Pakistan-based Brawlhalla clan. Track the clan's leaderboard, player profiles, and rating history." />
+  <meta property="og:title" content="Shaheen — Pakistan Brawlhalla Clan" />
+  <meta property="og:description" content="بلندیوں کی جانب — Higher Together. From Pakistan to the Arena." />
+  <meta property="og:image" content="assets/img/banner.jpg" />
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,42 +26,62 @@
         <a href="clan.html">Clan</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="player.html">Players</a>
+        <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
       </nav>
     </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <img class="mark" src="assets/img/favicon.svg" alt="Shaheen crest" />
-      <h1>SHAHEEN</h1>
-      <p class="motto">بلندیوں کی جانب</p>
-      <p class="tagline">From Pakistan to the Arena.</p>
+  <section class="hero-banner">
+    <picture>
+      <source srcset="assets/img/banner.webp" type="image/webp" />
+      <img
+        src="assets/img/banner.jpg"
+        alt="Shaheen — Pakistan Brawlhalla Clan. بلندیوں کی جانب, Higher Together. From Pakistan to the Arena."
+        width="1983"
+        height="793"
+        fetchpriority="high"
+      />
+    </picture>
+  </section>
+
+  <main style="padding-top: 0">
+    <div class="hero-cta">
+      <p class="tagline">Live clan stats, straight from Discord — no login required.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="leaderboard.html">View Leaderboard</a>
         <a class="btn btn-ghost" href="clan.html">About the Clan</a>
       </div>
-    </section>
+    </div>
 
     <section class="wrap">
+      <div class="divider"><span>The Clan</span></div>
+
       <div class="card">
         <p style="margin: 0">
           Shaheen is a Pakistan-based <strong>Brawlhalla</strong> clan built around a
           Discord community, competitive matches, and ranked progress. This site
           mirrors the clan's public, read-only data — the same data our Discord bot
-          tracks — with no login required.
+          tracks.
         </p>
       </div>
 
-      <div class="stat-grid" id="home-stats" style="margin-top: 1.5rem">
-        <div class="stat"><span class="value">🦅</span><span class="label">Clan</span></div>
-        <div class="stat"><span class="value">🏆</span><span class="label">Leaderboard</span></div>
-        <div class="stat"><span class="value">📈</span><span class="label">Rating History</span></div>
+      <div class="stat-grid" style="margin-top: 1.5rem">
+        <a class="stat" href="clan.html" style="text-decoration: none">
+          <span class="value">🦅</span><span class="label">Clan</span>
+        </a>
+        <a class="stat" href="leaderboard.html" style="text-decoration: none">
+          <span class="value">🏆</span><span class="label">Leaderboard</span>
+        </a>
+        <a class="stat" href="player.html" style="text-decoration: none">
+          <span class="value">📈</span><span class="label">Rating History</span>
+        </a>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
+      <img class="crest" src="assets/img/favicon.svg" alt="" />
       <p>&copy; <span id="year"></span> Shaheen &mdash; بلندیوں کی جانب. Data from the Brawlhalla API.</p>
     </div>
   </footer>

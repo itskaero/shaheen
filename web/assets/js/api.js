@@ -54,4 +54,18 @@ function setYear() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", setYear);
+function wireDiscordLink() {
+  const link = document.getElementById("discord-link");
+  if (!link) {
+    return;
+  }
+  if (typeof DISCORD_INVITE_URL !== "undefined" && DISCORD_INVITE_URL) {
+    link.href = DISCORD_INVITE_URL;
+    link.hidden = false;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setYear();
+  wireDiscordLink();
+});

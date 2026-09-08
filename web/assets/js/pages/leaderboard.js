@@ -13,10 +13,15 @@
       .map(
         (entry, i) => `
         <tr>
-          <td class="rank">#${i + 1}</td>
-          <td><a href="player.html?id=${entry.brawlhalla_id}">${escapeHtml(entry.player_name)}</a></td>
+          <td>${rankHtml(i + 1)}</td>
+          <td>
+            <a class="player-cell" href="player.html?id=${entry.brawlhalla_id}">
+              ${avatarHtml(entry.player_name, 36)}
+              <span>${escapeHtml(entry.player_name)}</span>
+            </a>
+          </td>
           <td>${entry.region ? escapeHtml(entry.region) : "—"}</td>
-          <td>${formatTier(entry.tier)}</td>
+          <td>${tierBadge(entry.tier)}</td>
           <td>${formatNumber(entry.rating)}</td>
           <td>${formatNumber(entry.peak_rating)}</td>
         </tr>`
@@ -28,7 +33,7 @@
         <table>
           <thead>
             <tr>
-              <th>#</th>
+              <th>Rank</th>
               <th>Player</th>
               <th>Region</th>
               <th>Tier</th>

@@ -6,3 +6,7 @@
 // deploy. Leave the localhost default for local development
 // (`uv run uvicorn api.app:app --reload`).
 const API_BASE_URL = "http://127.0.0.1:8000";
+
+// Optional: your Discord invite link (e.g. "https://discord.gg/xxxxxxx").
+// Leave empty to hide the header's "Join Discord" button.
+const DISCORD_INVITE_URL = "";
