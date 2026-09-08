@@ -46,6 +46,14 @@ class MemberPlayerLinkRepository:
         active.unlinked_at = datetime.now(UTC)
         return active
 
+    async def get_active_by_player(self, brawlhalla_player_id: int) -> MemberPlayerLink | None:
+        """The active link (if any) pointing at this BrawlhallaPlayer's internal id."""
+        stmt = select(MemberPlayerLink).where(
+            MemberPlayerLink.brawlhalla_player_id == brawlhalla_player_id,
+            MemberPlayerLink.unlinked_at.is_(None),
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
     async def list_active_for_guild(
         self, guild_id: int
     ) -> list[tuple[ShaheenMember, BrawlhallaPlayer, int]]:

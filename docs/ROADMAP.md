@@ -37,11 +37,11 @@
 - [x] match history
 
 ## Phase 5 — Website
-- [ ] shared application/API layer
-- [ ] public player profiles
-- [ ] clan page
-- [ ] leaderboard
-- [ ] authentication if required
+- [x] shared application/API layer
+- [x] public player profiles
+- [x] clan page
+- [x] leaderboard
+- [x] authentication if required
 
 ## Rule
 

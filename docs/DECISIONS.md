@@ -376,3 +376,60 @@ Reason: Consistent with the `ConfirmView` used since Phase 1
 a separate, non-trivial piece of scope no doc asks for yet. A bot restart
 mid-signup means re-running the command — acceptable for v1 at Shaheen's
 current scale.
+
+## ADR-039 — Phase 5 stack: FastAPI, JSON API only, no auth
+Decision: `docs/ROADMAP.md`'s Phase 5 ("shared application/API layer,
+public player profiles, clan page, leaderboard, authentication if
+required") is built as a FastAPI app under `src/api/`, exposing read-only
+JSON endpoints only — no server-rendered HTML pages, no auth on any
+endpoint.
+
+Reason: Owner decisions. FastAPI is async, Pydantic-based (already a
+baseline dependency), and sits directly on the existing async SQLAlchemy
+sessions with no sync/async bridging. JSON-only matches
+`docs/ARCHITECTURE.md`'s literal "application/API layer" wording — a
+frontend/template stack is unspecified anywhere and stays a separate,
+later decision. No auth because every Phase 5 endpoint is read-only public
+data (`docs/PRODUCT.md`: "the public identity/statistics layer") and
+nothing in scope needs a write endpoint to protect. `fastapi` and
+`uvicorn` are added to the dependency baseline; both are commonly-used,
+narrowly-scoped additions, not a framework substitution.
+
+## ADR-040 — Public identity is Brawlhalla identity, never Discord identity
+Decision: Every Phase 5 endpoint is keyed and labeled by `BrawlhallaPlayer`
+(`brawlhalla_player_id`, `player_name`) — Discord user IDs, usernames, and
+display names are never read or returned by the API.
+
+Reason: Two independent reasons converge on the same answer: (1) the API
+process has no Discord gateway connection, so it cannot resolve a live
+display name the way the bot can; (2) a player's Brawlhalla identity is
+already public (they chose it in-game), while publishing their Discord
+identity on a public website without that being asked for anywhere is a
+privacy overreach `docs/PRODUCT.md` doesn't call for.
+
+## ADR-041 — The website reuses the bot's Settings class unchanged
+Decision: `src/api/` loads configuration through the same
+`core.config.Settings` the bot uses, rather than a web-specific settings
+class. A web-only deployment's environment must still provide
+`DISCORD_TOKEN` and `BRAWLHALLA_API_KEY` even though the API process never
+uses them.
+
+Reason: `CLAUDE.md`: "do not duplicate configuration." In practice bot and
+web share one deployment/`.env` (see docker-compose.yml's new `web`
+service), so this costs nothing today; splitting `Settings` into
+per-process subsets is a real but premature refactor with no current
+requirement forcing it.
+
+## ADR-042 — A separate services/website_service.py, not a reused clan_service.py
+Decision: Phase 5 reads go through a new `services/website_service.py`
+rather than reusing `services/clan_service.py` (Phase 3/4's
+Discord-command-shaped queries).
+
+Reason: The two callers want different shapes from the same tables —
+`clan_service.py` returns Discord-identity-bearing tuples for cogs to
+resolve into mentions/display names; `website_service.py` must never do
+that (ADR-040). Forcing one service to serve both would mean the Discord
+layer stripping fields back out, or the API layer filtering a Discord
+identity it should never have received in the first place. Both still sit
+on the exact same repositories and database (docs/ARCHITECTURE.md) — this
+splits the orchestration layer, not the data layer.

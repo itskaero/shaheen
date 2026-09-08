@@ -16,6 +16,10 @@ Private / in development. Implemented so far:
 - Phase 4 — competition: `/challenge`, `/scrim`, `/match`, `/report`
   (with opponent confirm/dispute), `/matches`, `/tournament` (single-
   elimination brackets, 1v1 and 2v2)
+- Phase 5 — website: read-only, unauthenticated FastAPI JSON API sharing
+  the bot's services/repositories/database — `GET /clan`,
+  `GET /leaderboard`, `GET /players/{brawlhalla_id}`,
+  `GET /players/{brawlhalla_id}/history`, `GET /health`
 
 ## Getting started
 
@@ -29,6 +33,14 @@ uv run python -m src.main
 ```
 
 Or run everything in Docker: `docker compose up --build`.
+
+To run the website API on its own:
+
+```bash
+uv run uvicorn api.app:app --reload
+```
+
+(Docker Compose also starts it as the `web` service, on port 8000.)
 
 ## Goals
 

@@ -7,11 +7,9 @@ from __future__ import annotations
 import discord
 
 from bot.palette import FOREST_GREEN, GOLD
+from core.brand import MOTTO, TAGLINE
 from services.setup_planner import ActionType, CategoryAction, ChannelAction, RoleAction, SetupPlan
 from services.setup_service import ActionSummary, SetupReport
-
-MOTTO = "بلندیوں کی جانب — Higher Together"
-TAGLINE = "From Pakistan to the Arena."
 
 
 def build_welcome_embed() -> discord.Embed:

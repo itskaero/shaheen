@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.discord_user import DiscordUser
@@ -14,6 +14,14 @@ from database.models.shaheen_member import ShaheenMember
 class ShaheenMemberRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def count_for_guild(self, guild_id: int) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(ShaheenMember)
+            .where(ShaheenMember.guild_id == guild_id)
+        )
+        return (await self._session.execute(stmt)).scalar_one()
 
     async def get_discord_id(self, shaheen_member_id: int) -> int | None:
         stmt = (
