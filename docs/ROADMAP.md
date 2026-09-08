@@ -30,11 +30,11 @@
 - [x] milestone announcements
 
 ## Phase 4 — Competition
-- [ ] challenges
-- [ ] scrims
-- [ ] match records
-- [ ] tournaments
-- [ ] match history
+- [x] challenges
+- [x] scrims
+- [x] match records
+- [x] tournaments
+- [x] match history
 
 ## Phase 5 — Website
 - [ ] shared application/API layer

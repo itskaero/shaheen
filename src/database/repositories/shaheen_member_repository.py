@@ -7,12 +7,21 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.models.discord_user import DiscordUser
 from database.models.shaheen_member import ShaheenMember
 
 
 class ShaheenMemberRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def get_discord_id(self, shaheen_member_id: int) -> int | None:
+        stmt = (
+            select(DiscordUser.discord_id)
+            .join(ShaheenMember, ShaheenMember.discord_user_id == DiscordUser.id)
+            .where(ShaheenMember.id == shaheen_member_id)
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
 
     async def get(self, *, discord_user_id: int, guild_id: int) -> ShaheenMember | None:
         stmt = select(ShaheenMember).where(

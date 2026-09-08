@@ -302,3 +302,77 @@ Reason: Ties `docs/ROADMAP.md`'s "achievements", "Hall of Fame", and
 "milestone announcements" items together through the mechanism that
 already exists (`docs/DISCORD_SPEC.md`'s hall-of-fame channel,
 `ProvisionedResource` lookups from Phase 1) instead of inventing a new one.
+
+## ADR-033 — Match results require opponent confirmation
+Decision: `/report` records the reporter's claimed result but leaves the
+`Match` in a `pending_confirmation` state. The opposing side gets a
+Confirm/Dispute prompt (only they can respond). Confirm finalizes the
+match (`confirmed`); Dispute marks it `disputed` and leaves it for staff
+to resolve manually — no automated dispute resolution.
+
+Reason: Owner decision; self-reported results with no confirmation step
+are trivially abusable, and `docs/COMMANDS.md` doesn't specify a
+confirmation mechanic, so this fills that gap rather than leaving results
+unverifiable.
+
+## ADR-034 — Matches support both 1v1 and 2v2, via a Match/side model
+Decision: `Match` has exactly two sides (`A`/`B`); each side has one
+`MatchParticipant` for 1v1 or two for 2v2. `/challenge <user>` is always
+1v1 (its signature only takes one opponent); `/scrim` and `/match create`
+support both `1v1` and `2v2`, matching `docs/DISCORD_SPEC.md`'s existing
+⚔️ 1v1 / 👥 2v2 channels and the brief's own choice.
+
+Reason: Owner decision; a single side-based model covers both sizes
+without a separate 2v2-only schema, and keeps `/report`'s confirm/dispute
+flow (ADR-033) identical regardless of team size.
+
+## ADR-035 — Tournaments: an automated single-elimination bracket engine,
+with staff manual override
+Decision: `docs/ROADMAP.md` lists "tournaments" for Phase 4 but
+`docs/COMMANDS.md` defines no `/tournament` command. Built as: registration
+via a Join button on an announcement in 🏆 tournaments, `/tournament start`
+generates a single-elimination bracket (seeded by registration order,
+byes for non-power-of-2 entrant counts) via a pure, unit-tested bracket
+generator (`services/bracket.py`). Each bracket match is a `TournamentMatch`
+wrapping a normal `Match` — winning it through the same `/report` +
+confirm flow (ADR-033) automatically advances the winner to the next
+round and, on the final, completes the tournament. Staff (Moderator or
+Leader) can force-resolve a stuck or disputed bracket match with
+`/tournament resolve`, which advances the bracket the same way a
+confirmed report would, without requiring both sides to agree.
+
+Reason: Owner decision ("both" automated and manual). No seeding-fairness
+mechanism (e.g. Elo) exists yet, so registration-order seeding is the only
+defensible default; double-elimination, byes-with-reseeding, and
+multi-tournament concurrency limits are explicitly out of scope for v1.
+
+## ADR-036 — New staff permission tier: Moderator or Leader
+Decision: A new check, `require_staff_authorized()`, authorizes the guild
+owner, Administrator-permission holders, or anyone holding 🛡️ MODERATOR or
+👑 SHAHEEN LEADER. It gates `/tournament create|start|resolve` and
+`/match resolve`. This is distinct from `require_setup_authorized()`
+(ADR-010), which stays Leader/admin-only for `/setup`.
+
+Reason: `docs/PERMISSIONS.md` gives Moderators real moderation authority
+short of full server administration; tournament/dispute management is
+that kind of authority, not `/setup`-level access.
+
+## ADR-037 — XPTransaction stays out of scope
+Decision: `docs/DATABASE.md`'s `XPTransaction` entity is not implemented.
+
+Reason: `docs/ROADMAP.md`'s Phase 4 list (challenges, scrims, match
+records, tournaments, match history) never mentions XP/leveling, so
+building it now would be exactly the "later phase" scope creep
+`docs/ROADMAP.md`'s own rule warns against.
+
+## ADR-038 — Challenge/scrim/tournament signup views are session-lived
+Decision: Accept/Decline and Join-side buttons use a generous but bounded
+`discord.ui.View` timeout (1 hour for challenges/scrims, 24 hours for
+tournament registration) rather than a persistent, `custom_id`-routed view
+that survives a bot restart.
+
+Reason: Consistent with the `ConfirmView` used since Phase 1
+(docs/SETUP_FLOW.md); building persistent-view routing infrastructure is
+a separate, non-trivial piece of scope no doc asks for yet. A bot restart
+mid-signup means re-running the command — acceptable for v1 at Shaheen's
+current scale.

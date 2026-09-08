@@ -13,6 +13,9 @@ Private / in development. Implemented so far:
   `/stats`, `/legends`
 - Phase 3 — clan: scheduled rating/Legend snapshots, `/leaderboard`,
   `/achievements`, `/history`, Hall of Fame + milestone announcements
+- Phase 4 — competition: `/challenge`, `/scrim`, `/match`, `/report`
+  (with opponent confirm/dispute), `/matches`, `/tournament` (single-
+  elimination brackets, 1v1 and 2v2)
 
 ## Getting started
 
