@@ -163,3 +163,73 @@ or the intended interaction.
 
 Reason: Avoid inventing an unspecified UX mechanic; keep Phase 1 scope to
 what `docs/ROADMAP.md` actually lists.
+
+## ADR-022 — Brawlhalla API base URL and authentication
+Decision: The Brawlhalla integration client uses base URL
+`https://api.brawlhalla.com/` and sends an `api_key` query parameter (from
+the new `BRAWLHALLA_API_KEY` setting) on every request.
+
+Reason: `dev.brawlhalla.com` itself was unreachable from this environment's
+network egress, so this was verified against a community-maintained mirror
+of the official client library rather than the live docs, per
+`docs/BRAWLHALLA_API.md`'s instruction to verify current documentation.
+**This should be re-confirmed against `https://dev.brawlhalla.com/` directly
+before relying on it in production** — public sources disagreed on whether
+v1.0 still requires a key; the mirrored client's actual request code (which
+attaches `api_key` unconditionally) was trusted over an ambiguous search
+snippet.
+
+## ADR-023 — /link accepts a Brawlhalla ID or a Steam64 ID
+Decision: `/link`'s identifier argument accepts either a raw Brawlhalla
+player ID (looked up directly via `/player/{id}/stats`) or a Steam64 ID
+(resolved to a Brawlhalla ID via `/search?steamid=`, the only lookup the
+API exposes for a non-Brawlhalla-native identifier).
+
+Reason: `docs/COMMANDS.md`'s "request ID" step doesn't say which ID; Steam64
+is what most players can actually find (their Steam profile), while some
+already know their Brawlhalla ID from third-party trackers.
+
+## ADR-024 — Phase 2 database scope excludes snapshot tables
+Decision: The Phase 2 migration adds `DiscordUser`, `ShaheenMember`,
+`BrawlhallaPlayer`, and `MemberPlayerLink` only. `RankingSnapshot` and
+`LegendSnapshot` are deferred to Phase 3, when `docs/ROADMAP.md` introduces
+"scheduled snapshots" as its own item. `/rank`, `/stats`, and `/legends`
+read live data from the Brawlhalla API in Phase 2; they do not persist
+history yet.
+
+Reason: `docs/ROADMAP.md`'s Phase 2 list is client + `/link` + read
+commands only; snapshot storage is explicitly a separate, later roadmap
+item, and building it now would be exactly the "later phase" scope creep
+`docs/ROADMAP.md`'s own rule warns against.
+
+## ADR-025 — Re-linking replaces the active link after one confirmation
+Decision: Running `/link` while a member already has an active
+`MemberPlayerLink` shows the existing link alongside the newly-resolved
+player and, on confirmation, unlinks the old association (setting
+`unlinked_at`) and creates the new one in the same step, rather than
+requiring `/unlink` first.
+
+Reason: `docs/COMMANDS.md` doesn't specify this case; requiring two
+commands for what is conceptually one action (switching linked accounts)
+is worse UX for no safety benefit, since both paths require explicit
+confirmation.
+
+## ADR-026 — /link promotes GUEST to TRIAL SHAHEEN only
+Decision: On a successful link, if the member currently holds the
+👀 GUEST role (or no clan rank role at all), Shaheen assigns
+🎯 TRIAL SHAHEEN. Members already holding a higher rank role
+(🦅 SHAHEEN, 🏆 ELITE SHAHEEN, 🛡️ MODERATOR, 👑 SHAHEEN LEADER) are left
+unchanged — promotion beyond Trial stays a manual staff decision.
+
+Reason: Owner decision — linking is the first step into the clan, not
+proof of competitive standing.
+
+## ADR-027 — In-process TTL cache instead of new caching infrastructure
+Decision: `BrawlhallaService` keeps a small in-memory, per-process TTL
+cache (keyed by endpoint + Brawlhalla ID) instead of introducing Redis or
+another cache dependency.
+
+Reason: `docs/BRAWLHALLA_API.md` requires caching and avoiding unnecessary
+calls; a single-guild bot with modest command volume doesn't need
+distributed caching, and `CLAUDE.md`'s "no major framework/dependency
+without justification" rule applies here.

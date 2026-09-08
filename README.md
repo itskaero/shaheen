@@ -7,12 +7,14 @@ Brawlhalla clan.
 
 ## Status
 
-Private / in development. Phase 1 (foundation + `/setup`) is implemented.
+Private / in development. Phase 1 (foundation + `/setup`) and Phase 2
+(Brawlhalla identity: `/link`, `/unlink`, `/profile`, `/rank`, `/stats`,
+`/legends`) are implemented.
 
 ## Getting started
 
 ```bash
-cp .env.example .env   # fill in DISCORD_TOKEN, GUILD_ID, DATABASE_URL
+cp .env.example .env   # fill in DISCORD_TOKEN, GUILD_ID, DATABASE_URL, BRAWLHALLA_API_KEY
 uv sync
 docker compose up -d db
 uv run alembic upgrade head

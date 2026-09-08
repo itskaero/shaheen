@@ -23,3 +23,16 @@ class PermissionDeniedError(ShaheenError):
 
 class SetupError(ShaheenError):
     """Raised when the setup service cannot safely plan or apply changes."""
+
+
+class NotFoundError(ShaheenError):
+    """Raised when a requested player/member/resource does not exist."""
+
+
+class IntegrationError(ShaheenError):
+    """Raised when an external integration (e.g. Brawlhalla) fails.
+
+    Services catch the integration's own exception types and re-raise this
+    with a user-safe message — cogs never see the raw external error
+    (docs/COMMANDS.md).
+    """

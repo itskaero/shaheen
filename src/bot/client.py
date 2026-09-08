@@ -17,6 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from core.config import Settings
 from core.exceptions import ShaheenError
+from integrations.brawlhalla.client import BrawlhallaClient
+from integrations.brawlhalla.service import BrawlhallaService
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ logger = logging.getLogger(__name__)
 # application in the Discord Developer Portal.
 INTENTS = discord.Intents.all()
 
-STARTUP_EXTENSIONS = ("bot.cogs.setup",)
+STARTUP_EXTENSIONS = ("bot.cogs.setup", "bot.cogs.link", "bot.cogs.profile")
 
 
 class ShaheenBot(commands.Bot):
@@ -35,6 +37,9 @@ class ShaheenBot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned, intents=INTENTS)
         self.settings = settings
         self.session_factory = session_factory
+        self.brawlhalla = BrawlhallaService(
+            BrawlhallaClient(settings.brawlhalla_api_key.get_secret_value())
+        )
         # discord.py's documented way to override the tree's default error handler.
         self.tree.on_error = self._on_app_command_error  # type: ignore[method-assign]
 
@@ -53,6 +58,10 @@ class ShaheenBot(commands.Bot):
 
     async def on_ready(self) -> None:
         logger.info("Shaheen Bot ready as %s (guild=%s)", self.user, self.settings.guild_id)
+
+    async def close(self) -> None:
+        await self.brawlhalla.aclose()
+        await super().close()
 
     async def _on_app_command_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError

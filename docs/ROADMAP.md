@@ -14,12 +14,12 @@
 - [x] welcome/rules/roles embeds
 
 ## Phase 2 — Identity
-- [ ] Brawlhalla client
-- [ ] /link
-- [ ] player profiles
-- [ ] /rank
-- [ ] /stats
-- [ ] /legends
+- [x] Brawlhalla client
+- [x] /link
+- [x] player profiles
+- [x] /rank
+- [x] /stats
+- [x] /legends
 
 ## Phase 3 — Clan
 - [ ] scheduled snapshots

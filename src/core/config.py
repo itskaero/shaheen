@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     database_url: str
     setup_mode: SetupMode = "development"
     log_level: str = Field(default="INFO")
+    brawlhalla_api_key: SecretStr
 
 
 def load_settings() -> Settings:
