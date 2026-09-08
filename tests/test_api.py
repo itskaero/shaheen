@@ -70,6 +70,13 @@ def test_health(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_cors_allows_any_origin(client: TestClient) -> None:
+    # ADR-043: every endpoint is public/read-only, so the frontend (hosted
+    # on a separate origin, e.g. GitHub Pages) must be able to call it.
+    response = client.get("/health", headers={"Origin": "https://example.github.io"})
+    assert response.headers["access-control-allow-origin"] == "*"
+
+
 def test_clan_endpoint(client: TestClient) -> None:
     response = client.get("/clan")
     assert response.status_code == 200

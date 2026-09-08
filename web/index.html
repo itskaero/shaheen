@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shaheen — Pakistan Brawlhalla Clan</title>
+  <meta name="description" content="Shaheen is a Pakistan-based Brawlhalla clan. Track the clan's leaderboard, player profiles, and rating history." />
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <img src="assets/img/favicon.svg" alt="" />
+        <span class="brand-name">SHAHEEN</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html" class="active">Home</a>
+        <a href="clan.html">Clan</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="player.html">Players</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img class="mark" src="assets/img/favicon.svg" alt="Shaheen crest" />
+      <h1>SHAHEEN</h1>
+      <p class="motto">بلندیوں کی جانب</p>
+      <p class="tagline">From Pakistan to the Arena.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="leaderboard.html">View Leaderboard</a>
+        <a class="btn btn-ghost" href="clan.html">About the Clan</a>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="card">
+        <p style="margin: 0">
+          Shaheen is a Pakistan-based <strong>Brawlhalla</strong> clan built around a
+          Discord community, competitive matches, and ranked progress. This site
+          mirrors the clan's public, read-only data — the same data our Discord bot
+          tracks — with no login required.
+        </p>
+      </div>
+
+      <div class="stat-grid" id="home-stats" style="margin-top: 1.5rem">
+        <div class="stat"><span class="value">🦅</span><span class="label">Clan</span></div>
+        <div class="stat"><span class="value">🏆</span><span class="label">Leaderboard</span></div>
+        <div class="stat"><span class="value">📈</span><span class="label">Rating History</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>&copy; <span id="year"></span> Shaheen &mdash; بلندیوں کی جانب. Data from the Brawlhalla API.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+</body>
+</html>

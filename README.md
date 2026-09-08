@@ -20,6 +20,10 @@ Private / in development. Implemented so far:
   the bot's services/repositories/database — `GET /clan`,
   `GET /leaderboard`, `GET /players/{brawlhalla_id}`,
   `GET /players/{brawlhalla_id}/history`, `GET /health`
+- Phase 6 — public frontend: a static, on-brand website (`web/`) — home,
+  clan, leaderboard, and player profile/rating-history pages — that calls
+  the Phase 5 API directly from the browser. Free to host: the site on
+  GitHub Pages, the API + database on Render's free tier.
 
 ## Getting started
 
@@ -37,10 +41,38 @@ Or run everything in Docker: `docker compose up --build`.
 To run the website API on its own:
 
 ```bash
-uv run uvicorn api.app:app --reload
+uv run uvicorn api.app:app --app-dir src --reload
 ```
 
 (Docker Compose also starts it as the `web` service, on port 8000.)
+
+To preview the static frontend locally, point `web/assets/js/config.js`'s
+`API_BASE_URL` at your running API (`http://127.0.0.1:8000` by default),
+then serve the `web/` folder with any static file server, e.g.
+`python3 -m http.server 8080 --directory web`.
+
+## Deploying the website (free hosting)
+
+Two independent, free deployments — see `docs/DECISIONS.md` ADR-045:
+
+1. **API + database, on [Render](https://render.com):** in the Render
+   dashboard, New → Blueprint → point it at this repo. Render reads
+   `render.yaml` and provisions a free web service plus a free Postgres
+   database. After the first deploy, set the `DISCORD_TOKEN`, `GUILD_ID`,
+   and `BRAWLHALLA_API_KEY` environment variables on the `shaheen-api`
+   service (the API doesn't use their values, but `Settings` requires them
+   — never commit real secrets to the repo). Copy the service's public
+   `https://shaheen-api-xxxx.onrender.com` URL.
+
+   The free plan sleeps after 15 minutes idle (first request after that is
+   slow, ~30-60s) and its Postgres database expires after 90 days unless
+   upgraded — fine for a small clan site, revisit if that stops being true.
+
+2. **Frontend, on GitHub Pages:** one-time setup — repo Settings → Pages →
+   Source: "GitHub Actions". Set `web/assets/js/config.js`'s
+   `API_BASE_URL` to the Render URL from step 1 and push to `main`;
+   `.github/workflows/pages.yml` deploys `web/` automatically on every push
+   that touches it (or run it manually from the Actions tab).
 
 ## Goals
 

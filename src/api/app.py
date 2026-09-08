@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import clan, leaderboard, players
 from core.config import load_settings
@@ -46,6 +47,16 @@ app = FastAPI(
     ),
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    # Every endpoint is already public and read-only (ADR-039), so there is
+    # no per-origin data to protect — allow any origin rather than
+    # maintaining a frontend-hosting-URL allowlist (ADR-043).
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
 )
 
 app.include_router(clan.router)

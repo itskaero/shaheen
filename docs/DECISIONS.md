@@ -433,3 +433,65 @@ layer stripping fields back out, or the API layer filtering a Discord
 identity it should never have received in the first place. Both still sit
 on the exact same repositories and database (docs/ARCHITECTURE.md) — this
 splits the orchestration layer, not the data layer.
+
+## ADR-043 — CORS: allow every origin
+Decision: `src/api/app.py` adds `CORSMiddleware` with `allow_origins=["*"]`,
+`allow_methods=["GET"]`, so any frontend origin (GitHub Pages, a local dev
+server, etc.) can call the API from a browser.
+
+Reason: Every endpoint is already public and read-only with no
+authentication (ADR-039) — there is no per-origin data to protect, so
+maintaining an allowlist of frontend hosting URLs would add operational
+friction (redeploy the API every time the frontend moves) for no security
+benefit. `allow_methods` is still restricted to `GET` since the API exposes
+no write endpoints.
+
+## ADR-044 — Settings normalizes managed-Postgres connection strings
+Decision: `core.config.Settings.database_url` has a validator that rewrites
+a bare `postgres://` or `postgresql://` URL to `postgresql+asyncpg://`,
+leaving any URL that already names a driver (or a non-Postgres scheme like
+`sqlite+aiosqlite://`) unchanged.
+
+Reason: Managed Postgres providers used for free hosting (Render, Heroku,
+...) hand out connection strings with no driver suffix, but SQLAlchemy's
+async engine requires `+asyncpg` explicitly. Normalizing in `Settings`
+means a provider's connection string can be pasted into `DATABASE_URL`
+as-is instead of every operator needing to remember to edit it by hand.
+
+## ADR-045 — Public frontend: static HTML/CSS/JS on GitHub Pages, API on Render
+Decision: The public Shaheen website (`web/`) is a framework-free static
+site — plain HTML/CSS/JS, no build step — that calls the existing FastAPI
+JSON API (docs/DECISIONS.md ADR-039) client-side with `fetch()`. It deploys
+to GitHub Pages via `.github/workflows/pages.yml` on every push to `main`.
+The API itself deploys to Render's free tier via the `render.yaml`
+Blueprint (a free web service plus a free Postgres database).
+
+Reason: Owner decisions — "you decide" on frontend stack (recommended:
+static HTML/CSS/JS, since `CLAUDE.md` asks not to introduce a framework
+without justification, and a handful of read-only pages doesn't need one),
+GitHub Pages for frontend hosting (already on GitHub, zero new accounts),
+Render free tier for the API+DB (documented trade-off: the free web
+service sleeps after 15 minutes idle, ~30-60s cold start on the next
+request, and the free Postgres database expires after 90 days unless
+upgraded — acceptable for a small private clan's first public presence,
+revisit if/when the site needs to stay always-warm). The frontend's API
+base URL lives in `web/assets/js/config.js`, a plain constant the operator
+edits after the first Render deploy — no build tooling needed to point the
+static site at a different backend.
+
+## ADR-046 — `uvicorn api.app:app` needs `--app-dir src`
+Decision: Every place that runs the API server directly with `uvicorn`
+(README.md, `docker-compose.yml`'s `web` service, `render.yaml`) passes
+`--app-dir src`.
+
+Reason: Found while smoke-testing the new deployment configs: `src` has no
+project-level install (`[tool.uv] package = false`, ADR-019) and is not on
+`sys.path` for a plain `uv run uvicorn api.app:app` — only pytest resolves
+`api.app` at all, via `pythonpath = ["src"]` in `pyproject.toml`, which is
+test-only. Without `--app-dir src`, both the `docker-compose.yml` `web`
+service command and the API-only `uv run uvicorn ...` instructions written
+in ADR-039's phase were actually broken outside of `pytest` and the Docker
+image's own bot entrypoint (`python -m src.main`, which works differently
+since `src/__init__.py` makes it an importable package from `/app`). Fixed
+at the source in all three places rather than adding a `PYTHONPATH` env
+var, since `--app-dir` is uvicorn's own documented mechanism for this.

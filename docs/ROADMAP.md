@@ -43,6 +43,12 @@
 - [x] leaderboard
 - [x] authentication if required
 
+## Phase 6 — Public Frontend
+- [x] static website (clan, leaderboard, player profiles + history)
+- [x] on-brand visual design (docs/BRAND.md palette/motifs)
+- [x] free frontend hosting (GitHub Pages)
+- [x] free API + database hosting (Render free tier)
+
 ## Rule
 
 Do not implement a later phase merely because it is documented. Finish the

@@ -35,7 +35,13 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    command: ["uv", "run", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    command:
+      [
+        "uv", "run", "uvicorn", "api.app:app",
+        "--app-dir", "src",
+        "--host", "0.0.0.0",
+        "--port", "8000",
+      ]
 
 volumes:
   shaheen_db_data:

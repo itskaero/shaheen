@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SetupMode = Literal["development", "launch"]
@@ -34,6 +34,21 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     brawlhalla_api_key: SecretStr
     snapshot_interval_hours: float = Field(default=6.0, gt=0)
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_asyncpg_driver(cls, value: str) -> str:
+        """Normalize a bare `postgres://`/`postgresql://` URL to asyncpg.
+
+        Managed Postgres providers (Render, Heroku, ...) hand out connection
+        strings without a driver suffix, but SQLAlchemy's async engine
+        requires one. Doing this here means a provider's connection string
+        can be used for DATABASE_URL as-is (docs/DEPLOYMENT.md).
+        """
+        for prefix in ("postgresql://", "postgres://"):
+            if value.startswith(prefix):
+                return "postgresql+asyncpg://" + value[len(prefix) :]
+        return value
 
 
 def load_settings() -> Settings:

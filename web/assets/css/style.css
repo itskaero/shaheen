@@ -1,0 +1,396 @@
+/* Shaheen — public website
+   Palette + motifs from docs/BRAND.md (same hex values as src/bot/palette.py):
+   forest green, emerald, gold, cream, grey. Restrained, no neon. */
+
+:root {
+  --forest: #1b4332;
+  --forest-dark: #102a20;
+  --emerald: #2d6a4f;
+  --gold: #d4af37;
+  --gold-dim: #a98a2c;
+  --cream: #e8e1cf;
+  --grey: #6c757d;
+  --ink: #0e1f18;
+  --card-bg: rgba(232, 225, 207, 0.04);
+  --card-border: rgba(212, 175, 55, 0.25);
+  --radius: 12px;
+  --max-width: 960px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, var(--forest) 0%, var(--forest-dark) 55%, var(--ink) 100%);
+  background-attachment: fixed;
+  color: var(--cream);
+  font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration: underline;
+}
+
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- header ---------- */
+
+.site-header {
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--cream);
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand img {
+  width: 32px;
+  height: 32px;
+}
+
+.brand-name {
+  font-family: "Cinzel", "Poppins", serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: 1.15rem;
+  color: var(--cream);
+}
+
+nav.site-nav {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+nav.site-nav a {
+  color: var(--cream);
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+nav.site-nav a:hover,
+nav.site-nav a.active {
+  color: var(--gold);
+  opacity: 1;
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  text-align: center;
+  padding: 4.5rem 1.5rem 3rem;
+}
+
+.hero .mark {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 1.25rem;
+}
+
+.hero h1 {
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: clamp(2.1rem, 5vw, 3.2rem);
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem;
+  color: var(--cream);
+}
+
+.motto {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  font-size: 1.4rem;
+  color: var(--gold);
+  margin: 0.25rem 0;
+}
+
+.tagline {
+  color: var(--grey);
+  font-size: 1.05rem;
+  margin: 0.25rem 0 2rem;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid var(--gold);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--forest-dark);
+}
+
+.btn-primary:hover {
+  background: var(--gold-dim);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+}
+
+.btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* ---------- layout / cards ---------- */
+
+main {
+  padding: 2.5rem 0 5rem;
+}
+
+.page-title {
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  color: var(--grey);
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.card + .card {
+  margin-top: 1.25rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.stat {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1rem;
+  text-align: center;
+}
+
+.stat .value {
+  display: block;
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: 1.6rem;
+  color: var(--gold);
+}
+
+.stat .label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+/* ---------- tables ---------- */
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+thead {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+th,
+td {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+th {
+  color: var(--gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.75rem;
+}
+
+tbody tr {
+  border-top: 1px solid rgba(232, 225, 207, 0.08);
+}
+
+tbody tr:hover {
+  background: rgba(212, 175, 55, 0.06);
+}
+
+td.rank {
+  color: var(--gold);
+  font-weight: 600;
+  width: 3rem;
+}
+
+/* ---------- forms ---------- */
+
+.search-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.search-form input {
+  flex: 1 1 220px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--cream);
+  font-size: 0.95rem;
+}
+
+.search-form input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.search-form button {
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: var(--forest-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-form button:hover {
+  background: var(--gold-dim);
+}
+
+/* ---------- badges / achievements ---------- */
+
+.badge-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.badge-list li {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.badge-list li strong {
+  color: var(--gold);
+}
+
+/* ---------- states ---------- */
+
+.state-msg {
+  color: var(--grey);
+  padding: 1rem 0;
+}
+
+.state-msg.error {
+  color: #e07a5f;
+}
+
+canvas#history-chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+/* ---------- footer ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--card-border);
+  color: var(--grey);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.site-footer a {
+  color: var(--grey);
+}
+
+@media (max-width: 560px) {
+  nav.site-nav {
+    gap: 0.85rem;
+    font-size: 0.85rem;
+  }
+}
