@@ -1,17 +1,17 @@
 # Roadmap
 
 ## Phase 1 — Foundation
-- [ ] project structure
-- [ ] configuration
-- [ ] logging
-- [ ] database/session
-- [ ] migrations
-- [ ] Discord client
-- [ ] /setup
-- [ ] setup verification
-- [ ] roles/categories/channels
-- [ ] permissions
-- [ ] welcome/rules/roles embeds
+- [x] project structure
+- [x] configuration
+- [x] logging
+- [x] database/session
+- [x] migrations
+- [x] Discord client
+- [x] /setup
+- [x] setup verification
+- [x] roles/categories/channels
+- [x] permissions
+- [x] welcome/rules/roles embeds
 
 ## Phase 2 — Identity
 - [ ] Brawlhalla client

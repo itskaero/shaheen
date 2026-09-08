@@ -48,3 +48,118 @@ Decision: The server remains private until the bot and initial web presence are
 ready for launch.
 
 Reason: Avoid exposing an unfinished public experience.
+
+## ADR-010 — /setup permission bootstrap
+Decision: `/setup` and setup verification are authorized for the Discord guild
+owner or any member with the native `Administrator` permission, in addition to
+holders of the 👑 SHAHEEN LEADER role once it exists. This is not a temporary
+bootstrap-only rule; it stays in effect permanently, because on a brand-new
+server the Shaheen Leader role does not exist until `/setup` creates it.
+
+Reason: Without this fallback, `/setup` could never be run for the first time.
+
+## ADR-011 — guild_id stored on persisted state, and a resource-tracking table
+Decision: Tables that represent per-guild state store an explicit `guild_id`
+column rather than assuming a single implicit guild, so the schema is
+multi-guild-ready even though only one guild is operated today. A new entity,
+`ProvisionedResource` (guild_id, resource_type, logical_key, discord_id,
+last_verified_at, timestamps, unique on guild_id+resource_type+logical_key),
+is added to track the Discord IDs of roles/categories/channels created by
+`/setup`, and a `GuildSettings` entity (guild_id primary key, setup_mode,
+last_setup_at) stores the active development/launch mode per guild. Neither
+table was listed in `docs/DATABASE.md`'s conceptual entity list, which focuses
+on Phase 2+ member/player data — these two exist specifically to satisfy the
+Phase 1 idempotency requirement in `docs/SETUP_FLOW.md`.
+
+Reason: `/setup`'s idempotency contract requires looking resources up by
+stored ID before falling back to name matching; nothing in the original
+schema could hold those IDs.
+
+## ADR-012 — All Discord intents enabled
+Decision: The bot requests all Discord gateway intents, including the
+privileged `members`, `presences`, and `message_content` intents. These must
+also be enabled for the application in the Discord Developer Portal.
+
+Reason: Owner decision, made to avoid revisiting intent configuration as
+member-join welcome flows, role assignment, and later phases need them.
+
+## ADR-013 — Guild-scoped slash command sync
+Decision: Application commands are synced to the configured `GUILD_ID` only,
+not globally.
+
+Reason: Instant propagation during development; Shaheen operates a single
+guild, so global sync's only benefit (multi-server propagation) does not
+apply.
+
+## ADR-014 — Phase 1 database scope is setup-only
+Decision: Phase 1 migrations create only `provisioned_resources` and
+`guild_settings`. `DiscordUser`, `ShaheenMember`, `BrawlhallaPlayer`, and the
+other entities in `docs/DATABASE.md` are deferred to the Phase 2 migration
+that introduces `/link`, since no Phase 1 command reads or writes them.
+
+Reason: `docs/ROADMAP.md`'s own rule — do not implement a later phase's data
+merely because it is documented — applied to the database layer.
+
+## ADR-015 — Setup mode is a command option, persisted per guild
+Decision: `/setup run` takes a `mode` option (`development` default |
+`launch`). The chosen mode is persisted in `GuildSettings` so `/setup status`
+and `/setup verify` can report against the last-applied mode without it being
+re-specified.
+
+Reason: `docs/COMMANDS.md` and `docs/SETUP_FLOW.md` require `/setup` to know
+its mode but never say where that value comes from.
+
+## ADR-016 — /setup exposed as a command group
+Decision: `/setup`, `/setup status`, and `/setup verify` from
+`docs/COMMANDS.md` are implemented as the subcommands `/setup run`,
+`/setup status`, and `/setup verify` of one `setup` application command
+group.
+
+Reason: Discord's slash command schema does not allow a top-level command to
+be both directly invocable and a parent of subcommands, so a literal bare
+`/setup` cannot coexist with `/setup status` and `/setup verify`.
+
+## ADR-017 — Discord channel/category name literals
+Decision: Text and voice channel names use `emoji-kebab-case`, e.g.
+`📢-announcements`, matching Discord's own lowercase/hyphen normalization so
+stored names stay stable for idempotent name-matching. Category names keep
+the emoji-and-title form from `docs/DISCORD_SPEC.md` (e.g. `🏯 SHAHEEN HQ`),
+which Discord permits without normalization.
+
+Reason: `docs/DISCORD_SPEC.md` lists conceptual names with spaces; the setup
+service needs one literal, deterministic string per resource.
+
+## ADR-018 — Bot's own role is not created by /setup
+Decision: The 🤖 SHAHEEN BOT entry in `docs/PERMISSIONS.md`'s hierarchy is
+Discord's own managed integration role for the bot, not a role `/setup`
+creates. `/setup` locates that existing managed role and verifies/repairs its
+position in the hierarchy instead of creating a duplicate.
+
+Reason: Discord auto-creates a managed role for every bot with a role;
+creating a second one would be redundant and confusing.
+
+## ADR-019 — uv for packaging and dependency management
+Decision: Use `uv` with `pyproject.toml` (`[tool.uv] package = false`, since
+Shaheen is an application, not a distributed library) instead of Poetry or
+plain pip/requirements.txt.
+
+Reason: Single fast tool for venv, dependency resolution/locking, and running
+scripts; good Docker build support; no functional need to publish Shaheen as
+an installable package.
+
+## ADR-020 — mypy added in Phase 1
+Decision: Configure `mypy` alongside Ruff and pytest from Phase 1 onward,
+run in the same quality step `docs/DEVELOPMENT.md` describes.
+
+Reason: `docs/DEVELOPMENT.md` left type checking as "if configured"; catching
+typing issues is cheapest before the codebase grows past Phase 1.
+
+## ADR-021 — Welcome/rules/roles messages are static branded embeds
+Decision: The welcome/rules/roles messages `/setup` deploys in launch mode
+are static, branded embeds (per `docs/BRAND.md`) posted to their respective
+channels. Interactive self-service role assignment is not implemented in
+Phase 1, since no document specifies which roles should be self-assignable
+or the intended interaction.
+
+Reason: Avoid inventing an unspecified UX mechanic; keep Phase 1 scope to
+what `docs/ROADMAP.md` actually lists.

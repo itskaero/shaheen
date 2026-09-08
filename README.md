@@ -7,7 +7,20 @@ Brawlhalla clan.
 
 ## Status
 
-Private / in development.
+Private / in development. Phase 1 (foundation + `/setup`) is implemented.
+
+## Getting started
+
+```bash
+cp .env.example .env   # fill in DISCORD_TOKEN, GUILD_ID, DATABASE_URL
+uv sync
+docker compose up -d db
+uv run alembic upgrade head
+uv run pytest
+uv run python -m src.main
+```
+
+Or run everything in Docker: `docker compose up --build`.
 
 ## Goals
 
