@@ -496,6 +496,17 @@ since `src/__init__.py` makes it an importable package from `/app`). Fixed
 at the source in all three places rather than adding a `PYTHONPATH` env
 var, since `--app-dir` is uvicorn's own documented mechanism for this.
 
+**Correction (ADR-057):** the bot-entrypoint aside above was wrong. `python
+-m src.main` does make `src` itself importable from `/app` (so `src.main`
+resolves), but `src/main.py`'s own imports are absolute and un-prefixed —
+`from bot.client import ShaheenBot`, `from core.config import
+load_settings`, etc. — which need `bot`, `core`, `database`, ... resolvable
+as *top-level* packages. Those live inside `src/`, and only `/app` (the
+Dockerfile's `WORKDIR`, added by `-m`'s own cwd-on-sys.path rule), not
+`/app/src`, was ever on `sys.path`. The bot's Docker CMD was therefore
+never actually runnable as written — see ADR-057 for the real fix and how
+it went undetected this long.
+
 ## ADR-047 — Frontend visual redesign: the clan's own banner art as the theme
 Decision: The homepage hero is the clan's actual Discord server banner
 (`web/assets/img/banner.{jpg,webp}`, owner-provided), not the previous
@@ -910,3 +921,56 @@ Postgres instance end to end — migrate, boot uvicorn, `GET /health` →
 rather than sqlite. `pytest`/`mypy` still pass; the two pre-existing
 `ruff` findings in this file (an unsorted import block, one over-length
 line) predate this change and are untouched by it.
+
+## ADR-057 — Bot's Docker CMD runs `src/main.py` as a script, not `-m src.main`
+Decision: The `Dockerfile`'s `CMD` (and README's local-dev instructions)
+now run the bot as `uv run python src/main.py` — a plain script
+invocation — instead of `uv run python -m src.main`.
+
+Reason: on Fly, the container built and deployed with no error (ADR
+addendum on ADR-053), but the bot process itself crashed immediately:
+
+    from bot.client import ShaheenBot
+    ModuleNotFoundError: No module named 'bot'
+    Main child exited normally with code: 1
+
+This has been broken since Phase 1 and was never actually caught, because
+nothing before this deploy ever executed the real container process
+boundary — `pytest` resolves `bot`/`core`/`database` via
+`pythonpath = ["src"]` in `pyproject.toml`, a pytest-only mechanism
+unrelated to how a real `python` invocation resolves imports, and
+apparently the bot was never run via `docker compose up` (or the repo
+root `uv run python -m src.main` from README) in a way that surfaced it
+either. `src/main.py` itself uses absolute, un-prefixed imports —
+`from bot.client import ShaheenBot`, `from core.config import
+load_settings`, etc. — written on the assumption that `src/` is the
+import root, matching every other place in this project that treats it
+that way: `alembic/env.py` explicitly does
+`sys.path.insert(0, ".../src")`, `docker-compose.yml`'s `web` service and
+`render.yaml` both pass uvicorn `--app-dir src` (ADR-046), and
+`[tool.mypy] mypy_path = "src"`. `-m src.main` doesn't provide that: `-m`
+adds only the *current working directory* (the Dockerfile's `WORKDIR`,
+`/app`) to `sys.path`, making `src` itself importable as a package
+(`src.main`, `src.core.config`, ...) but never adding `/app/src`, so
+`bot`, `core`, `database`, etc. stay unresolvable as top-level names. See
+the correction appended to ADR-046, which asserted the opposite without
+actually testing it.
+
+Running `main.py` as a plain script instead is Python's own documented
+behavior for this exact situation: a script invocation (not `-m`)
+prepends the script's own directory to `sys.path[0]`, which is `src/`
+here — no `PYTHONPATH` env var or explicit `sys.path` surgery in
+`main.py` needed, and it's the same fix shape uvicorn's `--app-dir`
+already applies for the API half of this project.
+
+Verified by reproducing the exact reported traceback locally
+(`uv run python -m src.main` → `ModuleNotFoundError: No module named
+'bot'`, byte-for-byte down to the failing import line) and then
+confirming the fixed invocation clears it: `uv run python src/main.py`
+with fake credentials runs past every internal import all the way to
+discord.py's own login call, failing only on this sandbox's own network
+egress allowlist (`discord.errors.Forbidden: ... Host not in allowlist:
+discord.com`) — evidence the import boundary that was actually broken is
+now fixed, not evidence the bot logs into Discord successfully (this
+environment can't reach discord.com to test that part). `pytest`/`mypy`
+are unaffected (neither invokes `main.py` as a subprocess).
