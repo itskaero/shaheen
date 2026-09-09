@@ -17,4 +17,11 @@ COPY alembic/ ./alembic/
 COPY scripts/ ./scripts/
 RUN chmod +x scripts/render-start.sh
 
-CMD ["uv", "run", "python", "-m", "src.main"]
+# `python src/main.py` (script mode), not `-m src.main`: running as a
+# script makes Python prepend the script's own directory (src/) to
+# sys.path, which is what makes src/main.py's own absolute imports (e.g.
+# `from bot.client import ShaheenBot`) resolve — bot/, core/, database/,
+# etc. live inside src/, not at the repo root. `-m src.main` instead adds
+# only the WORKDIR (the repo root) to sys.path, leaving those unresolved
+# — see docs/DECISIONS.md ADR-057.
+CMD ["uv", "run", "python", "src/main.py"]

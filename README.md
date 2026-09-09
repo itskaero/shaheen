@@ -46,7 +46,7 @@ uv sync
 docker compose up -d db
 uv run alembic upgrade head
 uv run pytest
-uv run python -m src.main
+uv run python src/main.py
 ```
 
 Or run everything in Docker: `docker compose up --build`.
