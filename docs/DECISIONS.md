@@ -845,3 +845,53 @@ used now, without needing a real Postgres server in this environment.
 from ADR-054's verification is unaffected — sqlite URLs don't match
 either `postgres://` prefix, so `normalize_database_url` is a no-op for
 them).
+
+## ADR-056 — Migration 0003's achievements seed binds tz-aware timestamps as tz-aware
+Decision: `alembic/versions/0003_clan_tables.py`'s `_ACHIEVEMENTS_TABLE` —
+the lightweight `sa.table(...)`/`sa.column(...)` pair `op.bulk_insert()`
+uses to know how to bind the achievements seed row parameters — declares
+`created_at`/`updated_at` as `sa.DateTime(timezone=True)`, matching the
+real `achievements` table's columns (also `DateTime(timezone=True)`,
+declared a few lines above via `op.create_table`). It previously declared
+them as bare `sa.DateTime` (no `timezone=True`).
+
+Reason: with ADR-054 and ADR-055's fixes both live, the next production
+deploy got further than either had and failed a third way, this time
+inside migration 0003 itself while seeding the achievements catalog:
+
+    asyncpg.exceptions.DataError: invalid input for query argument $4 in
+    element #0 of executemany() sequence: datetime.datetime(2026, 9, 9,
+    ...) (can't subtract offset-naive and offset-aware datetimes)
+
+`_ACHIEVEMENTS_TABLE`'s bare `sa.DateTime` column type is only used to
+tell `op.bulk_insert()` how to *bind* the parameters for that one
+`INSERT` — it's a separate, parallel declaration from the real
+`op.create_table("achievements", ...)` columns a few lines above, and the
+two had drifted out of sync. Bare `sa.DateTime` compiles the bind as
+`TIMESTAMP WITHOUT TIME ZONE`; the actual Python value passed
+(`now = datetime.now(UTC)`) is timezone-aware. asyncpg's codec for the
+no-tz `timestamp` type internally subtracts the bound value against a
+naive epoch reference, and an aware value against a naive epoch is
+exactly the `TypeError` string asyncpg reports (wrapped as
+`asyncpg.exceptions.DataError` by the time SQLAlchemy surfaces it).
+
+Why the earlier local verification (ADR-054, ADR-055) never caught this:
+both were checked against a throwaway **sqlite** database, and sqlite's
+driver doesn't type-check or distinguish tz-aware vs. naive `DATETIME`
+columns at all — it just stores whatever it's given. The bug is specific
+to a real Postgres connection via asyncpg, which every sqlite-based
+"verified locally" claim in this file up to this point was structurally
+unable to exercise. Postgres itself is available in this dev environment
+(`postgresql-16`, unused until now) — verification for this fix instead
+starts a local Postgres cluster, reproduces the exact reported error
+against it on the unfixed migration (confirmed identical, down to the
+`$4::TIMESTAMP WITHOUT TIME ZONE` cast in the failing `INSERT`'s SQL),
+then confirms the fix migrates cleanly (`alembic upgrade head`, all four
+migrations, no error), that the seeded rows land as genuine
+`timestamp with time zone` in the database (checked via `psql`), and
+re-runs the full `scripts/render-start.sh` (ADR-054) against that same
+Postgres instance end to end — migrate, boot uvicorn, `GET /health` →
+200 — the first time that script has been verified against Postgres
+rather than sqlite. `pytest`/`mypy` still pass; the two pre-existing
+`ruff` findings in this file (an unsorted import block, one over-length
+line) predate this change and are untouched by it.

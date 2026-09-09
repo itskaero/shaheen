@@ -27,8 +27,15 @@ _ACHIEVEMENTS_TABLE = sa.table(
     sa.column("key", sa.String),
     sa.column("name", sa.String),
     sa.column("description", sa.String),
-    sa.column("created_at", sa.DateTime),
-    sa.column("updated_at", sa.DateTime),
+    # timezone=True here must match the real column type declared for
+    # "achievements" below — this lightweight sa.table/sa.column pair only
+    # exists to tell op.bulk_insert() how to bind these parameters, and a
+    # mismatch (naive-typed bind vs. the tz-aware `now` value passed below)
+    # makes asyncpg's codec raise "can't subtract offset-naive and
+    # offset-aware datetimes" against real Postgres — sqlite's driver
+    # doesn't enforce this, so it doesn't show up there.
+    sa.column("created_at", sa.DateTime(timezone=True)),
+    sa.column("updated_at", sa.DateTime(timezone=True)),
 )
 
 _SEED_ACHIEVEMENTS = (
