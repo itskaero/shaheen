@@ -52,3 +52,13 @@ function rankHtml(position) {
   }
   return `<span class="rank-plain">#${position}</span>`;
 }
+
+// Same heuristic as src/bot/content/profile_embeds.py's _legend_display_name
+// — the API sends the raw legend_name_key (e.g. "wu_shang"), not a display
+// name, so both surfaces format it the same simple way.
+function legendDisplayName(legendNameKey) {
+  return legendNameKey
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

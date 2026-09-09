@@ -18,12 +18,18 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from api.app import app
 from api.dependencies import get_session, get_settings
 from core.config import Settings
+from database.models.match import MatchKind, MatchSide
 from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.match_repository import MatchRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from database.repositories.tournament_repository import (
+    TournamentEntrantRepository,
+    TournamentRepository,
+)
 
 GUILD_ID = 1
 
@@ -101,6 +107,27 @@ def test_player_history_not_found(client: TestClient) -> None:
     assert response.status_code == 404
 
 
+def test_player_legends_not_found(client: TestClient) -> None:
+    response = client.get("/players/99999/legends")
+    assert response.status_code == 404
+
+
+def test_player_matches_not_found(client: TestClient) -> None:
+    response = client.get("/players/99999/matches")
+    assert response.status_code == 404
+
+
+def test_tournaments_empty(client: TestClient) -> None:
+    response = client.get("/tournaments")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_tournament_bracket_not_found(client: TestClient) -> None:
+    response = client.get("/tournaments/99999")
+    assert response.status_code == 404
+
+
 async def _seed_linked_player(session: AsyncSession) -> None:
     users = DiscordUserRepository(session)
     members = ShaheenMemberRepository(session)
@@ -148,3 +175,64 @@ async def test_player_profile_and_leaderboard_reflect_seeded_data(
     assert history_response.status_code == 200
     (snapshot,) = history_response.json()
     assert snapshot["rating"] == 1500
+
+
+async def test_player_matches_and_tournament_bracket_reflect_seeded_data(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # discord_id=1, brawlhalla_id=10, "Foo"
+
+        users = DiscordUserRepository(session)
+        members = ShaheenMemberRepository(session)
+        players = BrawlhallaPlayerRepository(session)
+        links = MemberPlayerLinkRepository(session)
+
+        user_a = await users.get_or_create(
+            1
+        )  # idempotent — same DiscordUser _seed_linked_player made
+        user_b = await users.get_or_create(2)
+        member_a = await members.get_or_create(discord_user_id=user_a.id, guild_id=GUILD_ID)
+        member_b = await members.get_or_create(discord_user_id=user_b.id, guild_id=GUILD_ID)
+        player_b = await players.upsert(brawlhalla_player_id=20, player_name="Bar", region="eu")
+        await links.link(shaheen_member_id=member_b.id, brawlhalla_player_id=player_b.id)
+
+        matches = MatchRepository(session)
+        match = await matches.create(
+            guild_id=GUILD_ID,
+            kind=MatchKind.ONE_V_ONE,
+            participants=[(member_a.id, MatchSide.A), (member_b.id, MatchSide.B)],
+        )
+        await matches.report(match, reported_by_member_id=member_a.id, winning_side=MatchSide.A)
+        await matches.confirm(match)
+
+        tournaments = TournamentRepository(session)
+        entrants = TournamentEntrantRepository(session)
+        tournament = await tournaments.create(
+            guild_id=GUILD_ID,
+            name="Winter Cup",
+            kind=MatchKind.ONE_V_ONE,
+            created_by_member_id=member_a.id,
+        )
+        await entrants.register(tournament_id=tournament.id, shaheen_member_ids=[member_a.id])
+        await session.commit()
+        tournament_id = tournament.id
+
+    matches_response = client.get("/players/10/matches")
+    assert matches_response.status_code == 200
+    (result,) = matches_response.json()
+    assert result["won"] is True
+    assert result["opponents"] == ["Bar"]
+
+    tournaments_response = client.get("/tournaments")
+    assert tournaments_response.status_code == 200
+    (summary,) = tournaments_response.json()
+    assert summary["name"] == "Winter Cup"
+    assert summary["id"] == tournament_id
+
+    bracket_response = client.get(f"/tournaments/{tournament_id}")
+    assert bracket_response.status_code == 200
+    bracket = bracket_response.json()
+    assert bracket["tournament"]["name"] == "Winter Cup"
+    (entrant,) = bracket["entrants"]
+    assert entrant["names"] == ["Foo"]

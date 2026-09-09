@@ -35,6 +35,15 @@ class TournamentRepository:
     async def get(self, tournament_id: int) -> Tournament | None:
         return await self._session.get(Tournament, tournament_id)
 
+    async def list_for_guild(self, guild_id: int, *, limit: int = 20) -> list[Tournament]:
+        stmt = (
+            select(Tournament)
+            .where(Tournament.guild_id == guild_id)
+            .order_by(Tournament.created_at.desc())
+            .limit(limit)
+        )
+        return list((await self._session.execute(stmt)).scalars().all())
+
     async def start(self, tournament: Tournament) -> None:
         tournament.status = TournamentStatus.IN_PROGRESS
         tournament.started_at = datetime.now(UTC)

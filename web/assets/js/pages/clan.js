@@ -22,6 +22,9 @@
         <a class="stat" href="player.html" style="text-decoration: none">
           <span class="value">📈</span><span class="label">Player Profiles</span>
         </a>
+        <a class="stat" href="tournaments.html" style="text-decoration: none">
+          <span class="value">🥇</span><span class="label">Tournaments</span>
+        </a>
       </div>
     `;
   } catch (err) {

@@ -22,6 +22,12 @@ const ShaheenAPI = (() => {
     getPlayer: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}`),
     getPlayerHistory: (brawlhallaId, limit = 20) =>
       get(`/players/${encodeURIComponent(brawlhallaId)}/history?limit=${limit}`),
+    getPlayerLegends: (brawlhallaId, limit = 6) =>
+      get(`/players/${encodeURIComponent(brawlhallaId)}/legends?limit=${limit}`),
+    getPlayerMatches: (brawlhallaId, limit = 10) =>
+      get(`/players/${encodeURIComponent(brawlhallaId)}/matches?limit=${limit}`),
+    getTournaments: (limit = 20) => get(`/tournaments?limit=${limit}`),
+    getTournamentBracket: (id) => get(`/tournaments/${encodeURIComponent(id)}`),
   };
 })();
 

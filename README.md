@@ -31,6 +31,12 @@ Private / in development. Implemented so far:
   homepage is a scroll-triggered landing page with live animated stat
   counters (docs/DECISIONS.md ADR-050), and the player rating-history
   chart has gridlines, a peak-rating overlay, and a hover tooltip.
+- Phase 7 — deeper website data: player profiles now show legend mastery
+  and match history (`GET /players/{id}/legends`, `.../matches`); a new
+  tournament list + live bracket viewer (`GET /tournaments`,
+  `GET /tournaments/{id}`, `tournaments.html` / `tournament.html`)
+  (docs/DECISIONS.md ADR-051). One abstracted, restrained nod to Pakistani
+  truck art as a homepage divider (ADR-052).
 
 ## Getting started
 

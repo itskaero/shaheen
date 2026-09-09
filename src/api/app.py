@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import clan, leaderboard, players
+from api.routers import clan, leaderboard, players, tournaments
 from core.config import load_settings
 from core.logging import configure_logging
 from database.session import create_engine, create_session_factory
@@ -62,6 +62,7 @@ app.add_middleware(
 app.include_router(clan.router)
 app.include_router(leaderboard.router)
 app.include_router(players.router)
+app.include_router(tournaments.router)
 
 
 @app.get("/health", tags=["health"])

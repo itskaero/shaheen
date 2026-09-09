@@ -659,3 +659,65 @@ after load specifically to catch this class of bug, not just screenshot
 it — caught immediately, fixed to target `.value` explicitly (matching
 the pattern the adjacent "Top Rating" stat already used correctly), and
 re-verified before commit.
+
+## ADR-051 — Legend mastery, match history, and tournament brackets go public
+Decision: Three more slices of data the bot already tracked, previously
+invisible on the website, are now exposed read-only:
+- `GET /players/{id}/legends` — each Legend's latest snapshot (ADR-029:
+  append-only, so "latest per legend" is the lifetime total), sorted by
+  games played. New `LegendSnapshotRepository.list_latest_per_legend()`
+  (a group-by-max-captured_at subquery join — the same shape SQL uses for
+  "latest row per group" generally).
+- `GET /players/{id}/matches` — recent **CONFIRMED** matches only
+  (ADR-033/034); pending/disputed/cancelled stay internal, not a public
+  result. Resolves the opponent side's `MatchParticipant`s to Brawlhalla
+  player names via each one's active `MemberPlayerLink`, same identity
+  boundary as everywhere else (ADR-040) — never a Discord-identifying
+  detail, and a since-unlinked opponent is silently omitted rather than
+  showing an internal id.
+- `GET /tournaments` and `GET /tournaments/{id}` — a tournament list and a
+  full bracket (all `TournamentMatch` rows per round, each entrant's
+  linked player name(s), the winner highlighted). New
+  `TournamentRepository.list_for_guild()`. A 1v1 entrant resolves to one
+  name, a 2v2 entrant to two (joined with "&" client-side); an entrant
+  with no linked members displays as "Unknown" rather than nothing.
+
+All three follow the same shape as every other Phase 5+ endpoint: a
+`WebsiteService` method returning a plain dataclass, a thin FastAPI router
+converting it to a `pydantic` response model, 404 when the player/
+tournament doesn't exist. `website_service.py` picked up read-only
+instances of `MatchRepository` and the three `Tournament*Repository`
+classes already built for the bot's `/challenge`/`/scrim`/`/tournament`
+commands (Phase 4) — no new repository write paths, this is exposure only.
+
+Frontend: the player profile page gained a "Legend Mastery" bar list and a
+"Match History" result list; two new pages, `tournaments.html` (list) and
+`tournament.html` (bracket, grouped by round with the last round labeled
+"Final", second-to-last "Semifinals", third-to-last "Quarterfinals" —
+otherwise "Round N" — and a CSS-only connector nub between rounds rather
+than routed SVG lines, which is the standard low-effort/high-legibility
+bracket layout technique).
+
+Reason: Owner ask ("legend mastery + match history + tournament bracket
+viewer") — explicitly the bigger-scope items flagged as needing real
+backend work when the feature menu was presented, chosen over the
+frontend-only Discord-widget option. Verified against a tournament played
+to completion through the real `TournamentService`/`MatchService` (not
+hand-poked rows) so the bracket data reflects what the bot itself
+produces, not just what a test fixture assumes.
+
+## ADR-052 — Truck-art-inspired divider, applied once
+Decision: `.divider-truck` — a small repeating floral motif (a muted
+rust-red center with gold petals on a thin gold line, `web/assets/css/
+style.css`, tileable SVG data-URI) — appears once, as a closing flourish
+on the homepage between "Explore" and the footer.
+
+Reason: The owner's answer to "which Pakistani-identity motif next" was
+specifically an *abstracted* truck-art divider, not literal truck-art
+imagery — truck art is the most globally-recognized distinctly-Pakistani
+decorative form, but rendered literally (or repeated everywhere) it tips
+into the "generic gamer clichés"/clutter `docs/BRAND.md` warns against.
+Restrained to one motif, one placement, muted rather than truck art's
+usual riot of colour, and a small closed set of extra hues (rust + the
+existing gold) rather than opening the palette further — same spirit as
+ADR-049's neon scoping.
