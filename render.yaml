@@ -7,10 +7,15 @@
 # request after that takes ~30-60s to wake it), and the free Postgres
 # database expires 90 days after creation unless upgraded. Free-tier
 # services also can't use Render's preDeployCommand (paid-plan only), so
-# migrations run as part of dockerCommand instead, before uvicorn starts —
-# see docs/DECISIONS.md ADR-054. `alembic upgrade head` is a no-op once
-# already at head, so re-running it on every boot (every wake from sleep
-# included) is safe, just an extra few hundred ms.
+# migrations run at boot instead, via scripts/render-start.sh, before
+# uvicorn starts — see docs/DECISIONS.md ADR-054. `alembic upgrade head`
+# is a no-op once already at head, so re-running it on every boot (every
+# wake from sleep included) is safe, just an extra few hundred ms.
+#
+# dockerCommand is a plain script path, not an inline `cmd1 && cmd2`
+# string — Render's dockerCommand field does not reliably shell-tokenize
+# an inline command chain (see ADR-054), so the chain lives in the script
+# instead, where there's nothing for Render's own parsing to mangle.
 
 databases:
   - name: shaheen-db
@@ -24,7 +29,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: sh -c "uv run alembic upgrade head && uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port $PORT"
+    dockerCommand: ./scripts/render-start.sh
     plan: free
     healthCheckPath: /health
     envVars:

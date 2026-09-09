@@ -753,12 +753,13 @@ list was already selective, not `COPY . .`) but it shrinks and speeds up
 every `flyctl deploy`/`docker build` context upload, which matters once
 deploys happen from a real dev machine instead of CI.
 
-## ADR-054 — Free-tier Render: migrations run in dockerCommand, not preDeployCommand
+## ADR-054 — Free-tier Render: migrations run at boot, via a start script, not preDeployCommand
 Decision: `render.yaml`'s `shaheen-api` service no longer sets
-`preDeployCommand`. Instead, `dockerCommand` chains the migration and the
-server start, wrapped in an explicit shell:
-`sh -c "uv run alembic upgrade head && uv run uvicorn ... --port $PORT"` —
-the container runs `alembic upgrade head` every time it boots (every
+`preDeployCommand`. Instead, `dockerCommand` points at a small script
+baked into the image, `scripts/render-start.sh`, which runs
+`uv run alembic upgrade head` and then `exec`s
+`uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port "$PORT"`
+— the container runs `alembic upgrade head` every time it boots (every
 deploy, and every wake from the free plan's idle sleep), then starts the
 API.
 
@@ -769,22 +770,41 @@ no-op, just a version-table check, when already at head), so running it
 on every boot instead of only "before" each deploy costs a few hundred ms
 per cold start and is otherwise free of downside.
 
-Correction (same day): the first version of this ADR chained the two
+Correction 1 (same day): the first version of this ADR chained the two
 commands with a bare `dockerCommand: uv run alembic upgrade head && uv
 run uvicorn ...` and claimed to have verified it locally. That
 verification ran the string through `bash -c '...'` — which itself
 supplies the shell that interprets `&&` — so it never actually tested
-the failure mode. Render does not run `dockerCommand` through a shell;
-it tokenizes the raw string and execs it directly, so `&&` and
-everything after it were passed as literal CLI arguments to `alembic`,
-which failed in production with `alembic: error: unrecognized
-arguments: && uv run uvicorn ...`. Fix: wrap the whole chain in
-`sh -c "..."` so the container's own shell (not Render) parses `&&` and
-expands `$PORT`. Re-verified this time by invoking the exact
-`dockerCommand` string directly via `sh -c` (no `bash -c` shortcut) with
-a throwaway sqlite DB: all four migrations apply, uvicorn starts, and
-`GET /health` returns 200 — and by tokenizing both the old and new
-strings with Python's `shlex.split` (which mirrors a non-shell,
-quote-aware exec split) to confirm the old form splits `&&` into a
-literal argument while the new form keeps the whole chain as one
-argument to `sh -c`.
+the failure mode. In production `&&` and everything after it were passed
+as literal CLI arguments to `alembic`: `alembic: error: unrecognized
+arguments: && uv run uvicorn ...`.
+
+Correction 2 (same day): the fix for correction 1 wrapped the chain in
+`dockerCommand: sh -c "uv run alembic upgrade head && uv run uvicorn ...
+--port $PORT"`, on the theory that Render tokenizes `dockerCommand` and
+execs it without a shell (so the fix supplies one explicitly). That
+theory turned out to be wrong too — in production this produced
+`sh: 1: uv run alembic upgrade head && uv run uvicorn api.app:app
+--app-dir src --host 0.0.0.0 --port 10000: not found`, i.e. Render (or
+something in its path to the container) handed the *entire* `sh -c
+"..."` string to a shell as one opaque command name, rather than
+splitting it into `sh`, `-c`, and the script argument the way a real
+shell invocation would. Whatever Render's exact tokenization rules are,
+guessing at them a third time isn't worth it. Fix: stop asking
+`dockerCommand` to parse an inline shell one-liner at all. Move the
+chain into `scripts/render-start.sh` (copied into the image, made
+executable in the `Dockerfile`) and set `dockerCommand:
+./scripts/render-start.sh` — a single plain path with no quotes, no
+`&&`, no `$VAR`, so there is nothing left for Render's parsing to split
+wrong. The file's own `#!/bin/sh` shebang is what invokes a shell, not
+Render.
+
+Verification note: since this environment has no Docker daemon, this was
+verified by `execve`-ing the script path directly (`./scripts/render-
+start.sh`, not `sh ./scripts/render-start.sh` and not `bash -c '...'`)
+against a throwaway sqlite DB — the same mechanism a container uses to
+run a `dockerCommand` — confirming all four migrations apply, uvicorn
+starts, and `GET /health` returns 200. This doesn't prove Render's exact
+tokenization behavior (still unconfirmed after two wrong guesses above),
+but it does remove tokenization from the equation: a single unquoted
+path has nothing left to mis-split.
