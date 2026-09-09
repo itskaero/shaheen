@@ -5,7 +5,7 @@
 // blueprint (render.yaml) prints the URL to use here after the first
 // deploy. Leave the localhost default for local development
 // (`uv run uvicorn api.app:app --reload`).
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "https://shaheen-api-6a6o.onrender.com";
 
 // Optional: your Discord invite link (e.g. "https://discord.gg/xxxxxxx").
 // Leave empty to hide the header's "Join Discord" button.
