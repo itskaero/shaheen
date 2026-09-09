@@ -753,6 +753,21 @@ list was already selective, not `COPY . .`) but it shrinks and speeds up
 every `flyctl deploy`/`docker build` context upload, which matters once
 deploys happen from a real dev machine instead of CI.
 
+Addendum: `fly.toml` originally shipped with no `primary_region`. After
+the DB/migration fixes in ADR-054 through ADR-056, the first real deploy
+attempt reported the bot as not running with no error from `flyctl`
+itself — consistent with the known Fly Machines gotcha where an app not
+created via `fly launch` can build and push its image successfully while
+placing zero Machines, since nothing tells Fly where to place one. Added
+`primary_region = "bom"` (Mumbai — the nearest Fly region to a
+Pakistan-based clan; change it if you'd rather use a different one).
+**Unverified against the real deploy** — this environment has no
+`flyctl`/Fly API access to confirm it against the account this bot
+actually runs on, so treat it as the first thing to try, not a confirmed
+fix; `flyctl status`/`flyctl logs` output is what would confirm it (or
+point at something else entirely, e.g. a startup exception in the
+container itself).
+
 ## ADR-054 — Free-tier Render: migrations run at boot, via a start script, not preDeployCommand
 Decision: `render.yaml`'s `shaheen-api` service no longer sets
 `preDeployCommand`. Instead, `dockerCommand` points at a small script
