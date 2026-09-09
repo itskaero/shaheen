@@ -45,10 +45,10 @@ function drawSparkline(canvas, points) {
   ctx.lineTo(padding + (points.length - 1) * xStep, height - padding);
   ctx.lineTo(padding, height - padding);
   ctx.closePath();
-  ctx.fillStyle = "rgba(212, 175, 55, 0.12)";
+  ctx.fillStyle = "rgba(57, 255, 176, 0.14)";
   ctx.fill();
 
-  // the line itself
+  // the line itself, with a neon glow to match the site's theme
   ctx.beginPath();
   points.forEach((p, i) => {
     const [x, y] = toXY(i, p.rating ?? min);
@@ -58,16 +58,19 @@ function drawSparkline(canvas, points) {
       ctx.lineTo(x, y);
     }
   });
-  ctx.strokeStyle = "#d4af37";
+  ctx.strokeStyle = "#39ffb0";
   ctx.lineWidth = 2;
+  ctx.shadowColor = "rgba(57, 255, 176, 0.8)";
+  ctx.shadowBlur = 8;
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
   // dots
   points.forEach((p, i) => {
     const [x, y] = toXY(i, p.rating ?? min);
     ctx.beginPath();
     ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = "#e8e1cf";
+    ctx.fillStyle = "#eaf6ef";
     ctx.fill();
   });
 }

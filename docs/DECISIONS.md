@@ -556,3 +556,58 @@ unjustified dependency" rule and is trivially disabled for
 page again, and specifically asserted the hero image's bounding box
 position differs across two frames ~1.5s apart to confirm the float
 animation is actually running rather than just present in the CSS.
+
+## ADR-049 — Dark neon esports-team visual direction
+Decision: The website's chrome (backgrounds, typography, buttons, cards,
+badges, dividers, nav) moved to a near-black, neon-glow direction modeled
+on competitive-gaming org sites, replacing the earlier heraldic/luxury
+green-and-gold treatment from ADR-047/048:
+- Background: true near-black with animated aurora-glow gradients and a
+  faint animated grid-line texture (`body::before`), instead of the
+  softer forest-green gradient.
+- Type: `Orbitron` (display/wordmark, brand name, big stat numbers) +
+  `Rajdhani` (headings, nav, labels) replace `Cinzel`, uppercase and
+  letter-spaced throughout, matching how esports orgs typically set type.
+- A gradient "shine" sweep on the homepage `<h1>` and a scrolling ticker
+  marquee (motto/tagline, looping) — both common on esports team sites,
+  implemented as plain CSS/HTML (no library).
+- Buttons, the tier-badge chips, and the nav CTA got an angular
+  clip-path-cut corner treatment; left off cards/stats/tables so the cut
+  stays a deliberate accent rather than covering every box (see "Reason").
+- Cards/stats gained a cursor-follow spotlight highlight
+  (`web/assets/js/spotlight.js`, ~30 lines: rAF-batched pointermove sets
+  `--mx`/`--my`, read by a `radial-gradient` on `::after`) — a vanilla
+  CSS/JS take on the reactbits "SpotlightCard" component the owner asked
+  to draw from.
+- The palette stayed a closed green/gold/(cyan-in-gradients-only) system
+  rather than opening up to arbitrary neon hues.
+
+`docs/BRAND.md`'s "Avoid: excessive neon" / "generic gamer clichés" lines
+were updated alongside this ADR to say what that means in practice now,
+rather than leaving them flatly contradicting a decision that supersedes
+them for the website.
+
+Reason: Owner feedback — the previous design "not good," wanted something
+closer to real esports team sites and drawing from reactbits (a React
+component-animation library) specifically. Two things drove the
+implementation choices: (1) `docs/BRAND.md` already named green/gold/black
+as Shaheen's identity and explicitly warned against excessive neon and
+generic gamer clichés — so neon went in as a glow *treatment* on the
+existing brand hues (green primary, gold secondary, cyan only as a third
+gradient note) rather than a new arbitrary palette, and the angular-cut
+motif stayed scoped to a few components instead of clipping everything,
+to avoid tipping into the clichés the doc warns about. (2) reactbits is a
+React component library; adding React + a component dependency to a
+plain-HTML static site (ADR-045: no framework without justification) to
+borrow a handful of visual effects would be exactly the kind of
+unjustified dependency `CLAUDE.md` asks to avoid, especially for effects
+(cursor spotlight, shine text, marquee) that are each a few lines of
+vanilla CSS/JS. So the brief was read as "build these effects," not
+"take this dependency" — same visual outcome, no framework migration.
+Verified with Playwright end-to-end (desktop + mobile, all four pages);
+the spotlight effect was also confirmed by manually dispatching a
+`pointermove` event in the page (Playwright's synthesized mouse events
+didn't register as pointer events against this sandbox's mismatched
+browser/driver build — a test-tooling quirk, not a site bug, since a
+manually dispatched `pointermove` updated `--mx`/`--my` immediately, and
+real browsers dispatch genuine pointer events on mouse movement).

@@ -20,13 +20,14 @@ Private / in development. Implemented so far:
   the bot's services/repositories/database — `GET /clan`,
   `GET /leaderboard`, `GET /players/{brawlhalla_id}`,
   `GET /players/{brawlhalla_id}/history`, `GET /health`
-- Phase 6 — public frontend: a static, on-brand website (`web/`) — home,
-  clan, leaderboard, and player profile/rating-history pages — that calls
-  the Phase 5 API directly from the browser. Free to host: the site on
-  GitHub Pages, the API + database on Render's free tier. Themed directly
-  around the clan's own Discord art (docs/DECISIONS.md ADR-047/ADR-048):
-  the crest logo is animated in the hero, tier-colored rank badges, player
-  avatars, rank medals, glass-panel cards.
+- Phase 6 — public frontend: a static website (`web/`) — home, clan,
+  leaderboard, and player profile/rating-history pages — that calls the
+  Phase 5 API directly from the browser. Free to host: the site on GitHub
+  Pages, the API + database on Render's free tier. A dark, neon-glow
+  esports-team-site look (docs/DECISIONS.md ADR-047/048/049) built around
+  the clan's own Discord art: an animated crest-logo hero, a scrolling
+  ticker marquee, gradient shine text, cursor-spotlight cards, angular
+  neon buttons/badges, tier-colored rank badges, player avatars.
 
 ## Getting started
 
