@@ -24,8 +24,9 @@ Private / in development. Implemented so far:
   clan, leaderboard, and player profile/rating-history pages — that calls
   the Phase 5 API directly from the browser. Free to host: the site on
   GitHub Pages, the API + database on Render's free tier. Themed directly
-  around the clan's own Discord banner (docs/DECISIONS.md ADR-047):
-  tier-colored rank badges, player avatars, rank medals, glass-panel cards.
+  around the clan's own Discord art (docs/DECISIONS.md ADR-047/ADR-048):
+  the crest logo is animated in the hero, tier-colored rank badges, player
+  avatars, rank medals, glass-panel cards.
 
 ## Getting started
 
@@ -48,10 +49,17 @@ uv run uvicorn api.app:app --app-dir src --reload
 
 (Docker Compose also starts it as the `web` service, on port 8000.)
 
-The homepage hero and every inner-page banner strip use the clan's own
-Discord banner artwork (`web/assets/img/banner.jpg` / `.webp`). To swap in
-an updated banner, replace both files (keep the ~2.5:1 width:height ratio)
-— no other change needed.
+The site uses two pieces of the clan's own Discord art (docs/DECISIONS.md
+ADR-047/ADR-048):
+- `web/assets/img/banner.jpg` / `.webp` — the wide action-scene banner,
+  used as the homepage's `.cinematic-strip` and every inner page's
+  `.page-banner`. Swap in an updated one by replacing both files (keep the
+  ~2.5:1 width:height ratio) — no other change needed.
+- `web/assets/img/logo-full.*` / `logo-icon.*` — the circular crest, used
+  as the animated homepage hero (`logo-full`, includes the wordmark) and
+  the nav/footer/favicon mark (`logo-icon`, crest only — legible at small
+  sizes). Regenerate `favicon-32.png` / `favicon-48.png` /
+  `apple-touch-icon.png` from a new crest at 32/48/180px square.
 
 To preview the static frontend locally, point `web/assets/js/config.js`'s
 `API_BASE_URL` at your running API (`http://127.0.0.1:8000` by default),

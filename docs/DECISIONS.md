@@ -518,3 +518,41 @@ leaderboard was a plain text table). Verified end-to-end with Playwright
 screenshots (desktop + mobile, all four pages) before shipping, including
 iterating on the banner crop position after the first pass showed the
 logotype getting cut off mid-word.
+
+## ADR-048 — The clan's crest is the site's real logo, with a subtle idle animation
+Decision: A second owner-provided asset — a circular falcon-crest emblem,
+distinct from the wide banner (ADR-047) — replaces the hand-drawn
+`favicon.svg` everywhere: the browser favicon (PNG, since the source is
+raster art, not a vector I drew), the nav/footer brand mark, and the
+homepage hero, which now centers a large version of the full crest+
+wordmark lockup (`web/assets/img/logo-full.*`) with a CSS-only entrance
+(fade+scale+blur in), a continuous gentle float + glow-pulse, a slowly
+rotating conic-gradient glow ring behind it, and a hover spin on the nav
+and footer marks. `web/assets/img/logo-icon.*` is a tighter crop (crest
+only, no wordmark) used at nav/favicon sizes, where the full lockup's text
+would be illegible. All animation is `both`-filled CSS keyframes/
+transitions (no JS animation library, no scroll-linked JS), and a
+`prefers-reduced-motion: reduce` media query collapses every animation and
+transition to near-zero duration site-wide.
+
+The hero image itself sits on the source art's own near-black square
+canvas; rather than showing that as a visible rectangle, `.hero-logo-img`
+uses a radial `mask-image` to fade the square's edges into the page
+background, so the crest reads as a glowing emblem rather than a pasted
+photo. The wide banner (ADR-047) stays in place as the `.page-banner`
+strips and a new `.cinematic-strip` divider between the hero and the rest
+of the homepage — it's scene-setting key art, not the logo, so it moved
+out of the hero position rather than being removed.
+
+Reason: Owner feedback asked for a "modern and professional" look with
+"beautiful animations of the logo," and provided this second, cleaner
+crest asset specifically for it — a wide action-scene banner and a
+circular logo mark serve different jobs (atmosphere vs. identity), so
+using the crest as the actual logo and reserving the banner for
+supporting art matches how esports orgs typically split the two. Pure CSS
+for the animation (vs. a JS animation library) matches `CLAUDE.md`'s "no
+unjustified dependency" rule and is trivially disabled for
+`prefers-reduced-motion`. Verified with Playwright: screenshotted every
+page again, and specifically asserted the hero image's bounding box
+position differs across two frames ~1.5s apart to confirm the float
+animation is actually running rather than just present in the CSS.

@@ -1,8 +1,9 @@
 /* Shaheen — public website
-   Visual language pulled directly from the clan's own Discord banner/crest
-   (Mordex-in-the-arena key art: deep forest night, emerald claw-light,
-   gold crescent-and-wings crest, Lahore-style skyline silhouette) —
-   see web/assets/img/banner.* and docs/BRAND.md. Palette hex values match
+   Visual language pulled directly from the clan's own Discord art: the
+   circular falcon-crest logo (web/assets/img/logo-full/-icon.*) is the
+   site's real logo — animated hero centerpiece, nav mark, favicon — and
+   the wide Mordex-in-the-arena banner (web/assets/img/banner.*) supplies
+   the atmospheric strips. See docs/BRAND.md. Palette hex values match
    src/bot/palette.py so the site and the bot read as one system. */
 
 :root {
@@ -107,10 +108,17 @@ a:focus-visible {
   text-decoration: none;
 }
 
-.brand img {
-  width: 30px;
-  height: 30px;
+.brand-mark {
+  width: 34px;
+  height: 34px;
   filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.55));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
+}
+
+.brand:hover .brand-mark,
+.brand:focus-visible .brand-mark {
+  transform: rotate(-8deg) scale(1.1);
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.85));
 }
 
 .brand-name {
@@ -179,71 +187,130 @@ nav.site-nav a.active::after {
   border-color: var(--card-border-hover);
 }
 
-/* ---------- hero banner (homepage) ---------- */
+/* ---------- hero: animated crest logo (homepage) ---------- */
 
-.hero-banner {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-}
-
-.hero-banner picture,
-.hero-banner img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 58vh;
-  object-fit: cover;
-  object-position: center 30%;
-}
-
-.hero-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(7, 15, 11, 0) 55%, var(--void) 100%);
-  pointer-events: none;
-}
-
-.hero-cta {
+.hero-logo {
   position: relative;
   text-align: center;
-  padding: 1.75rem 1.5rem 3rem;
+  padding: 4rem 1.5rem 2.5rem;
+  overflow: hidden;
 }
 
-.hero-cta .tagline {
+.hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 190px;
+  width: min(520px, 80vw);
+  height: min(520px, 80vw);
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.3) 18%,
+    transparent 36%,
+    transparent 60%,
+    rgba(82, 183, 136, 0.22) 78%,
+    transparent 100%
+  );
+  filter: blur(46px);
+  border-radius: 50%;
+  animation: heroRotate 18s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-logo-wrap {
+  position: relative;
+  z-index: 1;
+  animation: heroEntrance 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-logo-img {
+  width: clamp(200px, 30vw, 340px);
+  height: auto;
+  animation: heroFloat 5.5s ease-in-out infinite;
+  /* the source art is a badge on its own near-black square canvas — fade
+     that square's edges into the page background instead of showing a
+     visible rectangle, so it reads as a glowing emblem, not a pasted photo */
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
+}
+
+.hero-logo .tagline {
+  position: relative;
+  z-index: 1;
   color: var(--grey);
   font-size: 1.05rem;
-  margin: 0 0 1.75rem;
+  margin: 0.5rem 0 1.85rem;
+  animation: fadeInUp 0.8s ease-out 0.5s both;
 }
 
 .hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease-out 0.65s both;
 }
 
-/* smaller, text-only hero used on inner pages (no banner image) */
-
-.hero {
-  text-align: center;
-  padding: 3.5rem 1.5rem 2.5rem;
+/* purely decorative divider strip using the clan's action-art banner —
+   keeps that artwork in the page without competing with the crest hero */
+.cinematic-strip {
+  position: relative;
+  height: 150px;
+  background-image: linear-gradient(180deg, rgba(7, 15, 11, 0.25) 0%, var(--void) 100%),
+    url("../img/banner.jpg");
+  background-size: cover;
+  background-position: center 15%;
+  border-top: 1px solid rgba(212, 175, 55, 0.12);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.12);
 }
 
-.hero .mark {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.45));
+@keyframes heroEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 }
 
-.hero h1 {
-  font-family: "Cinzel", "Poppins", serif;
-  font-size: clamp(1.9rem, 5vw, 2.8rem);
-  letter-spacing: 0.04em;
-  margin: 0 0 0.4rem;
-  color: var(--cream);
+@keyframes heroFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 24px rgba(212, 175, 55, 0.32));
+  }
+
+  50% {
+    transform: translateY(-12px);
+    filter: drop-shadow(0 0 42px rgba(212, 175, 55, 0.52));
+  }
+}
+
+@keyframes heroRotate {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .motto {
@@ -373,6 +440,7 @@ main {
   padding: 1.5rem;
   box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.8);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  animation: fadeInUp 0.55s ease-out both;
 }
 
 .card::before {
@@ -390,6 +458,7 @@ main {
 .card:hover {
   border-color: var(--card-border-hover);
   box-shadow: 0 22px 46px -26px rgba(82, 183, 136, 0.35);
+  transform: translateY(-2px);
 }
 
 .card + .card {
@@ -411,6 +480,15 @@ main {
   padding: 1.2rem 1rem;
   text-align: center;
   transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: fadeInUp 0.55s ease-out both;
+}
+
+.stat-grid .stat:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.stat-grid .stat:nth-child(3) {
+  animation-delay: 0.16s;
 }
 
 .stat:hover {
@@ -443,6 +521,7 @@ main {
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  animation: fadeInUp 0.55s ease-out both;
 }
 
 table {
@@ -660,6 +739,7 @@ tbody tr:hover {
   border-radius: 999px;
   padding: 0.45rem 1rem 0.45rem 0.7rem;
   font-size: 0.85rem;
+  animation: fadeInUp 0.45s ease-out both;
 }
 
 .badge-list .badge-icon {
@@ -728,10 +808,16 @@ canvas#history-chart {
 }
 
 .site-footer .crest {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   margin-bottom: 0.6rem;
-  opacity: 0.8;
+  opacity: 0.85;
+  transition: transform 0.5s ease, opacity 0.3s ease;
+}
+
+.site-footer .crest:hover {
+  opacity: 1;
+  transform: rotate(-10deg) scale(1.1);
 }
 
 .site-footer a {
@@ -744,9 +830,12 @@ canvas#history-chart {
     font-size: 0.85rem;
   }
 
-  .hero-banner img {
-    max-height: 34vh;
-    object-position: 30% 30%;
+  .hero-glow {
+    top: 150px;
+  }
+
+  .cinematic-strip {
+    height: 100px;
   }
 
   /* Below ~640px the banner photo can't crop to a clean strip without
@@ -755,5 +844,18 @@ canvas#history-chart {
   .page-banner {
     background-image: linear-gradient(160deg, rgba(45, 106, 79, 0.35), rgba(7, 15, 11, 0.96));
     min-height: 128px;
+  }
+}
+
+/* Motion is decorative everywhere here (entrances, float, glow, hover
+   lift) — never load-bearing for meaning, so it's safe to remove wholesale. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
