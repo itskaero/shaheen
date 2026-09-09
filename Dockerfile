@@ -14,5 +14,7 @@ RUN uv sync --frozen --no-dev --no-install-project || uv sync --no-dev --no-inst
 COPY src/ ./src/
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
+COPY scripts/ ./scripts/
+RUN chmod +x scripts/render-start.sh
 
 CMD ["uv", "run", "python", "-m", "src.main"]
