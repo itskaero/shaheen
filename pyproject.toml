@@ -1,0 +1,55 @@
+[project]
+name = "shaheen-bot"
+version = "0.1.0"
+description = "Discord application for Shaheen, a Pakistan-based Brawlhalla clan."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "discord-py>=2.4,<3",
+  "sqlalchemy[asyncio]>=2.0,<3",
+  "alembic>=1.13,<2",
+  "asyncpg>=0.29,<1",
+  "httpx>=0.27,<1",
+  "pydantic>=2.7,<3",
+  "pydantic-settings>=2.3,<3",
+  "python-dotenv>=1.0,<2",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.32,<1",
+]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.6",
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "mypy>=1.11",
+  "aiosqlite>=0.20",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Depends()/Query()/etc. are meant to be used as argument
+# defaults — that's the framework's own dependency-injection idiom, not
+# the mutable-default-argument bug B008 exists to catch.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Body"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_ignores = true

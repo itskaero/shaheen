@@ -1,0 +1,759 @@
+/* Shaheen — public website
+   Visual language pulled directly from the clan's own Discord banner/crest
+   (Mordex-in-the-arena key art: deep forest night, emerald claw-light,
+   gold crescent-and-wings crest, Lahore-style skyline silhouette) —
+   see web/assets/img/banner.* and docs/BRAND.md. Palette hex values match
+   src/bot/palette.py so the site and the bot read as one system. */
+
+:root {
+  --forest: #1b4332;
+  --forest-dark: #102a20;
+  --void: #070f0b;
+  --emerald: #2d6a4f;
+  --emerald-glow: #52b788;
+  --gold: #d4af37;
+  --gold-bright: #f1cd6b;
+  --gold-dim: #a98a2c;
+  --cream: #e8e1cf;
+  --grey: #98a29c;
+  --ink: #0a1a13;
+  --card-bg: linear-gradient(165deg, rgba(45, 106, 79, 0.16), rgba(7, 15, 11, 0.55));
+  --card-border: rgba(212, 175, 55, 0.28);
+  --card-border-hover: rgba(212, 175, 55, 0.65);
+  --radius: 14px;
+  --max-width: 1000px;
+
+  /* tier accent colours — restrained, distinct, night-arena palette
+     (not a rainbow role scheme, just enough contrast to scan a table) */
+  --tier-tin: #8a8f8c;
+  --tier-bronze: #b5722e;
+  --tier-silver: #b9c4c9;
+  --tier-gold: #d4af37;
+  --tier-platinum: #4fd1c5;
+  --tier-diamond: #6ea8f7;
+  --tier-valhallan: #c084fc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--void);
+  background-image:
+    radial-gradient(ellipse 900px 520px at 50% -8%, rgba(82, 183, 136, 0.22), transparent 60%),
+    radial-gradient(ellipse 700px 400px at 90% 10%, rgba(212, 175, 55, 0.08), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23d4af37' stroke-opacity='0.05'%3E%3Cpath d='M42 2 L82 42 L42 82 L2 42 Z'/%3E%3Ccircle cx='42' cy='42' r='20'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--forest-dark) 0%, var(--ink) 45%, var(--void) 100%);
+  background-attachment: fixed, fixed, fixed, fixed;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+  color: var(--cream);
+  font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--gold-bright);
+  text-decoration: underline;
+}
+
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- header ---------- */
+
+.site-header {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  background: rgba(6, 14, 10, 0.72);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 0 rgba(212, 175, 55, 0.06), 0 12px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--cream);
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand img {
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.55));
+}
+
+.brand-name {
+  font-family: "Cinzel", "Poppins", serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-size: 1.1rem;
+  color: var(--cream);
+}
+
+nav.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+nav.site-nav a {
+  position: relative;
+  color: var(--cream);
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.75;
+  padding-bottom: 0.3rem;
+}
+
+nav.site-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--emerald-glow));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+  border-radius: 2px;
+}
+
+nav.site-nav a:hover,
+nav.site-nav a.active {
+  color: var(--gold-bright);
+  opacity: 1;
+  text-decoration: none;
+}
+
+nav.site-nav a:hover::after,
+nav.site-nav a.active::after {
+  transform: scaleX(1);
+}
+
+.nav-cta {
+  padding: 0.4rem 1rem !important;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.nav-cta::after {
+  display: none;
+}
+
+.nav-cta:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--card-border-hover);
+}
+
+/* ---------- hero banner (homepage) ---------- */
+
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.hero-banner picture,
+.hero-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 58vh;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.hero-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 15, 11, 0) 55%, var(--void) 100%);
+  pointer-events: none;
+}
+
+.hero-cta {
+  position: relative;
+  text-align: center;
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+.hero-cta .tagline {
+  color: var(--grey);
+  font-size: 1.05rem;
+  margin: 0 0 1.75rem;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* smaller, text-only hero used on inner pages (no banner image) */
+
+.hero {
+  text-align: center;
+  padding: 3.5rem 1.5rem 2.5rem;
+}
+
+.hero .mark {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.45));
+}
+
+.hero h1 {
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: clamp(1.9rem, 5vw, 2.8rem);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+  color: var(--cream);
+}
+
+.motto {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  font-size: 1.35rem;
+  color: var(--gold);
+  margin: 0.25rem 0;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid var(--gold);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
+  color: var(--forest-dark);
+  box-shadow: 0 8px 22px -8px rgba(212, 175, 55, 0.55);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 10px 28px -6px rgba(212, 175, 55, 0.75);
+}
+
+.btn-ghost {
+  background: rgba(232, 225, 207, 0.03);
+  color: var(--gold-bright);
+}
+
+.btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.12);
+  box-shadow: 0 8px 22px -10px rgba(82, 183, 136, 0.5);
+}
+
+/* ---------- layout / cards ---------- */
+
+main {
+  padding: 2.5rem 0 5rem;
+}
+
+.page-banner {
+  position: relative;
+  min-height: 168px;
+  display: flex;
+  align-items: flex-end;
+  background-image: linear-gradient(180deg, rgba(7, 15, 11, 0.4) 0%, rgba(7, 15, 11, 0.94) 100%),
+    url("../img/banner.jpg");
+  background-size: cover;
+  background-position: center 0%;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  margin-bottom: 2.5rem;
+}
+
+.page-banner .wrap {
+  padding-top: 2.5rem;
+  padding-bottom: 1.4rem;
+}
+
+.page-banner .page-title,
+.page-banner .page-subtitle {
+  margin: 0;
+}
+
+.page-banner .page-title {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+.page-banner .page-subtitle {
+  margin-top: 0.35rem;
+}
+
+.page-title {
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.page-subtitle {
+  color: var(--grey);
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 2.5rem 0;
+  color: var(--gold-dim);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+}
+
+.divider span {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}
+
+.card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.8);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.7;
+  border-radius: 2px;
+}
+
+.card:hover {
+  border-color: var(--card-border-hover);
+  box-shadow: 0 22px 46px -26px rgba(82, 183, 136, 0.35);
+}
+
+.card + .card {
+  margin-top: 1.25rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.stat {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1rem;
+  text-align: center;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stat:hover {
+  border-color: var(--card-border-hover);
+  transform: translateY(-2px);
+}
+
+.stat .value {
+  display: block;
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: 1.7rem;
+  color: var(--gold-bright);
+  text-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
+}
+
+.stat .label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.3rem;
+}
+
+/* ---------- tables ---------- */
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+thead {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.92rem;
+  vertical-align: middle;
+}
+
+th {
+  color: var(--gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+}
+
+tbody tr {
+  border-top: 1px solid rgba(232, 225, 207, 0.07);
+  transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+  background: rgba(212, 175, 55, 0.07);
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--cream);
+  font-weight: 500;
+}
+
+.player-cell:hover {
+  color: var(--gold-bright);
+  text-decoration: none;
+}
+
+/* ---------- avatars ---------- */
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--cream);
+  font-family: "Cinzel", "Poppins", serif;
+  font-weight: 600;
+}
+
+/* ---------- rank medals ---------- */
+
+.rank-medal,
+.rank-plain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.rank-plain {
+  color: var(--grey);
+}
+
+.rank-medal {
+  color: var(--ink);
+}
+
+.rank-gold {
+  background: linear-gradient(155deg, #f7dd8a, #c99a2e);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.55);
+}
+
+.rank-silver {
+  background: linear-gradient(155deg, #eef2f3, #a9b4b8);
+  box-shadow: 0 0 12px rgba(180, 195, 199, 0.4);
+}
+
+.rank-bronze {
+  background: linear-gradient(155deg, #e3a469, #a35f2c);
+  box-shadow: 0 0 12px rgba(181, 114, 46, 0.4);
+}
+
+/* ---------- tier badges ---------- */
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+  background: rgba(212, 175, 55, 0.1);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.tier-badge::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.tier-unranked {
+  color: var(--grey);
+}
+
+.tier-tin {
+  color: var(--tier-tin);
+}
+
+.tier-bronze {
+  color: var(--tier-bronze);
+}
+
+.tier-silver {
+  color: var(--tier-silver);
+}
+
+.tier-gold {
+  color: var(--tier-gold);
+}
+
+.tier-platinum {
+  color: var(--tier-platinum);
+}
+
+.tier-diamond {
+  color: var(--tier-diamond);
+}
+
+.tier-valhallan {
+  color: var(--tier-valhallan);
+}
+
+/* ---------- forms ---------- */
+
+.search-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.search-form input {
+  flex: 1 1 220px;
+  padding: 0.7rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cream);
+  font-size: 0.95rem;
+}
+
+.search-form input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.search-form button {
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
+  color: var(--forest-dark);
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.search-form button:hover {
+  box-shadow: 0 8px 20px -8px rgba(212, 175, 55, 0.6);
+  transform: translateY(-1px);
+}
+
+/* ---------- badges / achievements ---------- */
+
+.badge-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.badge-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.45rem 1rem 0.45rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.badge-list .badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--gold-bright), var(--gold-dim));
+  color: var(--forest-dark);
+  font-size: 0.85rem;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+  flex: none;
+}
+
+.badge-list li strong {
+  color: var(--gold-bright);
+}
+
+/* ---------- player profile header ---------- */
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.profile-head .avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 1.6rem;
+}
+
+.profile-head h2 {
+  margin: 0;
+  font-family: "Cinzel", "Poppins", serif;
+  font-size: 1.4rem;
+}
+
+/* ---------- states ---------- */
+
+.state-msg {
+  color: var(--grey);
+  padding: 1rem 0;
+}
+
+.state-msg.error {
+  color: #e07a5f;
+}
+
+canvas#history-chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+/* ---------- footer ---------- */
+
+.site-footer {
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  color: var(--grey);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.site-footer .crest {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 0.6rem;
+  opacity: 0.8;
+}
+
+.site-footer a {
+  color: var(--grey);
+}
+
+@media (max-width: 640px) {
+  nav.site-nav {
+    gap: 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .hero-banner img {
+    max-height: 34vh;
+    object-position: 30% 30%;
+  }
+
+  /* Below ~640px the banner photo can't crop to a clean strip without
+     cutting into the logotype (its 2.5:1 aspect ratio nearly matches the
+     viewport at this width) — fall back to a plain themed gradient band. */
+  .page-banner {
+    background-image: linear-gradient(160deg, rgba(45, 106, 79, 0.35), rgba(7, 15, 11, 0.96));
+    min-height: 128px;
+  }
+}

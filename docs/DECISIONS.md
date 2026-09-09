@@ -48,3 +48,473 @@ Decision: The server remains private until the bot and initial web presence are
 ready for launch.
 
 Reason: Avoid exposing an unfinished public experience.
+
+## ADR-010 — /setup permission bootstrap
+Decision: `/setup` and setup verification are authorized for the Discord guild
+owner or any member with the native `Administrator` permission, in addition to
+holders of the 👑 SHAHEEN LEADER role once it exists. This is not a temporary
+bootstrap-only rule; it stays in effect permanently, because on a brand-new
+server the Shaheen Leader role does not exist until `/setup` creates it.
+
+Reason: Without this fallback, `/setup` could never be run for the first time.
+
+## ADR-011 — guild_id stored on persisted state, and a resource-tracking table
+Decision: Tables that represent per-guild state store an explicit `guild_id`
+column rather than assuming a single implicit guild, so the schema is
+multi-guild-ready even though only one guild is operated today. A new entity,
+`ProvisionedResource` (guild_id, resource_type, logical_key, discord_id,
+last_verified_at, timestamps, unique on guild_id+resource_type+logical_key),
+is added to track the Discord IDs of roles/categories/channels created by
+`/setup`, and a `GuildSettings` entity (guild_id primary key, setup_mode,
+last_setup_at) stores the active development/launch mode per guild. Neither
+table was listed in `docs/DATABASE.md`'s conceptual entity list, which focuses
+on Phase 2+ member/player data — these two exist specifically to satisfy the
+Phase 1 idempotency requirement in `docs/SETUP_FLOW.md`.
+
+Reason: `/setup`'s idempotency contract requires looking resources up by
+stored ID before falling back to name matching; nothing in the original
+schema could hold those IDs.
+
+## ADR-012 — All Discord intents enabled
+Decision: The bot requests all Discord gateway intents, including the
+privileged `members`, `presences`, and `message_content` intents. These must
+also be enabled for the application in the Discord Developer Portal.
+
+Reason: Owner decision, made to avoid revisiting intent configuration as
+member-join welcome flows, role assignment, and later phases need them.
+
+## ADR-013 — Guild-scoped slash command sync
+Decision: Application commands are synced to the configured `GUILD_ID` only,
+not globally.
+
+Reason: Instant propagation during development; Shaheen operates a single
+guild, so global sync's only benefit (multi-server propagation) does not
+apply.
+
+## ADR-014 — Phase 1 database scope is setup-only
+Decision: Phase 1 migrations create only `provisioned_resources` and
+`guild_settings`. `DiscordUser`, `ShaheenMember`, `BrawlhallaPlayer`, and the
+other entities in `docs/DATABASE.md` are deferred to the Phase 2 migration
+that introduces `/link`, since no Phase 1 command reads or writes them.
+
+Reason: `docs/ROADMAP.md`'s own rule — do not implement a later phase's data
+merely because it is documented — applied to the database layer.
+
+## ADR-015 — Setup mode is a command option, persisted per guild
+Decision: `/setup run` takes a `mode` option (`development` default |
+`launch`). The chosen mode is persisted in `GuildSettings` so `/setup status`
+and `/setup verify` can report against the last-applied mode without it being
+re-specified.
+
+Reason: `docs/COMMANDS.md` and `docs/SETUP_FLOW.md` require `/setup` to know
+its mode but never say where that value comes from.
+
+## ADR-016 — /setup exposed as a command group
+Decision: `/setup`, `/setup status`, and `/setup verify` from
+`docs/COMMANDS.md` are implemented as the subcommands `/setup run`,
+`/setup status`, and `/setup verify` of one `setup` application command
+group.
+
+Reason: Discord's slash command schema does not allow a top-level command to
+be both directly invocable and a parent of subcommands, so a literal bare
+`/setup` cannot coexist with `/setup status` and `/setup verify`.
+
+## ADR-017 — Discord channel/category name literals
+Decision: Text and voice channel names use `emoji-kebab-case`, e.g.
+`📢-announcements`, matching Discord's own lowercase/hyphen normalization so
+stored names stay stable for idempotent name-matching. Category names keep
+the emoji-and-title form from `docs/DISCORD_SPEC.md` (e.g. `🏯 SHAHEEN HQ`),
+which Discord permits without normalization.
+
+Reason: `docs/DISCORD_SPEC.md` lists conceptual names with spaces; the setup
+service needs one literal, deterministic string per resource.
+
+## ADR-018 — Bot's own role is not created by /setup
+Decision: The 🤖 SHAHEEN BOT entry in `docs/PERMISSIONS.md`'s hierarchy is
+Discord's own managed integration role for the bot, not a role `/setup`
+creates. `/setup` locates that existing managed role and verifies/repairs its
+position in the hierarchy instead of creating a duplicate.
+
+Reason: Discord auto-creates a managed role for every bot with a role;
+creating a second one would be redundant and confusing.
+
+## ADR-019 — uv for packaging and dependency management
+Decision: Use `uv` with `pyproject.toml` (`[tool.uv] package = false`, since
+Shaheen is an application, not a distributed library) instead of Poetry or
+plain pip/requirements.txt.
+
+Reason: Single fast tool for venv, dependency resolution/locking, and running
+scripts; good Docker build support; no functional need to publish Shaheen as
+an installable package.
+
+## ADR-020 — mypy added in Phase 1
+Decision: Configure `mypy` alongside Ruff and pytest from Phase 1 onward,
+run in the same quality step `docs/DEVELOPMENT.md` describes.
+
+Reason: `docs/DEVELOPMENT.md` left type checking as "if configured"; catching
+typing issues is cheapest before the codebase grows past Phase 1.
+
+## ADR-021 — Welcome/rules/roles messages are static branded embeds
+Decision: The welcome/rules/roles messages `/setup` deploys in launch mode
+are static, branded embeds (per `docs/BRAND.md`) posted to their respective
+channels. Interactive self-service role assignment is not implemented in
+Phase 1, since no document specifies which roles should be self-assignable
+or the intended interaction.
+
+Reason: Avoid inventing an unspecified UX mechanic; keep Phase 1 scope to
+what `docs/ROADMAP.md` actually lists.
+
+## ADR-022 — Brawlhalla API base URL and authentication
+Decision: The Brawlhalla integration client uses base URL
+`https://api.brawlhalla.com/` and sends an `api_key` query parameter (from
+the new `BRAWLHALLA_API_KEY` setting) on every request.
+
+Reason: `dev.brawlhalla.com` itself was unreachable from this environment's
+network egress, so this was verified against a community-maintained mirror
+of the official client library rather than the live docs, per
+`docs/BRAWLHALLA_API.md`'s instruction to verify current documentation.
+**This should be re-confirmed against `https://dev.brawlhalla.com/` directly
+before relying on it in production** — public sources disagreed on whether
+v1.0 still requires a key; the mirrored client's actual request code (which
+attaches `api_key` unconditionally) was trusted over an ambiguous search
+snippet.
+
+## ADR-023 — /link accepts a Brawlhalla ID or a Steam64 ID
+Decision: `/link`'s identifier argument accepts either a raw Brawlhalla
+player ID (looked up directly via `/player/{id}/stats`) or a Steam64 ID
+(resolved to a Brawlhalla ID via `/search?steamid=`, the only lookup the
+API exposes for a non-Brawlhalla-native identifier).
+
+Reason: `docs/COMMANDS.md`'s "request ID" step doesn't say which ID; Steam64
+is what most players can actually find (their Steam profile), while some
+already know their Brawlhalla ID from third-party trackers.
+
+## ADR-024 — Phase 2 database scope excludes snapshot tables
+Decision: The Phase 2 migration adds `DiscordUser`, `ShaheenMember`,
+`BrawlhallaPlayer`, and `MemberPlayerLink` only. `RankingSnapshot` and
+`LegendSnapshot` are deferred to Phase 3, when `docs/ROADMAP.md` introduces
+"scheduled snapshots" as its own item. `/rank`, `/stats`, and `/legends`
+read live data from the Brawlhalla API in Phase 2; they do not persist
+history yet.
+
+Reason: `docs/ROADMAP.md`'s Phase 2 list is client + `/link` + read
+commands only; snapshot storage is explicitly a separate, later roadmap
+item, and building it now would be exactly the "later phase" scope creep
+`docs/ROADMAP.md`'s own rule warns against.
+
+## ADR-025 — Re-linking replaces the active link after one confirmation
+Decision: Running `/link` while a member already has an active
+`MemberPlayerLink` shows the existing link alongside the newly-resolved
+player and, on confirmation, unlinks the old association (setting
+`unlinked_at`) and creates the new one in the same step, rather than
+requiring `/unlink` first.
+
+Reason: `docs/COMMANDS.md` doesn't specify this case; requiring two
+commands for what is conceptually one action (switching linked accounts)
+is worse UX for no safety benefit, since both paths require explicit
+confirmation.
+
+## ADR-026 — /link promotes GUEST to TRIAL SHAHEEN only
+Decision: On a successful link, if the member currently holds the
+👀 GUEST role (or no clan rank role at all), Shaheen assigns
+🎯 TRIAL SHAHEEN. Members already holding a higher rank role
+(🦅 SHAHEEN, 🏆 ELITE SHAHEEN, 🛡️ MODERATOR, 👑 SHAHEEN LEADER) are left
+unchanged — promotion beyond Trial stays a manual staff decision.
+
+Reason: Owner decision — linking is the first step into the clan, not
+proof of competitive standing.
+
+## ADR-027 — In-process TTL cache instead of new caching infrastructure
+Decision: `BrawlhallaService` keeps a small in-memory, per-process TTL
+cache (keyed by endpoint + Brawlhalla ID) instead of introducing Redis or
+another cache dependency.
+
+Reason: `docs/BRAWLHALLA_API.md` requires caching and avoiding unnecessary
+calls; a single-guild bot with modest command volume doesn't need
+distributed caching, and `CLAUDE.md`'s "no major framework/dependency
+without justification" rule applies here.
+
+## ADR-028 — Snapshot scheduling: in-process discord.py task loop
+Decision: The scheduled snapshot job runs as a `discord.ext.tasks.loop`
+owned by a cog, started in `cog_load` and stopped in `cog_unload`, on a
+configurable `SNAPSHOT_INTERVAL_HOURS` (default 6). No external scheduler,
+queue, or worker process is introduced.
+
+Reason: `CLAUDE.md`'s tech baseline has no job-queue dependency, and a
+single-guild bot with a small member count doesn't need one; discord.py
+already ships a robust, in-process periodic-task primitive.
+
+## ADR-029 — Snapshots cover both ranked and Legend stats
+Decision: Each snapshot cycle writes one `RankingSnapshot` (from
+`/player/{id}/ranked`) and one `LegendSnapshot` per played Legend (from
+`/player/{id}/stats`.legends) for every member with an active Brawlhalla
+link. Rows are append-only, never overwritten (docs/DATABASE.md).
+
+Reason: `docs/DATABASE.md` lists both `RankingSnapshot` and
+`LegendSnapshot` as Phase 3 entities and `docs/BRAWLHALLA_API.md`'s
+History section asks for "relevant values" generally, not ranked-only.
+
+## ADR-030 — Achievement catalog v1 and where it's evaluated
+Decision: v1 ships five achievements, defined in code
+(`services/achievements.py`) and seeded into the `achievements` table by
+the Phase 3 migration (reference data, not user data):
+- `first_link` — linked a Brawlhalla account (awarded immediately by
+  `/link`, not the scheduled job)
+- `games_100` / `games_500` — lifetime games played crosses 100 / 500
+- `tier_platinum` / `tier_diamond_plus` — ranked tier reaches Platinum /
+  Diamond or higher
+
+The last four are evaluated once per member per scheduled snapshot cycle,
+against the freshly fetched stats, and granted at most once each
+(`MemberAchievement` is unique on member+achievement). Achievements are
+strictly one-time unlocks; a repeatable event like reaching a new career-
+peak rating is a milestone announcement (docs/ROADMAP.md's separate
+"milestone announcements" item), not an achievement, and is not stored as
+a `MemberAchievement` row.
+
+Reason: Owner decision ("you decide, v1"); this is a small, easy-to-extend
+starter set computed entirely from data Shaheen already tracks, with no
+invented mechanic beyond what docs/DATABASE.md's `Achievement` /
+`MemberAchievement` schema already implies.
+
+## ADR-031 — Ranked tier comparison is a best-effort ordered list
+Decision: `tier_platinum`/`tier_diamond_plus` compare the API's free-text
+`tier` string (e.g. "Diamond III") against a hardcoded tier-name order
+(Tin < Bronze < Silver < Gold < Platinum < Diamond < Diamond+ < Valhallan).
+An unrecognized tier string never raises — the achievement is simply not
+granted that cycle and is picked up once the name is recognized (e.g.
+after the list is updated) or reconciled manually.
+
+Reason: The Brawlhalla API returns tier as display text, not a stable
+enum, and this project's own verification of the live API was already
+limited (ADR-022) — failing open (skip, don't crash the snapshot job) is
+safer than guessing wrong and blocking every player's snapshot.
+
+## ADR-032 — Hall of Fame announcements come from the snapshot job
+Decision: Newly-awarded achievements and new career-peak ratings detected
+during a snapshot cycle are posted as branded embeds to the
+🥇 hall-of-fame channel (looked up via `ProvisionedResource`, same as
+`/setup`'s idempotency ledger). If `/setup` hasn't run yet and the channel
+isn't provisioned, the snapshot job logs and skips the announcement rather
+than failing.
+
+Reason: Ties `docs/ROADMAP.md`'s "achievements", "Hall of Fame", and
+"milestone announcements" items together through the mechanism that
+already exists (`docs/DISCORD_SPEC.md`'s hall-of-fame channel,
+`ProvisionedResource` lookups from Phase 1) instead of inventing a new one.
+
+## ADR-033 — Match results require opponent confirmation
+Decision: `/report` records the reporter's claimed result but leaves the
+`Match` in a `pending_confirmation` state. The opposing side gets a
+Confirm/Dispute prompt (only they can respond). Confirm finalizes the
+match (`confirmed`); Dispute marks it `disputed` and leaves it for staff
+to resolve manually — no automated dispute resolution.
+
+Reason: Owner decision; self-reported results with no confirmation step
+are trivially abusable, and `docs/COMMANDS.md` doesn't specify a
+confirmation mechanic, so this fills that gap rather than leaving results
+unverifiable.
+
+## ADR-034 — Matches support both 1v1 and 2v2, via a Match/side model
+Decision: `Match` has exactly two sides (`A`/`B`); each side has one
+`MatchParticipant` for 1v1 or two for 2v2. `/challenge <user>` is always
+1v1 (its signature only takes one opponent); `/scrim` and `/match create`
+support both `1v1` and `2v2`, matching `docs/DISCORD_SPEC.md`'s existing
+⚔️ 1v1 / 👥 2v2 channels and the brief's own choice.
+
+Reason: Owner decision; a single side-based model covers both sizes
+without a separate 2v2-only schema, and keeps `/report`'s confirm/dispute
+flow (ADR-033) identical regardless of team size.
+
+## ADR-035 — Tournaments: an automated single-elimination bracket engine,
+with staff manual override
+Decision: `docs/ROADMAP.md` lists "tournaments" for Phase 4 but
+`docs/COMMANDS.md` defines no `/tournament` command. Built as: registration
+via a Join button on an announcement in 🏆 tournaments, `/tournament start`
+generates a single-elimination bracket (seeded by registration order,
+byes for non-power-of-2 entrant counts) via a pure, unit-tested bracket
+generator (`services/bracket.py`). Each bracket match is a `TournamentMatch`
+wrapping a normal `Match` — winning it through the same `/report` +
+confirm flow (ADR-033) automatically advances the winner to the next
+round and, on the final, completes the tournament. Staff (Moderator or
+Leader) can force-resolve a stuck or disputed bracket match with
+`/tournament resolve`, which advances the bracket the same way a
+confirmed report would, without requiring both sides to agree.
+
+Reason: Owner decision ("both" automated and manual). No seeding-fairness
+mechanism (e.g. Elo) exists yet, so registration-order seeding is the only
+defensible default; double-elimination, byes-with-reseeding, and
+multi-tournament concurrency limits are explicitly out of scope for v1.
+
+## ADR-036 — New staff permission tier: Moderator or Leader
+Decision: A new check, `require_staff_authorized()`, authorizes the guild
+owner, Administrator-permission holders, or anyone holding 🛡️ MODERATOR or
+👑 SHAHEEN LEADER. It gates `/tournament create|start|resolve` and
+`/match resolve`. This is distinct from `require_setup_authorized()`
+(ADR-010), which stays Leader/admin-only for `/setup`.
+
+Reason: `docs/PERMISSIONS.md` gives Moderators real moderation authority
+short of full server administration; tournament/dispute management is
+that kind of authority, not `/setup`-level access.
+
+## ADR-037 — XPTransaction stays out of scope
+Decision: `docs/DATABASE.md`'s `XPTransaction` entity is not implemented.
+
+Reason: `docs/ROADMAP.md`'s Phase 4 list (challenges, scrims, match
+records, tournaments, match history) never mentions XP/leveling, so
+building it now would be exactly the "later phase" scope creep
+`docs/ROADMAP.md`'s own rule warns against.
+
+## ADR-038 — Challenge/scrim/tournament signup views are session-lived
+Decision: Accept/Decline and Join-side buttons use a generous but bounded
+`discord.ui.View` timeout (1 hour for challenges/scrims, 24 hours for
+tournament registration) rather than a persistent, `custom_id`-routed view
+that survives a bot restart.
+
+Reason: Consistent with the `ConfirmView` used since Phase 1
+(docs/SETUP_FLOW.md); building persistent-view routing infrastructure is
+a separate, non-trivial piece of scope no doc asks for yet. A bot restart
+mid-signup means re-running the command — acceptable for v1 at Shaheen's
+current scale.
+
+## ADR-039 — Phase 5 stack: FastAPI, JSON API only, no auth
+Decision: `docs/ROADMAP.md`'s Phase 5 ("shared application/API layer,
+public player profiles, clan page, leaderboard, authentication if
+required") is built as a FastAPI app under `src/api/`, exposing read-only
+JSON endpoints only — no server-rendered HTML pages, no auth on any
+endpoint.
+
+Reason: Owner decisions. FastAPI is async, Pydantic-based (already a
+baseline dependency), and sits directly on the existing async SQLAlchemy
+sessions with no sync/async bridging. JSON-only matches
+`docs/ARCHITECTURE.md`'s literal "application/API layer" wording — a
+frontend/template stack is unspecified anywhere and stays a separate,
+later decision. No auth because every Phase 5 endpoint is read-only public
+data (`docs/PRODUCT.md`: "the public identity/statistics layer") and
+nothing in scope needs a write endpoint to protect. `fastapi` and
+`uvicorn` are added to the dependency baseline; both are commonly-used,
+narrowly-scoped additions, not a framework substitution.
+
+## ADR-040 — Public identity is Brawlhalla identity, never Discord identity
+Decision: Every Phase 5 endpoint is keyed and labeled by `BrawlhallaPlayer`
+(`brawlhalla_player_id`, `player_name`) — Discord user IDs, usernames, and
+display names are never read or returned by the API.
+
+Reason: Two independent reasons converge on the same answer: (1) the API
+process has no Discord gateway connection, so it cannot resolve a live
+display name the way the bot can; (2) a player's Brawlhalla identity is
+already public (they chose it in-game), while publishing their Discord
+identity on a public website without that being asked for anywhere is a
+privacy overreach `docs/PRODUCT.md` doesn't call for.
+
+## ADR-041 — The website reuses the bot's Settings class unchanged
+Decision: `src/api/` loads configuration through the same
+`core.config.Settings` the bot uses, rather than a web-specific settings
+class. A web-only deployment's environment must still provide
+`DISCORD_TOKEN` and `BRAWLHALLA_API_KEY` even though the API process never
+uses them.
+
+Reason: `CLAUDE.md`: "do not duplicate configuration." In practice bot and
+web share one deployment/`.env` (see docker-compose.yml's new `web`
+service), so this costs nothing today; splitting `Settings` into
+per-process subsets is a real but premature refactor with no current
+requirement forcing it.
+
+## ADR-042 — A separate services/website_service.py, not a reused clan_service.py
+Decision: Phase 5 reads go through a new `services/website_service.py`
+rather than reusing `services/clan_service.py` (Phase 3/4's
+Discord-command-shaped queries).
+
+Reason: The two callers want different shapes from the same tables —
+`clan_service.py` returns Discord-identity-bearing tuples for cogs to
+resolve into mentions/display names; `website_service.py` must never do
+that (ADR-040). Forcing one service to serve both would mean the Discord
+layer stripping fields back out, or the API layer filtering a Discord
+identity it should never have received in the first place. Both still sit
+on the exact same repositories and database (docs/ARCHITECTURE.md) — this
+splits the orchestration layer, not the data layer.
+
+## ADR-043 — CORS: allow every origin
+Decision: `src/api/app.py` adds `CORSMiddleware` with `allow_origins=["*"]`,
+`allow_methods=["GET"]`, so any frontend origin (GitHub Pages, a local dev
+server, etc.) can call the API from a browser.
+
+Reason: Every endpoint is already public and read-only with no
+authentication (ADR-039) — there is no per-origin data to protect, so
+maintaining an allowlist of frontend hosting URLs would add operational
+friction (redeploy the API every time the frontend moves) for no security
+benefit. `allow_methods` is still restricted to `GET` since the API exposes
+no write endpoints.
+
+## ADR-044 — Settings normalizes managed-Postgres connection strings
+Decision: `core.config.Settings.database_url` has a validator that rewrites
+a bare `postgres://` or `postgresql://` URL to `postgresql+asyncpg://`,
+leaving any URL that already names a driver (or a non-Postgres scheme like
+`sqlite+aiosqlite://`) unchanged.
+
+Reason: Managed Postgres providers used for free hosting (Render, Heroku,
+...) hand out connection strings with no driver suffix, but SQLAlchemy's
+async engine requires `+asyncpg` explicitly. Normalizing in `Settings`
+means a provider's connection string can be pasted into `DATABASE_URL`
+as-is instead of every operator needing to remember to edit it by hand.
+
+## ADR-045 — Public frontend: static HTML/CSS/JS on GitHub Pages, API on Render
+Decision: The public Shaheen website (`web/`) is a framework-free static
+site — plain HTML/CSS/JS, no build step — that calls the existing FastAPI
+JSON API (docs/DECISIONS.md ADR-039) client-side with `fetch()`. It deploys
+to GitHub Pages via `.github/workflows/pages.yml` on every push to `main`.
+The API itself deploys to Render's free tier via the `render.yaml`
+Blueprint (a free web service plus a free Postgres database).
+
+Reason: Owner decisions — "you decide" on frontend stack (recommended:
+static HTML/CSS/JS, since `CLAUDE.md` asks not to introduce a framework
+without justification, and a handful of read-only pages doesn't need one),
+GitHub Pages for frontend hosting (already on GitHub, zero new accounts),
+Render free tier for the API+DB (documented trade-off: the free web
+service sleeps after 15 minutes idle, ~30-60s cold start on the next
+request, and the free Postgres database expires after 90 days unless
+upgraded — acceptable for a small private clan's first public presence,
+revisit if/when the site needs to stay always-warm). The frontend's API
+base URL lives in `web/assets/js/config.js`, a plain constant the operator
+edits after the first Render deploy — no build tooling needed to point the
+static site at a different backend.
+
+## ADR-046 — `uvicorn api.app:app` needs `--app-dir src`
+Decision: Every place that runs the API server directly with `uvicorn`
+(README.md, `docker-compose.yml`'s `web` service, `render.yaml`) passes
+`--app-dir src`.
+
+Reason: Found while smoke-testing the new deployment configs: `src` has no
+project-level install (`[tool.uv] package = false`, ADR-019) and is not on
+`sys.path` for a plain `uv run uvicorn api.app:app` — only pytest resolves
+`api.app` at all, via `pythonpath = ["src"]` in `pyproject.toml`, which is
+test-only. Without `--app-dir src`, both the `docker-compose.yml` `web`
+service command and the API-only `uv run uvicorn ...` instructions written
+in ADR-039's phase were actually broken outside of `pytest` and the Docker
+image's own bot entrypoint (`python -m src.main`, which works differently
+since `src/__init__.py` makes it an importable package from `/app`). Fixed
+at the source in all three places rather than adding a `PYTHONPATH` env
+var, since `--app-dir` is uvicorn's own documented mechanism for this.
+
+## ADR-047 — Frontend visual redesign: the clan's own banner art as the theme
+Decision: The homepage hero is the clan's actual Discord server banner
+(`web/assets/img/banner.{jpg,webp}`, owner-provided), not the previous
+generic gradient hero. Inner pages carry the same artwork as a cropped
+`.page-banner` strip (falling back to a themed gradient on narrow
+viewports, where the banner's 2.5:1 aspect ratio can't crop cleanly
+without cutting into its own logotype). The rest of the UI — tier badges,
+rank medals, deterministic player avatars, glass-panel cards with a gold
+accent line, glow-on-hover — was redesigned around that artwork's palette
+and around the data density of stats sites like corehalla.com, rather than
+the plainer flat-card layout Phase 6 shipped with.
+
+Reason: Owner feedback — the original design read as generic/lackluster
+next to the clan's own branding, and asked for something closer to a
+Brawlhalla stats site, "built around the discord server theme." Using the
+real banner is the most direct way to make the site feel like *this*
+clan's site rather than a template; tier/rank/avatar treatment is standard
+UX for a competitive stats site and was previously missing entirely (the
+leaderboard was a plain text table). Verified end-to-end with Playwright
+screenshots (desktop + mobile, all four pages) before shipping, including
+iterating on the banner crop position after the first pass showed the
+logotype getting cut off mid-word.
