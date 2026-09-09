@@ -16,6 +16,10 @@
 # Redeploy any time after that with just `flyctl deploy`.
 
 app = "shaheen-bot"
+# Nearest Fly region to a Pakistan-based clan; change if you'd rather use
+# a different one (`flyctl platform regions` lists them all) — this only
+# matters for latency to Discord's gateway, not correctness.
+primary_region = "bom"
 
 [build]
 
