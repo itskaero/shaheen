@@ -611,3 +611,51 @@ didn't register as pointer events against this sandbox's mismatched
 browser/driver build — a test-tooling quirk, not a site bug, since a
 manually dispatched `pointermove` updated `--mx`/`--my` immediately, and
 real browsers dispatch genuine pointer events on mouse movement).
+
+## ADR-050 — Homepage as a scroll-triggered landing page; a real trend chart
+Decision: Two owner-requested upgrades, both zero-dependency:
+
+1. The homepage (`index.html`) now reveals in beats as the visitor
+   scrolls, instead of animating everything in at once on load. Each
+   section is wrapped in `.reveal`; `web/assets/js/scroll.js` uses an
+   `IntersectionObserver` to add `.in-view` (opacity/translateY
+   transition) the first time a section enters the viewport. A new "By
+   the Numbers" section between the hero and the clan blurb fetches the
+   existing `/clan` and `/leaderboard` endpoints (no new API surface) and
+   counts its numbers up once the data arrives — decoupled from the
+   scroll reveal itself, so a slow connection never leaves the section
+   visibly stuck at zero. The `.cinematic-strip` banner gets a subtle
+   scroll-linked parallax (`background-position-y` nudged by a fraction
+   of scroll distance, rAF-throttled). A bouncing `.scroll-cue` under the
+   hero buttons hints that the page continues. Everything routes through
+   `ShaheenMotion` (exposed by `scroll.js`) so page-specific scripts (like
+   the new stats fetch) can trigger the same count-up without duplicating
+   it, and every effect no-ops under `prefers-reduced-motion`.
+2. `web/assets/js/sparkline.js` (the rating-history chart) was rebuilt:
+   quadratic-curve smoothing instead of straight segments, gridlines with
+   y-axis rating labels and x-axis date labels, a dashed peak-rating
+   overlay alongside the current-rating line, a mouse/touch hover tooltip
+   with a guide line and highlighted point, and an eased draw-in animation
+   on first render. Same zero-dependency canvas approach as before, same
+   `drawSparkline(canvas, points)` call site in `player.js` — only the
+   ~70-line internals changed.
+
+Reason: Owner feedback, verbatim — build a scroll-animation landing page,
+and the trend chart "looks simple or old." Both true: the chart was a
+straight-line canvas plot with no axes, no interaction, and it fetched
+`peak_rating` without ever showing it; the homepage animated everything on
+load rather than as the visitor actually moved through the page, which
+doesn't read as a landing page so much as a hero with extra sections
+bolted on. Neither fix needed a charting library or a scroll-animation
+library (CLAUDE.md: no unjustified dependency) — `IntersectionObserver`
+and `requestAnimationFrame` cover both.
+
+Caught in review before shipping: the first pass wrote the live member
+count directly onto the `.stat` container element returned by
+`querySelector('[data-stat="members"]')` instead of its inner `.value`
+span, which clobbered the span and the `.label` text the moment the count
+resolved. Playwright's automated check dumped the section's rendered HTML
+after load specifically to catch this class of bug, not just screenshot
+it — caught immediately, fixed to target `.value` explicitly (matching
+the pattern the adjacent "Top Rating" stat already used correctly), and
+re-verified before commit.

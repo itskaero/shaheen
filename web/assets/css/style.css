@@ -389,6 +389,51 @@ nav.site-nav a.active::after {
   border-bottom: 1px solid rgba(57, 255, 176, 0.25);
 }
 
+.scroll-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 2.25rem auto 0;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  color: var(--neon-green);
+  font-size: 0.9rem;
+  animation: bounce 2.2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.scroll-cue:hover {
+  border-color: var(--card-border-hover);
+  text-decoration: none;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(7px);
+  }
+}
+
+/* ---------- scroll-triggered reveal (landing page sections) ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @keyframes heroEntrance {
   from {
     opacity: 0;
@@ -963,8 +1008,39 @@ tbody tr:hover {
 
 canvas#history-chart {
   width: 100%;
-  height: 180px;
+  height: 200px;
   display: block;
+  cursor: crosshair;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(57, 255, 176, 0.4);
+  background: rgba(4, 10, 7, 0.92);
+  box-shadow: 0 0 16px rgba(57, 255, 176, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+}
+
+.chart-tooltip strong {
+  color: var(--neon-green);
+  font-size: 0.95rem;
+  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+}
+
+.chart-tooltip span {
+  color: var(--grey);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ---------- footer ---------- */

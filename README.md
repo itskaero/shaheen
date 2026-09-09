@@ -27,7 +27,10 @@ Private / in development. Implemented so far:
   esports-team-site look (docs/DECISIONS.md ADR-047/048/049) built around
   the clan's own Discord art: an animated crest-logo hero, a scrolling
   ticker marquee, gradient shine text, cursor-spotlight cards, angular
-  neon buttons/badges, tier-colored rank badges, player avatars.
+  neon buttons/badges, tier-colored rank badges, player avatars. The
+  homepage is a scroll-triggered landing page with live animated stat
+  counters (docs/DECISIONS.md ADR-050), and the player rating-history
+  chart has gridlines, a peak-rating overlay, and a hover tooltip.
 
 ## Getting started
 

@@ -63,12 +63,27 @@
       <a class="btn btn-primary" href="leaderboard.html">View Leaderboard</a>
       <a class="btn btn-ghost" href="clan.html">About the Clan</a>
     </div>
+    <a class="scroll-cue" href="#by-the-numbers" aria-label="Scroll down">↓</a>
   </section>
 
   <div class="cinematic-strip" role="img" aria-label="Shaheen clan key art"></div>
 
   <main style="padding-top: 0">
-    <section class="wrap">
+    <section class="wrap reveal" id="live-stats">
+      <div class="divider" id="by-the-numbers"><span>By the Numbers</span></div>
+      <div class="stat-grid">
+        <div class="stat" data-stat="members">
+          <span class="value" data-count-to="0">0</span>
+          <span class="label">Linked Members</span>
+        </div>
+        <div class="stat" data-stat="rating">
+          <span class="value" data-count-to="0">0</span>
+          <span class="label">Top Rating</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap reveal">
       <div class="divider"><span>The Clan</span></div>
 
       <div class="card">
@@ -79,8 +94,11 @@
           tracks.
         </p>
       </div>
+    </section>
 
-      <div class="stat-grid" style="margin-top: 1.5rem">
+    <section class="wrap reveal">
+      <div class="divider"><span>Explore</span></div>
+      <div class="stat-grid" style="margin-top: 0">
         <a class="stat" href="clan.html" style="text-decoration: none">
           <span class="value">🦅</span><span class="label">Clan</span>
         </a>
@@ -107,5 +125,7 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/spotlight.js"></script>
+  <script src="assets/js/scroll.js"></script>
+  <script src="assets/js/pages/home.js"></script>
 </body>
 </html>
