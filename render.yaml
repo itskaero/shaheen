@@ -24,7 +24,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: uv run alembic upgrade head && uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port $PORT
+    dockerCommand: sh -c "uv run alembic upgrade head && uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port $PORT"
     plan: free
     healthCheckPath: /health
     envVars:
