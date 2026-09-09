@@ -1,11 +1,16 @@
 # Render Blueprint — free-tier hosting for the Shaheen website API.
 # Deploy: Render dashboard -> New -> Blueprint -> point at this repo.
-# See README.md's "Deploying the website" section for the full walkthrough,
-# and docs/DECISIONS.md ADR-044 for why Render was chosen.
+# See README.md's "Deploying to production" section for the full
+# walkthrough, and docs/DECISIONS.md ADR-044 for why Render was chosen.
 #
 # Note (free tier): the web service sleeps after 15 minutes idle (first
 # request after that takes ~30-60s to wake it), and the free Postgres
-# database expires 90 days after creation unless upgraded.
+# database expires 90 days after creation unless upgraded. Free-tier
+# services also can't use Render's preDeployCommand (paid-plan only), so
+# migrations run as part of dockerCommand instead, before uvicorn starts —
+# see docs/DECISIONS.md ADR-054. `alembic upgrade head` is a no-op once
+# already at head, so re-running it on every boot (every wake from sleep
+# included) is safe, just an extra few hundred ms.
 
 databases:
   - name: shaheen-db
@@ -19,8 +24,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port $PORT
-    preDeployCommand: uv run alembic upgrade head
+    dockerCommand: uv run alembic upgrade head && uv run uvicorn api.app:app --app-dir src --host 0.0.0.0 --port $PORT
     plan: free
     healthCheckPath: /health
     envVars:
