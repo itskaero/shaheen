@@ -518,3 +518,237 @@ leaderboard was a plain text table). Verified end-to-end with Playwright
 screenshots (desktop + mobile, all four pages) before shipping, including
 iterating on the banner crop position after the first pass showed the
 logotype getting cut off mid-word.
+
+## ADR-048 — The clan's crest is the site's real logo, with a subtle idle animation
+Decision: A second owner-provided asset — a circular falcon-crest emblem,
+distinct from the wide banner (ADR-047) — replaces the hand-drawn
+`favicon.svg` everywhere: the browser favicon (PNG, since the source is
+raster art, not a vector I drew), the nav/footer brand mark, and the
+homepage hero, which now centers a large version of the full crest+
+wordmark lockup (`web/assets/img/logo-full.*`) with a CSS-only entrance
+(fade+scale+blur in), a continuous gentle float + glow-pulse, a slowly
+rotating conic-gradient glow ring behind it, and a hover spin on the nav
+and footer marks. `web/assets/img/logo-icon.*` is a tighter crop (crest
+only, no wordmark) used at nav/favicon sizes, where the full lockup's text
+would be illegible. All animation is `both`-filled CSS keyframes/
+transitions (no JS animation library, no scroll-linked JS), and a
+`prefers-reduced-motion: reduce` media query collapses every animation and
+transition to near-zero duration site-wide.
+
+The hero image itself sits on the source art's own near-black square
+canvas; rather than showing that as a visible rectangle, `.hero-logo-img`
+uses a radial `mask-image` to fade the square's edges into the page
+background, so the crest reads as a glowing emblem rather than a pasted
+photo. The wide banner (ADR-047) stays in place as the `.page-banner`
+strips and a new `.cinematic-strip` divider between the hero and the rest
+of the homepage — it's scene-setting key art, not the logo, so it moved
+out of the hero position rather than being removed.
+
+Reason: Owner feedback asked for a "modern and professional" look with
+"beautiful animations of the logo," and provided this second, cleaner
+crest asset specifically for it — a wide action-scene banner and a
+circular logo mark serve different jobs (atmosphere vs. identity), so
+using the crest as the actual logo and reserving the banner for
+supporting art matches how esports orgs typically split the two. Pure CSS
+for the animation (vs. a JS animation library) matches `CLAUDE.md`'s "no
+unjustified dependency" rule and is trivially disabled for
+`prefers-reduced-motion`. Verified with Playwright: screenshotted every
+page again, and specifically asserted the hero image's bounding box
+position differs across two frames ~1.5s apart to confirm the float
+animation is actually running rather than just present in the CSS.
+
+## ADR-049 — Dark neon esports-team visual direction
+Decision: The website's chrome (backgrounds, typography, buttons, cards,
+badges, dividers, nav) moved to a near-black, neon-glow direction modeled
+on competitive-gaming org sites, replacing the earlier heraldic/luxury
+green-and-gold treatment from ADR-047/048:
+- Background: true near-black with animated aurora-glow gradients and a
+  faint animated grid-line texture (`body::before`), instead of the
+  softer forest-green gradient.
+- Type: `Orbitron` (display/wordmark, brand name, big stat numbers) +
+  `Rajdhani` (headings, nav, labels) replace `Cinzel`, uppercase and
+  letter-spaced throughout, matching how esports orgs typically set type.
+- A gradient "shine" sweep on the homepage `<h1>` and a scrolling ticker
+  marquee (motto/tagline, looping) — both common on esports team sites,
+  implemented as plain CSS/HTML (no library).
+- Buttons, the tier-badge chips, and the nav CTA got an angular
+  clip-path-cut corner treatment; left off cards/stats/tables so the cut
+  stays a deliberate accent rather than covering every box (see "Reason").
+- Cards/stats gained a cursor-follow spotlight highlight
+  (`web/assets/js/spotlight.js`, ~30 lines: rAF-batched pointermove sets
+  `--mx`/`--my`, read by a `radial-gradient` on `::after`) — a vanilla
+  CSS/JS take on the reactbits "SpotlightCard" component the owner asked
+  to draw from.
+- The palette stayed a closed green/gold/(cyan-in-gradients-only) system
+  rather than opening up to arbitrary neon hues.
+
+`docs/BRAND.md`'s "Avoid: excessive neon" / "generic gamer clichés" lines
+were updated alongside this ADR to say what that means in practice now,
+rather than leaving them flatly contradicting a decision that supersedes
+them for the website.
+
+Reason: Owner feedback — the previous design "not good," wanted something
+closer to real esports team sites and drawing from reactbits (a React
+component-animation library) specifically. Two things drove the
+implementation choices: (1) `docs/BRAND.md` already named green/gold/black
+as Shaheen's identity and explicitly warned against excessive neon and
+generic gamer clichés — so neon went in as a glow *treatment* on the
+existing brand hues (green primary, gold secondary, cyan only as a third
+gradient note) rather than a new arbitrary palette, and the angular-cut
+motif stayed scoped to a few components instead of clipping everything,
+to avoid tipping into the clichés the doc warns about. (2) reactbits is a
+React component library; adding React + a component dependency to a
+plain-HTML static site (ADR-045: no framework without justification) to
+borrow a handful of visual effects would be exactly the kind of
+unjustified dependency `CLAUDE.md` asks to avoid, especially for effects
+(cursor spotlight, shine text, marquee) that are each a few lines of
+vanilla CSS/JS. So the brief was read as "build these effects," not
+"take this dependency" — same visual outcome, no framework migration.
+Verified with Playwright end-to-end (desktop + mobile, all four pages);
+the spotlight effect was also confirmed by manually dispatching a
+`pointermove` event in the page (Playwright's synthesized mouse events
+didn't register as pointer events against this sandbox's mismatched
+browser/driver build — a test-tooling quirk, not a site bug, since a
+manually dispatched `pointermove` updated `--mx`/`--my` immediately, and
+real browsers dispatch genuine pointer events on mouse movement).
+
+## ADR-050 — Homepage as a scroll-triggered landing page; a real trend chart
+Decision: Two owner-requested upgrades, both zero-dependency:
+
+1. The homepage (`index.html`) now reveals in beats as the visitor
+   scrolls, instead of animating everything in at once on load. Each
+   section is wrapped in `.reveal`; `web/assets/js/scroll.js` uses an
+   `IntersectionObserver` to add `.in-view` (opacity/translateY
+   transition) the first time a section enters the viewport. A new "By
+   the Numbers" section between the hero and the clan blurb fetches the
+   existing `/clan` and `/leaderboard` endpoints (no new API surface) and
+   counts its numbers up once the data arrives — decoupled from the
+   scroll reveal itself, so a slow connection never leaves the section
+   visibly stuck at zero. The `.cinematic-strip` banner gets a subtle
+   scroll-linked parallax (`background-position-y` nudged by a fraction
+   of scroll distance, rAF-throttled). A bouncing `.scroll-cue` under the
+   hero buttons hints that the page continues. Everything routes through
+   `ShaheenMotion` (exposed by `scroll.js`) so page-specific scripts (like
+   the new stats fetch) can trigger the same count-up without duplicating
+   it, and every effect no-ops under `prefers-reduced-motion`.
+2. `web/assets/js/sparkline.js` (the rating-history chart) was rebuilt:
+   quadratic-curve smoothing instead of straight segments, gridlines with
+   y-axis rating labels and x-axis date labels, a dashed peak-rating
+   overlay alongside the current-rating line, a mouse/touch hover tooltip
+   with a guide line and highlighted point, and an eased draw-in animation
+   on first render. Same zero-dependency canvas approach as before, same
+   `drawSparkline(canvas, points)` call site in `player.js` — only the
+   ~70-line internals changed.
+
+Reason: Owner feedback, verbatim — build a scroll-animation landing page,
+and the trend chart "looks simple or old." Both true: the chart was a
+straight-line canvas plot with no axes, no interaction, and it fetched
+`peak_rating` without ever showing it; the homepage animated everything on
+load rather than as the visitor actually moved through the page, which
+doesn't read as a landing page so much as a hero with extra sections
+bolted on. Neither fix needed a charting library or a scroll-animation
+library (CLAUDE.md: no unjustified dependency) — `IntersectionObserver`
+and `requestAnimationFrame` cover both.
+
+Caught in review before shipping: the first pass wrote the live member
+count directly onto the `.stat` container element returned by
+`querySelector('[data-stat="members"]')` instead of its inner `.value`
+span, which clobbered the span and the `.label` text the moment the count
+resolved. Playwright's automated check dumped the section's rendered HTML
+after load specifically to catch this class of bug, not just screenshot
+it — caught immediately, fixed to target `.value` explicitly (matching
+the pattern the adjacent "Top Rating" stat already used correctly), and
+re-verified before commit.
+
+## ADR-051 — Legend mastery, match history, and tournament brackets go public
+Decision: Three more slices of data the bot already tracked, previously
+invisible on the website, are now exposed read-only:
+- `GET /players/{id}/legends` — each Legend's latest snapshot (ADR-029:
+  append-only, so "latest per legend" is the lifetime total), sorted by
+  games played. New `LegendSnapshotRepository.list_latest_per_legend()`
+  (a group-by-max-captured_at subquery join — the same shape SQL uses for
+  "latest row per group" generally).
+- `GET /players/{id}/matches` — recent **CONFIRMED** matches only
+  (ADR-033/034); pending/disputed/cancelled stay internal, not a public
+  result. Resolves the opponent side's `MatchParticipant`s to Brawlhalla
+  player names via each one's active `MemberPlayerLink`, same identity
+  boundary as everywhere else (ADR-040) — never a Discord-identifying
+  detail, and a since-unlinked opponent is silently omitted rather than
+  showing an internal id.
+- `GET /tournaments` and `GET /tournaments/{id}` — a tournament list and a
+  full bracket (all `TournamentMatch` rows per round, each entrant's
+  linked player name(s), the winner highlighted). New
+  `TournamentRepository.list_for_guild()`. A 1v1 entrant resolves to one
+  name, a 2v2 entrant to two (joined with "&" client-side); an entrant
+  with no linked members displays as "Unknown" rather than nothing.
+
+All three follow the same shape as every other Phase 5+ endpoint: a
+`WebsiteService` method returning a plain dataclass, a thin FastAPI router
+converting it to a `pydantic` response model, 404 when the player/
+tournament doesn't exist. `website_service.py` picked up read-only
+instances of `MatchRepository` and the three `Tournament*Repository`
+classes already built for the bot's `/challenge`/`/scrim`/`/tournament`
+commands (Phase 4) — no new repository write paths, this is exposure only.
+
+Frontend: the player profile page gained a "Legend Mastery" bar list and a
+"Match History" result list; two new pages, `tournaments.html` (list) and
+`tournament.html` (bracket, grouped by round with the last round labeled
+"Final", second-to-last "Semifinals", third-to-last "Quarterfinals" —
+otherwise "Round N" — and a CSS-only connector nub between rounds rather
+than routed SVG lines, which is the standard low-effort/high-legibility
+bracket layout technique).
+
+Reason: Owner ask ("legend mastery + match history + tournament bracket
+viewer") — explicitly the bigger-scope items flagged as needing real
+backend work when the feature menu was presented, chosen over the
+frontend-only Discord-widget option. Verified against a tournament played
+to completion through the real `TournamentService`/`MatchService` (not
+hand-poked rows) so the bracket data reflects what the bot itself
+produces, not just what a test fixture assumes.
+
+## ADR-052 — Truck-art-inspired divider, applied once
+Decision: `.divider-truck` — a small repeating floral motif (a muted
+rust-red center with gold petals on a thin gold line, `web/assets/css/
+style.css`, tileable SVG data-URI) — appears once, as a closing flourish
+on the homepage between "Explore" and the footer.
+
+Reason: The owner's answer to "which Pakistani-identity motif next" was
+specifically an *abstracted* truck-art divider, not literal truck-art
+imagery — truck art is the most globally-recognized distinctly-Pakistani
+decorative form, but rendered literally (or repeated everywhere) it tips
+into the "generic gamer clichés"/clutter `docs/BRAND.md` warns against.
+Restrained to one motif, one placement, muted rather than truck art's
+usual riot of colour, and a small closed set of extra hues (rust + the
+existing gold) rather than opening the palette further — same spirit as
+ADR-049's neon scoping.
+
+## ADR-053 — Bot hosting: Fly.io, not Render, and why it's a separate deploy
+Decision: The bot process deploys to Fly.io's free small-VM allowance
+(`fly.toml`, same `Dockerfile` as the API, its default CMD), pointed at
+the **same** Postgres database as the Render-hosted API (its External
+Database URL, not the internal one — the bot connects from outside
+Render's network). This is a third, independent deployment alongside
+Render (API + DB) and GitHub Pages (frontend) — `docs/DEVELOPMENT.md`'s
+`docker compose up --build` remains the single-command option for
+self-hosting all three together instead.
+
+Reason: The bot holds a persistent Discord gateway connection — a
+long-lived process, not a request/response server. Render's free tier is
+request-driven: a free web service spins down after 15 minutes with no
+inbound HTTP traffic (ADR-045), which would silently drop the bot's
+Discord connection on a timer regardless of how active the Discord server
+itself is, since gateway traffic isn't HTTP traffic Render's spin-down
+logic sees. Fly.io's free allowance covers one small always-on VM with no
+such request-driven spin-down, and needs no new code — `fly.toml` just
+points `flyctl` at the repo's existing `Dockerfile`, whose default CMD
+already runs the bot (`docker-compose.yml`'s `bot` service does the same
+thing locally). A paid Render Background Worker was the alternative
+(simplest given the API is already there) but isn't free, so it lost to
+the free option per the standing "free hosting" requirement (ADR-045)
+unless the owner says otherwise.
+
+Added `.dockerignore` alongside this (`.git`, caches, `tests/`, `docs/`,
+`web/`, markdown) — unrelated to correctness (the Dockerfile's `COPY`
+list was already selective, not `COPY . .`) but it shrinks and speeds up
+every `flyctl deploy`/`docker build` context upload, which matters once
+deploys happen from a real dev machine instead of CI.

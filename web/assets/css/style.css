@@ -1,37 +1,44 @@
 /* Shaheen — public website
-   Visual language pulled directly from the clan's own Discord banner/crest
-   (Mordex-in-the-arena key art: deep forest night, emerald claw-light,
-   gold crescent-and-wings crest, Lahore-style skyline silhouette) —
-   see web/assets/img/banner.* and docs/BRAND.md. Palette hex values match
-   src/bot/palette.py so the site and the bot read as one system. */
+   Dark neon esports-team direction (owner request), reconciled with
+   docs/BRAND.md (ADR-049): brand-colored neon only — green + gold, a hint
+   of cyan in gradients — never a rainbow, kept to a few deliberate accents
+   (buttons, ticker, badges, hover glow) rather than covering everything,
+   so it reads as a competitive-gaming org site, not a generic gamer
+   cliché. The falcon crest (web/assets/img/logo-full/-icon.*) and banner
+   (web/assets/img/banner.*) are unchanged — only the chrome around them
+   changed. Base hues still trace back to src/bot/palette.py. */
 
 :root {
-  --forest: #1b4332;
-  --forest-dark: #102a20;
-  --void: #070f0b;
-  --emerald: #2d6a4f;
-  --emerald-glow: #52b788;
-  --gold: #d4af37;
-  --gold-bright: #f1cd6b;
-  --gold-dim: #a98a2c;
-  --cream: #e8e1cf;
-  --grey: #98a29c;
-  --ink: #0a1a13;
-  --card-bg: linear-gradient(165deg, rgba(45, 106, 79, 0.16), rgba(7, 15, 11, 0.55));
-  --card-border: rgba(212, 175, 55, 0.28);
-  --card-border-hover: rgba(212, 175, 55, 0.65);
-  --radius: 14px;
-  --max-width: 1000px;
+  --void: #030604;
+  --bg-deep: #061a12;
+  --bg-mid: #071008;
+  --neon-green: #39ffb0;
+  --neon-green-soft: #1fe89a;
+  --neon-cyan: #2af0ff;
+  --neon-gold: #ffd23f;
+  --neon-gold-soft: #f4b93c;
+  --cream: #eaf6ef;
+  --grey: #86958d;
+  --ink: #040e08;
+  --card-bg: linear-gradient(165deg, rgba(57, 255, 176, 0.07), rgba(3, 6, 4, 0.82));
+  --card-border: rgba(57, 255, 176, 0.22);
+  --card-border-hover: rgba(57, 255, 176, 0.65);
+  --radius: 8px;
+  --max-width: 1040px;
+  --font-display: "Orbitron", "Rajdhani", "Poppins", sans-serif;
+  --font-heading: "Rajdhani", "Poppins", sans-serif;
+  --cut: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  --cut-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 
-  /* tier accent colours — restrained, distinct, night-arena palette
-     (not a rainbow role scheme, just enough contrast to scan a table) */
+  /* tier accent colours — distinct per rank, still a closed green/gold/
+     neutral-adjacent set rather than a full rainbow role scheme */
   --tier-tin: #8a8f8c;
-  --tier-bronze: #b5722e;
-  --tier-silver: #b9c4c9;
-  --tier-gold: #d4af37;
-  --tier-platinum: #4fd1c5;
-  --tier-diamond: #6ea8f7;
-  --tier-valhallan: #c084fc;
+  --tier-bronze: #d98a44;
+  --tier-silver: #c7d4d1;
+  --tier-gold: #ffd23f;
+  --tier-platinum: #42e8d0;
+  --tier-diamond: #4fc3ff;
+  --tier-valhallan: #c974ff;
 }
 
 * {
@@ -43,29 +50,55 @@ html {
 }
 
 body {
+  position: relative;
   margin: 0;
   min-height: 100vh;
   background-color: var(--void);
   background-image:
-    radial-gradient(ellipse 900px 520px at 50% -8%, rgba(82, 183, 136, 0.22), transparent 60%),
-    radial-gradient(ellipse 700px 400px at 90% 10%, rgba(212, 175, 55, 0.08), transparent 55%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23d4af37' stroke-opacity='0.05'%3E%3Cpath d='M42 2 L82 42 L42 82 L2 42 Z'/%3E%3Ccircle cx='42' cy='42' r='20'/%3E%3C/g%3E%3C/svg%3E"),
-    linear-gradient(180deg, var(--forest-dark) 0%, var(--ink) 45%, var(--void) 100%);
+    radial-gradient(ellipse 780px 480px at 12% -8%, rgba(57, 255, 176, 0.18), transparent 60%),
+    radial-gradient(ellipse 680px 440px at 88% 6%, rgba(255, 210, 63, 0.12), transparent 55%),
+    radial-gradient(ellipse 620px 480px at 50% 115%, rgba(42, 240, 255, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 42%, var(--void) 100%);
   background-attachment: fixed, fixed, fixed, fixed;
-  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
   color: var(--cream);
   font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
   line-height: 1.55;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(57, 255, 176, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 176, 0.07) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 900px 700px at 50% 0%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 900px 700px at 50% 0%, black 0%, transparent 75%);
+  animation: gridDrift 50s linear infinite;
+}
+
+@keyframes gridDrift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+
+  to {
+    background-position: 84px 0, 0 84px;
+  }
 }
 
 a {
-  color: var(--gold);
+  color: var(--neon-green);
   text-decoration: none;
 }
 
 a:hover,
 a:focus-visible {
-  color: var(--gold-bright);
+  color: var(--neon-gold);
   text-decoration: underline;
 }
 
@@ -75,16 +108,58 @@ a:focus-visible {
   padding: 0 1.5rem;
 }
 
+/* ---------- ticker ---------- */
+
+.ticker {
+  overflow: hidden;
+  border-bottom: 1px solid rgba(57, 255, 176, 0.22);
+  background: rgba(57, 255, 176, 0.04);
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 3rem;
+  padding: 0.45rem 0;
+  animation: tickerScroll 24s linear infinite;
+}
+
+.ticker-track span {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--neon-green);
+  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+}
+
+.ticker-track span:nth-child(4n) {
+  color: var(--neon-gold);
+  text-shadow: 0 0 8px rgba(255, 210, 63, 0.5);
+}
+
+@keyframes tickerScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* ---------- header ---------- */
 
 .site-header {
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
-  background: rgba(6, 14, 10, 0.72);
+  border-bottom: 1px solid rgba(57, 255, 176, 0.18);
+  background: rgba(3, 8, 5, 0.78);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 1px 0 rgba(212, 175, 55, 0.06), 0 12px 24px -12px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 1px 0 rgba(57, 255, 176, 0.08), 0 12px 28px -14px rgba(0, 0, 0, 0.75);
 }
 
 .site-header .wrap {
@@ -107,18 +182,47 @@ a:focus-visible {
   text-decoration: none;
 }
 
-.brand img {
-  width: 30px;
-  height: 30px;
-  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.55));
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 0 7px rgba(57, 255, 176, 0.6));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
+}
+
+.brand:hover .brand-mark,
+.brand:focus-visible .brand-mark {
+  transform: rotate(-8deg) scale(1.1);
+  filter: drop-shadow(0 0 14px rgba(57, 255, 176, 0.9));
 }
 
 .brand-name {
-  font-family: "Cinzel", "Poppins", serif;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-size: 1.05rem;
   color: var(--cream);
+}
+
+.brand:hover .brand-name {
+  animation: textGlitch 0.4s steps(3) 1;
+}
+
+@keyframes textGlitch {
+  0% {
+    text-shadow: -2px 0 var(--neon-cyan), 2px 0 var(--neon-gold);
+  }
+
+  30% {
+    text-shadow: 2px 0 var(--neon-cyan), -2px 0 var(--neon-gold);
+  }
+
+  60% {
+    text-shadow: -1px 0 var(--neon-cyan), 1px 0 var(--neon-gold);
+  }
+
+  100% {
+    text-shadow: none;
+  }
 }
 
 nav.site-nav {
@@ -131,9 +235,12 @@ nav.site-nav {
 nav.site-nav a {
   position: relative;
   color: var(--cream);
-  font-size: 0.9rem;
-  font-weight: 500;
-  opacity: 0.75;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.72;
   padding-bottom: 0.3rem;
 }
 
@@ -144,7 +251,8 @@ nav.site-nav a::after {
   right: 0;
   bottom: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--gold), var(--emerald-glow));
+  background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+  box-shadow: 0 0 8px rgba(57, 255, 176, 0.7);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.2s ease;
@@ -153,9 +261,10 @@ nav.site-nav a::after {
 
 nav.site-nav a:hover,
 nav.site-nav a.active {
-  color: var(--gold-bright);
+  color: var(--neon-green);
   opacity: 1;
   text-decoration: none;
+  text-shadow: 0 0 10px rgba(57, 255, 176, 0.5);
 }
 
 nav.site-nav a:hover::after,
@@ -165,9 +274,9 @@ nav.site-nav a.active::after {
 
 .nav-cta {
   padding: 0.4rem 1rem !important;
-  border-radius: 999px;
+  clip-path: var(--cut-sm);
   border: 1px solid var(--card-border);
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(57, 255, 176, 0.08);
 }
 
 .nav-cta::after {
@@ -175,94 +284,227 @@ nav.site-nav a.active::after {
 }
 
 .nav-cta:hover {
-  background: rgba(212, 175, 55, 0.18);
+  background: rgba(57, 255, 176, 0.18);
   border-color: var(--card-border-hover);
 }
 
-/* ---------- hero banner (homepage) ---------- */
+/* ---------- hero: animated crest logo (homepage) ---------- */
 
-.hero-banner {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-}
-
-.hero-banner picture,
-.hero-banner img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 58vh;
-  object-fit: cover;
-  object-position: center 30%;
-}
-
-.hero-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(7, 15, 11, 0) 55%, var(--void) 100%);
-  pointer-events: none;
-}
-
-.hero-cta {
+.hero-logo {
   position: relative;
   text-align: center;
-  padding: 1.75rem 1.5rem 3rem;
+  padding: 4rem 1.5rem 2.5rem;
+  overflow: hidden;
 }
 
-.hero-cta .tagline {
-  color: var(--grey);
-  font-size: 1.05rem;
-  margin: 0 0 1.75rem;
+.hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 190px;
+  width: min(520px, 80vw);
+  height: min(520px, 80vw);
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(57, 255, 176, 0.32) 18%,
+    transparent 36%,
+    transparent 60%,
+    rgba(255, 210, 63, 0.24) 78%,
+    transparent 100%
+  );
+  filter: blur(46px);
+  border-radius: 50%;
+  animation: heroRotate 18s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-logo-wrap {
+  position: relative;
+  z-index: 1;
+  animation: heroEntrance 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-logo-img {
+  width: clamp(200px, 30vw, 340px);
+  height: auto;
+  animation: heroFloat 5.5s ease-in-out infinite;
+  /* the source art is a badge on its own near-black square canvas — fade
+     that square's edges into the page background instead of showing a
+     visible rectangle, so it reads as a glowing emblem, not a pasted photo */
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
+}
+
+.hero-logo h1 {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: 0.14em;
+  margin: 0.5rem 0 0;
+  background: linear-gradient(100deg, var(--neon-green) 0%, var(--cream) 35%, var(--neon-gold) 60%, var(--neon-green) 100%);
+  background-size: 240% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 6s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: -240% center;
+  }
+}
+
+.hero-logo .tagline {
+  position: relative;
+  z-index: 1;
+  margin: 0.5rem 0 1.85rem;
+  animation: fadeInUp 0.8s ease-out 0.5s both;
 }
 
 .hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease-out 0.65s both;
 }
 
-/* smaller, text-only hero used on inner pages (no banner image) */
-
-.hero {
-  text-align: center;
-  padding: 3.5rem 1.5rem 2.5rem;
+/* purely decorative divider strip using the clan's action-art banner —
+   keeps that artwork in the page without competing with the crest hero */
+.cinematic-strip {
+  position: relative;
+  height: 150px;
+  background-image: linear-gradient(180deg, rgba(3, 6, 4, 0.3) 0%, var(--void) 100%),
+    url("../img/banner.jpg");
+  background-size: cover;
+  background-position: center 15%;
+  border-top: 1px solid rgba(57, 255, 176, 0.25);
+  border-bottom: 1px solid rgba(57, 255, 176, 0.25);
 }
 
-.hero .mark {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.45));
+.scroll-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 2.25rem auto 0;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  color: var(--neon-green);
+  font-size: 0.9rem;
+  animation: bounce 2.2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
 }
 
-.hero h1 {
-  font-family: "Cinzel", "Poppins", serif;
-  font-size: clamp(1.9rem, 5vw, 2.8rem);
-  letter-spacing: 0.04em;
-  margin: 0 0 0.4rem;
-  color: var(--cream);
+.scroll-cue:hover {
+  border-color: var(--card-border-hover);
+  text-decoration: none;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(7px);
+  }
+}
+
+/* ---------- scroll-triggered reveal (landing page sections) ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes heroEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes heroFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 26px rgba(57, 255, 176, 0.4));
+  }
+
+  50% {
+    transform: translateY(-12px);
+    filter: drop-shadow(0 0 46px rgba(255, 210, 63, 0.42));
+  }
+}
+
+@keyframes heroRotate {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .motto {
   font-family: "Noto Nastaliq Urdu", serif;
   direction: rtl;
   font-size: 1.35rem;
-  color: var(--gold);
+  color: var(--neon-gold);
+  text-shadow: 0 0 14px rgba(255, 210, 63, 0.35);
   margin: 0.25rem 0;
+}
+
+.tagline {
+  color: var(--grey);
+  font-size: 1.05rem;
 }
 
 /* ---------- buttons ---------- */
 
 .btn {
   display: inline-block;
-  padding: 0.75rem 1.7rem;
-  border-radius: 999px;
-  font-weight: 600;
+  padding: 0.75rem 1.9rem;
+  clip-path: var(--cut);
+  font-family: var(--font-heading);
+  font-weight: 700;
   font-size: 0.95rem;
-  border: 1px solid var(--gold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid var(--neon-green);
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
@@ -273,23 +515,25 @@ nav.site-nav a.active::after {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
-  color: var(--forest-dark);
-  box-shadow: 0 8px 22px -8px rgba(212, 175, 55, 0.55);
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-green-soft));
+  color: var(--ink);
+  box-shadow: 0 0 22px -4px rgba(57, 255, 176, 0.7);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 10px 28px -6px rgba(212, 175, 55, 0.75);
+  box-shadow: 0 0 32px -2px rgba(57, 255, 176, 0.9);
 }
 
 .btn-ghost {
-  background: rgba(232, 225, 207, 0.03);
-  color: var(--gold-bright);
+  background: rgba(57, 255, 176, 0.04);
+  color: var(--neon-green);
+  border-color: var(--card-border);
 }
 
 .btn-ghost:hover {
-  background: rgba(212, 175, 55, 0.12);
-  box-shadow: 0 8px 22px -10px rgba(82, 183, 136, 0.5);
+  background: rgba(57, 255, 176, 0.12);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 22px -6px rgba(57, 255, 176, 0.55);
 }
 
 /* ---------- layout / cards ---------- */
@@ -303,11 +547,11 @@ main {
   min-height: 168px;
   display: flex;
   align-items: flex-end;
-  background-image: linear-gradient(180deg, rgba(7, 15, 11, 0.4) 0%, rgba(7, 15, 11, 0.94) 100%),
+  background-image: linear-gradient(180deg, rgba(3, 6, 4, 0.42) 0%, rgba(3, 6, 4, 0.95) 100%),
     url("../img/banner.jpg");
   background-size: cover;
   background-position: center 0%;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(57, 255, 176, 0.22);
   margin-bottom: 2.5rem;
 }
 
@@ -322,7 +566,7 @@ main {
 }
 
 .page-banner .page-title {
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
 }
 
 .page-banner .page-subtitle {
@@ -330,10 +574,12 @@ main {
 }
 
 .page-title {
-  font-family: "Cinzel", "Poppins", serif;
-  font-size: 1.8rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1.9rem;
   margin-bottom: 0.25rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .page-subtitle {
@@ -347,7 +593,7 @@ main {
   align-items: center;
   gap: 0.75rem;
   margin: 2.5rem 0;
-  color: var(--gold-dim);
+  color: var(--neon-green);
 }
 
 .divider::before,
@@ -355,24 +601,29 @@ main {
   content: "";
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(57, 255, 176, 0.5), transparent);
 }
 
 .divider span {
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--gold-dim);
+  color: var(--neon-green);
+  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
 }
 
 .card {
   position: relative;
+  overflow: hidden;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  animation: fadeInUp 0.55s ease-out both;
 }
 
 .card::before {
@@ -382,14 +633,33 @@ main {
   left: 1.25rem;
   right: 1.25rem;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.7;
+  background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-gold), transparent);
+  opacity: 0.8;
   border-radius: 2px;
+}
+
+/* cursor-follow highlight (assets/js/spotlight.js sets --mx/--my) —
+   a vanilla-CSS/JS take on the reactbits "spotlight card" effect */
+.card::after,
+.stat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(57, 255, 176, 0.16), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card:hover::after,
+.stat:hover::after {
+  opacity: 1;
 }
 
 .card:hover {
   border-color: var(--card-border-hover);
-  box-shadow: 0 22px 46px -26px rgba(82, 183, 136, 0.35);
+  box-shadow: 0 22px 46px -26px rgba(57, 255, 176, 0.4);
+  transform: translateY(-2px);
 }
 
 .card + .card {
@@ -405,12 +675,22 @@ main {
 
 .stat {
   position: relative;
+  overflow: hidden;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   padding: 1.2rem 1rem;
   text-align: center;
   transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: fadeInUp 0.55s ease-out both;
+}
+
+.stat-grid .stat:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.stat-grid .stat:nth-child(3) {
+  animation-delay: 0.16s;
 }
 
 .stat:hover {
@@ -420,19 +700,22 @@ main {
 
 .stat .value {
   display: block;
-  font-family: "Cinzel", "Poppins", serif;
-  font-size: 1.7rem;
-  color: var(--gold-bright);
-  text-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--neon-green);
+  text-shadow: 0 0 18px rgba(57, 255, 176, 0.45);
 }
 
 .stat .label {
   display: block;
+  font-family: var(--font-heading);
   font-size: 0.78rem;
+  font-weight: 600;
   color: var(--grey);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-top: 0.3rem;
+  letter-spacing: 0.08em;
+  margin-top: 0.35rem;
 }
 
 /* ---------- tables ---------- */
@@ -443,6 +726,7 @@ main {
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  animation: fadeInUp 0.55s ease-out both;
 }
 
 table {
@@ -452,7 +736,7 @@ table {
 }
 
 thead {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(57, 255, 176, 0.08);
 }
 
 th,
@@ -464,20 +748,21 @@ td {
 }
 
 th {
-  color: var(--gold);
-  font-weight: 600;
+  color: var(--neon-green);
+  font-family: var(--font-heading);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   font-size: 0.72rem;
 }
 
 tbody tr {
-  border-top: 1px solid rgba(232, 225, 207, 0.07);
+  border-top: 1px solid rgba(234, 246, 239, 0.06);
   transition: background 0.15s ease;
 }
 
 tbody tr:hover {
-  background: rgba(212, 175, 55, 0.07);
+  background: rgba(57, 255, 176, 0.06);
 }
 
 .player-cell {
@@ -489,7 +774,7 @@ tbody tr:hover {
 }
 
 .player-cell:hover {
-  color: var(--gold-bright);
+  color: var(--neon-green);
   text-decoration: none;
 }
 
@@ -501,10 +786,10 @@ tbody tr:hover {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(57, 255, 176, 0.35);
   color: var(--cream);
-  font-family: "Cinzel", "Poppins", serif;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 /* ---------- rank medals ---------- */
@@ -517,6 +802,7 @@ tbody tr:hover {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
+  font-family: var(--font-heading);
   font-weight: 700;
   font-size: 0.85rem;
 }
@@ -530,8 +816,8 @@ tbody tr:hover {
 }
 
 .rank-gold {
-  background: linear-gradient(155deg, #f7dd8a, #c99a2e);
-  box-shadow: 0 0 14px rgba(212, 175, 55, 0.55);
+  background: linear-gradient(155deg, #fff0b0, var(--neon-gold));
+  box-shadow: 0 0 16px rgba(255, 210, 63, 0.65);
 }
 
 .rank-silver {
@@ -551,12 +837,15 @@ tbody tr:hover {
   align-items: center;
   gap: 0.4rem;
   padding: 0.28rem 0.7rem;
-  border-radius: 999px;
+  clip-path: var(--cut-sm);
+  font-family: var(--font-heading);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   border: 1px solid currentColor;
-  background: rgba(212, 175, 55, 0.1);
-  background: color-mix(in srgb, currentColor 14%, transparent);
+  background: rgba(57, 255, 176, 0.08);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  text-shadow: 0 0 8px currentColor;
 }
 
 .tier-badge::before {
@@ -612,31 +901,34 @@ tbody tr:hover {
 .search-form input {
   flex: 1 1 220px;
   padding: 0.7rem 0.95rem;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--card-border);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
   color: var(--cream);
   font-size: 0.95rem;
 }
 
 .search-form input:focus {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--neon-green);
   outline-offset: 1px;
 }
 
 .search-form button {
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
-  border: 1px solid var(--gold);
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
-  color: var(--forest-dark);
-  font-weight: 600;
+  padding: 0.7rem 1.6rem;
+  clip-path: var(--cut-sm);
+  border: 1px solid var(--neon-green);
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-green-soft));
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .search-form button:hover {
-  box-shadow: 0 8px 20px -8px rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 24px -4px rgba(57, 255, 176, 0.7);
   transform: translateY(-1px);
 }
 
@@ -655,11 +947,12 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(57, 255, 176, 0.06);
   border: 1px solid var(--card-border);
   border-radius: 999px;
   padding: 0.45rem 1rem 0.45rem 0.7rem;
   font-size: 0.85rem;
+  animation: fadeInUp 0.45s ease-out both;
 }
 
 .badge-list .badge-icon {
@@ -669,15 +962,15 @@ tbody tr:hover {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  background: linear-gradient(155deg, var(--gold-bright), var(--gold-dim));
-  color: var(--forest-dark);
+  background: linear-gradient(155deg, var(--neon-gold), var(--neon-gold-soft));
+  color: var(--ink);
   font-size: 0.85rem;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 0 12px rgba(255, 210, 63, 0.55);
   flex: none;
 }
 
 .badge-list li strong {
-  color: var(--gold-bright);
+  color: var(--neon-green);
 }
 
 /* ---------- player profile header ---------- */
@@ -696,7 +989,9 @@ tbody tr:hover {
 
 .profile-head h2 {
   margin: 0;
-  font-family: "Cinzel", "Poppins", serif;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
   font-size: 1.4rem;
 }
 
@@ -708,19 +1003,54 @@ tbody tr:hover {
 }
 
 .state-msg.error {
-  color: #e07a5f;
+  color: #ff6b6b;
 }
 
 canvas#history-chart {
   width: 100%;
-  height: 180px;
+  height: 200px;
   display: block;
+  cursor: crosshair;
+}
+
+.chart-tooltip[hidden] {
+  display: none;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(57, 255, 176, 0.4);
+  background: rgba(4, 10, 7, 0.92);
+  box-shadow: 0 0 16px rgba(57, 255, 176, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+}
+
+.chart-tooltip strong {
+  color: var(--neon-green);
+  font-size: 0.95rem;
+  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+}
+
+.chart-tooltip span {
+  color: var(--grey);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ---------- footer ---------- */
 
 .site-footer {
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  border-top: 1px solid rgba(57, 255, 176, 0.18);
   color: var(--grey);
   font-size: 0.85rem;
   text-align: center;
@@ -728,14 +1058,299 @@ canvas#history-chart {
 }
 
 .site-footer .crest {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   margin-bottom: 0.6rem;
-  opacity: 0.8;
+  opacity: 0.85;
+  transition: transform 0.5s ease, opacity 0.3s ease, filter 0.5s ease;
+}
+
+.site-footer .crest:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(57, 255, 176, 0.7));
+  transform: rotate(-10deg) scale(1.1);
 }
 
 .site-footer a {
   color: var(--grey);
+}
+
+/* ---------- truck-art divider ----------
+   An abstracted nod to Pakistani truck art's decorative floral borders —
+   restrained: one small repeating motif, muted rather than the art form's
+   usual riot of colour, used once as a closing flourish rather than
+   everywhere (docs/DECISIONS.md ADR-051, docs/BRAND.md). */
+
+.divider-truck {
+  height: 20px;
+  margin: 3rem 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Cline x1='0' y1='10' x2='40' y2='10' stroke='%23ffd23f' stroke-width='1' stroke-opacity='0.55'/%3E%3Cg transform='translate(20,10)'%3E%3Ccircle r='2.6' fill='%23e8734a'/%3E%3Cellipse cx='0' cy='-6.5' rx='2.3' ry='3.6' fill='%23ffd23f' fill-opacity='0.85'/%3E%3Cellipse cx='0' cy='6.5' rx='2.3' ry='3.6' fill='%23ffd23f' fill-opacity='0.85'/%3E%3Cellipse cx='-6.5' cy='0' rx='3.6' ry='2.3' fill='%23ffd23f' fill-opacity='0.85'/%3E%3Cellipse cx='6.5' cy='0' rx='3.6' ry='2.3' fill='%23ffd23f' fill-opacity='0.85'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: center;
+  opacity: 0.9;
+}
+
+/* ---------- legend mastery ---------- */
+
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.legend-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.legend-meta {
+  font-size: 0.78rem;
+  color: var(--grey);
+  white-space: nowrap;
+}
+
+.legend-bar-track {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(57, 255, 176, 0.08);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+
+.legend-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--neon-green-soft), var(--neon-green));
+  box-shadow: 0 0 10px rgba(57, 255, 176, 0.6);
+}
+
+/* ---------- match history ---------- */
+
+.match-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.match-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.015);
+  flex-wrap: wrap;
+}
+
+.match-result {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  flex: none;
+}
+
+.match-win .match-result {
+  color: var(--neon-green);
+  background: rgba(57, 255, 176, 0.14);
+  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+}
+
+.match-loss .match-result {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.match-kind {
+  font-size: 0.75rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex: none;
+}
+
+.match-opponents {
+  flex: 1 1 auto;
+  color: var(--cream);
+  font-size: 0.9rem;
+}
+
+.match-date {
+  font-size: 0.78rem;
+  color: var(--grey);
+  flex: none;
+}
+
+/* ---------- tournaments ---------- */
+
+.tournament-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.tournament-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  flex-wrap: wrap;
+}
+
+.tournament-card h3 {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tournament-card .meta {
+  color: var(--grey);
+  font-size: 0.82rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.7rem;
+  clip-path: var(--cut-sm);
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid currentColor;
+}
+
+.status-badge::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.status-registration {
+  color: var(--neon-gold);
+}
+
+.status-in_progress {
+  color: var(--neon-green);
+}
+
+.status-completed {
+  color: var(--tier-diamond);
+}
+
+.status-cancelled {
+  color: var(--grey);
+}
+
+/* ---------- bracket ---------- */
+
+.bracket {
+  display: flex;
+  gap: 2.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.25rem 1.5rem;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 1.25rem;
+  min-width: 220px;
+  flex: none;
+}
+
+.bracket-round-label {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--neon-green);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.bracket-match {
+  position: relative;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.bracket-match::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -1.25rem;
+  width: 1.25rem;
+  height: 1px;
+  background: rgba(57, 255, 176, 0.35);
+}
+
+.bracket-round:last-child .bracket-match::after {
+  display: none;
+}
+
+.bracket-entrant {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--cream);
+}
+
+.bracket-entrant + .bracket-entrant {
+  border-top: 1px solid rgba(234, 246, 239, 0.08);
+}
+
+.bracket-entrant.winner {
+  color: var(--neon-green);
+  font-weight: 700;
+  background: rgba(57, 255, 176, 0.06);
+}
+
+.bracket-entrant.eliminated {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.bracket-seed {
+  color: var(--grey);
+  font-size: 0.72rem;
+  flex: none;
 }
 
 @media (max-width: 640px) {
@@ -744,16 +1359,41 @@ canvas#history-chart {
     font-size: 0.85rem;
   }
 
-  .hero-banner img {
-    max-height: 34vh;
-    object-position: 30% 30%;
+  .hero-glow {
+    top: 150px;
+  }
+
+  .cinematic-strip {
+    height: 100px;
   }
 
   /* Below ~640px the banner photo can't crop to a clean strip without
      cutting into the logotype (its 2.5:1 aspect ratio nearly matches the
      viewport at this width) — fall back to a plain themed gradient band. */
   .page-banner {
-    background-image: linear-gradient(160deg, rgba(45, 106, 79, 0.35), rgba(7, 15, 11, 0.96));
+    background-image: linear-gradient(160deg, rgba(6, 26, 18, 0.5), rgba(3, 6, 4, 0.97));
     min-height: 128px;
+  }
+}
+
+/* Motion is decorative everywhere here (entrances, float, glow, hover
+   lift, ticker, spotlight) — never load-bearing for meaning, so it's safe
+   to remove wholesale. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ticker-track {
+    animation: none;
+  }
+
+  body::before {
+    animation: none;
   }
 }

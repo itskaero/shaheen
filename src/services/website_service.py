@@ -15,12 +15,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.brand import MOTTO, NAME, TAGLINE
 from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.models.match import MatchSide, MatchStatus
 from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
+from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
+from database.repositories.match_repository import MatchRepository
 from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from database.repositories.tournament_repository import (
+    TournamentEntrantRepository,
+    TournamentMatchRepository,
+    TournamentRepository,
+)
 
 
 @dataclass
@@ -44,6 +52,57 @@ class PlayerProfile:
     achievements: list[tuple[Achievement, datetime]]
 
 
+@dataclass
+class LegendMastery:
+    legend_name_key: str
+    games: int
+    wins: int
+    kos: int
+
+
+@dataclass
+class MatchResult:
+    kind: str
+    opponents: list[str]
+    won: bool
+    confirmed_at: datetime
+
+
+@dataclass
+class BracketEntrant:
+    id: int
+    seed: int | None
+    names: list[str]
+    eliminated: bool
+
+
+@dataclass
+class BracketMatch:
+    round_number: int
+    slot_index: int
+    entrant_a: BracketEntrant | None
+    entrant_b: BracketEntrant | None
+    winner_entrant_id: int | None
+    status: str
+
+
+@dataclass
+class TournamentSummary:
+    id: int
+    name: str
+    kind: str
+    status: str
+    started_at: datetime | None
+    completed_at: datetime | None
+
+
+@dataclass
+class TournamentBracket:
+    tournament: TournamentSummary
+    entrants: list[BracketEntrant]
+    matches: list[BracketMatch]
+
+
 class WebsiteService:
     def __init__(self, session: AsyncSession) -> None:
         self._links = MemberPlayerLinkRepository(session)
@@ -51,6 +110,11 @@ class WebsiteService:
         self._players = BrawlhallaPlayerRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._awards = MemberAchievementRepository(session)
+        self._legends = LegendSnapshotRepository(session)
+        self._matches = MatchRepository(session)
+        self._tournaments = TournamentRepository(session)
+        self._entrants = TournamentEntrantRepository(session)
+        self._tournament_matches = TournamentMatchRepository(session)
 
     async def get_clan_info(self, guild_id: int) -> ClanInfo:
         member_count = await self._members.count_for_guild(guild_id)
@@ -89,3 +153,128 @@ class WebsiteService:
         if player is None:
             return None
         return await self._ranking.list_recent(player.id, limit=limit)
+
+    async def get_player_legends(
+        self, brawlhalla_player_id: int, *, limit: int = 6
+    ) -> list[LegendMastery] | None:
+        player = await self._players.get_by_brawlhalla_id(brawlhalla_player_id)
+        if player is None:
+            return None
+        snapshots = await self._legends.list_latest_per_legend(player.id)
+        return [
+            LegendMastery(legend_name_key=s.legend_name_key, games=s.games, wins=s.wins, kos=s.kos)
+            for s in snapshots[:limit]
+        ]
+
+    async def get_player_matches(
+        self, brawlhalla_player_id: int, *, limit: int = 10
+    ) -> list[MatchResult] | None:
+        """Recent CONFIRMED matches for this player (ADR-033/034) — pending,
+        disputed, and cancelled matches stay internal, not public results.
+        """
+        player = await self._players.get_by_brawlhalla_id(brawlhalla_player_id)
+        if player is None:
+            return None
+        link = await self._links.get_active_by_player(player.id)
+        if link is None:
+            return []
+
+        member_id = link.shaheen_member_id
+        results: list[MatchResult] = []
+        for match in await self._matches.list_recent_for_member(member_id, limit=limit * 3):
+            if match.status != MatchStatus.CONFIRMED or match.winning_side is None:
+                continue
+            my_side = await self._matches.is_participant(match.id, member_id)
+            if my_side is None:
+                continue
+            opponent_side = MatchSide.B if my_side == MatchSide.A else MatchSide.A
+            opponent_participants = await self._matches.participants_on_side(
+                match.id, opponent_side
+            )
+            opponents = await self._resolve_member_names(
+                [p.shaheen_member_id for p in opponent_participants]
+            )
+            results.append(
+                MatchResult(
+                    kind=match.kind.value,
+                    opponents=opponents,
+                    won=match.winning_side == my_side,
+                    confirmed_at=match.confirmed_at or match.updated_at,
+                )
+            )
+            if len(results) >= limit:
+                break
+        return results
+
+    async def list_tournaments(self, guild_id: int, *, limit: int = 20) -> list[TournamentSummary]:
+        tournaments = await self._tournaments.list_for_guild(guild_id, limit=limit)
+        return [
+            TournamentSummary(
+                id=t.id,
+                name=t.name,
+                kind=t.kind.value,
+                status=t.status.value,
+                started_at=t.started_at,
+                completed_at=t.completed_at,
+            )
+            for t in tournaments
+        ]
+
+    async def get_tournament_bracket(self, tournament_id: int) -> TournamentBracket | None:
+        tournament = await self._tournaments.get(tournament_id)
+        if tournament is None:
+            return None
+
+        entrant_map: dict[int, BracketEntrant] = {}
+        for entrant in await self._entrants.list_for_tournament(tournament_id):
+            member_ids = await self._entrants.members_of(entrant.id)
+            names = await self._resolve_member_names(member_ids)
+            entrant_map[entrant.id] = BracketEntrant(
+                id=entrant.id,
+                seed=entrant.seed,
+                names=names or ["Unknown"],
+                eliminated=entrant.eliminated,
+            )
+
+        matches = [
+            BracketMatch(
+                round_number=m.round_number,
+                slot_index=m.slot_index,
+                entrant_a=entrant_map.get(m.entrant_a_id) if m.entrant_a_id else None,
+                entrant_b=entrant_map.get(m.entrant_b_id) if m.entrant_b_id else None,
+                winner_entrant_id=m.winner_entrant_id,
+                status=m.status.value,
+            )
+            for m in await self._tournament_matches.list_all(tournament_id)
+        ]
+
+        return TournamentBracket(
+            tournament=TournamentSummary(
+                id=tournament.id,
+                name=tournament.name,
+                kind=tournament.kind.value,
+                status=tournament.status.value,
+                started_at=tournament.started_at,
+                completed_at=tournament.completed_at,
+            ),
+            entrants=list(entrant_map.values()),
+            matches=matches,
+        )
+
+    async def _resolve_member_names(self, shaheen_member_ids: list[int]) -> list[str]:
+        """ShaheenMember ids -> their linked Brawlhalla player names.
+
+        Same identity boundary as everywhere else in this service (ADR-040):
+        callers only ever learn a Brawlhalla player_name, never anything
+        Discord-identifying. A member with no active link (or none at all)
+        is silently skipped rather than surfacing an internal id.
+        """
+        names: list[str] = []
+        for member_id in shaheen_member_ids:
+            link = await self._links.get_active(member_id)
+            if link is None:
+                continue
+            player = await self._players.get_by_id(link.brawlhalla_player_id)
+            if player is not None:
+                names.append(player.player_name)
+        return names

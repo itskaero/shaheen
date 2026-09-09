@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Player Profile — Shaheen</title>
   <meta name="description" content="Shaheen clan member Brawlhalla profile, ranking, and achievements." />
-  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
       <a class="brand" href="index.html">
-        <img src="assets/img/favicon.svg" alt="" />
+        <picture>
+          <source srcset="assets/img/logo-icon.webp" type="image/webp" />
+          <img class="brand-mark" src="assets/img/logo-icon.png" alt="" width="34" height="34" />
+        </picture>
         <span class="brand-name">SHAHEEN</span>
       </a>
       <nav class="site-nav">
@@ -23,10 +27,18 @@
         <a href="clan.html">Clan</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="player.html" class="active">Players</a>
+        <a href="tournaments.html">Tournaments</a>
         <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
       </nav>
     </div>
   </header>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>SHAHEEN</span><span>PAKISTAN BRAWLHALLA CLAN</span><span>بلندیوں کی جانب</span><span>FROM PAKISTAN TO THE ARENA</span>
+      <span>SHAHEEN</span><span>PAKISTAN BRAWLHALLA CLAN</span><span>بلندیوں کی جانب</span><span>FROM PAKISTAN TO THE ARENA</span>
+    </div>
+  </div>
 
   <div class="page-banner">
     <div class="wrap">
@@ -46,7 +58,10 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <img class="crest" src="assets/img/favicon.svg" alt="" />
+      <picture>
+        <source srcset="assets/img/logo-icon.webp" type="image/webp" />
+        <img class="crest" src="assets/img/logo-icon.png" alt="" />
+      </picture>
       <p>&copy; <span id="year"></span> Shaheen &mdash; بلندیوں کی جانب. Data from the Brawlhalla API.</p>
     </div>
   </footer>
@@ -55,6 +70,7 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/sparkline.js"></script>
+  <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/pages/player.js"></script>
 </body>
 </html>

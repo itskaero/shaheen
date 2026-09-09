@@ -20,12 +20,23 @@ Private / in development. Implemented so far:
   the bot's services/repositories/database — `GET /clan`,
   `GET /leaderboard`, `GET /players/{brawlhalla_id}`,
   `GET /players/{brawlhalla_id}/history`, `GET /health`
-- Phase 6 — public frontend: a static, on-brand website (`web/`) — home,
-  clan, leaderboard, and player profile/rating-history pages — that calls
-  the Phase 5 API directly from the browser. Free to host: the site on
-  GitHub Pages, the API + database on Render's free tier. Themed directly
-  around the clan's own Discord banner (docs/DECISIONS.md ADR-047):
-  tier-colored rank badges, player avatars, rank medals, glass-panel cards.
+- Phase 6 — public frontend: a static website (`web/`) — home, clan,
+  leaderboard, and player profile/rating-history pages — that calls the
+  Phase 5 API directly from the browser. Free to host: the site on GitHub
+  Pages, the API + database on Render's free tier. A dark, neon-glow
+  esports-team-site look (docs/DECISIONS.md ADR-047/048/049) built around
+  the clan's own Discord art: an animated crest-logo hero, a scrolling
+  ticker marquee, gradient shine text, cursor-spotlight cards, angular
+  neon buttons/badges, tier-colored rank badges, player avatars. The
+  homepage is a scroll-triggered landing page with live animated stat
+  counters (docs/DECISIONS.md ADR-050), and the player rating-history
+  chart has gridlines, a peak-rating overlay, and a hover tooltip.
+- Phase 7 — deeper website data: player profiles now show legend mastery
+  and match history (`GET /players/{id}/legends`, `.../matches`); a new
+  tournament list + live bracket viewer (`GET /tournaments`,
+  `GET /tournaments/{id}`, `tournaments.html` / `tournament.html`)
+  (docs/DECISIONS.md ADR-051). One abstracted, restrained nod to Pakistani
+  truck art as a homepage divider (ADR-052).
 
 ## Getting started
 
@@ -48,38 +59,105 @@ uv run uvicorn api.app:app --app-dir src --reload
 
 (Docker Compose also starts it as the `web` service, on port 8000.)
 
-The homepage hero and every inner-page banner strip use the clan's own
-Discord banner artwork (`web/assets/img/banner.jpg` / `.webp`). To swap in
-an updated banner, replace both files (keep the ~2.5:1 width:height ratio)
-— no other change needed.
+The site uses two pieces of the clan's own Discord art (docs/DECISIONS.md
+ADR-047/ADR-048):
+- `web/assets/img/banner.jpg` / `.webp` — the wide action-scene banner,
+  used as the homepage's `.cinematic-strip` and every inner page's
+  `.page-banner`. Swap in an updated one by replacing both files (keep the
+  ~2.5:1 width:height ratio) — no other change needed.
+- `web/assets/img/logo-full.*` / `logo-icon.*` — the circular crest, used
+  as the animated homepage hero (`logo-full`, includes the wordmark) and
+  the nav/footer/favicon mark (`logo-icon`, crest only — legible at small
+  sizes). Regenerate `favicon-32.png` / `favicon-48.png` /
+  `apple-touch-icon.png` from a new crest at 32/48/180px square.
 
 To preview the static frontend locally, point `web/assets/js/config.js`'s
 `API_BASE_URL` at your running API (`http://127.0.0.1:8000` by default),
 then serve the `web/` folder with any static file server, e.g.
 `python3 -m http.server 8080 --directory web`.
 
-## Deploying the website (free hosting)
+## Deploying to production
 
-Two independent, free deployments — see `docs/DECISIONS.md` ADR-045:
+Four pieces, deployed in this order (each depends on the one before it).
+The bot and the website **share one Postgres database** — that's the
+piece that ties the whole system together.
 
-1. **API + database, on [Render](https://render.com):** in the Render
-   dashboard, New → Blueprint → point it at this repo. Render reads
-   `render.yaml` and provisions a free web service plus a free Postgres
-   database. After the first deploy, set the `DISCORD_TOKEN`, `GUILD_ID`,
-   and `BRAWLHALLA_API_KEY` environment variables on the `shaheen-api`
-   service (the API doesn't use their values, but `Settings` requires them
-   — never commit real secrets to the repo). Copy the service's public
-   `https://shaheen-api-xxxx.onrender.com` URL.
+### 0. Discord + Brawlhalla prerequisites
 
-   The free plan sleeps after 15 minutes idle (first request after that is
-   slow, ~30-60s) and its Postgres database expires after 90 days unless
-   upgraded — fine for a small clan site, revisit if that stops being true.
+1. **Discord bot:** [Discord Developer Portal](https://discord.com/developers/applications)
+   → New Application → Bot tab → Reset Token, save it (`DISCORD_TOKEN`).
+   Under Privileged Gateway Intents, enable **all three**: Presence,
+   Server Members, and Message Content (ADR-012 — the bot requests every
+   intent). Under OAuth2 → URL Generator, check scopes `bot` and
+   `applications.commands`; for bot permissions, grant only what
+   `docs/PERMISSIONS.md` actually calls for (Manage Roles, Manage
+   Channels, Send Messages, Embed Links, etc. — not Administrator, per
+   that doc's own rule). Open the generated URL and invite it to your
+   server. Get the server's ID (right-click the server icon → Copy Server
+   ID, with Developer Mode on) — that's `GUILD_ID`.
+2. **Brawlhalla API key:** request one per `docs/DECISIONS.md` ADR-022
+   (`api@brawlhalla.com`, verify current requirements at
+   [dev.brawlhalla.com](https://dev.brawlhalla.com/)) — `BRAWLHALLA_API_KEY`.
 
-2. **Frontend, on GitHub Pages:** one-time setup — repo Settings → Pages →
-   Source: "GitHub Actions". Set `web/assets/js/config.js`'s
-   `API_BASE_URL` to the Render URL from step 1 and push to `main`;
-   `.github/workflows/pages.yml` deploys `web/` automatically on every push
-   that touches it (or run it manually from the Actions tab).
+### 1. Database + API, on Render (free)
+
+In the [Render dashboard](https://dashboard.render.com), New → Blueprint →
+point it at this repo. Render reads `render.yaml` and provisions a free
+web service (the API) plus a free Postgres database. After the first
+deploy:
+
+- Set `DISCORD_TOKEN`, `GUILD_ID`, and `BRAWLHALLA_API_KEY` on the
+  `shaheen-api` service (the API process never reads their values, but
+  `Settings` requires them present — ADR-041; never commit real secrets).
+- Copy the service's public URL (`https://shaheen-api-xxxx.onrender.com`)
+  — the website needs it in step 3.
+- Open the `shaheen-db` database → copy its **External Database URL**
+  (not the internal one — the bot in step 2 connects from outside
+  Render's network). The bot needs this as its `DATABASE_URL`.
+
+The free plan sleeps after 15 minutes idle (first request after that is
+slow, ~30-60s) and its Postgres database expires after 90 days unless
+upgraded — fine for a small clan site, revisit if that stops being true.
+
+### 2. Bot, on Fly.io (free)
+
+The bot holds a persistent connection to Discord, so it can't live on
+Render's free tier the way the API does (that tier is request-driven and
+sleeps without inbound HTTP, which would drop the bot's connection —
+docs/DECISIONS.md ADR-053). Fly.io's free small-VM allowance covers a
+single always-on worker like this comfortably, deploying the same
+`Dockerfile` the API uses via the checked-in `fly.toml`:
+
+```bash
+flyctl auth login
+flyctl apps create shaheen-bot   # or your own name — update fly.toml's `app` to match
+flyctl secrets set \
+  DISCORD_TOKEN=... \
+  GUILD_ID=... \
+  DATABASE_URL=<the Render External Database URL from step 1> \
+  BRAWLHALLA_API_KEY=...
+flyctl deploy
+```
+
+`flyctl deploy` again any time you push changes. `flyctl logs` tails the
+running bot.
+
+### 3. Frontend, on GitHub Pages (free)
+
+One-time setup — repo Settings → Pages → Source: "GitHub Actions". Set
+`web/assets/js/config.js`'s `API_BASE_URL` to the Render URL from step 1
+and push to `main`; `.github/workflows/pages.yml` deploys `web/`
+automatically on every push that touches it (or run it manually from the
+Actions tab).
+
+### 4. First run
+
+In Discord, run `/setup run mode:launch` (needs the server owner,
+Administrator, or — once it exists — 👑 SHAHEEN LEADER). This provisions
+roles/categories/channels and posts the welcome/rules embeds. `/setup
+verify` confirms everything matches; `/setup status` shows the last run.
+The website will read as empty (0 members, no leaderboard) until members
+run `/link` — that's expected, not a bug.
 
 ## Goals
 

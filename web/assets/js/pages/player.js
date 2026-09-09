@@ -26,9 +26,11 @@
     content.innerHTML = '<p class="state-msg">Loading player…</p>';
 
     try {
-      const [profile, history] = await Promise.all([
+      const [profile, history, legends, matches] = await Promise.all([
         ShaheenAPI.getPlayer(brawlhallaId),
         ShaheenAPI.getPlayerHistory(brawlhallaId, 20),
+        ShaheenAPI.getPlayerLegends(brawlhallaId),
+        ShaheenAPI.getPlayerMatches(brawlhallaId),
       ]);
 
       if (!profile) {
@@ -73,6 +75,16 @@
         </div>
 
         <div class="card">
+          <h3 style="margin-top: 0">Legend Mastery</h3>
+          ${legendMasteryHtml(legends)}
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top: 0">Match History</h3>
+          ${matchHistoryHtml(matches)}
+        </div>
+
+        <div class="card">
           <h3 style="margin-top: 0">Achievements</h3>
           ${achievements}
         </div>
@@ -85,5 +97,51 @@
     } catch (err) {
       content.innerHTML = `<p class="state-msg error">Couldn't load this player: ${err.message}</p>`;
     }
+  }
+
+  function legendMasteryHtml(legends) {
+    if (!legends || legends.length === 0) {
+      return '<p class="state-msg">No legend stats yet — plays will show up after the next snapshot.</p>';
+    }
+    const maxGames = Math.max(...legends.map((l) => l.games), 1);
+    return `
+      <ul class="legend-list">
+        ${legends
+          .map((legend) => {
+            const winRate = legend.games > 0 ? Math.round((legend.wins / legend.games) * 100) : 0;
+            const width = Math.max(6, Math.round((legend.games / maxGames) * 100));
+            return `
+              <li>
+                <div class="legend-row">
+                  <span class="legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
+                  <span class="legend-meta">${legend.games} games · ${winRate}% WR · ${legend.kos} KOs</span>
+                </div>
+                <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${width}%"></div></div>
+              </li>`;
+          })
+          .join("")}
+      </ul>
+    `;
+  }
+
+  function matchHistoryHtml(matches) {
+    if (!matches || matches.length === 0) {
+      return '<p class="state-msg">No confirmed matches yet.</p>';
+    }
+    return `
+      <ul class="match-list">
+        ${matches
+          .map(
+            (m) => `
+              <li class="${m.won ? "match-win" : "match-loss"}">
+                <span class="match-result">${m.won ? "WIN" : "LOSS"}</span>
+                <span class="match-kind">${escapeHtml(m.kind)}</span>
+                <span class="match-opponents">vs ${m.opponents.length ? escapeHtml(m.opponents.join(" & ")) : "Unknown"}</span>
+                <span class="match-date">${formatDate(m.confirmed_at)}</span>
+              </li>`
+          )
+          .join("")}
+      </ul>
+    `;
   }
 })();

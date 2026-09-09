@@ -49,6 +49,11 @@
 - [x] free frontend hosting (GitHub Pages)
 - [x] free API + database hosting (Render free tier)
 
+## Phase 7 — Deeper Website Data
+- [x] legend mastery on player profiles
+- [x] match history on player profiles
+- [x] tournament list + bracket viewer
+
 ## Rule
 
 Do not implement a later phase merely because it is documented. Finish the

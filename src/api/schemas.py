@@ -51,3 +51,48 @@ class RankingHistoryEntryResponse(BaseModel):
     rating: int | None
     peak_rating: int | None
     tier: str | None
+
+
+class LegendMasteryResponse(BaseModel):
+    legend_name_key: str
+    games: int
+    wins: int
+    kos: int
+
+
+class MatchResultResponse(BaseModel):
+    kind: str
+    opponents: list[str]
+    won: bool
+    confirmed_at: datetime
+
+
+class TournamentSummaryResponse(BaseModel):
+    id: int
+    name: str
+    kind: str
+    status: str
+    started_at: datetime | None
+    completed_at: datetime | None
+
+
+class BracketEntrantResponse(BaseModel):
+    id: int
+    seed: int | None
+    names: list[str]
+    eliminated: bool
+
+
+class BracketMatchResponse(BaseModel):
+    round_number: int
+    slot_index: int
+    entrant_a: BracketEntrantResponse | None
+    entrant_b: BracketEntrantResponse | None
+    winner_entrant_id: int | None
+    status: str
+
+
+class TournamentBracketResponse(BaseModel):
+    tournament: TournamentSummaryResponse
+    entrants: list[BracketEntrantResponse]
+    matches: list[BracketMatchResponse]
