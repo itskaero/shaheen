@@ -756,16 +756,35 @@ deploys happen from a real dev machine instead of CI.
 ## ADR-054 — Free-tier Render: migrations run in dockerCommand, not preDeployCommand
 Decision: `render.yaml`'s `shaheen-api` service no longer sets
 `preDeployCommand`. Instead, `dockerCommand` chains the migration and the
-server start: `uv run alembic upgrade head && uv run uvicorn ...` — the
-container runs `alembic upgrade head` every time it boots (every deploy,
-and every wake from the free plan's idle sleep), then starts the API.
+server start, wrapped in an explicit shell:
+`sh -c "uv run alembic upgrade head && uv run uvicorn ... --port $PORT"` —
+the container runs `alembic upgrade head` every time it boots (every
+deploy, and every wake from the free plan's idle sleep), then starts the
+API.
 
 Reason: Render's `preDeployCommand` is a paid-plan feature — the free
 `shaheen-api` service (ADR-044's whole point) can't use it; Render's
 dashboard rejects it outright. `alembic upgrade head` is idempotent (a
 no-op, just a version-table check, when already at head), so running it
 on every boot instead of only "before" each deploy costs a few hundred ms
-per cold start and is otherwise free of downside — confirmed locally by
-running the exact `dockerCommand` string against a fresh sqlite DB (all
-four migrations apply, server starts) and then again unchanged (migration
-step is instant, no-op, server starts identically).
+per cold start and is otherwise free of downside.
+
+Correction (same day): the first version of this ADR chained the two
+commands with a bare `dockerCommand: uv run alembic upgrade head && uv
+run uvicorn ...` and claimed to have verified it locally. That
+verification ran the string through `bash -c '...'` — which itself
+supplies the shell that interprets `&&` — so it never actually tested
+the failure mode. Render does not run `dockerCommand` through a shell;
+it tokenizes the raw string and execs it directly, so `&&` and
+everything after it were passed as literal CLI arguments to `alembic`,
+which failed in production with `alembic: error: unrecognized
+arguments: && uv run uvicorn ...`. Fix: wrap the whole chain in
+`sh -c "..."` so the container's own shell (not Render) parses `&&` and
+expands `$PORT`. Re-verified this time by invoking the exact
+`dockerCommand` string directly via `sh -c` (no `bash -c` shortcut) with
+a throwaway sqlite DB: all four migrations apply, uvicorn starts, and
+`GET /health` returns 200 — and by tokenizing both the old and new
+strings with Python's `shlex.split` (which mirrors a non-shell,
+quote-aware exec split) to confirm the old form splits `&&` into a
+literal argument while the new form keeps the whole chain as one
+argument to `sh -c`.
