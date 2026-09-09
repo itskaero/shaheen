@@ -1,0 +1,29 @@
+# Fly.io app definition for the Shaheen Discord bot — the long-lived,
+# gateway-connected process. It runs separately from the website (see
+# render.yaml): Render's free tier is request-driven and spins down
+# without inbound HTTP traffic, which would drop the bot's Discord
+# connection, so the bot lives on Fly.io's free small-VM allowance
+# instead (docs/DECISIONS.md ADR-053). Deploys the same Dockerfile the
+# API/website use, just running its default CMD (the bot, not uvicorn).
+#
+# One-time setup (see README.md "Deploying to production" for the full
+# walkthrough):
+#   flyctl auth login
+#   flyctl apps create shaheen-bot          # or your own name — update `app` below to match
+#   flyctl secrets set DISCORD_TOKEN=... GUILD_ID=... DATABASE_URL=... BRAWLHALLA_API_KEY=...
+#   flyctl deploy
+#
+# Redeploy any time after that with just `flyctl deploy`.
+
+app = "shaheen-bot"
+
+[build]
+
+[env]
+  LOG_LEVEL = "INFO"
+  SETUP_MODE = "launch"
+  SNAPSHOT_INTERVAL_HOURS = "6"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

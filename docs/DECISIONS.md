@@ -721,3 +721,34 @@ Restrained to one motif, one placement, muted rather than truck art's
 usual riot of colour, and a small closed set of extra hues (rust + the
 existing gold) rather than opening the palette further — same spirit as
 ADR-049's neon scoping.
+
+## ADR-053 — Bot hosting: Fly.io, not Render, and why it's a separate deploy
+Decision: The bot process deploys to Fly.io's free small-VM allowance
+(`fly.toml`, same `Dockerfile` as the API, its default CMD), pointed at
+the **same** Postgres database as the Render-hosted API (its External
+Database URL, not the internal one — the bot connects from outside
+Render's network). This is a third, independent deployment alongside
+Render (API + DB) and GitHub Pages (frontend) — `docs/DEVELOPMENT.md`'s
+`docker compose up --build` remains the single-command option for
+self-hosting all three together instead.
+
+Reason: The bot holds a persistent Discord gateway connection — a
+long-lived process, not a request/response server. Render's free tier is
+request-driven: a free web service spins down after 15 minutes with no
+inbound HTTP traffic (ADR-045), which would silently drop the bot's
+Discord connection on a timer regardless of how active the Discord server
+itself is, since gateway traffic isn't HTTP traffic Render's spin-down
+logic sees. Fly.io's free allowance covers one small always-on VM with no
+such request-driven spin-down, and needs no new code — `fly.toml` just
+points `flyctl` at the repo's existing `Dockerfile`, whose default CMD
+already runs the bot (`docker-compose.yml`'s `bot` service does the same
+thing locally). A paid Render Background Worker was the alternative
+(simplest given the API is already there) but isn't free, so it lost to
+the free option per the standing "free hosting" requirement (ADR-045)
+unless the owner says otherwise.
+
+Added `.dockerignore` alongside this (`.git`, caches, `tests/`, `docs/`,
+`web/`, markdown) — unrelated to correctness (the Dockerfile's `COPY`
+list was already selective, not `COPY . .`) but it shrinks and speeds up
+every `flyctl deploy`/`docker build` context upload, which matters once
+deploys happen from a real dev machine instead of CI.
