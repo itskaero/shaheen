@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from core.config import normalize_database_url  # noqa: E402
 from database.models import Base  # noqa: E402
 
 load_dotenv()
@@ -33,6 +34,14 @@ if config.config_file_name is not None:
 database_url = os.environ.get("DATABASE_URL")
 if not database_url:
     raise RuntimeError("DATABASE_URL must be set to run migrations.")
+# Managed Postgres providers (Render, Heroku, ...) hand out a bare
+# postgres://.../postgresql://... connection string with no driver suffix;
+# the async engine below requires +asyncpg. `core.config.Settings` already
+# normalizes this for the app itself — reuse the same function here instead
+# of duplicating the prefix-swap (this module deliberately doesn't build a
+# full Settings object, since migrations can run without Discord/Brawlhalla
+# credentials set).
+database_url = normalize_database_url(database_url)
 config.set_main_option("sqlalchemy.url", database_url)
 
 target_metadata = Base.metadata
