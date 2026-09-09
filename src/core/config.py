@@ -15,6 +15,25 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 SetupMode = Literal["development", "launch"]
 
 
+def normalize_database_url(value: str) -> str:
+    """Normalize a bare `postgres://`/`postgresql://` URL to asyncpg.
+
+    Managed Postgres providers (Render, Heroku, ...) hand out connection
+    strings without a driver suffix, but SQLAlchemy's async engine requires
+    one. Doing this means a provider's connection string can be used for
+    DATABASE_URL as-is (docs/DEPLOYMENT.md).
+
+    A standalone function, not a method, so `alembic/env.py` can reuse it
+    without constructing a full `Settings` object — migrations run in
+    contexts (CI, a bare migration-only container) that only have
+    DATABASE_URL set, not Discord/Brawlhalla credentials.
+    """
+    for prefix in ("postgresql://", "postgres://"):
+        if value.startswith(prefix):
+            return "postgresql+asyncpg://" + value[len(prefix) :]
+    return value
+
+
 class Settings(BaseSettings):
     """Runtime configuration for Shaheen Bot.
 
@@ -38,17 +57,7 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _use_asyncpg_driver(cls, value: str) -> str:
-        """Normalize a bare `postgres://`/`postgresql://` URL to asyncpg.
-
-        Managed Postgres providers (Render, Heroku, ...) hand out connection
-        strings without a driver suffix, but SQLAlchemy's async engine
-        requires one. Doing this here means a provider's connection string
-        can be used for DATABASE_URL as-is (docs/DEPLOYMENT.md).
-        """
-        for prefix in ("postgresql://", "postgres://"):
-            if value.startswith(prefix):
-                return "postgresql+asyncpg://" + value[len(prefix) :]
-        return value
+        return normalize_database_url(value)
 
 
 def load_settings() -> Settings:

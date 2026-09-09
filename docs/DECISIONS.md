@@ -808,3 +808,40 @@ starts, and `GET /health` returns 200. This doesn't prove Render's exact
 tokenization behavior (still unconfirmed after two wrong guesses above),
 but it does remove tokenization from the equation: a single unquoted
 path has nothing left to mis-split.
+
+## ADR-055 — Alembic normalizes DATABASE_URL to asyncpg too, not just Settings
+Decision: `alembic/env.py` now runs `DATABASE_URL` through
+`core.config.normalize_database_url` — the same bare-`postgres://`-to-
+`postgresql+asyncpg://` rewrite `Settings.database_url` already applied
+via a `field_validator` — before handing it to `async_engine_from_config`.
+That rewrite was extracted from the validator into a standalone function
+so both call sites share one implementation instead of duplicating the
+prefix-swap (CLAUDE.md: don't duplicate configuration/business logic).
+
+Reason: with `scripts/render-start.sh` in place (ADR-054), the next
+production deploy got past the dockerCommand problem and failed
+differently: `ModuleNotFoundError: No module named 'psycopg2'`. Render's
+Postgres `connectionString` (wired into `render.yaml` via
+`fromDatabase.property: connectionString`) is a bare `postgresql://...`
+URL with no driver suffix. The running app already handled this — its
+`Settings.database_url` validator rewrites it to
+`postgresql+asyncpg://...` — but `alembic/env.py` reads `DATABASE_URL`
+straight from the environment and never went through `Settings` at all
+(deliberately: migrations need to run in contexts, like CI, that don't
+have Discord/Brawlhalla credentials to construct a full `Settings`
+object). SQLAlchemy's async engine, given a bare `postgresql://` URL,
+falls back to the default sync driver (`psycopg2`) — which isn't
+installed (the project only depends on `asyncpg`) — hence the
+`ModuleNotFoundError`.
+
+Verified locally by pointing `DATABASE_URL` at a bare
+`postgresql://user:pass@nonexistent-host/db` and running
+`alembic upgrade head`: before this fix it failed with
+`ModuleNotFoundError: No module named 'psycopg2'`; after it, it fails
+with `asyncpg`'s own `socket.gaierror: Name or service not known` for the
+fake hostname — proving the async/asyncpg driver is what's actually being
+used now, without needing a real Postgres server in this environment.
+`pytest`/`mypy`/`ruff` all still pass (the sqlite-backed migration flow
+from ADR-054's verification is unaffected — sqlite URLs don't match
+either `postgres://` prefix, so `normalize_database_url` is a no-op for
+them).
