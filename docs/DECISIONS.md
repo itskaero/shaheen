@@ -1364,3 +1364,91 @@ rather than silently falling back to the generic default.
 (unique logical keys, unique names, `#announcements` staff-only-send)
 still pass unchanged — adding `topic=` values and Urdu to role names
 didn't touch any of the invariants those tests check.
+
+## ADR-062 — Generated imagery moves onto the owner's achievement-frame artwork, "bevel & highlight" text treatment
+
+Decision: replace `image_service.py`'s procedurally-generated background
+(a flat gradient plus a faded logo watermark — ADR-059/ADR-060) with the
+owner's own finished achievement-frame template artwork, styled with a
+metallic-gold text treatment chosen from three prototyped options.
+
+**Why a template instead of procedural generation.** The owner supplied a
+professionally composed frame (crest, gradient, mountains, Pakistan
+motifs, bilingual corner taglines) and wants the bot's generated cards to
+look like that piece, not a simpler procedural approximation of it. Before
+touching the real service, the text-effect treatment was prototyped in
+total isolation — a standalone script outside the repo, three visual
+variants sent to the owner for comparison (metallic extrusion, bevel &
+highlight, clean glow) — so the owner could pick a direction before any
+production code changed. They picked **Bevel & Highlight**.
+
+**What changed in `src/services/image_service.py`:**
+- New asset `src/assets/img/achievement_template.png` (the owner's
+  template, ~1.9MB) is now the entire card background — `CARD_WIDTH`/
+  `CARD_HEIGHT` become the template's own dimensions (1672×941, up from
+  the old procedural canvas's 800×300). Lives under `src/` for the same
+  reason `logo-icon.png` and the bundled fonts do (Dockerfile's `COPY
+  src/ ./src/`, `.dockerignore` excludes `web/` — ADR-060).
+- The old `_vertical_gradient`, `_faded_logo`, and `_LOGO_PATH` are gone —
+  the template already carries the gradient and crest, so generating them
+  separately and layering a watermark on top no longer applies. `render_
+  milestone_card(*, title, subtitle)` keeps its exact signature (one call
+  site, `bot/cogs/clan.py`) but now composites both strings into a fixed
+  safe rectangle inside the template's own empty content area (`_CUTOUT_
+  BOX`, confirmed visually against the asset — inset from the gold frame
+  and the diamond ornaments), rather than centering them on a blank
+  gradient.
+- **Text treatment** ("bevel & highlight", `_render_styled_text`): a
+  subtle diagonal extrusion (`_extrude`, 4 steps) for carved depth, a thin
+  dark stroke ring (`_make_masks` builds inner/outer glyph masks at the
+  same canvas offset so a gradient fill and a stroke-only ring stay pixel-
+  aligned — the ring is stroke color showing through where the gradient
+  layer doesn't reach), a three-stop gold-to-bronze metallic gradient fill
+  (`_vertical_gradient_multi`, a generalization of the old two-stop
+  gradient to an arbitrary number of stops), a soft top-band highlight
+  confined to the glyph shape (`_bevel_highlight`, multiplies a vertical
+  fade band against the glyph mask rather than lighting the whole card) for
+  the carved-medallion look, and a moderate gold glow. One fixed style,
+  reused for both strings — only font/size differ.
+- **Long text shrinks instead of overflowing or clipping** (`_fit_font`):
+  starts at a generous size and steps down until the rendered text fits
+  the safe width, falling back to Pillow's generic default font if a
+  bundled font file is ever unreadable (same fail-safe precedent as every
+  other font-loading path in this file).
+- **No dynamic Urdu.** The prototype proved Urdu renders correctly (raqm
+  shapes/joins/reorders it — confirmed in the standalone experiment), but
+  `title`/`subtitle` are runtime strings (a Discord display name, an
+  achievement's name) with no Urdu translation available at render time —
+  there's nothing to translate. Bilingual brand presence stays where it
+  already lives: baked into the template artwork's own corner captions.
+- **Rendering moved off the event loop.** The new render is real Pillow
+  work over a ~1.9MB image — measured at ~0.7s per card (dominated by PNG
+  encoding a 1672×941 RGBA composite; `optimize=True` was tried and
+  dropped — it cost ~3.8s for a few percent smaller output, not worth
+  risking event-loop stalls over). `bot/cogs/clan.py`'s `_announce` now
+  calls `render_milestone_card` via `asyncio.to_thread` instead of
+  directly; the existing try/except fail-safe (a rendering failure never
+  loses the announcement, just falls back to the plain embed) is
+  unchanged.
+
+**Known limitation, not addressed here:** neither bundled font (Orbitron,
+Rajdhani) has emoji glyphs, so an achievement subtitle that includes an
+emoji (e.g. `"🏅 {achievement.name}"`, built in `bot/content/clan_embeds.
+py`) renders a missing-glyph box for the emoji in the generated image —
+pre-existing since ADR-061 switched off Pillow's default font, not a
+regression introduced here. A proper fix (bundling a symbol/emoji-capable
+fallback font) is future scope, not blocking this change.
+
+Verified: ran the real `render_milestone_card` (not just the prototype
+script) against a short name, a long display-name-plus-achievement-text
+pair (confirms `_fit_font` shrinks correctly and nothing overflows the
+frame), and empty strings (existing edge-case test) — all three sent to
+the owner as rendered PNGs. `uv run ruff check src tests` / `uv run mypy
+src` (93 files) clean. Full `pytest` suite green — 160 tests: `tests/
+test_image_service.py` rewritten for the new public surface (`_fit_font`,
+`_make_masks`, `_TEMPLATE_PATH`) in place of the removed `_faded_logo`/
+`_load_fonts`/`_LOGO_PATH`, plus a template-ships-under-`src/` test
+mirroring the existing font-asset test. `git status` confirms the
+prototype script itself was never part of this repo — it lived and stayed
+in the session scratchpad throughout, only the chosen variant's approach
+was ported into `image_service.py`.

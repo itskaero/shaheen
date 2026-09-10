@@ -6,6 +6,7 @@ services/snapshot_service.py and services/clan_service.py.
 
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 
@@ -99,10 +100,15 @@ class ClanCog(commands.Cog):
 
         # A branded generated card alongside the embed (docs/DECISIONS.md
         # ADR-059) — a rendering failure here should never lose the
-        # announcement itself, so fall back to the plain embed.
+        # announcement itself, so fall back to the plain embed. Rendering
+        # is CPU-bound Pillow work over a ~1.9MB template (docs/
+        # DECISIONS.md ADR-062) — run it off the event loop so it can't
+        # stall the bot's heartbeat/other commands while it runs.
         file: discord.File | None = None
         try:
-            png_bytes = render_milestone_card(title=display_name, subtitle=subtitle)
+            png_bytes = await asyncio.to_thread(
+                render_milestone_card, title=display_name, subtitle=subtitle
+            )
             file = discord.File(io.BytesIO(png_bytes), filename="milestone.png")
             embed.set_image(url="attachment://milestone.png")
         except Exception:
