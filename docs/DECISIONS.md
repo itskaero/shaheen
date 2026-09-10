@@ -1520,3 +1520,50 @@ plus `join.html`'s own active nav state (8 total), and `discord.gg/GTuQaE7WfF` �
 `config.js` and both of `join.html`'s hardcoded CTA hrefs, no typos. No JS/build step exists
 for `web/` — nothing to lint/type-check; visual confirmation in a real browser is the
 verification, same as prior website-visual ADRs (049/051/053/054/062).
+
+## ADR-064 — Consistent Nastaliq Urdu everywhere it appears + a fresher English typeface pairing
+
+Decision: fix Urdu text rendering inconsistently across the site, and swap the English
+heading/body faces (owner feedback: the old pairing "looks stale or outdated").
+
+**The real Urdu bug.** `Noto Nastaliq Urdu` was only ever applied via the `.motto` class,
+used exactly once (join.html). Every other Urdu instance — the ticker's Urdu span (5
+pages) and the footer's "بلندیوں کی جانب" tagline (all 8 pages) — had no font-family rule
+targeting it at all, so it silently fell back to the body font stack (Poppins/system
+sans), which has no Nastaliq glyphs — browsers then substitute *some* system Arabic-
+capable font, arbitrarily, never the calligraphic face the site was actually going for.
+Worse, `404.html` and `tournament.html` didn't even load the `Noto Nastaliq Urdu` font
+file in their `<head>`, so even a correct CSS rule couldn't have fixed those two pages.
+
+Fix: every Urdu run is now wrapped in `<span lang="ur">…</span>` (or, for join.html's
+motto — a standalone Urdu paragraph — the attribute goes directly on the `<p>`), and one
+new global rule picks it up:
+```css
+[lang="ur"] {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+```
+One rule instead of a class-per-spot, so any future Urdu text anywhere on the site gets
+the right font automatically just by marking it `lang="ur"` — no CSS change needed. All 8
+pages' Google Fonts `<link>` now load `Noto Nastaliq Urdu` (added to the two that were
+missing it).
+
+**English pairing.** `Rajdhani` (headings/nav/labels) → **Space Grotesk**; `Poppins`
+(body) → **Sora**. `Orbitron` (the big display wordmark) is unchanged — distinctive, not
+what read as dated. Both new faces are modern geometric sans faces already common in
+current tech/gaming product UI, picked over a bolder "HUD" alternative (Chakra Petch +
+Inter) to keep the shift a refresh rather than a different visual language — consistent
+with "UI is fine" from the ADR-063 request this follows. `--font-display`/`--font-
+heading` custom properties and the `body` font-family were updated in one place each
+(`web/assets/css/style.css`); no per-page CSS.
+
+Verified: served `web/` locally, confirmed `fonts.googleapis.com` was actually reachable
+this time (retried after an earlier transient SSL failure), and screenshotted
+`index.html`/`join.html` with the same headless-Chrome-via-CDP script from ADR-063 —
+confirmed Space Grotesk/Sora render on headings/body text, and the Urdu ticker/footer/
+motto all render in the calligraphic Nastaliq style rather than a generic fallback.
+Grepped `lang="ur"` counts against expected occurrences per page (3 on the 5 ticker
+pages, 1 on tournament.html/404.html, 2 on join.html) — all matched. No JS/build step for
+`web/`; visual confirmation is the verification, same as every prior website ADR.
