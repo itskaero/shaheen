@@ -24,7 +24,9 @@ from bot.content.profile_embeds import (
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
 from database.session import session_scope
+from integrations.brawlhalla.errors import BrawlhallaAPIError
 from services.link_service import LinkService
+from services.snapshot_service import SnapshotRunResult, SnapshotService
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,20 @@ class LinkCog(commands.Cog):
                 joined_at=member.joined_at,
                 candidate=candidate,
             )
+
+        # Take an initial snapshot now instead of leaving the member absent
+        # from /leaderboard and the website until the next scheduled
+        # snapshot tick (up to SNAPSHOT_INTERVAL_HOURS later, ADR-059) —
+        # both leaderboards skip any player with zero RankingSnapshot rows.
+        # A Brawlhalla hiccup here must never fail /link itself, matching
+        # link_service.py's own "region is a nice-to-have" pattern.
+        try:
+            async with session_scope(self.bot.session_factory) as session:
+                await SnapshotService(session, self.bot.brawlhalla).snapshot_member(
+                    outcome.member, outcome.player, member.id, SnapshotRunResult()
+                )
+        except BrawlhallaAPIError as exc:
+            logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)
 
         promoted = await self._maybe_promote(member)
         embed = build_link_success_embed(player_name=outcome.player.player_name, promoted=promoted)

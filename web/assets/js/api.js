@@ -2,11 +2,31 @@
 // response shapes in src/api/schemas.py — kept in sync by hand since this
 // is a plain static site with no shared type generation.
 
+// Render's free tier sleeps after 15 min idle and can take ~30-60s to wake
+// on the next request (README.md's "Deploying to production" section) —
+// without a timeout, a cold-start request and a genuinely broken one look
+// identical to a page: both just sit on "Loading…" forever. This gives
+// every request an upper bound so the UI can tell the difference.
+const REQUEST_TIMEOUT_MS = 50_000;
+
 const ShaheenAPI = (() => {
   async function get(path) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: { Accept: "application/json" },
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error("Shaheen's server is waking up — try again in a moment.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
     if (response.status === 404) {
       return null;
     }

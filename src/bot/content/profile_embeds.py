@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import discord
 
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
@@ -65,20 +67,37 @@ def build_profile_embed(
     player: BrawlhallaPlayer,
     stats: PlayerStatsResponse,
     ranked: PlayerRankedResponse | None,
+    joined_at: datetime | None,
 ) -> discord.Embed:
+    """The one-look profile card — folds in what /rank, /stats, and /legends
+    each show separately (win rate, tier/rating/peak, global rank, region)
+    plus clan join date, which wasn't surfaced anywhere before
+    (docs/DECISIONS.md ADR-059). /rank/-stats/-legends stay as-is for a
+    quick single-stat check.
+    """
     embed = discord.Embed(title=f"🦅 {display_name}", colour=FOREST_GREEN)
     if avatar_url:
         embed.set_thumbnail(url=avatar_url)
     embed.add_field(
         name="Brawlhalla", value=f"{player.player_name} (Lv. {stats.level})", inline=True
     )
-    embed.add_field(name="Games / Wins", value=f"{stats.games} / {stats.wins}", inline=True)
+    win_rate = (stats.wins / stats.games * 100) if stats.games else 0.0
+    embed.add_field(
+        name="Games / Wins", value=f"{stats.games} / {stats.wins} ({win_rate:.0f}%)", inline=True
+    )
+    if joined_at is not None:
+        embed.add_field(name="Member Since", value=joined_at.strftime("%b %d, %Y"), inline=True)
+
     if ranked is not None and ranked.tier:
         embed.add_field(
             name="Ranked",
             value=f"{ranked.tier} — {ranked.rating} rating (peak {ranked.peak_rating})",
             inline=False,
         )
+        if ranked.global_rank:
+            embed.add_field(name="Global Rank", value=f"#{ranked.global_rank}", inline=True)
+        if ranked.region:
+            embed.add_field(name="Region", value=ranked.region, inline=True)
     return embed
 
 

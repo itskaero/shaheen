@@ -1053,3 +1053,110 @@ as intended and no `custom_id` collides with another. This doesn't prove
 Discord actually accepts these interactions end-to-end (no network access
 from this environment), consistent with every other bot-side verification
 in this document.
+
+## ADR-059 — Post-launch batch: leaderboard-at-link, channel content, fail-safety, generated imagery, /profile depth
+
+Decision: five related fixes/additions, shipped together after the first
+real usage surfaced them.
+
+**1. Leaderboard shows a member immediately after `/link`.**
+`SnapshotService._snapshot_one` (private) is now public
+`SnapshotService.snapshot_member` — `run_for_guild` calls it exactly as
+before; `bot/cogs/link.py`'s `link()` command additionally calls it once,
+directly, right after a successful link, in its own `try/except
+BrawlhallaAPIError` (mirroring `link_service.py`'s existing "region is a
+nice-to-have" pattern — a snapshot hiccup must never fail `/link`
+itself). Reason: `LinkService.link()` never created a `RankingSnapshot`;
+only the scheduled `SnapshotService.run_for_guild` job did (interval =
+`SNAPSHOT_INTERVAL_HOURS`, 6h default), and both `ClanService.leaderboard`
+and `WebsiteService.get_leaderboard` skip any player with zero snapshots
+— so a freshly-linked member was invisible on both leaderboards for up to
+6 hours. No new snapshot-creation logic was written; the existing method
+was reused as-is, just renamed to be callable from outside `run_for_guild`.
+
+**2. The website no longer hangs on "Loading…" forever.** No unhandled
+backend exception was found for this (`WebsiteService.get_clan_info` only
+does a `COUNT(*)`, unrelated to the snapshot issue above) — the real gap
+was `web/assets/js/api.js`'s `get()` having no request timeout, so a
+Render free-tier cold start (README already documents ~30-60s) or a
+genuinely hung request both looked identical to "broken" for as long as
+the user waited. Added an `AbortController`-based ~50s timeout with a
+clear "waking up" message on timeout specifically, and a short
+first-load hint on every page's static loading text (clan/leaderboard/
+tournament/tournaments/player). Also gave `create_engine`
+(`src/database/session.py`) a `connect_args={"timeout": 10}` for
+`postgresql+asyncpg` URLs only (sqlite, used by the whole test suite, is
+untouched) — a defensive backstop so an unreachable DB fails fast with a
+real error instead of hanging the request the frontend's new timeout is
+racing against.
+
+**3. Every text channel gets `/setup run mode:launch` content, and a
+channel-send failure can't abort the rest.** `bot/constants.py` defines
+24 text channels (plus 4 voice, which never get messages); before this,
+`bot/cogs/setup.py` only populated 4 (welcome/rules/roles/ranked). Added
+one embed builder per remaining channel in new `bot/content/
+channel_intros.py`, and extended `_LAUNCH_MESSAGE_CHANNELS` plus a new
+module-level `_launch_messages()` (extracted out of
+`_deploy_launch_messages` specifically so `tests/
+test_setup_launch_messages.py` can assert every text `ChannelSpec` in
+`CATEGORIES` has an entry, without needing a live guild). Each channel's
+send is now wrapped in `try/except discord.HTTPException`, logged and
+skipped rather than aborting the whole method — a missing permission or
+a since-deleted channel no longer takes out every other channel's
+content. (A manually *deleted message*, as opposed to a deleted channel,
+was already safe before this: `_already_posted`'s history-based title
+search just doesn't find it and correctly re-posts on the next
+`/setup run`.)
+
+**4. Server-themed generated imagery, via Pillow, not an AI image API.**
+No AI image service is configured anywhere in this project (only
+Discord/Brawlhalla keys exist) — asked, and the owner confirmed
+"use own tools," i.e. generate procedurally rather than adding a new
+external API/key/cost. New `src/services/image_service.py`
+(Discord-agnostic, no Discord import) renders a branded green-to-gold
+diagonal-gradient PNG card from `bot/palette.py`'s existing colors, with
+a title/subtitle centered using Pillow's own bundled scalable default
+font (`ImageFont.load_default(size=...)`, Pillow >= 10.1) rather than a
+bundled or system font file — the Dockerfile's `python:3.12-slim` base
+has no fonts installed, so a system-font path would break in production;
+shipping a font asset was unnecessary scope for a first pass when Pillow
+already bundles one. `ClanCog._announce` (hall-of-fame achievement/
+milestone posts) attaches the card via `discord.File`; a render failure
+falls back to the plain embed rather than losing the announcement.
+
+**5. `/profile` expanded to be a real one-look card.** It showed only 3
+fields (Brawlhalla name, games/wins, one combined rank line); `/rank`,
+`/stats`, `/legends` covered the rest as separate commands. Asked, and
+the owner said fold detail into `/profile` itself rather than keep it
+minimal. `build_profile_embed` (`bot/content/profile_embeds.py`) now
+also shows win-rate %, global rank, region (same data `/rank` already
+fetches), and — the one field genuinely unsurfaced anywhere before —
+"Member Since" from `ShaheenMember.joined_at`. `bot/cogs/profile.py`'s
+`_require_link` now returns `(ShaheenMember, BrawlhallaPlayer)` instead
+of just the player so `/profile` can reach `joined_at`; `/rank`/`/stats`/
+`/legends` are otherwise unchanged (still useful for a quick single-stat
+check — this is additive, not a removal).
+
+Reason (all five): traced from actual owner-reported symptoms by three
+parallel Explore agents against the real code (not guessed), with two
+genuinely ambiguous scope questions — imagery approach, `/profile` depth
+— put to the owner before implementation rather than assumed.
+
+Verified: `uv run mypy src` (93 files) and `uv run ruff check src tests`
+both clean. Full `pytest` suite green — 153 tests, up from 140 at the
+start of this batch: `tests/test_snapshot_service.py` gained a direct
+`snapshot_member` test (the public-rename call shape `bot/cogs/link.py`
+now uses); new `tests/test_setup_launch_messages.py` (3 tests) asserts
+every text channel in `CATEGORIES` has launch content, the tuple/dict
+stay in sync, and every embed has a title (required for `_already_posted`
+to work); new `tests/test_image_service.py` (3 tests) checks
+`render_milestone_card` returns a valid, correctly-sized PNG, including
+with long and empty strings. Manually rendered and viewed a sample
+milestone card to confirm it's legible and on-brand, not just
+"doesn't crash." Ran the same `setup_hook()`-body smoke test as ADR-058
+(add_view + load_extension for all 5 cogs) against a freshly-migrated
+sqlite DB post-`uv sync` (picking up the new Pillow dependency) to
+confirm nothing in this batch broke bot startup. Did not verify against
+a live Render/Discord deployment — same caveat as every other
+verification in this document; this sandbox has no network access to
+either.

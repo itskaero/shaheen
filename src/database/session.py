@@ -19,7 +19,16 @@ from sqlalchemy.ext.asyncio import (
 
 
 def create_engine(database_url: str) -> AsyncEngine:
-    return create_async_engine(database_url, pool_pre_ping=True)
+    connect_args: dict[str, object] = {}
+    if database_url.startswith("postgresql+asyncpg://"):
+        # asyncpg's own connect() timeout (seconds) — without this, an
+        # unreachable/slow Postgres host leaves the API's request handler
+        # hanging indefinitely instead of failing fast with a real error
+        # the frontend can show (docs/DECISIONS.md ADR-059). Not applied
+        # for sqlite (the test suite's DATABASE_URL), which has no
+        # equivalent concept and no connect-hang failure mode to guard.
+        connect_args["timeout"] = 10
+    return create_async_engine(database_url, pool_pre_ping=True, connect_args=connect_args)
 
 
 def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
