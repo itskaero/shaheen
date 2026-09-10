@@ -337,6 +337,17 @@ nav.site-nav a.active::after {
   mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
 }
 
+/* The join.html hero lockup is a second, more detailed brand asset that's
+   already genuinely transparent (unlike logo-full.png's near-black square
+   canvas, which needs the radial mask above to fake it) — reuse .hero-
+   logo-img's float animation but drop the mask and size it a little
+   larger, since on join.html it stands in for a separate <h1> wordmark. */
+.hero-lockup-img {
+  width: clamp(240px, 34vw, 420px);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 .hero-logo h1 {
   position: relative;
   z-index: 1;
@@ -522,6 +533,26 @@ nav.site-nav a.active::after {
 
 .btn-primary:hover {
   box-shadow: 0 0 32px -2px rgba(57, 255, 176, 0.9);
+}
+
+/* A subtle pulsing glow ring on join.html's primary Discord CTA — draws
+   the eye to the one action that matters on a recruitment page, without
+   introducing any new color (same --neon-green already used everywhere
+   else on .btn-primary). Covered by the prefers-reduced-motion kill-
+   switch below like every other animation in this file. */
+.cta-pulse {
+  animation: ctaPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes ctaPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 22px -4px rgba(57, 255, 176, 0.7);
+  }
+
+  50% {
+    box-shadow: 0 0 40px 4px rgba(57, 255, 176, 0.85);
+  }
 }
 
 .btn-ghost {
