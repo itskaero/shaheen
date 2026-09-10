@@ -37,6 +37,10 @@ class ChannelSpec:
     name: str
     kind: ChannelKind
     topic: str | None = None
+    # Everyone can still view/read; only ROLES_WITH_STAFF_ACCESS can send.
+    # False (default) leaves Send Messages inherited from the category —
+    # docs/DECISIONS.md ADR-060, docs/PERMISSIONS.md.
+    staff_only_send: bool = False
 
 
 @dataclass(frozen=True)
@@ -52,10 +56,17 @@ class CategorySpec:
 #
 # SHAHEEN BOT is deliberately absent: it is Discord's own managed integration
 # role for the bot, not one /setup creates (docs/DECISIONS.md ADR-018).
+#
+# Bilingual "English | Urdu" names, no emoji prefix — matches the owner's own
+# hand-made roles (docs/DECISIONS.md ADR-060), replacing the earlier
+# "emoji + ALL CAPS" style. Urdu is only filled in where the owner gave an
+# exact string; guessing translations for a live server risks getting them
+# wrong, so Moderator/Trial/Ally/Guest stay English-only until confirmed
+# (ADR-060 records exactly which).
 
 ROLE_LEADER = RoleSpec(
     logical_key="role:shaheen_leader",
-    name="👑 SHAHEEN LEADER",
+    name="Leader | سربراہ",
     color=GOLD,
     mentionable=True,
     # Server owner-equivalent by design; every other role below is deliberately
@@ -65,7 +76,7 @@ ROLE_LEADER = RoleSpec(
 
 ROLE_MODERATOR = RoleSpec(
     logical_key="role:moderator",
-    name="🛡️ MODERATOR",
+    name="Moderator",
     color=EMERALD,
     mentionable=True,
     permissions=discord.Permissions(
@@ -81,31 +92,31 @@ ROLE_MODERATOR = RoleSpec(
 
 ROLE_ELITE = RoleSpec(
     logical_key="role:elite_shaheen",
-    name="🏆 ELITE SHAHEEN",
+    name="Elite Shaheen | شاہینِ خاص",
     color=GOLD,
 )
 
 ROLE_SHAHEEN = RoleSpec(
     logical_key="role:shaheen",
-    name="🦅 SHAHEEN",
+    name="Shaheen | شاہین",
     color=FOREST_GREEN,
 )
 
 ROLE_TRIAL = RoleSpec(
     logical_key="role:trial_shaheen",
-    name="🎯 TRIAL SHAHEEN",
+    name="Trial Shaheen",
     color=EMERALD,
 )
 
 ROLE_ALLY = RoleSpec(
     logical_key="role:ally",
-    name="🤝 ALLY",
+    name="Ally",
     color=CREAM,
 )
 
 ROLE_GUEST = RoleSpec(
     logical_key="role:guest",
-    name="👀 GUEST",
+    name="Guest",
     color=GREY,
     hoist=False,
 )
@@ -199,7 +210,9 @@ CATEGORIES: tuple[CategorySpec, ...] = (
         logical_key="category:shaheen_hq",
         name="🏯 SHAHEEN HQ",
         channels=(
-            ChannelSpec("channel:announcements", "📢-announcements", "text"),
+            ChannelSpec(
+                "channel:announcements", "📢-announcements", "text", staff_only_send=True
+            ),
             ChannelSpec("channel:welcome", "👋-welcome", "text"),
             ChannelSpec("channel:rules", "📜-rules", "text"),
             ChannelSpec("channel:roles", "🎭-roles", "text"),

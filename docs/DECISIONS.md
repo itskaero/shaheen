@@ -1160,3 +1160,130 @@ confirm nothing in this batch broke bot startup. Did not verify against
 a live Render/Discord deployment — same caveat as every other
 verification in this document; this sandbox has no network access to
 either.
+
+## ADR-060 — Bilingual role names, per-channel send permissions, generated imagery redesign, /setup reset
+
+Decision: four related changes, all from the same owner request, after
+seeing their own hand-made roles (screenshot) sitting alongside the
+bot's auto-created ones with completely different naming.
+
+**1. Role names: "English | Urdu", no emoji, matching the owner's own
+hand-made roles.** `bot/constants.py`'s `ROLE_LEADER`, `ROLE_ELITE`,
+`ROLE_SHAHEEN` now use the exact Urdu the owner's screenshot confirmed
+("Leader | سربراہ", "Elite Shaheen | شاہینِ خاص", "Shaheen | شاہین").
+`ROLE_MODERATOR`, `ROLE_TRIAL`, `ROLE_ALLY`, `ROLE_GUEST` are English-only
+for now — the owner's screenshot also showed a "Brawler | جنگجو" role
+that doesn't map cleanly onto any existing rank, and guessing Urdu for a
+real, live server risks getting it wrong. Both are open questions back to
+the owner (see the end of this entry), not guessed at.
+
+Every place that had the old names as hardcoded literal strings — most
+importantly `bot/content/embeds.py`'s `build_roles_embed()` and
+`build_rules_embed()`, and `bot/content/profile_embeds.py`'s promotion
+message — was rewritten to reference `bot.constants.ROLE_*` instead of
+duplicating the string. That duplication is exactly what let the display
+text go stale the first time (the embed still said "SHAHEEN LEADER"
+etc. with the old emoji, unrelated to whatever the constant said);
+referencing the constant directly makes that class of drift impossible
+going forward. Renaming only touches each `RoleSpec.name` — `logical_key`
+values are untouched, so `/setup run` picks up the new names as an
+ordinary REPAIR action on existing roles, no migration needed.
+
+**2. Per-channel send permissions, layered on the existing category
+overwrite pattern.** New `ChannelSpec.staff_only_send: bool = False`
+(`bot/constants.py`) — `#announcements` is the first (only, for now) use:
+`@everyone` can still view the channel but not send in it, only
+`ROLES_WITH_STAFF_ACCESS` can. Implemented as `SetupService.
+_channel_overwrites`, a near-exact mirror of the existing `_category_
+overwrites` (same shape, same re-applied-every-pass-not-just-repair
+behavior so a manually changed Discord permission gets corrected back).
+`_apply_channels` now takes `role_by_key` (already computed earlier in
+`apply()`, just threaded through) to resolve staff roles into actual
+`discord.Role` objects for the overwrite dict.
+
+The owner's other ask here — "bots limited to bot channel" — turned out,
+on asking, to mean *other* bots' permissions, a Discord server-config
+concern for whichever bot that turns out to be, not something Shaheen's
+own code enforces (Shaheen's commands already work everywhere by design,
+and it has no visibility into what other bots exist on the server to
+scope this generically for). No code change for that part.
+
+**3. Generated imagery redesign: gradient direction, and a faded crest
+watermark.** ADR-059's gold-accented diagonal gradient is now a vertical
+green-mid-shade-to-dark-shade gradient (`bot.palette.FOREST_GREEN` down
+to a computed 28%-brightness version of it), per the owner's explicit
+color direction. A faded copy of the clan crest (`logo-icon.png`) is
+composited in behind the text as a soft radial-fade watermark (opacity
+capped at ~35%, alpha fades to 0 at the edges) — "transparent logo" read
+most sensibly as *faded into the background*, since no alpha-channel
+source asset exists for the crest (it's a single flat RGB PNG with
+gradient shading baked into the artwork itself, not a clean-edged subject
+a naive color-key cutout could isolate without looking ragged); faking a
+hard cutout badly seemed worse than a tasteful blend using the asset as
+it actually is.
+
+The crest asset itself had to move: it lived only at `web/assets/img/
+logo-icon.png`, and the bot's `.dockerignore` deliberately excludes
+`web/` entirely (only the static frontend needs it — ADR-053's reasoning
+for keeping the bot and website deploys separate). A copy now lives at
+`src/assets/img/logo-icon.png`, which ships automatically since the
+Dockerfile's `COPY src/ ./src/` already copies everything under `src/` —
+no Dockerfile change needed, just getting the file inside the directory
+that's already copied. `_faded_logo()` returns `None` (not an exception)
+if the asset is ever missing, so a card still renders — without the
+watermark — rather than losing the whole announcement over it.
+
+**4. `/setup reset` — a new, separately-confirmed, genuinely destructive
+command.** Explicitly NOT folded into `/setup run`, which stays the safe,
+idempotent, never-deletes-anything command people re-run routinely for
+repairs/verification (asked the owner directly given the risk of
+permanently losing channel history; they confirmed a separate command).
+`SetupService.reset()` deletes every Discord role/category/channel
+`/setup` has ever created for the guild (walks `ProvisionedResource.
+list_for_guild`, deletes channels/categories first then roles, each
+deletion independently guarded so one failure — a missing permission, a
+resource already gone — doesn't abort the rest) and then clears the
+ledger (`ProvisionedResourceRepository.delete_for_guild`, new) so the
+next `/setup run` treats everything as needing fresh creation. It does
+**not** touch stored member/player/match/achievement data — only Discord
+structure and the idempotency ledger.
+
+Confirmation is two steps, not one: `/setup reset` first shows a plain-
+language warning embed with a "Continue to confirm" button
+(`_ResetWarningView`, author-locked like the existing `ConfirmView`);
+that button's click is what's allowed to call `interaction.response.
+send_modal(...)` (Discord requires a modal to be the *direct* response to
+the interaction that triggers it, so it can't be shown straight off the
+slash command if a warning screen comes first) — the modal
+(`_ResetConfirmModal`) requires typing the literal text `DELETE` before
+anything is deleted. Both live in `bot/cogs/setup.py` rather than
+`bot/views/`, since they're single-purpose and tightly coupled to this
+one command, unlike the reusable views in `bot/views/`.
+
+Verified: `uv run mypy src` (93 files) and `ruff check src tests` clean.
+Full `pytest` suite green — 158 tests (up from 153): new tests confirm
+`#announcements` is `staff_only_send` (`tests/test_constants.py`),
+`ProvisionedResourceRepository.delete_for_guild` clears only the target
+guild's rows (`tests/test_provisioned_resource_repository.py`), the crest
+asset resolves under `src/` not `web/` and `_faded_logo` actually caps
+its alpha (`tests/test_image_service.py`). Generated and viewed a sample
+card to confirm the new gradient direction and watermark read correctly,
+not just "doesn't crash" — legible text, visible-but-subtle crest. Ran
+the same `setup_hook()`-body + `SetupCog.setup_group.commands` smoke test
+as ADR-058/059 to confirm all 5 cogs still load and `/setup reset` is
+registered as a fourth subcommand alongside `run`/`status`/`verify`.
+Did not exercise `SetupService.reset()`'s actual Discord deletion calls
+or the modal flow end-to-end — this project has no Discord-mocking test
+harness for any cog/service that makes live Discord calls (consistent
+with every other `setup_service.py`/cog method, none of which are unit
+tested either), and this sandbox has no network access to a real guild.
+
+**Open questions back to the owner, not guessed at:** the exact Urdu for
+Moderator/Trial (or does "Brawler | جنگجو" replace Trial Shaheen?)/Ally/
+Guest, and whether channel names (not just role names) should also go
+bilingual — that's a separate, larger question given Discord channel
+names are lowercase-and-hyphenated (spaces become hyphens) and it's
+unconfirmed whether Urdu script plus a "|" separator survives that
+normalization cleanly; docs/DISCORD_SPEC.md's original English-first
+channel-naming call (ADR-008) was left as-is pending that answer rather
+than guessed at for ~20 channels on a live server.

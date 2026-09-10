@@ -6,10 +6,19 @@ from __future__ import annotations
 
 import discord
 
+from bot.constants import (
+    ROLE_ALLY,
+    ROLE_ELITE,
+    ROLE_GUEST,
+    ROLE_LEADER,
+    ROLE_MODERATOR,
+    ROLE_SHAHEEN,
+    ROLE_TRIAL,
+)
 from bot.palette import EMERALD, FOREST_GREEN, GOLD
 from core.brand import MOTTO, TAGLINE
 from services.setup_planner import ActionType, CategoryAction, ChannelAction, RoleAction, SetupPlan
-from services.setup_service import ActionSummary, SetupReport
+from services.setup_service import ActionSummary, ResetReport, SetupReport
 
 
 def build_welcome_embed() -> discord.Embed:
@@ -34,7 +43,8 @@ def build_rules_embed() -> discord.Embed:
             "2. Keep channels on-topic; use 💬-general or 🇵🇰-pakistan-chat for casual chat.\n"
             "3. No spam, self-promotion, or unsolicited links.\n"
             "4. Follow Discord's Terms of Service and Community Guidelines.\n"
-            "5. Staff decisions are final; DM a 🛡️ MODERATOR or 👑 SHAHEEN LEADER with concerns."
+            f"5. Staff decisions are final; DM a **{ROLE_MODERATOR.name}** or "
+            f"**{ROLE_LEADER.name}** with concerns."
         ),
         colour=FOREST_GREEN,
     )
@@ -42,16 +52,20 @@ def build_rules_embed() -> discord.Embed:
 
 
 def build_roles_embed() -> discord.Embed:
+    """Role names come from bot.constants, not hardcoded here — a previous
+    version duplicated them as literal strings and drifted out of sync when
+    the roles were renamed (docs/DECISIONS.md ADR-060).
+    """
     embed = discord.Embed(
         title="🎭 Shaheen Roles",
         description=(
-            "👑 **SHAHEEN LEADER** — clan leadership\n"
-            "🛡️ **MODERATOR** — community moderation\n"
-            "🏆 **ELITE SHAHEEN** — top competitive members\n"
-            "🦅 **SHAHEEN** — full clan members\n"
-            "🎯 **TRIAL SHAHEEN** — members under evaluation\n"
-            "🤝 **ALLY** — friends of the clan\n"
-            "👀 **GUEST** — everyone else\n\n"
+            f"**{ROLE_LEADER.name}** — clan leadership\n"
+            f"**{ROLE_MODERATOR.name}** — community moderation\n"
+            f"**{ROLE_ELITE.name}** — top competitive members\n"
+            f"**{ROLE_SHAHEEN.name}** — full clan members\n"
+            f"**{ROLE_TRIAL.name}** — members under evaluation\n"
+            f"**{ROLE_ALLY.name}** — friends of the clan\n"
+            f"**{ROLE_GUEST.name}** — everyone else\n\n"
             "Ranks above are assigned by staff. Grab your own opt-in roles below ⬇️"
         ),
         colour=GOLD,
@@ -129,6 +143,45 @@ def build_report_embed(report: SetupReport) -> discord.Embed:
         )
     if not report.warnings and not report.errors:
         embed.add_field(name="Status", value="✅ Completed with no issues.", inline=False)
+    return embed
+
+
+def build_reset_warning_embed() -> discord.Embed:
+    """Shown before the type-DELETE-to-confirm modal (docs/DECISIONS.md
+    ADR-060) — /setup reset is permanent and unrelated to the normal,
+    safe /setup run flow.
+    """
+    return discord.Embed(
+        title="⚠️ Reset Shaheen's Server Structure?",
+        description=(
+            "This permanently **deletes every role, category, and channel** "
+            "`/setup` has ever created — including all messages in them. "
+            "This cannot be undone.\n\n"
+            "Stored member/player/match/achievement data is **not** affected — "
+            "only the Discord structure itself.\n\n"
+            "This is a separate, deliberately destructive command — `/setup run` "
+            "remains safe to re-run any time and never deletes anything."
+        ),
+        colour=0xB00020,
+    )
+
+
+def build_reset_report_embed(report: ResetReport) -> discord.Embed:
+    embed = discord.Embed(
+        title="🗑️ Shaheen Setup — Reset Complete",
+        description=f"Deleted **{report.total_deleted}** resource(s).",
+        colour=GOLD if not report.errors else 0xB00020,
+    )
+    embed.add_field(name="Roles deleted", value=str(report.roles_deleted), inline=True)
+    embed.add_field(name="Categories deleted", value=str(report.categories_deleted), inline=True)
+    embed.add_field(name="Channels deleted", value=str(report.channels_deleted), inline=True)
+    if report.errors:
+        embed.add_field(
+            name="❌ Errors", value="\n".join(f"- {e}" for e in report.errors[:10]), inline=False
+        )
+    embed.add_field(
+        name="Next step", value="Run `/setup run` to rebuild from scratch.", inline=False
+    )
     return embed
 
 

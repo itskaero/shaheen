@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.provisioned_resource import ProvisionedResource, ResourceType
@@ -27,6 +27,16 @@ class ProvisionedResourceRepository:
     async def list_for_guild(self, guild_id: int) -> list[ProvisionedResource]:
         stmt = select(ProvisionedResource).where(ProvisionedResource.guild_id == guild_id)
         return list((await self._session.execute(stmt)).scalars().all())
+
+    async def delete_for_guild(self, guild_id: int) -> None:
+        """Clears the idempotency ledger for a guild — /setup reset
+        (docs/DECISIONS.md ADR-060) calls this after deleting the actual
+        Discord roles/categories/channels, so the next /setup run treats
+        everything as needing fresh creation rather than "already exists."
+        """
+        await self._session.execute(
+            delete(ProvisionedResource).where(ProvisionedResource.guild_id == guild_id)
+        )
 
     async def upsert(
         self,

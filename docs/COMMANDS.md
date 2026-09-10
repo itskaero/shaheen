@@ -19,6 +19,14 @@ Show whether expected Shaheen resources exist and whether permissions match.
 ### /setup verify
 Run non-destructive validation and report discrepancies.
 
+### /setup reset
+**Destructive** (docs/DECISIONS.md ADR-060) — permanently deletes every
+role/category/channel `/setup` has created, then clears the idempotency
+ledger so the next `/setup run` rebuilds from scratch. Does not touch
+stored member/player/match/achievement data. Separate from `/setup run`
+on purpose: `run` stays safe to re-run any time. Two-step confirmation —
+a warning screen, then a modal requiring the exact text `DELETE`.
+
 ## Phase 2 — Identity and Brawlhalla
 
 ### /link

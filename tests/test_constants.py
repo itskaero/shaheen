@@ -5,7 +5,7 @@ idempotency (ADR-011), so these are worth a regression guard.
 
 from __future__ import annotations
 
-from bot.constants import ROLES, ROLES_WITH_STAFF_ACCESS, SELF_ASSIGN_ROLES
+from bot.constants import CATEGORIES, ROLES, ROLES_WITH_STAFF_ACCESS, SELF_ASSIGN_ROLES
 
 
 def test_role_logical_keys_are_unique() -> None:
@@ -46,3 +46,10 @@ def test_self_assign_roles_positioned_below_rank_roles() -> None:
             seen_self_assign = True
         elif seen_self_assign:
             raise AssertionError(f"rank role {role.logical_key!r} appears after a self-assign role")
+
+
+def test_announcements_channel_is_staff_only_send() -> None:
+    """docs/DECISIONS.md ADR-060 — everyone can read, only staff can post."""
+    all_channels = (c for category in CATEGORIES for c in category.channels)
+    channel = next(c for c in all_channels if c.logical_key == "channel:announcements")
+    assert channel.staff_only_send is True
