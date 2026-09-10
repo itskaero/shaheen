@@ -40,6 +40,16 @@ Private / in development. Implemented so far:
   `GET /tournaments/{id}`, `tournaments.html` / `tournament.html`)
   (docs/DECISIONS.md ADR-051). One abstracted, restrained nod to Pakistani
   truck art as a homepage divider (ADR-052).
+- Post-launch fixes (docs/DECISIONS.md ADR-059): `/link` takes an initial
+  snapshot immediately, so a new member shows up on `/leaderboard` and the
+  website right away instead of waiting for the next scheduled snapshot;
+  every text channel now gets `/setup run mode:launch` starter content,
+  each post fail-safe against a missing permission or deleted channel; the
+  website's API calls time out with a clear "waking up" message instead of
+  hanging forever; `/profile` is now a full one-look card (win-rate,
+  global rank, region, member-since); Hall of Fame milestone/achievement
+  posts include a branded generated image (`src/services/image_service.py`,
+  Pillow, no external AI API).
 
 ## Getting started
 

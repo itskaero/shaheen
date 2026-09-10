@@ -6,6 +6,7 @@ services/snapshot_service.py and services/clan_service.py.
 
 from __future__ import annotations
 
+import io
 import logging
 
 import discord
@@ -26,6 +27,7 @@ from database.models.provisioned_resource import ResourceType
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.session import session_scope
 from services.clan_service import ClanService
+from services.image_service import render_milestone_card
 from services.link_service import LinkService
 from services.snapshot_service import Announcement, SnapshotService
 
@@ -84,17 +86,33 @@ class ClanCog(commands.Cog):
             embed = build_achievement_announcement_embed(
                 display_name=display_name, achievement=announcement.achievement
             )
+            subtitle = f"🏅 {announcement.achievement.name}"
         elif announcement.new_peak_rating is not None:
             embed = build_milestone_announcement_embed(
                 display_name=display_name,
                 player_name=announcement.player.player_name,
                 new_peak_rating=announcement.new_peak_rating,
             )
+            subtitle = f"New peak rating: {announcement.new_peak_rating}!"
         else:
             return
 
+        # A branded generated card alongside the embed (docs/DECISIONS.md
+        # ADR-059) — a rendering failure here should never lose the
+        # announcement itself, so fall back to the plain embed.
+        file: discord.File | None = None
         try:
-            await channel.send(embed=embed)
+            png_bytes = render_milestone_card(title=display_name, subtitle=subtitle)
+            file = discord.File(io.BytesIO(png_bytes), filename="milestone.png")
+            embed.set_image(url="attachment://milestone.png")
+        except Exception:
+            logger.exception("Failed to render milestone card for %s", display_name)
+
+        try:
+            if file is not None:
+                await channel.send(embed=embed, file=file)
+            else:
+                await channel.send(embed=embed)
         except discord.Forbidden:
             logger.warning("Missing permission to post in hall-of-fame channel")
 

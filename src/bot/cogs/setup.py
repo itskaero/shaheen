@@ -21,6 +21,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_setup_authorized
 from bot.client import ShaheenBot
+from bot.content.channel_intros import (
+    build_announcements_intro_embed,
+    build_bot_testing_intro_embed,
+    build_brawlhalla_intro_embed,
+    build_bug_reports_intro_embed,
+    build_clan_info_intro_embed,
+    build_clips_intro_embed,
+    build_commands_intro_embed,
+    build_development_log_intro_embed,
+    build_general_intro_embed,
+    build_hall_of_fame_intro_embed,
+    build_leaderboard_intro_embed,
+    build_legend_talk_intro_embed,
+    build_memes_intro_embed,
+    build_one_v_one_intro_embed,
+    build_pakistan_chat_intro_embed,
+    build_scrims_intro_embed,
+    build_tips_guides_intro_embed,
+    build_tournaments_intro_embed,
+    build_two_v_two_intro_embed,
+    build_website_testing_intro_embed,
+)
 from bot.content.competition_embeds import build_spar_kiosk_embed
 from bot.content.embeds import (
     build_plan_embed,
@@ -49,12 +71,36 @@ REQUIRED_BOT_PERMISSIONS = discord.Permissions(
 )
 
 # Channels that get one or more branded messages deployed in launch mode
-# (see _deploy_launch_messages for what each one gets).
+# (see _deploy_launch_messages for what each one gets). Every text channel
+# in bot/constants.py's CATEGORIES gets something (docs/DECISIONS.md
+# ADR-059) except #voice channels (no messages) and #development's admin
+# channels are included too, same as the rest — they're just hidden from
+# regular members by the category's own restricted=True permissions.
 _LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
+    "channel:announcements",
     "channel:welcome",
     "channel:rules",
     "channel:roles",
+    "channel:clan_info",
+    "channel:general",
+    "channel:pakistan_chat",
+    "channel:memes",
+    "channel:clips",
+    "channel:brawlhalla",
+    "channel:tips_guides",
+    "channel:legend_talk",
+    "channel:one_v_one",
+    "channel:two_v_two",
     "channel:ranked",
+    "channel:scrims",
+    "channel:tournaments",
+    "channel:leaderboard",
+    "channel:hall_of_fame",
+    "channel:bot_testing",
+    "channel:website_testing",
+    "channel:commands",
+    "channel:bug_reports",
+    "channel:development_log",
 )
 
 
@@ -156,22 +202,7 @@ class SetupCog(commands.Cog):
 
     async def _deploy_launch_messages(self, guild: discord.Guild, session: AsyncSession) -> None:
         resources = ProvisionedResourceRepository(session)
-        # Each channel can get more than one message; _already_posted's
-        # title check keeps re-running /setup from duplicating any of them.
-        # The persistent-view instances here are fresh objects, but that's
-        # fine — discord.py routes an interaction to whichever registered
-        # view has a matching custom_id (ShaheenBot.setup_hook), regardless
-        # of which specific instance is attached to the message that was
-        # actually sent (docs/DECISIONS.md ADR-058).
-        messages_by_channel_key: dict[str, list[tuple[discord.Embed, discord.ui.View | None]]] = {
-            "channel:welcome": [(build_welcome_embed(), None)],
-            "channel:rules": [(build_rules_embed(), None)],
-            "channel:roles": [
-                (build_roles_embed(), None),
-                (build_self_assign_roles_embed(), SelfAssignRolesView()),
-            ],
-            "channel:ranked": [(build_spar_kiosk_embed(), SparKioskView())],
-        }
+        messages_by_channel_key = _launch_messages()
         for logical_key in _LAUNCH_MESSAGE_CHANNELS:
             resource = await resources.get(
                 guild_id=guild.id, resource_type=ResourceType.CHANNEL, logical_key=logical_key
@@ -182,12 +213,71 @@ class SetupCog(commands.Cog):
             if not isinstance(channel, discord.TextChannel):
                 continue
             for embed, view in messages_by_channel_key[logical_key]:
-                if await _already_posted(channel, embed.title, self.bot.user):
-                    continue
-                if view is not None:
-                    await channel.send(embed=embed, view=view)
-                else:
-                    await channel.send(embed=embed)
+                try:
+                    if await _already_posted(channel, embed.title, self.bot.user):
+                        continue
+                    if view is not None:
+                        await channel.send(embed=embed, view=view)
+                    else:
+                        await channel.send(embed=embed)
+                except discord.HTTPException as exc:
+                    # A missing permission, a channel deleted mid-run, a
+                    # rate limit, etc. must not abort every other channel's
+                    # content — log and move on (docs/DECISIONS.md ADR-059:
+                    # explicit fail-safety ask). A manually *deleted
+                    # message* was already safe before this — _already_posted
+                    # just won't find it and re-posts normally next run.
+                    logger.warning(
+                        "Couldn't post launch message to %s (%s): %s",
+                        logical_key,
+                        channel.id,
+                        exc,
+                    )
+
+
+def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | None]]]:
+    """One or more branded messages per channel, deployed in launch mode.
+
+    Module-level (not inlined in _deploy_launch_messages) so
+    tests/test_setup_launch_messages.py can check every text channel in
+    bot.constants.CATEGORIES has an entry here without needing a live
+    guild/session (docs/DECISIONS.md ADR-059). Each channel can get more
+    than one message; _already_posted's title check keeps re-running
+    /setup from duplicating any of them. The persistent-view instances
+    here are fresh objects, but that's fine — discord.py routes an
+    interaction to whichever registered view has a matching custom_id
+    (ShaheenBot.setup_hook), regardless of which specific instance is
+    attached to the message that was actually sent (ADR-058).
+    """
+    return {
+        "channel:announcements": [(build_announcements_intro_embed(), None)],
+        "channel:welcome": [(build_welcome_embed(), None)],
+        "channel:rules": [(build_rules_embed(), None)],
+        "channel:roles": [
+            (build_roles_embed(), None),
+            (build_self_assign_roles_embed(), SelfAssignRolesView()),
+        ],
+        "channel:clan_info": [(build_clan_info_intro_embed(), None)],
+        "channel:general": [(build_general_intro_embed(), None)],
+        "channel:pakistan_chat": [(build_pakistan_chat_intro_embed(), None)],
+        "channel:memes": [(build_memes_intro_embed(), None)],
+        "channel:clips": [(build_clips_intro_embed(), None)],
+        "channel:brawlhalla": [(build_brawlhalla_intro_embed(), None)],
+        "channel:tips_guides": [(build_tips_guides_intro_embed(), None)],
+        "channel:legend_talk": [(build_legend_talk_intro_embed(), None)],
+        "channel:one_v_one": [(build_one_v_one_intro_embed(), None)],
+        "channel:two_v_two": [(build_two_v_two_intro_embed(), None)],
+        "channel:ranked": [(build_spar_kiosk_embed(), SparKioskView())],
+        "channel:scrims": [(build_scrims_intro_embed(), None)],
+        "channel:tournaments": [(build_tournaments_intro_embed(), None)],
+        "channel:leaderboard": [(build_leaderboard_intro_embed(), None)],
+        "channel:hall_of_fame": [(build_hall_of_fame_intro_embed(), None)],
+        "channel:bot_testing": [(build_bot_testing_intro_embed(), None)],
+        "channel:website_testing": [(build_website_testing_intro_embed(), None)],
+        "channel:commands": [(build_commands_intro_embed(), None)],
+        "channel:bug_reports": [(build_bug_reports_intro_embed(), None)],
+        "channel:development_log": [(build_development_log_intro_embed(), None)],
+    }
 
 
 async def _already_posted(

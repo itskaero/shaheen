@@ -21,6 +21,7 @@ from bot.content.profile_embeds import (
 )
 from core.exceptions import ShaheenError
 from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.models.shaheen_member import ShaheenMember
 from database.session import session_scope
 from services.link_service import LinkService
 from services.profile_service import ProfileService
@@ -41,9 +42,10 @@ class ProfileCog(commands.Cog):
 
         async with session_scope(self.bot.session_factory) as session:
             service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
-            player = await self._require_link(interaction, service, member, is_self=user is None)
-            if player is None:
+            linked = await self._require_link(interaction, service, member, is_self=user is None)
+            if linked is None:
                 return
+            shaheen_member, player = linked
             stats = await service.get_stats(player.brawlhalla_player_id)
             ranked = await service.get_ranked(player.brawlhalla_player_id)
 
@@ -53,6 +55,7 @@ class ProfileCog(commands.Cog):
             player=player,
             stats=stats,
             ranked=ranked,
+            joined_at=shaheen_member.joined_at,
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
 
@@ -67,9 +70,10 @@ class ProfileCog(commands.Cog):
 
         async with session_scope(self.bot.session_factory) as session:
             service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
-            player = await self._require_link(interaction, service, member, is_self=user is None)
-            if player is None:
+            linked = await self._require_link(interaction, service, member, is_self=user is None)
+            if linked is None:
                 return
+            _, player = linked
             ranked = await service.get_ranked(player.brawlhalla_player_id)
 
         embed = build_rank_embed(display_name=member.display_name, player=player, ranked=ranked)
@@ -86,9 +90,10 @@ class ProfileCog(commands.Cog):
 
         async with session_scope(self.bot.session_factory) as session:
             service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
-            player = await self._require_link(interaction, service, member, is_self=user is None)
-            if player is None:
+            linked = await self._require_link(interaction, service, member, is_self=user is None)
+            if linked is None:
                 return
+            _, player = linked
             stats = await service.get_stats(player.brawlhalla_player_id)
 
         embed = build_stats_embed(display_name=member.display_name, player=player, stats=stats)
@@ -105,9 +110,10 @@ class ProfileCog(commands.Cog):
 
         async with session_scope(self.bot.session_factory) as session:
             service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
-            player = await self._require_link(interaction, service, member, is_self=user is None)
-            if player is None:
+            linked = await self._require_link(interaction, service, member, is_self=user is None)
+            if linked is None:
                 return
+            _, player = linked
             stats = await service.get_stats(player.brawlhalla_player_id)
 
         embed = build_legends_embed(display_name=member.display_name, player=player, stats=stats)
@@ -130,14 +136,14 @@ class ProfileCog(commands.Cog):
         member: discord.Member,
         *,
         is_self: bool,
-    ) -> BrawlhallaPlayer | None:
+    ) -> tuple[ShaheenMember, BrawlhallaPlayer] | None:
         linked = await service.get_linked_player(guild_id=member.guild.id, discord_id=member.id)
         if linked is None:
             await interaction.followup.send(
                 embed=build_not_linked_embed(target_is_self=is_self), ephemeral=True
             )
             return None
-        return linked[1]
+        return linked
 
 
 async def setup(bot: ShaheenBot) -> None:

@@ -23,7 +23,7 @@
   });
 
   async function loadPlayer(brawlhallaId) {
-    content.innerHTML = '<p class="state-msg">Loading player…</p>';
+    content.innerHTML = '<p class="state-msg">Loading player… (first load can take up to a minute)</p>';
 
     try {
       const [profile, history, legends, matches] = await Promise.all([

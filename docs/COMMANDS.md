@@ -31,12 +31,19 @@ Flow:
 5. require confirmation
 6. persist relationship
 7. assign appropriate role
+8. take an initial rating/Legend snapshot (docs/DECISIONS.md ADR-059) —
+   without this the member wouldn't appear on `/leaderboard` or the
+   website until the next scheduled snapshot, up to
+   `SNAPSHOT_INTERVAL_HOURS` later
 
 ### /unlink
 Remove the active player association after confirmation.
 
 ### /profile [user]
-Show Shaheen member + Brawlhalla profile.
+One-look profile card: Brawlhalla name/level, games/wins/win-rate, tier/
+rating/peak, global rank, region, and clan "member since" date
+(docs/DECISIONS.md ADR-059). `/rank`, `/stats`, `/legends` below still
+exist as focused single-stat views.
 
 ### /rank [user]
 Show current ranked information.
@@ -83,6 +90,13 @@ section for which channel gets what.
   No slash command equivalent; members click to add/remove.
 - **Spar kiosk** (🏆 ranked) — 🥊 1v1 / 👥 2v2 buttons that run the exact
   same flow as `/scrim`, just without typing the command.
+
+Every other text channel also gets a short static intro embed in launch
+mode (docs/DECISIONS.md ADR-059) — see docs/DISCORD_SPEC.md's "Standing
+panels" section for the full list. A missing permission or a since-
+deleted channel can't abort the rest: each channel's post is wrapped in
+its own `try/except`, logged and skipped rather than failing the whole
+`/setup run`.
 
 ## UX requirements
 

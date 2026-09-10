@@ -88,3 +88,15 @@ everything else here:
   rank — no permissions, not staff-assigned.
 - **🏆 ranked** — a standing "🥊 Looking to Spar?" panel; its buttons run the
   same flow as `/scrim`.
+
+Every other text channel also gets a short static intro embed on launch
+(docs/DECISIONS.md ADR-059 — `bot/content/channel_intros.py`; 20 channels,
+one builder each, wired into `bot/cogs/setup.py`'s `_launch_messages()`):
+📢 announcements, 🦅 clan-info, 💬 general, 🇵🇰 pakistan-chat, 😂 memes,
+🎬 clips, 🎮 brawlhalla, 🧠 tips-guides, 🐺 legend-talk, ⚔️ 1v1, 👥 2v2,
+⚔️ scrims, 🏆 tournaments, 📊 leaderboard, 🥇 hall-of-fame, 🤖 bot-testing,
+🌐 website-testing, 🧪 commands, 🐛 bug-reports, 📝 development-log — i.e.
+every text channel `bot.constants.CATEGORIES` defines gets *something*;
+only the 4 voice channels get nothing (no text to post). A regression test
+(`tests/test_setup_launch_messages.py`) checks this stays true if a new
+channel is ever added.

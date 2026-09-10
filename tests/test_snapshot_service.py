@@ -6,8 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.achievement import Achievement
+from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
+from database.models.shaheen_member import ShaheenMember
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
@@ -18,7 +20,7 @@ from integrations.brawlhalla.models import (
     PlayerStatsResponse,
     RankedLegendStat,
 )
-from services.snapshot_service import SnapshotService
+from services.snapshot_service import SnapshotRunResult, SnapshotService
 
 GUILD_ID = 1
 
@@ -72,7 +74,9 @@ class _FakeBrawlhalla:
         )
 
 
-async def _setup_linked_member(session: AsyncSession) -> None:
+async def _setup_linked_member(
+    session: AsyncSession,
+) -> tuple[ShaheenMember, BrawlhallaPlayer, int]:
     users = DiscordUserRepository(session)
     members = ShaheenMemberRepository(session)
     players = BrawlhallaPlayerRepository(session)
@@ -82,6 +86,7 @@ async def _setup_linked_member(session: AsyncSession) -> None:
     member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
     player = await players.upsert(brawlhalla_player_id=42, player_name="Foo", region=None)
     await links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
+    return member, player, user.discord_id
 
 
 async def test_run_for_guild_persists_snapshots(
@@ -158,3 +163,22 @@ async def test_run_for_guild_no_milestone_on_first_ever_snapshot(
 
     milestones = [a for a in result.announcements if a.new_peak_rating is not None]
     assert milestones == []
+
+
+async def test_snapshot_member_persists_a_single_snapshot(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """snapshot_member is public (docs/DECISIONS.md ADR-059) so
+    bot/cogs/link.py can take an initial snapshot right after /link,
+    constructing its own SnapshotRunResult rather than going through
+    run_for_guild's per-guild loop — confirm that call shape works.
+    """
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+    result = SnapshotRunResult()
+
+    await service.snapshot_member(member, player, discord_id, result)
+
+    ranking_rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert len(ranking_rows) == 1
+    assert ranking_rows[0].tier == "Platinum II"

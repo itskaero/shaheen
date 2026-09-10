@@ -61,7 +61,7 @@ class SnapshotService:
         result = SnapshotRunResult()
         for member, player, discord_id in await self._links.list_active_for_guild(guild_id):
             try:
-                await self._snapshot_one(member, player, discord_id, result)
+                await self.snapshot_member(member, player, discord_id, result)
                 result.members_processed += 1
             except BrawlhallaAPIError as exc:
                 logger.warning(
@@ -70,13 +70,21 @@ class SnapshotService:
                 result.errors.append(f"{player.player_name}: Brawlhalla API error")
         return result
 
-    async def _snapshot_one(
+    async def snapshot_member(
         self,
         member: ShaheenMember,
         player: BrawlhallaPlayer,
         discord_id: int,
         result: SnapshotRunResult,
     ) -> None:
+        """Snapshot one member's current rating/legend stats.
+
+        Public (not `_`-prefixed) so bot/cogs/link.py can take an initial
+        snapshot synchronously right after /link, instead of the member
+        waiting for the next scheduled run_for_guild tick to appear on any
+        leaderboard (docs/DECISIONS.md ADR-059). run_for_guild uses this
+        the same way it always has — no behavior change there.
+        """
         stats = await self._brawlhalla.get_stats(player.brawlhalla_player_id)
         ranked = await self._brawlhalla.get_ranked(player.brawlhalla_player_id)
         captured_at = datetime.now(UTC)
