@@ -5,6 +5,14 @@
 English channel names are preferred for discoverability.
 Urdu is used as a subtitle/description and in branding.
 
+Every text channel also carries a bilingual "English | Urdu" **topic**
+(`ChannelSpec.topic`, `bot/constants.py`; applied/repaired idempotently by
+`/setup run` — docs/DECISIONS.md ADR-061), shown under the channel name in
+Discord's UI. Channel *names* stay English-only/emoji-kebab-case — Discord's
+stricter name-normalization rules made topics the safe place for Urdu, not
+the name itself (ADR-061). Voice channels have no topic field and are
+skipped.
+
 ## Categories and channels
 
 ### 🏯 SHAHEEN HQ

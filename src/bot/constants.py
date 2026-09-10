@@ -59,10 +59,8 @@ class CategorySpec:
 #
 # Bilingual "English | Urdu" names, no emoji prefix — matches the owner's own
 # hand-made roles (docs/DECISIONS.md ADR-060), replacing the earlier
-# "emoji + ALL CAPS" style. Urdu is only filled in where the owner gave an
-# exact string; guessing translations for a live server risks getting them
-# wrong, so Moderator/Trial/Ally/Guest stay English-only until confirmed
-# (ADR-060 records exactly which).
+# "emoji + ALL CAPS" style. All rank roles now carry an owner-confirmed Urdu
+# translation (docs/DECISIONS.md ADR-061).
 
 ROLE_LEADER = RoleSpec(
     logical_key="role:shaheen_leader",
@@ -76,7 +74,7 @@ ROLE_LEADER = RoleSpec(
 
 ROLE_MODERATOR = RoleSpec(
     logical_key="role:moderator",
-    name="Moderator",
+    name="Moderator | ناظم",
     color=EMERALD,
     mentionable=True,
     permissions=discord.Permissions(
@@ -104,19 +102,19 @@ ROLE_SHAHEEN = RoleSpec(
 
 ROLE_TRIAL = RoleSpec(
     logical_key="role:trial_shaheen",
-    name="Trial Shaheen",
+    name="Trial Shaheen | آزمائشی شاہین",
     color=EMERALD,
 )
 
 ROLE_ALLY = RoleSpec(
     logical_key="role:ally",
-    name="Ally",
+    name="Ally | اتحادی",
     color=CREAM,
 )
 
 ROLE_GUEST = RoleSpec(
     logical_key="role:guest",
-    name="Guest",
+    name="Guest | مہمان",
     color=GREY,
     hoist=False,
 )
@@ -211,34 +209,109 @@ CATEGORIES: tuple[CategorySpec, ...] = (
         name="🏯 SHAHEEN HQ",
         channels=(
             ChannelSpec(
-                "channel:announcements", "📢-announcements", "text", staff_only_send=True
+                "channel:announcements",
+                "📢-announcements",
+                "text",
+                topic="Clan news and updates — staff only to post, everyone can read. | "
+                "کلان کی خبریں اور اپڈیٹس — صرف اسٹاف پوسٹ کر سکتا ہے، سب پڑھ سکتے ہیں۔",
+                staff_only_send=True,
             ),
-            ChannelSpec("channel:welcome", "👋-welcome", "text"),
-            ChannelSpec("channel:rules", "📜-rules", "text"),
-            ChannelSpec("channel:roles", "🎭-roles", "text"),
-            ChannelSpec("channel:clan_info", "🦅-clan-info", "text"),
+            ChannelSpec(
+                "channel:welcome",
+                "👋-welcome",
+                "text",
+                topic="Start here. | یہاں سے شروع کریں۔",
+            ),
+            ChannelSpec(
+                "channel:rules",
+                "📜-rules",
+                "text",
+                topic="Server rules. | سرور کے قوانین۔",
+            ),
+            ChannelSpec(
+                "channel:roles",
+                "🎭-roles",
+                "text",
+                topic="Ranks and opt-in roles. | درجے اور اختیاری رولز۔",
+            ),
+            ChannelSpec(
+                "channel:clan_info",
+                "🦅-clan-info",
+                "text",
+                topic="About Shaheen. | شاہین کے بارے میں۔",
+            ),
         ),
     ),
     CategorySpec(
         logical_key="category:the_nest",
         name="🪹 THE NEST",
         channels=(
-            ChannelSpec("channel:general", "💬-general", "text"),
-            ChannelSpec("channel:pakistan_chat", "🇵🇰-pakistan-chat", "text"),
-            ChannelSpec("channel:memes", "😂-memes", "text"),
-            ChannelSpec("channel:clips", "🎬-clips", "text"),
+            ChannelSpec(
+                "channel:general",
+                "💬-general",
+                "text",
+                topic="General chat. | عمومی گفتگو۔",
+            ),
+            ChannelSpec(
+                "channel:pakistan_chat",
+                "🇵🇰-pakistan-chat",
+                "text",
+                topic="Chat for Pakistan-based members. | پاکستانی اراکین کے لیے گپ شپ۔",
+            ),
+            ChannelSpec(
+                "channel:memes",
+                "😂-memes",
+                "text",
+                topic="Memes. | میمز۔",
+            ),
+            ChannelSpec(
+                "channel:clips",
+                "🎬-clips",
+                "text",
+                topic="Share your clips. | اپنی کلپس شیئر کریں۔",
+            ),
         ),
     ),
     CategorySpec(
         logical_key="category:brawlhalla",
         name="⚔️ BRAWLHALLA",
         channels=(
-            ChannelSpec("channel:brawlhalla", "🎮-brawlhalla", "text"),
-            ChannelSpec("channel:tips_guides", "🧠-tips-guides", "text"),
-            ChannelSpec("channel:legend_talk", "🐺-legend-talk", "text"),
-            ChannelSpec("channel:one_v_one", "⚔️-1v1", "text"),
-            ChannelSpec("channel:two_v_two", "👥-2v2", "text"),
-            ChannelSpec("channel:ranked", "🏆-ranked", "text"),
+            ChannelSpec(
+                "channel:brawlhalla",
+                "🎮-brawlhalla",
+                "text",
+                topic="General Brawlhalla talk. | براولہلا پر عمومی گفتگو۔",
+            ),
+            ChannelSpec(
+                "channel:tips_guides",
+                "🧠-tips-guides",
+                "text",
+                topic="Tips and guides. | تجاویز اور گائیڈز۔",
+            ),
+            ChannelSpec(
+                "channel:legend_talk",
+                "🐺-legend-talk",
+                "text",
+                topic="Legend picks and matchups. | لیجنڈ کا انتخاب اور مقابلے۔",
+            ),
+            ChannelSpec(
+                "channel:one_v_one",
+                "⚔️-1v1",
+                "text",
+                topic="Coordinate 1v1s. | ون-وی-ون کوآرڈینیٹ کریں۔",
+            ),
+            ChannelSpec(
+                "channel:two_v_two",
+                "👥-2v2",
+                "text",
+                topic="Coordinate 2v2s. | ٹو-وی-ٹو کوآرڈینیٹ کریں۔",
+            ),
+            ChannelSpec(
+                "channel:ranked",
+                "🏆-ranked",
+                "text",
+                topic="Looking for a spar? Post here. | اسپار ڈھونڈ رہے ہیں؟ یہاں پوسٹ کریں۔",
+            ),
         ),
     ),
     CategorySpec(
@@ -246,10 +319,30 @@ CATEGORIES: tuple[CategorySpec, ...] = (
         name="🏟️ SHAHEEN ARENA",
         restricted=True,  # hidden/disabled from public users until there is a need
         channels=(
-            ChannelSpec("channel:scrims", "⚔️-scrims", "text"),
-            ChannelSpec("channel:tournaments", "🏆-tournaments", "text"),
-            ChannelSpec("channel:leaderboard", "📊-leaderboard", "text"),
-            ChannelSpec("channel:hall_of_fame", "🥇-hall-of-fame", "text"),
+            ChannelSpec(
+                "channel:scrims",
+                "⚔️-scrims",
+                "text",
+                topic="Scrim announcements. | اسکرم کے اعلانات۔",
+            ),
+            ChannelSpec(
+                "channel:tournaments",
+                "🏆-tournaments",
+                "text",
+                topic="Tournament brackets. | ٹورنامنٹ بریکٹس۔",
+            ),
+            ChannelSpec(
+                "channel:leaderboard",
+                "📊-leaderboard",
+                "text",
+                topic="Clan standings. | کلان کی درجہ بندی۔",
+            ),
+            ChannelSpec(
+                "channel:hall_of_fame",
+                "🥇-hall-of-fame",
+                "text",
+                topic="Milestones and achievements. | کارنامے اور کامیابیاں۔",
+            ),
         ),
     ),
     CategorySpec(
@@ -267,11 +360,36 @@ CATEGORIES: tuple[CategorySpec, ...] = (
         name="🛠️ DEVELOPMENT",
         restricted=True,  # admin-only
         channels=(
-            ChannelSpec("channel:bot_testing", "🤖-bot-testing", "text"),
-            ChannelSpec("channel:website_testing", "🌐-website-testing", "text"),
-            ChannelSpec("channel:commands", "🧪-commands", "text"),
-            ChannelSpec("channel:bug_reports", "🐛-bug-reports", "text"),
-            ChannelSpec("channel:development_log", "📝-development-log", "text"),
+            ChannelSpec(
+                "channel:bot_testing",
+                "🤖-bot-testing",
+                "text",
+                topic="Test bot commands here. | یہاں بوٹ کمانڈز ٹیسٹ کریں۔",
+            ),
+            ChannelSpec(
+                "channel:website_testing",
+                "🌐-website-testing",
+                "text",
+                topic="Website testing. | ویب سائٹ ٹیسٹنگ۔",
+            ),
+            ChannelSpec(
+                "channel:commands",
+                "🧪-commands",
+                "text",
+                topic="Try out commands. | کمانڈز آزمائیں۔",
+            ),
+            ChannelSpec(
+                "channel:bug_reports",
+                "🐛-bug-reports",
+                "text",
+                topic="Report bugs. | بگز رپورٹ کریں۔",
+            ),
+            ChannelSpec(
+                "channel:development_log",
+                "📝-development-log",
+                "text",
+                topic="Dev changelog. | ڈیو چینج لاگ۔",
+            ),
         ),
     ),
 )

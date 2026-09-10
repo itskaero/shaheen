@@ -3,16 +3,16 @@
 ## Role hierarchy
 
 Bilingual "English | Urdu" names, no emoji prefix — docs/DECISIONS.md
-ADR-060 (`bot.constants.ROLES` is the single source of truth; this list is
-for reference only and can drift, unlike the code):
+ADR-060/ADR-061 (`bot.constants.ROLES` is the single source of truth; this
+list is for reference only and can drift, unlike the code):
 
 Leader | سربراہ
-Moderator
+Moderator | ناظم
 Elite Shaheen | شاہینِ خاص
 Shaheen | شاہین
-Trial Shaheen
-Ally
-Guest
+Trial Shaheen | آزمائشی شاہین
+Ally | اتحادی
+Guest | مہمان
 SHAHEEN BOT (Discord's own managed integration role — ADR-018)
 
 The bot's role must be high enough to manage the roles/channels it is expected

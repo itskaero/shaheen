@@ -1287,3 +1287,80 @@ unconfirmed whether Urdu script plus a "|" separator survives that
 normalization cleanly; docs/DISCORD_SPEC.md's original English-first
 channel-naming call (ADR-008) was left as-is pending that answer rather
 than guessed at for ~20 channels on a live server.
+
+## ADR-061 — Remaining role Urdu, bilingual channel topics, esports brand fonts for generated imagery
+
+Decision: two follow-ups to ADR-060, both from the owner's request to
+"generate Urdu for everything so I can confirm" and to use "a good
+esports theme or focused font for images."
+
+**1. The last four role names now carry Urdu.** `ROLE_MODERATOR`,
+`ROLE_TRIAL`, `ROLE_ALLY`, `ROLE_GUEST` in `bot/constants.py` move from
+English-only to the same "English | Urdu" pattern as `ROLE_LEADER`/
+`ROLE_ELITE`/`ROLE_SHAHEEN` (ADR-060): "Moderator | ناظم", "Trial
+Shaheen | آزمائشی شاہین", "Ally | اتحادی", "Guest | مہمان". Proposed in
+plan mode for the owner's review before writing, rather than guessed at
+silently, given a role name is live server state. The Brawler-vs-Trial-
+Shaheen question ADR-060 carried over stays open — Trial Shaheen is kept
+as its own rank for now; swapping to "Brawler | جنگجو" instead is a
+one-line follow-up if the owner still wants that.
+
+**2. All ~23 postable text channels now carry a bilingual topic, not a
+bilingual name.** `ChannelSpec.topic` (already a field, previously unset
+on every channel) is now set to `"<English> | <Urdu>"` for every text
+channel across all six categories. Channel **names** stay English/emoji-
+kebab-case, deliberately unchanged — this keeps ADR-008's original
+"English channel names" call intact rather than overturning it, because
+Discord channel names are auto-lowercased/hyphenated with materially
+stricter character handling than role names (which already tolerate
+Unicode, spaces, and a literal "|" with no visible problems across four
+roles), and this project has no way to test Urdu-plus-pipe survival
+against a live Discord guild from this sandbox. The channel **topic**
+field has no such normalization — arbitrary Unicode renders as typed — so
+it's the zero-risk way to add real Urdu presence everywhere without
+gambling with channel identity (and therefore with `ProvisionedResource`
+lookups, which are keyed on `logical_key`, not name) on a running server.
+No new mechanism needed: `SetupService._apply_channels` already diffs and
+repairs `topic` drift for text channels on every `/setup run`. Voice
+channels have no topic field in Discord and were skipped.
+
+**3. Generated milestone/achievement images now use the website's own
+brand fonts instead of Pillow's bundled default.** `src/services/
+image_service.py` replaces `ImageFont.load_default(size=...)` with
+`ImageFont.truetype(...)` loads of two bundled OFL-licensed font files —
+Orbitron (variable font, `set_variation_by_name("Bold")` selects the bold
+instance) for the title, Rajdhani SemiBold (static weight) for the
+subtitle — the same two typefaces `web/index.html`/`web/assets/css/
+style.css` already use for display/heading text, so the bot's generated
+imagery and the website read as one branded system instead of two, and
+looks meaningfully more "esports" than a generic sans. `fonts.google.com`
+itself is unreachable from this sandbox (proxy 403), so both files were
+fetched from Google Fonts' official GitHub mirror
+(`raw.githubusercontent.com/google/fonts`, same OFL license, freely
+redistributable) instead. The two `.ttf` files live at
+`src/assets/fonts/Orbitron-Variable.ttf` and `src/assets/fonts/
+Rajdhani-SemiBold.ttf` — inside `src/`, which the Dockerfile's `COPY
+src/ ./src/` already copies whole (the same reason `src/assets/img/
+logo-icon.png` lives where it does, ADR-060), so no Dockerfile change was
+needed. A new `_load_fonts()` helper wraps both `ImageFont.truetype(...)`
+calls in a `try/except OSError` that falls back to
+`ImageFont.load_default(size=...)` per font — matching `_faded_logo()`'s
+existing fail-safe philosophy: a card with the wrong font is fine, a
+crash losing the whole announcement is not.
+
+Verified: both font files download over HTTPS through this sandbox's
+proxy and load with Pillow; `Orbitron-Variable.ttf` exposes named
+instances `Regular`/`Medium`/`SemiBold`/`Bold`/`ExtraBold`/`Black` via
+`get_variation_names()`. Rendered and sent the owner a sample milestone
+card with the real fonts wired in (not just the standalone verification
+script) to confirm the look before and after this change. `uv run ruff
+check src tests` / `uv run mypy src` (93 files) clean. Full `pytest`
+suite green — 159 tests (up from 157): two new tests in
+`tests/test_image_service.py` assert both bundled font files exist under
+`src/` (not `web/`, mirroring `test_logo_asset_ships_inside_src`) and
+that `_load_fonts()` actually returns `ImageFont.FreeTypeFont` instances
+rather than silently falling back to the generic default.
+`tests/test_constants.py`'s existing role/channel structural tests
+(unique logical keys, unique names, `#announcements` staff-only-send)
+still pass unchanged — adding `topic=` values and Urdu to role names
+didn't touch any of the invariants those tests check.

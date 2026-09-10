@@ -7,15 +7,19 @@ Deliberately modest for a first pass: one generator, a branded milestone/
 achievement card, attached as a discord.File by bot/cogs/clan.py's
 existing announcement path.
 
-Uses ImageFont.load_default(size=...) (Pillow >= 10.1) rather than a
-bundled or system font file — the Dockerfile's python:3.12-slim base has
-no fonts installed, and shipping a separate TTF asset is unnecessary scope
-for a first pass when Pillow already bundles a scalable default font.
+Title/subtitle use the same esports-branded typefaces already established
+on the website (web/index.html, web/assets/css/style.css): Orbitron (bold,
+geometric display face) for the title and Rajdhani SemiBold (condensed)
+for the subtitle, instead of Pillow's generic bundled default font — one
+visual brand across bot and website (docs/DECISIONS.md ADR-061). Both are
+OFL-licensed and bundled at src/assets/fonts/ (see _load_fonts for the
+fail-safe fallback if either file is ever missing).
 
 The crest logo lives at src/assets/img/logo-icon.png (a copy of the
 website's web/assets/img/logo-icon.png) rather than being read from web/,
 which the bot's Dockerfile deliberately excludes via .dockerignore — only
-src/ ships in the bot's image (docs/DECISIONS.md ADR-060).
+src/ ships in the bot's image (docs/DECISIONS.md ADR-060). The bundled
+fonts ship the same way, under src/assets/fonts/.
 """
 
 from __future__ import annotations
@@ -33,6 +37,10 @@ CARD_HEIGHT = 300
 _LOGO_PATH = Path(__file__).resolve().parents[1] / "assets" / "img" / "logo-icon.png"
 _LOGO_MAX_OPACITY = 90  # out of 255 (~35%) — a faint watermark, not a sticker
 _LOGO_TARGET_HEIGHT = 220
+
+_FONTS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
+_TITLE_FONT_PATH = _FONTS_DIR / "Orbitron-Variable.ttf"
+_SUBTITLE_FONT_PATH = _FONTS_DIR / "Rajdhani-SemiBold.ttf"
 
 
 def _hex_to_rgb(colour: int) -> tuple[int, int, int]:
@@ -84,6 +92,31 @@ def _faded_logo(*, target_height: int, max_opacity: int) -> Image.Image | None:
     return logo
 
 
+_Font = ImageFont.FreeTypeFont | ImageFont.ImageFont
+
+
+def _load_fonts(*, title_size: int, subtitle_size: int) -> tuple[_Font, _Font]:
+    """The bundled brand fonts (Orbitron Bold / Rajdhani SemiBold), or
+    Pillow's generic default font for either that's missing/unreadable —
+    a card with the wrong font is fine; a crash losing the whole
+    announcement is not (same fail-safe philosophy as _faded_logo).
+    """
+    title_font: _Font
+    try:
+        title_font = ImageFont.truetype(str(_TITLE_FONT_PATH), title_size)
+        title_font.set_variation_by_name("Bold")
+    except OSError:
+        title_font = ImageFont.load_default(size=title_size)
+
+    subtitle_font: _Font
+    try:
+        subtitle_font = ImageFont.truetype(str(_SUBTITLE_FONT_PATH), subtitle_size)
+    except OSError:
+        subtitle_font = ImageFont.load_default(size=subtitle_size)
+
+    return title_font, subtitle_font
+
+
 def _centered_text(
     draw: ImageDraw.ImageDraw,
     text: str,
@@ -113,8 +146,7 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
         image.alpha_composite(logo, dest=position)
 
     draw = ImageDraw.Draw(image)
-    title_font = ImageFont.load_default(size=56)
-    subtitle_font = ImageFont.load_default(size=28)
+    title_font, subtitle_font = _load_fonts(title_size=56, subtitle_size=28)
 
     _centered_text(
         draw, title, y=100, font=title_font, fill=_hex_to_rgb(GOLD), canvas_width=CARD_WIDTH

@@ -12,9 +12,12 @@ from PIL import Image
 
 from services.image_service import (
     _LOGO_PATH,
+    _SUBTITLE_FONT_PATH,
+    _TITLE_FONT_PATH,
     CARD_HEIGHT,
     CARD_WIDTH,
     _faded_logo,
+    _load_fonts,
     render_milestone_card,
 )
 
@@ -49,6 +52,26 @@ def test_logo_asset_ships_inside_src() -> None:
     assert _LOGO_PATH.exists()
     assert "src" in _LOGO_PATH.parts
     assert "web" not in _LOGO_PATH.parts
+
+
+def test_brand_fonts_ship_inside_src() -> None:
+    """The bundled Orbitron/Rajdhani font files must live under src/ (not
+    web/), which the bot's Dockerfile deliberately excludes via
+    .dockerignore — docs/DECISIONS.md ADR-060/ADR-061. Missing here means
+    missing in production too, silently falling back to the generic font.
+    """
+    for font_path in (_TITLE_FONT_PATH, _SUBTITLE_FONT_PATH):
+        assert font_path.exists()
+        assert "src" in font_path.parts
+        assert "web" not in font_path.parts
+
+
+def test_load_fonts_returns_truetype_fonts_from_the_bundled_files() -> None:
+    from PIL import ImageFont
+
+    title_font, subtitle_font = _load_fonts(title_size=56, subtitle_size=28)
+    assert isinstance(title_font, ImageFont.FreeTypeFont)
+    assert isinstance(subtitle_font, ImageFont.FreeTypeFont)
 
 
 def test_faded_logo_returns_a_faded_rgba_image() -> None:
