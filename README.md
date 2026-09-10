@@ -8,14 +8,17 @@ Brawlhalla clan.
 ## Status
 
 Private / in development. Implemented so far:
-- Phase 1 — foundation + `/setup`
+- Phase 1 — foundation + `/setup` (launch mode also posts a self-assign
+  opt-in roles panel to `#roles` — docs/DECISIONS.md ADR-058)
 - Phase 2 — Brawlhalla identity: `/link`, `/unlink`, `/profile`, `/rank`,
   `/stats`, `/legends`
 - Phase 3 — clan: scheduled rating/Legend snapshots, `/leaderboard`,
   `/achievements`, `/history`, Hall of Fame + milestone announcements
 - Phase 4 — competition: `/challenge`, `/scrim`, `/match`, `/report`
   (with opponent confirm/dispute), `/matches`, `/tournament` (single-
-  elimination brackets, 1v1 and 2v2)
+  elimination brackets, 1v1 and 2v2). Launch mode also posts a standing
+  spar kiosk to `#ranked` — its buttons run the same flow as `/scrim`
+  (ADR-058)
 - Phase 5 — website: read-only, unauthenticated FastAPI JSON API sharing
   the bot's services/repositories/database — `GET /clan`,
   `GET /leaderboard`, `GET /players/{brawlhalla_id}`,

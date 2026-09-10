@@ -14,6 +14,12 @@
 The bot's role must be high enough to manage the roles/channels it is expected
 to manage.
 
+A separate set of opt-in roles (pings/region/mode tags — see
+`bot.constants.SELF_ASSIGN_ROLES`, docs/DECISIONS.md ADR-058) sits below
+👀 GUEST and is not part of this hierarchy: no permissions, not staff-
+assigned, members toggle them themselves via the panel `/setup run
+mode:launch` posts to #roles.
+
 ## General principles
 
 - Use least privilege.
