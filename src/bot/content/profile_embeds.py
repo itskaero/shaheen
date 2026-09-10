@@ -6,6 +6,7 @@ from datetime import datetime
 
 import discord
 
+from bot.constants import ROLE_TRIAL
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
@@ -31,7 +32,7 @@ def build_link_preview_embed(
 def build_link_success_embed(*, player_name: str, promoted: bool) -> discord.Embed:
     description = f"Linked to **{player_name}**."
     if promoted:
-        description += "\n\n🎯 You've been promoted to **TRIAL SHAHEEN**. Welcome in!"
+        description += f"\n\n🎯 You've been promoted to **{ROLE_TRIAL.name}**. Welcome in!"
     return discord.Embed(title="✅ Brawlhalla Linked", description=description, colour=FOREST_GREEN)
 
 

@@ -47,6 +47,8 @@ from bot.content.competition_embeds import build_spar_kiosk_embed
 from bot.content.embeds import (
     build_plan_embed,
     build_report_embed,
+    build_reset_report_embed,
+    build_reset_warning_embed,
     build_roles_embed,
     build_rules_embed,
     build_self_assign_roles_embed,
@@ -63,6 +65,8 @@ from database.repositories.guild_settings_repository import GuildSettingsReposit
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.session import session_scope
 from services.setup_service import SetupService
+
+_RESET_CONFIRM_TEXT = "DELETE"
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +204,28 @@ class SetupCog(commands.Cog):
 
         await interaction.followup.send(embed=build_verify_embed(plan), ephemeral=True)
 
+    @setup_group.command(
+        name="reset",
+        description="DESTRUCTIVE: delete everything /setup created, for a clean restart",
+    )
+    @require_setup_authorized()
+    async def reset(self, interaction: discord.Interaction) -> None:
+        """Separate from /setup run on purpose (docs/DECISIONS.md ADR-060):
+        /setup run stays the safe, idempotent, never-deletes-anything
+        command people re-run routinely. This one permanently deletes
+        every bot-created role/category/channel, so it needs its own
+        explicit command name and its own, stronger confirmation — a
+        warning screen, then a modal that requires typing "DELETE".
+        """
+        guild = interaction.guild
+        if guild is None:
+            raise SetupError("This command can only be used inside the Shaheen server.")
+
+        view = _ResetWarningView(author_id=interaction.user.id, bot=self.bot, guild=guild)
+        await interaction.response.send_message(
+            embed=build_reset_warning_embed(), view=view, ephemeral=True
+        )
+
     async def _deploy_launch_messages(self, guild: discord.Guild, session: AsyncSession) -> None:
         resources = ProvisionedResourceRepository(session)
         messages_by_channel_key = _launch_messages()
@@ -289,6 +315,59 @@ async def _already_posted(
         if message.author.id == bot_user.id and message.embeds and message.embeds[0].title == title:
             return True
     return False
+
+
+class _ResetWarningView(discord.ui.View):
+    """Step 1 of /setup reset's two-step confirmation (docs/DECISIONS.md
+    ADR-060): a plain button here, since Discord requires send_modal to be
+    the direct response to the interaction that triggers it — the modal
+    itself (step 2) is where the actual "type DELETE" check happens.
+    """
+
+    def __init__(self, *, author_id: int, bot: ShaheenBot, guild: discord.Guild) -> None:
+        super().__init__(timeout=120)
+        self._author_id = author_id
+        self._bot = bot
+        self._guild = guild
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self._author_id:
+            await interaction.response.send_message(
+                "Only the person who ran this command can respond.", ephemeral=True
+            )
+            return False
+        return True
+
+    @discord.ui.button(label="Continue to confirm", style=discord.ButtonStyle.danger, emoji="⚠️")
+    async def continue_(self, interaction: discord.Interaction, _button: discord.ui.Button) -> None:
+        await interaction.response.send_modal(_ResetConfirmModal(self._bot, self._guild))
+        self.stop()
+
+
+class _ResetConfirmModal(discord.ui.Modal, title="Confirm Full Reset"):
+    confirmation: discord.ui.TextInput = discord.ui.TextInput(
+        label=f'Type "{_RESET_CONFIRM_TEXT}" to confirm',
+        placeholder=_RESET_CONFIRM_TEXT,
+        max_length=16,
+    )
+
+    def __init__(self, bot: ShaheenBot, guild: discord.Guild) -> None:
+        super().__init__()
+        self._bot = bot
+        self._guild = guild
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if self.confirmation.value.strip() != _RESET_CONFIRM_TEXT:
+            await interaction.response.send_message(
+                f"Reset cancelled — you must type `{_RESET_CONFIRM_TEXT}` exactly.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self._bot.session_factory) as session:
+            report = await SetupService(self._guild, session).reset()
+        await interaction.followup.send(embed=build_reset_report_embed(report), ephemeral=True)
 
 
 async def setup(bot: ShaheenBot) -> None:

@@ -2,13 +2,13 @@
 
 See docs/DECISIONS.md:
 - ADR-010: `/setup` is authorized for the guild owner, any member with the
-  native Administrator permission, or a holder of the 👑 SHAHEEN LEADER
-  role. The Administrator/owner fallback is permanent, not a one-time
-  bootstrap step, because the Leader role does not exist until /setup
-  creates it.
+  native Administrator permission, or a holder of ROLE_LEADER (docs/
+  DECISIONS.md ADR-060 for its current display name). The Administrator/
+  owner fallback is permanent, not a one-time bootstrap step, because the
+  Leader role does not exist until /setup creates it.
 - ADR-036: staff actions short of full server administration (tournament
   management, match dispute resolution) are authorized for the same
-  owner/admin fallback, or a holder of 🛡️ MODERATOR or 👑 SHAHEEN LEADER.
+  owner/admin fallback, or a holder of ROLE_MODERATOR or ROLE_LEADER.
 """
 
 from __future__ import annotations

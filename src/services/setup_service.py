@@ -22,7 +22,7 @@ from bot.constants import (
     ChannelSpec,
 )
 from core.config import SetupMode
-from database.models.provisioned_resource import ResourceType
+from database.models.provisioned_resource import ProvisionedResource, ResourceType
 from database.repositories.guild_settings_repository import GuildSettingsRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from services.setup_planner import (
@@ -73,6 +73,20 @@ class SetupReport:
     channels: ActionSummary = field(default_factory=ActionSummary)
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ResetReport:
+    """docs/DECISIONS.md ADR-060 — /setup reset's result."""
+
+    roles_deleted: int = 0
+    categories_deleted: int = 0
+    channels_deleted: int = 0
+    errors: list[str] = field(default_factory=list)
+
+    @property
+    def total_deleted(self) -> int:
+        return self.roles_deleted + self.categories_deleted + self.channels_deleted
 
 
 def build_snapshot(guild: discord.Guild) -> GuildSnapshot:
@@ -136,10 +150,65 @@ class SetupService:
         category_by_key = await self._apply_categories(
             current_plan.category_actions, role_by_key, report
         )
-        await self._apply_channels(current_plan.channel_actions, category_by_key, report)
+        await self._apply_channels(
+            current_plan.channel_actions, category_by_key, role_by_key, report
+        )
 
         await self._settings.set_mode(self._guild.id, mode)
         return report
+
+    async def reset(self) -> ResetReport:
+        """Deletes every Discord role/category/channel /setup has ever
+        created for this guild (tracked via ProvisionedResource) and
+        clears that ledger, so the next /setup run starts completely
+        fresh instead of finding everything "already exists" (docs/
+        DECISIONS.md ADR-060). Does NOT touch stored member/player/match/
+        achievement data — only the Discord guild structure and the
+        idempotency ledger itself. Channels/categories first, then roles
+        (order mostly cosmetic — Discord allows deleting a non-empty
+        category). Each deletion is independently guarded so one failure
+        (a missing permission, an already-gone resource) doesn't abort
+        the rest.
+        """
+        report = ResetReport()
+        resources = await self._resources.list_for_guild(self._guild.id)
+
+        by_type = {
+            ResourceType.CHANNEL: [r for r in resources if r.resource_type is ResourceType.CHANNEL],
+            ResourceType.CATEGORY: [
+                r for r in resources if r.resource_type is ResourceType.CATEGORY
+            ],
+            ResourceType.ROLE: [r for r in resources if r.resource_type is ResourceType.ROLE],
+        }
+        for resource in by_type[ResourceType.CHANNEL]:
+            if await self._delete_resource(resource, report):
+                report.channels_deleted += 1
+        for resource in by_type[ResourceType.CATEGORY]:
+            if await self._delete_resource(resource, report):
+                report.categories_deleted += 1
+        for resource in by_type[ResourceType.ROLE]:
+            if await self._delete_resource(resource, report):
+                report.roles_deleted += 1
+
+        await self._resources.delete_for_guild(self._guild.id)
+        return report
+
+    async def _delete_resource(self, resource: ProvisionedResource, report: ResetReport) -> bool:
+        obj: discord.abc.GuildChannel | discord.Role | None
+        if resource.resource_type is ResourceType.ROLE:
+            obj = self._guild.get_role(resource.discord_id)
+        else:
+            obj = self._guild.get_channel(resource.discord_id)
+        if obj is None:
+            return False  # already gone — nothing to delete, not an error
+        try:
+            await obj.delete(reason="Shaheen /setup reset")
+            return True
+        except discord.Forbidden:
+            report.errors.append(f"Missing permission to delete {resource.logical_key!r}.")
+        except discord.HTTPException as exc:
+            report.errors.append(f"Discord error deleting {resource.logical_key!r}: {exc}")
+        return False
 
     async def _known_resources(self) -> dict[tuple[ResourceType, str], int]:
         rows = await self._resources.list_for_guild(self._guild.id)
@@ -303,15 +372,17 @@ class SetupService:
         self,
         actions: tuple[ChannelAction, ...],
         category_by_key: dict[str, discord.CategoryChannel],
+        role_by_key: dict[str, discord.Role],
         report: SetupReport,
     ) -> None:
         for action in actions:
             spec = action.spec
             category = category_by_key.get(action.category_logical_key)
+            overwrites = self._channel_overwrites(spec, role_by_key)
             try:
                 resolved_channel: discord.TextChannel | discord.VoiceChannel | None
                 if action.type is ActionType.CREATE:
-                    resolved_channel = await self._create_channel(spec, category)
+                    resolved_channel = await self._create_channel(spec, category, overwrites)
                 else:
                     assert action.existing_id is not None
                     live_channel = self._guild.get_channel(action.existing_id)
@@ -324,7 +395,7 @@ class SetupService:
                         report.warnings.append(
                             f"Channel {spec.name!r} was recorded but no longer exists; recreating."
                         )
-                        resolved_channel = await self._create_channel(spec, category)
+                        resolved_channel = await self._create_channel(spec, category, overwrites)
                         action = ChannelAction(
                             type=ActionType.CREATE,
                             spec=spec,
@@ -350,6 +421,15 @@ class SetupService:
                                 name=spec.name, reason="Shaheen /setup (repair)"
                             )
 
+                    # Re-applied every non-recreate pass too (not just on
+                    # REPAIR), same as _category_overwrites — a manually
+                    # changed permission on Discord's side gets corrected
+                    # back, not just left drifted (docs/DECISIONS.md ADR-060).
+                    if overwrites and isinstance(
+                        resolved_channel, discord.TextChannel | discord.VoiceChannel
+                    ):
+                        await resolved_channel.edit(overwrites=overwrites, reason="Shaheen /setup")
+
                 await self._remember(ResourceType.CHANNEL, spec.logical_key, resolved_channel.id)
                 report.channels.record(action.type, spec.name)
             except discord.Forbidden:
@@ -358,15 +438,38 @@ class SetupService:
                 report.errors.append(f"Discord error for channel {spec.name!r}: {exc}")
 
     async def _create_channel(
-        self, spec: ChannelSpec, category: discord.CategoryChannel | None
+        self,
+        spec: ChannelSpec,
+        category: discord.CategoryChannel | None,
+        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] | None = None,
     ) -> discord.TextChannel | discord.VoiceChannel:
+        overwrites = overwrites or {}
         if spec.kind == "text":
             return await self._guild.create_text_channel(
                 name=spec.name,
                 category=category,
                 topic=spec.topic or discord.utils.MISSING,
+                overwrites=overwrites,
                 reason="Shaheen /setup",
             )
         return await self._guild.create_voice_channel(
-            name=spec.name, category=category, reason="Shaheen /setup"
+            name=spec.name, category=category, overwrites=overwrites, reason="Shaheen /setup"
         )
+
+    def _channel_overwrites(
+        self, spec: ChannelSpec, role_by_key: dict[str, discord.Role]
+    ) -> dict[OverwriteTarget, discord.PermissionOverwrite]:
+        """Mirrors _category_overwrites: @everyone can still view/read;
+        only ROLES_WITH_STAFF_ACCESS can send (docs/DECISIONS.md ADR-060).
+        Empty overwrites leave Send Messages inherited from the category.
+        """
+        if not spec.staff_only_send:
+            return {}
+        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
+            self._guild.default_role: discord.PermissionOverwrite(send_messages=False)
+        }
+        for staff_spec in ROLES_WITH_STAFF_ACCESS:
+            role = role_by_key.get(staff_spec.logical_key)
+            if role is not None:
+                overwrites[role] = discord.PermissionOverwrite(send_messages=True)
+        return overwrites

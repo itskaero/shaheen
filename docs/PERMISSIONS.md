@@ -2,23 +2,36 @@
 
 ## Role hierarchy
 
-👑 SHAHEEN LEADER
-🛡️ MODERATOR
-🏆 ELITE SHAHEEN
-🦅 SHAHEEN
-🎯 TRIAL SHAHEEN
-🤝 ALLY
-👀 GUEST
-🤖 SHAHEEN BOT
+Bilingual "English | Urdu" names, no emoji prefix — docs/DECISIONS.md
+ADR-060 (`bot.constants.ROLES` is the single source of truth; this list is
+for reference only and can drift, unlike the code):
+
+Leader | سربراہ
+Moderator
+Elite Shaheen | شاہینِ خاص
+Shaheen | شاہین
+Trial Shaheen
+Ally
+Guest
+SHAHEEN BOT (Discord's own managed integration role — ADR-018)
 
 The bot's role must be high enough to manage the roles/channels it is expected
 to manage.
 
 A separate set of opt-in roles (pings/region/mode tags — see
 `bot.constants.SELF_ASSIGN_ROLES`, docs/DECISIONS.md ADR-058) sits below
-👀 GUEST and is not part of this hierarchy: no permissions, not staff-
+Guest and is not part of this hierarchy: no permissions, not staff-
 assigned, members toggle them themselves via the panel `/setup run
 mode:launch` posts to #roles.
+
+## Per-channel send permissions
+
+Beyond the category-level visibility overwrites (restricted categories
+hidden from everyone but staff), individual channels can restrict who can
+*send* while staying visible to everyone — `ChannelSpec.staff_only_send`
+(`bot/constants.py`), applied idempotently by `/setup run` the same way
+everything else here is (docs/DECISIONS.md ADR-060). Currently only
+`#announcements`: everyone can read it, only Leader/Moderator can post.
 
 ## General principles
 
