@@ -1452,3 +1452,71 @@ mirroring the existing font-asset test. `git status` confirms the
 prototype script itself was never part of this repo — it lived and stayed
 in the session scratchpad throughout, only the chosen variant's approach
 was ported into `image_service.py`.
+
+## ADR-063 — Aggressive site-wide copy pass + animated `join.html` Discord landing page
+
+Decision: sharpen the website's voice from calm/data-first to a confident, competitive
+esports tone across all pages (owner request), and add a dedicated, animated landing page
+whose only job is converting visitors into Discord members via the real invite
+(`https://discord.gg/GTuQaE7WfF`).
+
+**Tone, reconciled with `docs/BRAND.md`'s guardrails.** BRAND.md explicitly warns against
+"childish copy" and "generic gamer clichés." The rewrite stays inside those lines —
+confident and challenge-driven ("we don't carry dead weight", "ranked by results, not
+excuses") rather than juvenile or emoji-spammy — the same reconciliation move ADR-049 made
+for "neon" (a glow treatment on the existing palette, not a new one, so it reads as a
+competitive-gaming org, not a cliché). Changed: `index.html`'s ticker/hero tagline/"The
+Clan" copy, and one punchy intro line each on `clan.html`, `leaderboard.html`,
+`player.html`, `tournaments.html`, `404.html`. Left alone: nav link text (Home/Clan/
+Leaderboard/Players/Tournaments — needs to stay instantly parseable), every data table,
+stat label, and the footer's factual attribution line — "aggressive" is a prose thing,
+never something a user needs to parse correctly.
+
+**Real Discord invite wired in.** `web/assets/js/config.js`'s `DISCORD_INVITE_URL` was an
+empty placeholder (the nav "Join Discord" CTA has been hidden on every page since it was
+built); it's now `https://discord.gg/GTuQaE7WfF`, so the existing `wireDiscordLink()`
+(`web/assets/js/api.js`) unhides and points that button site-wide — no JS logic changed,
+just the config value it was already waiting on.
+
+**New page: `web/join.html`.** Built the same way every other page in this site is (there's
+no shared nav partial — `docs`'s own prior exploration confirmed every page hand-repeats
+the header/nav/footer block — so `join.html` follows that exact pattern, and a `Join` link
+pointing to it was added to the nav on all 7 existing pages, one identical edit repeated
+seven times). Reuses the site's existing motion system entirely — `heroEntrance`/
+`heroFloat`/`shine` for the hero, `tickerScroll` for the marquee, `.reveal`/`fadeInUp`/
+spotlight-glow for the "Why Join" cards, the existing truck-art divider — no new JS files.
+The one genuinely new visual: a `cta-pulse` modifier (a pulsing glow ring, same
+`--neon-green` token already used on every other primary button) on the page's Discord CTA,
+covered automatically by the stylesheet's existing wildcard
+`prefers-reduced-motion` kill-switch (`*, *::before, *::after { animation-duration:
+0.001ms !important; ... }`) — no separate opt-out needed for a new animation.
+
+**Second brand asset.** The owner supplied a second, more detailed transparent lockup
+(full eagle crest + "SHAHEEN / BRAWLHALLA CLAN" wordmark + the Urdu tagline + "HIGHER
+TOGETHER," all baked into the artwork, genuinely transparent background — unlike
+`logo-full.png`, which sits on a near-black square canvas that `.hero-logo-img`'s
+`mask-image: radial-gradient(...)` fades into the page). Saved as `web/assets/img/
+shaheen-lockup.png`/`.webp` (resized from the source 1254×1254 down to 840×840 — plenty
+for the display size, keeps the file reasonable), used as `join.html`'s hero visual. A new
+`.hero-lockup-img` CSS class reuses `.hero-logo-img`'s float animation but sets
+`mask-image: none` and a larger `clamp()` — applying the existing mask to this asset would
+have clipped real wingtip artwork the old mask was never designed to touch. Not swapped in
+site-wide; `index.html`'s hero and the nav/footer crest keep their existing assets, since
+this task was scoped to the new landing page.
+
+**Deploy**: no config needed — `.github/workflows/pages.yml` uploads all of `web/` as
+a static artifact on every push to `main` touching `web/**`, so `join.html` and the new
+image assets ship automatically.
+
+Verified: served `web/` locally and screenshotted `index.html` and `join.html` with
+headless Chromium (this sandbox has no `playwright`/`puppeteer` npm packages installed, so
+a minimal from-scratch Chrome DevTools Protocol script was used instead — `Page.navigate`,
+wait past the CSS entrance-animation delays, `Page.captureScreenshot`) — confirmed the new
+lockup renders with no mask clipping, both Discord CTAs (hero + closing) render with the
+pulsing glow, the "Why Join" cards and truck-art divider render correctly, the Urdu motto
+line shapes correctly, and `index.html`'s reworked ticker/tagline/"The Clan" copy renders
+without breaking layout. Grepped for `href="join.html"` — present on all 7 existing pages
+plus `join.html`'s own active nav state (8 total), and `discord.gg/GTuQaE7WfF` — present in
+`config.js` and both of `join.html`'s hardcoded CTA hrefs, no typos. No JS/build step exists
+for `web/` — nothing to lint/type-check; visual confirmation in a real browser is the
+verification, same as prior website-visual ADRs (049/051/053/054/062).
