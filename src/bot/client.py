@@ -15,6 +15,8 @@ from discord import app_commands
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from bot.views.roles import SelfAssignRolesView
+from bot.views.spar import SparKioskView
 from core.config import Settings
 from core.exceptions import ShaheenError
 from integrations.brawlhalla.client import BrawlhallaClient
@@ -50,6 +52,15 @@ class ShaheenBot(commands.Bot):
         self.tree.on_error = self._on_app_command_error  # type: ignore[method-assign]
 
     async def setup_hook(self) -> None:
+        # Persistent views (docs/DECISIONS.md ADR-058) must be re-registered
+        # on every process start — discord.py routes an interaction to
+        # whichever registered view has a matching custom_id, regardless of
+        # which message it's actually attached to, but only while a view
+        # with that custom_id has been added here. Unlike the cogs below,
+        # these aren't tied to any specific message and survive restarts.
+        self.add_view(SelfAssignRolesView())
+        self.add_view(SparKioskView())
+
         for extension in STARTUP_EXTENSIONS:
             await self.load_extension(extension)
 

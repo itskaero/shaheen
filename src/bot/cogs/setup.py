@@ -21,16 +21,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_setup_authorized
 from bot.client import ShaheenBot
+from bot.content.competition_embeds import build_spar_kiosk_embed
 from bot.content.embeds import (
     build_plan_embed,
     build_report_embed,
     build_roles_embed,
     build_rules_embed,
+    build_self_assign_roles_embed,
     build_status_embed,
     build_verify_embed,
     build_welcome_embed,
 )
 from bot.views.confirm import ConfirmView
+from bot.views.roles import SelfAssignRolesView
+from bot.views.spar import SparKioskView
 from core.exceptions import SetupError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.guild_settings_repository import GuildSettingsRepository
@@ -44,11 +48,13 @@ REQUIRED_BOT_PERMISSIONS = discord.Permissions(
     manage_roles=True, manage_channels=True, view_channel=True
 )
 
-# Channels that get a branded message deployed in launch mode.
-_LAUNCH_MESSAGE_CHANNELS: tuple[tuple[str, str], ...] = (
-    ("channel:welcome", "welcome"),
-    ("channel:rules", "rules"),
-    ("channel:roles", "roles"),
+# Channels that get one or more branded messages deployed in launch mode
+# (see _deploy_launch_messages for what each one gets).
+_LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
+    "channel:welcome",
+    "channel:rules",
+    "channel:roles",
+    "channel:ranked",
 )
 
 
@@ -150,12 +156,23 @@ class SetupCog(commands.Cog):
 
     async def _deploy_launch_messages(self, guild: discord.Guild, session: AsyncSession) -> None:
         resources = ProvisionedResourceRepository(session)
-        embeds_by_channel_key = {
-            "channel:welcome": build_welcome_embed(),
-            "channel:rules": build_rules_embed(),
-            "channel:roles": build_roles_embed(),
+        # Each channel can get more than one message; _already_posted's
+        # title check keeps re-running /setup from duplicating any of them.
+        # The persistent-view instances here are fresh objects, but that's
+        # fine — discord.py routes an interaction to whichever registered
+        # view has a matching custom_id (ShaheenBot.setup_hook), regardless
+        # of which specific instance is attached to the message that was
+        # actually sent (docs/DECISIONS.md ADR-058).
+        messages_by_channel_key: dict[str, list[tuple[discord.Embed, discord.ui.View | None]]] = {
+            "channel:welcome": [(build_welcome_embed(), None)],
+            "channel:rules": [(build_rules_embed(), None)],
+            "channel:roles": [
+                (build_roles_embed(), None),
+                (build_self_assign_roles_embed(), SelfAssignRolesView()),
+            ],
+            "channel:ranked": [(build_spar_kiosk_embed(), SparKioskView())],
         }
-        for logical_key, _label in _LAUNCH_MESSAGE_CHANNELS:
+        for logical_key in _LAUNCH_MESSAGE_CHANNELS:
             resource = await resources.get(
                 guild_id=guild.id, resource_type=ResourceType.CHANNEL, logical_key=logical_key
             )
@@ -164,10 +181,13 @@ class SetupCog(commands.Cog):
             channel = guild.get_channel(resource.discord_id)
             if not isinstance(channel, discord.TextChannel):
                 continue
-            embed = embeds_by_channel_key[logical_key]
-            if await _already_posted(channel, embed.title, self.bot.user):
-                continue
-            await channel.send(embed=embed)
+            for embed, view in messages_by_channel_key[logical_key]:
+                if await _already_posted(channel, embed.title, self.bot.user):
+                    continue
+                if view is not None:
+                    await channel.send(embed=embed, view=view)
+                else:
+                    await channel.send(embed=embed)
 
 
 async def _already_posted(

@@ -74,3 +74,17 @@ The bot should identify previously-created resources, verify them, and repair
 configuration when safe.
 
 Use stored Discord IDs where possible rather than relying only on names.
+
+## Standing panels (launch mode)
+
+`/setup run mode:launch` posts persistent, interactive panels alongside the
+welcome/rules messages (docs/DECISIONS.md ADR-058) — idempotently, like
+everything else here:
+
+- **🎭 roles** — the rank-ladder embed (staff-assigned), plus an "🎯 Opt-in
+  Roles" panel with toggle buttons for opt-in pings/tags (🔔 Tournament
+  Alerts, 📣 Scrim Alerts, 🇵🇰 Pakistan / 🌍 International, 🥊 1v1 Player /
+  👥 2v2 Player — see `bot.constants.SELF_ASSIGN_ROLES`). These are not clan
+  rank — no permissions, not staff-assigned.
+- **🏆 ranked** — a standing "🥊 Looking to Spar?" panel; its buttons run the
+  same flow as `/scrim`.

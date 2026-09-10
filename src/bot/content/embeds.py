@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import discord
 
-from bot.palette import FOREST_GREEN, GOLD
+from bot.palette import EMERALD, FOREST_GREEN, GOLD
 from core.brand import MOTTO, TAGLINE
 from services.setup_planner import ActionType, CategoryAction, ChannelAction, RoleAction, SetupPlan
 from services.setup_service import ActionSummary, SetupReport
@@ -52,10 +52,27 @@ def build_roles_embed() -> discord.Embed:
             "🎯 **TRIAL SHAHEEN** — members under evaluation\n"
             "🤝 **ALLY** — friends of the clan\n"
             "👀 **GUEST** — everyone else\n\n"
-            "Roles are currently assigned by staff. Player-linked roles arrive "
-            "with Brawlhalla integration."
+            "Ranks above are assigned by staff. Grab your own opt-in roles below ⬇️"
         ),
         colour=GOLD,
+    )
+    return embed
+
+
+def build_self_assign_roles_embed() -> discord.Embed:
+    """Posted alongside build_roles_embed(), with SelfAssignRolesView's
+    toggle buttons attached (bot/cogs/setup.py, docs/DECISIONS.md ADR-058).
+    """
+    embed = discord.Embed(
+        title="🎯 Opt-in Roles",
+        description=(
+            "Click a button to add or remove a role — click again to take it off.\n\n"
+            "🔔 **Tournament Alerts** — pinged when a tournament is announced\n"
+            "📣 **Scrim Alerts** — pinged when a scrim is announced\n"
+            "🇵🇰 **Pakistan** / 🌍 **International** — where you're playing from\n"
+            "🥊 **1v1 Player** / 👥 **2v2 Player** — your preferred mode"
+        ),
+        colour=EMERALD,
     )
     return embed
 

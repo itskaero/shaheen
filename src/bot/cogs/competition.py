@@ -13,7 +13,7 @@ Phase 2/3's read commands.
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from discord import app_commands
@@ -21,7 +21,6 @@ from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_staff_authorized
-from bot.client import ShaheenBot
 from bot.content.competition_embeds import (
     build_bracket_embed,
     build_challenge_embed,
@@ -50,6 +49,15 @@ from database.repositories.tournament_repository import (
 from database.session import session_scope
 from services.match_service import MatchService
 from services.tournament_service import TournamentService
+
+if TYPE_CHECKING:
+    # Deferred to break an import cycle: bot/views/spar.py imports
+    # announce_scrim below (so the persistent spar kiosk and /scrim run the
+    # exact same flow), and bot/client.py imports that view to register it
+    # — so this module can't import bot.client at runtime. Safe because
+    # `from __future__ import annotations` (above) makes every annotation
+    # in this file lazy.
+    from bot.client import ShaheenBot
 
 logger = logging.getLogger(__name__)
 
@@ -110,57 +118,10 @@ class CompetitionCog(commands.Cog):
     async def scrim(self, interaction: discord.Interaction, kind: Literal["1v1", "2v2"]) -> None:
         member = _require_member(interaction)
         match_kind = _KIND_MAP[kind]
-
         await interaction.response.defer()
-        async with session_scope(self.bot.session_factory) as session:
-            scrim = await MatchService(session).create_scrim(
-                guild_id=member.guild.id,
-                creator_discord_id=member.id,
-                creator_joined_at=member.joined_at,
-                kind=match_kind,
-            )
-            scrim_id = scrim.id
-
-        async def on_join(view_interaction: discord.Interaction, side: str) -> None:
-            joiner = view_interaction.user
-            if not isinstance(joiner, discord.Member):
-                return
-            async with session_scope(self.bot.session_factory) as inner_session:
-                service = MatchService(inner_session)
-                if side in _SIDE_MAP:
-                    resolved_side = _SIDE_MAP[side]
-                else:
-                    resolved_side = await service.resolve_scrim_side(scrim_id)
-                result = await service.join_scrim(
-                    scrim_id=scrim_id,
-                    discord_id=joiner.id,
-                    joined_at=joiner.joined_at,
-                    side=resolved_side,
-                )
-
-            if result.match is not None:
-                await view_interaction.response.edit_message(
-                    embed=build_scrim_full_embed(kind=match_kind), view=None
-                )
-            else:
-                await view_interaction.response.edit_message(
-                    embed=build_scrim_embed(
-                        creator_name=member.display_name,
-                        kind=match_kind,
-                        side_counts=result.side_counts,
-                    )
-                )
-
-        view = ScrimJoinView(is_team=match_kind is MatchKind.TWO_V_TWO, on_join=on_join)
-        embed = build_scrim_embed(
-            creator_name=member.display_name, kind=match_kind, side_counts=(0, 0)
+        await announce_scrim(
+            self.bot, interaction, member, match_kind, ephemeral_confirmation=False
         )
-        target_channel = await self._provisioned_channel(member.guild, "channel:scrims")
-        if target_channel is not None:
-            await target_channel.send(embed=embed, view=view)
-            await interaction.followup.send(f"Scrim announced in {target_channel.mention}.")
-        else:
-            await interaction.followup.send(embed=embed, view=view)
 
     # --- /report ------------------------------------------------------------
 
@@ -410,14 +371,7 @@ class CompetitionCog(commands.Cog):
     async def _provisioned_channel(
         self, guild: discord.Guild, logical_key: str
     ) -> discord.TextChannel | None:
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=guild.id, resource_type=ResourceType.CHANNEL, logical_key=logical_key
-            )
-        if resource is None:
-            return None
-        channel = guild.get_channel(resource.discord_id)
-        return channel if isinstance(channel, discord.TextChannel) else None
+        return await resolve_provisioned_channel(self.bot, guild, logical_key)
 
     async def _maybe_advance_tournament(
         self, session: AsyncSession, match_id: int, winning_side: MatchSide | None
@@ -485,6 +439,89 @@ def _display_name(guild: discord.Guild | None, discord_id: int) -> str:
         return f"<@{discord_id}>"
     member = guild.get_member(discord_id)
     return member.display_name if member else f"<@{discord_id}>"
+
+
+async def resolve_provisioned_channel(
+    bot: ShaheenBot, guild: discord.Guild, logical_key: str
+) -> discord.TextChannel | None:
+    """Module-level twin of CompetitionCog._provisioned_channel, callable
+    without a cog instance — needed by announce_scrim below, which the
+    persistent spar kiosk (bot/views/spar.py) calls with no cog `self`.
+    """
+    async with session_scope(bot.session_factory) as session:
+        resource = await ProvisionedResourceRepository(session).get(
+            guild_id=guild.id, resource_type=ResourceType.CHANNEL, logical_key=logical_key
+        )
+    if resource is None:
+        return None
+    channel = guild.get_channel(resource.discord_id)
+    return channel if isinstance(channel, discord.TextChannel) else None
+
+
+async def announce_scrim(
+    bot: ShaheenBot,
+    interaction: discord.Interaction,
+    member: discord.Member,
+    match_kind: MatchKind,
+    *,
+    ephemeral_confirmation: bool,
+) -> None:
+    """Create a Scrim and post its join-embed to #scrims.
+
+    Shared by the /scrim command and the persistent spar-kiosk panel
+    (bot/views/spar.py, docs/DECISIONS.md ADR-058) so both entry points run
+    the exact same flow — `interaction.response.defer(...)` must already
+    have been called by the caller before this runs.
+    """
+    async with session_scope(bot.session_factory) as session:
+        scrim = await MatchService(session).create_scrim(
+            guild_id=member.guild.id,
+            creator_discord_id=member.id,
+            creator_joined_at=member.joined_at,
+            kind=match_kind,
+        )
+        scrim_id = scrim.id
+
+    async def on_join(view_interaction: discord.Interaction, side: str) -> None:
+        joiner = view_interaction.user
+        if not isinstance(joiner, discord.Member):
+            return
+        async with session_scope(bot.session_factory) as inner_session:
+            service = MatchService(inner_session)
+            if side in _SIDE_MAP:
+                resolved_side = _SIDE_MAP[side]
+            else:
+                resolved_side = await service.resolve_scrim_side(scrim_id)
+            result = await service.join_scrim(
+                scrim_id=scrim_id,
+                discord_id=joiner.id,
+                joined_at=joiner.joined_at,
+                side=resolved_side,
+            )
+
+        if result.match is not None:
+            await view_interaction.response.edit_message(
+                embed=build_scrim_full_embed(kind=match_kind), view=None
+            )
+        else:
+            await view_interaction.response.edit_message(
+                embed=build_scrim_embed(
+                    creator_name=member.display_name,
+                    kind=match_kind,
+                    side_counts=result.side_counts,
+                )
+            )
+
+    view = ScrimJoinView(is_team=match_kind is MatchKind.TWO_V_TWO, on_join=on_join)
+    embed = build_scrim_embed(creator_name=member.display_name, kind=match_kind, side_counts=(0, 0))
+    target_channel = await resolve_provisioned_channel(bot, member.guild, "channel:scrims")
+    if target_channel is not None:
+        await target_channel.send(embed=embed, view=view)
+        await interaction.followup.send(
+            f"Scrim announced in {target_channel.mention}.", ephemeral=ephemeral_confirmation
+        )
+    else:
+        await interaction.followup.send(embed=embed, view=view, ephemeral=ephemeral_confirmation)
 
 
 async def setup(bot: ShaheenBot) -> None:

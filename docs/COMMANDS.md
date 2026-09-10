@@ -72,6 +72,18 @@ Create or inspect a match.
 ### /report
 Report a match result.
 
+## Standing panels
+
+Not slash commands — persistent, interactive messages `/setup run
+mode:launch` posts once and that keep working across bot restarts
+(docs/DECISIONS.md ADR-058). See docs/DISCORD_SPEC.md's "Standing panels"
+section for which channel gets what.
+
+- **Opt-in role panel** (🎭 roles) — toggle buttons for opt-in pings/tags.
+  No slash command equivalent; members click to add/remove.
+- **Spar kiosk** (🏆 ranked) — 🥊 1v1 / 👥 2v2 buttons that run the exact
+  same flow as `/scrim`, just without typing the command.
+
 ## UX requirements
 
 Use Discord slash commands, embeds and buttons/selects where they improve UX.

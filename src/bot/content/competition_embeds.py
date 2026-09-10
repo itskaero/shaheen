@@ -9,6 +9,21 @@ from database.models.match import Match, MatchKind, MatchStatus
 from database.models.tournament import Tournament, TournamentMatch, TournamentMatchStatus
 
 
+def build_spar_kiosk_embed() -> discord.Embed:
+    """Posted with SparKioskView attached (bot/cogs/setup.py, docs/DECISIONS.md
+    ADR-058) — clicking either button runs the same flow as /scrim.
+    """
+    return discord.Embed(
+        title="🥊 Looking to Spar?",
+        description=(
+            "Click below to announce a scrim — Shaheen posts it in #scrims "
+            "with a Join button for whoever's up.\n\n"
+            "Prefer picking a specific mode or teammate? Use `/scrim` or `/challenge` instead."
+        ),
+        colour=GOLD,
+    )
+
+
 def build_challenge_embed(*, challenger_name: str, opponent_name: str) -> discord.Embed:
     return discord.Embed(
         title="⚔️ Challenge",

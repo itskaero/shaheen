@@ -110,8 +110,71 @@ ROLE_GUEST = RoleSpec(
     hoist=False,
 )
 
+# --- Self-assignable roles (opt-in pings/tags, not clan rank) ---------------
+#
+# Deliberately separate from the rank ladder above: these carry no
+# permissions, aren't staff-assigned, and members toggle them themselves via
+# the persistent panel bot/views/roles.py posts to #roles (docs/DECISIONS.md
+# ADR-058). Not in ROLES_WITH_STAFF_ACCESS. hoist=False so they don't create
+# extra sidebar groupings alongside the real rank roles.
+
+ROLE_TOURNAMENT_ALERTS = RoleSpec(
+    logical_key="role:tournament_alerts",
+    name="🔔 Tournament Alerts",
+    color=GOLD,
+    hoist=False,
+    mentionable=True,
+)
+
+ROLE_SCRIM_ALERTS = RoleSpec(
+    logical_key="role:scrim_alerts",
+    name="📣 Scrim Alerts",
+    color=EMERALD,
+    hoist=False,
+    mentionable=True,
+)
+
+ROLE_REGION_PAKISTAN = RoleSpec(
+    logical_key="role:region_pakistan",
+    name="🇵🇰 Pakistan",
+    color=FOREST_GREEN,
+    hoist=False,
+)
+
+ROLE_REGION_INTERNATIONAL = RoleSpec(
+    logical_key="role:region_international",
+    name="🌍 International",
+    color=CREAM,
+    hoist=False,
+)
+
+ROLE_MODE_1V1 = RoleSpec(
+    logical_key="role:mode_1v1",
+    name="🥊 1v1 Player",
+    color=GREY,
+    hoist=False,
+)
+
+ROLE_MODE_2V2 = RoleSpec(
+    logical_key="role:mode_2v2",
+    name="👥 2v2 Player",
+    color=GREY,
+    hoist=False,
+)
+
+# Order here is display order on the self-assign panel, not hierarchy.
+SELF_ASSIGN_ROLES: tuple[RoleSpec, ...] = (
+    ROLE_TOURNAMENT_ALERTS,
+    ROLE_SCRIM_ALERTS,
+    ROLE_REGION_PAKISTAN,
+    ROLE_REGION_INTERNATIONAL,
+    ROLE_MODE_1V1,
+    ROLE_MODE_2V2,
+)
+
 # Highest position first — /setup creates/repairs roles in this order and
-# leaves later roles positioned below earlier ones.
+# leaves later roles positioned below earlier ones. Self-assign roles are
+# appended last (lowest position) since they carry no rank/permissions.
 ROLES: tuple[RoleSpec, ...] = (
     ROLE_LEADER,
     ROLE_MODERATOR,
@@ -120,6 +183,7 @@ ROLES: tuple[RoleSpec, ...] = (
     ROLE_TRIAL,
     ROLE_ALLY,
     ROLE_GUEST,
+    *SELF_ASSIGN_ROLES,
 )
 
 # Roles authorized to see restricted categories (DEVELOPMENT, SHAHEEN ARENA

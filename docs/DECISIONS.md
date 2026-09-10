@@ -974,3 +974,82 @@ discord.com`) — evidence the import boundary that was actually broken is
 now fixed, not evidence the bot logs into Discord successfully (this
 environment can't reach discord.com to test that part). `pytest`/`mypy`
 are unaffected (neither invokes `main.py` as a subprocess).
+
+## ADR-058 — Persistent panels: self-assign roles and a spar kiosk
+Decision: Two new standing, restart-surviving panels, both posted
+idempotently by `/setup run mode:launch` (extending the existing
+welcome/rules/roles message deployment — ADR-021, ADR-054's pattern
+reused, not duplicated):
+
+- **Self-assign roles** (`bot/views/roles.py`, `#roles`): a new
+  `bot.constants.SELF_ASSIGN_ROLES` tuple — 🔔 Tournament Alerts, 📣 Scrim
+  Alerts, 🇵🇰 Pakistan, 🌍 International, 🥊 1v1 Player, 👥 2v2 Player —
+  appended to the end of `ROLES` (lowest position, no permissions, not in
+  `ROLES_WITH_STAFF_ACCESS`) so `/setup` creates/verifies/positions them
+  through the exact same idempotent role machinery as the rank ladder,
+  with none of its authority. A toggle-button panel lets members add/
+  remove these themselves; the rank ladder itself stays staff-assigned
+  (ADR-021 already covered why — nothing about that changes).
+- **Spar kiosk** (`bot/views/spar.py`, `#ranked`): two buttons, 🥊 1v1 and
+  👥 2v2, that run the *exact* `/scrim` flow (a real `Scrim` row via
+  `MatchService`, a join-embed posted to `#scrims`, auto side-matching) —
+  not a separate announcement system. `/scrim`'s command body was
+  extracted into a module-level `announce_scrim()` function in
+  `bot/cogs/competition.py` so both entry points share one
+  implementation (CLAUDE.md: don't duplicate business logic) rather than
+  the kiosk reimplementing scrim creation.
+
+Reason: owner request — an interactive, self-service roles channel and a
+standing "looking for a spar" post, in the channels members would actually
+look. `/scrim` already existed and does what a "post for spar" should do
+(join button, side auto-matching, tracked in the DB); the kiosk is a
+lower-friction *entry point* into it, not a new feature.
+
+**Persistent-view infrastructure, introduced here for the first time**:
+`bot/views/competition.py`'s views (Confirm/Challenge/Scrim-join/Report)
+are deliberately session-lived (bounded timeout, no custom_id routing —
+ADR-038, which explicitly deferred building persistent-view
+infrastructure as "a separate, non-trivial piece of scope no doc asks for
+yet"). That's still correct for those — a challenge or scrim signup is a
+one-shot interaction, not something that needs to survive a restart. A
+standing channel panel is different in kind: it must keep working
+indefinitely without being re-posted. New `bot/views/base.py`'s
+`PersistentView` (`timeout=None`, mirrors `ShaheenBot._on_app_command_error`
+for a view's own `on_error`) is the shared base for both new views;
+`ShaheenBot.setup_hook()` calls `self.add_view(...)` for one instance of
+each on every process start — discord.py then routes any interaction
+whose `custom_id` matches to that registered view regardless of which
+specific message (or bot restart) it's attached to, which is why the
+panel-posting code can create fresh view instances per `/setup run`
+without worrying about which one ends up "live" (idempotent posting keeps
+`_already_posted` from duplicating the *message*; global registration is
+what keeps the *buttons* working either way).
+
+**Import-cycle note**: `bot/views/spar.py` imports `announce_scrim` from
+`bot/cogs/competition.py`, and `bot/client.py` imports `bot/views/spar.py`
+to register it — so `bot/cogs/competition.py`'s existing
+`from bot.client import ShaheenBot` (used only for a constructor type
+hint) had to move behind `if TYPE_CHECKING:` to avoid a real circular
+import at runtime. Safe because every module here already uses
+`from __future__ import annotations` (PEP 563), so annotations were
+already never evaluated at runtime.
+
+Verified: `tests/test_constants.py` (new) checks `SELF_ASSIGN_ROLES`
+structurally — unique logical_keys/names across all of `ROLES`, no
+permissions, not in `ROLES_WITH_STAFF_ACCESS`, positioned after every rank
+role. `mypy`/`ruff`/the full `pytest` suite (140 existing tests) all still
+pass. Confirmed the import-cycle fix actually resolves by importing
+`bot.client`, `bot.cogs.setup`, `bot.cogs.competition`, `bot.views.roles`,
+and `bot.views.spar` together in one process (this failed before the
+`TYPE_CHECKING` change, with a real `ImportError`). Then, against a
+freshly-migrated sqlite database, ran `ShaheenBot.setup_hook()`'s actual
+body up to (not including) `tree.sync()` — which needs a real Discord API
+call this sandbox can't make — confirming both persistent views register
+(`len(bot.persistent_views) == 2`) and all five cogs load without error,
+including the modified `setup.py` and `competition.py`. Separately
+instantiated both views directly and printed their buttons' `custom_id`/
+`label`/`emoji` to confirm all 8 buttons (6 role toggles + 2 kiosk) render
+as intended and no `custom_id` collides with another. This doesn't prove
+Discord actually accepts these interactions end-to-end (no network access
+from this environment), consistent with every other bot-side verification
+in this document.
