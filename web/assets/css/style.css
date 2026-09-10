@@ -25,8 +25,12 @@
   --card-border-hover: rgba(57, 255, 176, 0.65);
   --radius: 8px;
   --max-width: 1040px;
-  --font-display: "Orbitron", "Rajdhani", "Poppins", sans-serif;
-  --font-heading: "Rajdhani", "Poppins", sans-serif;
+  /* Orbitron stays for the big display wordmark (distinctive, not what
+     reads as dated). Rajdhani/Poppins swapped for Space Grotesk/Sora
+     (owner feedback: the old pairing looked stale) — both modern
+     geometric sans faces, same "confident, technical" register. */
+  --font-display: "Orbitron", "Space Grotesk", "Sora", sans-serif;
+  --font-heading: "Space Grotesk", "Sora", sans-serif;
   --cut: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   --cut-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 
@@ -62,7 +66,7 @@ body {
   background-attachment: fixed, fixed, fixed, fixed;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
   color: var(--cream);
-  font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+  font-family: "Sora", "Segoe UI", system-ui, sans-serif;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -488,6 +492,18 @@ nav.site-nav a.active::after {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Every Urdu text run in the site — the ticker, the footer tagline, the
+   join.html motto — gets the real Nastaliq calligraphic face, not
+   whatever generic Arabic-capable font the browser happens to fall back
+   to. Marked with lang="ur" wherever Urdu is mixed into an otherwise-
+   English element, so this one rule covers all of it instead of a
+   one-off class per spot. */
+[lang="ur"] {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  unicode-bidi: isolate;
 }
 
 .motto {
