@@ -1717,3 +1717,113 @@ look, the same verification step ADR-062's achievement card got, confirming the 
 box coordinates were measured correctly against each new template. Cog loading smoke-
 tested the same way every other cog in this repo is (no live-Discord test harness exists
 for anything making real Discord calls).
+
+## ADR-066 — Website redesign: premium esports/stat-tracker direction, scroll storytelling, deeper Discord/Brawlhalla data
+
+Decision: replace ADR-049's dark-neon-cyberpunk visual direction with a calmer, more
+premium "esports team / stat-tracker" look (owner request, explicitly **not** neon-sign
+or glitch/technoware fonts) — inspired by corehalla (clean, data-dense Brawlhalla stat
+tracker) and PlayerX-style ThemeForest esports templates (angular sections, bold
+team-site headings). *Both reference URLs were unreachable from this sandbox (network
+egress proxy blocks corehalla.com and preview.themeforest.net) — confirmed with the
+owner, who approved working from established genre conventions instead of a pixel
+match.* Also: consolidate the site's two crest assets into one, build a scroll-mapped
+homepage hero around the owner's 5-character banner, add a more deliberate reveal
+animation to `clan.html`, and wire in three pieces of deeper Discord/Brawlhalla
+integration. Scope: reskin all 8 existing pages, keep every page's data-fetching
+untouched (`ShaheenAPI`, `website_service.py`, every endpoint) — a visual/structural
+pass on top of unchanged functionality.
+
+**Dropped, specifically the neon/glitch/technoware tells**: the `--neon-cyan` accent
+(BRAND.md only sanctions green/gold; cyan was ADR-049's own liberty), the `textGlitch`
+nav-hover keyframe (removed outright), default-everywhere `text-shadow` glow on ticker
+text/nav links/stat values/table headers/dividers (glow now lives only on a few
+deliberate accent moments — primary CTA, active nav underline, hover lift), and
+`Orbitron` (a sci-fi/HUD-coded display face). **Kept**: BRAND.md's palette (deep forest
+green, emerald, gold, black, cream) and motifs — untouched, non-negotiable — plus the
+angular diagonal-cut `clip-path` language (`--cut`/`--cut-sm`), which reads as
+PlayerX-style esports-team, not neon cliché, so it stayed and got a new diagonal
+section-divider motif built on the same idea. **New type system**: `Bebas Neue` for
+display type and big stat numbers (a standard sports/esports-team jersey face, zero
+sci-fi connotation) replacing Orbitron; `Space Grotesk` (headings/nav) and `Sora` (body)
+carry over unchanged from ADR-064.
+
+**Logo consolidation.** `logo-full.png` (a near-black-canvas crest needing a CSS radial
+mask to fake transparency, used only on `index.html`'s hero) and `shaheen-lockup.png`
+(genuinely transparent, crest+wordmark+tagline, used only on `join.html`'s hero) were
+two assets doing the same job. Now `shaheen-lockup.png/.webp` is the *one* hero crest,
+used on both pages — the mask hack is gone entirely. `logo-icon.png/.webp` (the 34px nav
+mark / 30px footer mark) was re-derived from the same lockup artwork (a PIL crop to just
+the eagle/wings/crescent arch, no wordmark) instead of being a separately-generated
+asset, so every crest touchpoint on the site now traces back to one source image;
+`favicon-32/48.png`/`apple-touch-icon.png` were regenerated from the same crop for the
+same reason. `logo-full.png/.webp` deleted, not just unreferenced.
+
+**Homepage scroll-mapped hero.** The owner's 5-character banner (werewolf, hooded
+rogue, central valkyrie, horned viking, ninja) becomes a "scrollytelling" section:
+`web/assets/js/pillar-scroll.js` (new, homepage-only) pairs a `position:sticky` banner
+image with five stacked 100vh text panels. Rather than pre-cutting five separate
+masked character images (attempted first, discarded — matching each character's silhouette
+by hand with only PIL's basic ops in this sandbox risked a bad crop that couldn't be
+visually pre-verified against a rendered page), the "spotlight" is a single source image
+(`hero-characters.jpg/.webp`) plus a runtime CSS radial-gradient vignette
+(`.pillar-vignette`) whose center position is driven by a `--focus-x` custom property
+(with an `@property` declaration so it interpolates smoothly where supported, and
+degrades to an instant snap everywhere else — never breaks). An `IntersectionObserver`
+(threshold 0.55 — the point at which a panel is roughly centered in the viewport) updates
+`--focus-x`, the sticky caption's text, and fades in that panel's copy card. Pillar
+mapping (left-to-right in the source image): werewolf -> *Community*, rogue -> *Competition*,
+valkyrie (the banner's central hero figure) -> *The Clan*, viking -> *Tournaments*, ninja
+(final, sharpest figure) -> *Join Shaheen*. On short/narrow viewports (`max-width:720px`
+or `max-height:560px` — sticky scrollytelling gets unreliable on mobile browser
+chrome-resize quirks) the whole thing falls back to a plain static stack: no sticky pin,
+normal document flow, every card visible without needing to scroll-trigger. Inert under
+`prefers-reduced-motion`, same posture as every other animation on this site.
+
+**`clan.html` reveal.** The "The Clan" card's plain fade-in became a diagonal
+`clip-path` wipe (`.clan-reveal`) with the crest watermark fading in behind the copy —
+triggered manually via `requestAnimationFrame` rather than `scroll.js`'s shared
+`IntersectionObserver`, since this card is injected into the DOM well after
+`DOMContentLoaded` (once `ShaheenAPI.getClan()` resolves) and is also the first thing on
+the page, so a scroll trigger was never the right fit for it specifically.
+
+**Deeper Discord/Brawlhalla integration** (all three, owner-selected):
+1. *Live Discord widget.* `web/assets/js/config.js` gained `DISCORD_GUILD_ID`; `api.js`'s
+   new `wireDiscordWidgets()` fetches Discord's public, unauthenticated
+   `guilds/{id}/widget.json` and fills every `[data-discord-widget]` element (header +
+   footer on all 8 pages) with an online-count badge — silently stays hidden if the guild
+   ID is unset, the widget isn't enabled, or the request fails. **Operational note**: needs
+   "Server Widget" enabled under Discord's Server Settings -> Widget, a portal toggle
+   outside this repo (same category as prior rounds' `message_content` intent note).
+2. *Chat gamification, visual upgrade.* `clan.html`'s Community Activity table (ADR-065)
+   became a card list (`web/assets/js/pages/clan.js`): a rank-title badge per member
+   (`theme.js`'s new `chatRankBadge()`, styled via new `.rank-hatchling`..`.rank-valhallan`
+   classes) plus an XP-to-next-level progress bar reusing the `.legend-bar-track/-fill`
+   pattern already built for legend mastery. Same `GET /community/activity` data — no
+   backend change, `theme.js`'s new `xpForLevel()` is a small intentional duplicate of
+   `services/chat_gamification.py`'s formula (the API returns level/xp/rank_title, not a
+   next-level threshold — not worth a new field for one progress bar).
+3. *Brawlhalla stats already captured but unexposed* — cheap wins, no new API calls or
+   migration: `RankingSnapshot.global_rank` was already stored but never left
+   `website_service.py` — now a `PlayerProfile.global_rank` property, surfaced on
+   `player.html` as a "Global Rank #N" stat. `LegendSnapshot.damagedealt`/`falls` were
+   already stored per-legend but unused — added to `LegendMastery`/`LegendMasteryResponse`,
+   shown in each legend's meta line on `player.html`.
+
+Verified: `uv run pytest` (190 passed, including new/extended `test_website_service.py`
+coverage for `global_rank`/`damagedealt`/`falls`), `uv run ruff check src tests` / `uv run
+mypy src` clean, every touched JS file passed `node --check`. Visual verification used
+this sandbox's established headless-Chromium-via-raw-CDP approach (no Playwright/
+Puppeteer packages available) — screenshotted all 8 pages at desktop and ~400px mobile
+width: confirmed the new crest renders everywhere, the pillar-scroll hero's vignette and
+caption genuinely change per section with the copy card fading in at the right scroll
+position (this needed two real fixes during verification: the card's alignment moved from
+bottom to center so it lands on screen at the same scroll position the
+`IntersectionObserver` fires at, and the screenshot script itself needed to wait for
+`Page.loadEventFired` — a flat timeout wasn't reliably long enough given this sandbox's
+proxied Google Fonts fetch), the mobile fallback drops the sticky pin and stacks cleanly
+with no horizontal scroll, `clan.html`'s wipe fires, and `prefers-reduced-motion` still
+disables every animation. Data-dependent pages (clan/leaderboard/tournaments) correctly
+showed the site's existing "failed to fetch" error state rather than breaking, since this
+sandbox's egress proxy can't reach the live Render-hosted API — a sandbox network
+limitation, not a defect in this change.

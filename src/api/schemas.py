@@ -43,6 +43,7 @@ class PlayerProfileResponse(BaseModel):
     rating: int | None
     peak_rating: int | None
     tier: str | None
+    global_rank: int | None
     achievements: list[AchievementResponse]
 
 
@@ -58,6 +59,8 @@ class LegendMasteryResponse(BaseModel):
     games: int
     wins: int
     kos: int
+    damagedealt: int
+    falls: int
 
 
 class MatchResultResponse(BaseModel):

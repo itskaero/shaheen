@@ -7,12 +7,12 @@
   <meta name="description" content="Shaheen is a Pakistan-based Brawlhalla clan. Track the clan's leaderboard, player profiles, and rating history." />
   <meta property="og:title" content="Shaheen — Pakistan Brawlhalla Clan" />
   <meta property="og:description" content="بلندیوں کی جانب — Higher Together. From Pakistan to the Arena." />
-  <meta property="og:image" content="assets/img/logo-full.png" />
+  <meta property="og:image" content="assets/img/shaheen-lockup.png" />
   <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
@@ -32,6 +32,7 @@
         <a href="player.html">Players</a>
         <a href="tournaments.html">Tournaments</a>
         <a href="join.html">Join</a>
+        <span class="discord-widget" data-discord-widget hidden></span>
         <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
       </nav>
     </div>
@@ -48,27 +49,92 @@
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-logo-wrap">
       <picture>
-        <source srcset="assets/img/logo-full.webp" type="image/webp" />
+        <source srcset="assets/img/shaheen-lockup.webp" type="image/webp" />
         <img
           class="hero-logo-img"
-          src="assets/img/logo-full.png"
+          src="assets/img/shaheen-lockup.png"
           alt="Shaheen — Pakistan Brawlhalla Clan. بلندیوں کی جانب, Higher Together."
-          width="720"
-          height="704"
+          width="840"
+          height="840"
           fetchpriority="high"
         />
       </picture>
     </div>
-    <h1>Pakistan Brawlhalla Clan</h1>
+    <h1>Pakistan <em>Brawlhalla</em> Clan</h1>
     <p class="tagline">Every win tracked. Every excuse ignored. This is where Pakistan's best Brawlhalla players prove it.</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="leaderboard.html">View Leaderboard</a>
       <a class="btn btn-ghost" href="clan.html">About the Clan</a>
     </div>
-    <a class="scroll-cue" href="#by-the-numbers" aria-label="Scroll down">↓</a>
+    <a class="scroll-cue" href="#pillar-hero" aria-label="Scroll down">↓</a>
   </section>
 
-  <div class="cinematic-strip" role="img" aria-label="Shaheen clan key art"></div>
+  <!-- Scroll-mapped hero (docs/DECISIONS.md ADR-066): a sticky banner
+       stays pinned while five panels of copy scroll past, each one
+       spotlighting a different character in the banner via
+       assets/js/pillar-scroll.js. -->
+  <section class="pillar-hero" id="pillar-hero" aria-label="What Shaheen is about">
+    <div class="pillar-stage">
+      <div class="pillar-visual">
+        <picture>
+          <source srcset="assets/img/hero-characters.webp" type="image/webp" />
+          <img src="assets/img/hero-characters.jpg" alt="" class="pillar-banner-img" />
+        </picture>
+        <div class="pillar-vignette" aria-hidden="true"></div>
+        <div class="pillar-caption" aria-hidden="true">
+          <span class="eyebrow" data-caption-eyebrow>01 — Pack</span>
+          <h2 data-caption-title>Community</h2>
+        </div>
+      </div>
+
+      <div class="pillar-panels">
+        <div class="pillar-panel" data-focus-x="15" data-eyebrow="01 — Pack" data-title="Community">
+          <div class="wrap">
+            <div class="pillar-panel-card">
+              <p>A pack, not a roster. Shaheen shows up for each other in ranked, in scrims, and in every chat that matters.</p>
+              <a href="clan.html">Meet the clan &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="pillar-panel" data-focus-x="30" data-eyebrow="02 — Tracked" data-title="Competition">
+          <div class="wrap">
+            <div class="pillar-panel-card">
+              <p>Every match tracked. Every rating logged. No filters, no cherry-picked highlight reels — the record speaks for itself.</p>
+              <a href="leaderboard.html">See the leaderboard &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="pillar-panel" data-focus-x="49" data-eyebrow="03 — Standard" data-title="The Clan">
+          <div class="wrap">
+            <div class="pillar-panel-card">
+              <p>Shaheen isn't a Discord server with a scoreboard bolted on. It's a Pakistan-based Brawlhalla clan that competes to win.</p>
+              <a href="clan.html">About the clan &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="pillar-panel" data-focus-x="68" data-eyebrow="04 — Brackets" data-title="Tournaments">
+          <div class="wrap">
+            <div class="pillar-panel-card">
+              <p>Brackets don't lie. Show up or get run over — live tournament brackets, updated as every match reports in.</p>
+              <a href="tournaments.html">View tournaments &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="pillar-panel" data-focus-x="86" data-eyebrow="05 — Last Call" data-title="Join Shaheen">
+          <div class="wrap">
+            <div class="pillar-panel-card">
+              <p>Two clicks. Zero regrets. Every rank above you started exactly where you are now.</p>
+              <a href="join.html">Join the clan &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <main style="padding-top: 0">
     <section class="wrap reveal" id="live-stats">
@@ -82,19 +148,6 @@
           <span class="value" data-count-to="0">0</span>
           <span class="label">Top Rating</span>
         </div>
-      </div>
-    </section>
-
-    <section class="wrap reveal">
-      <div class="divider"><span>The Clan</span></div>
-
-      <div class="card">
-        <p style="margin: 0">
-          Shaheen isn't a Discord server with a scoreboard bolted on. It's a
-          Pakistan-based <strong>Brawlhalla</strong> clan that competes to win,
-          tracks every match, and doesn't carry dead weight. This site mirrors that
-          record in public — the same data our Discord bot tracks, no filters.
-        </p>
       </div>
     </section>
 
@@ -125,6 +178,7 @@
         <source srcset="assets/img/logo-icon.webp" type="image/webp" />
         <img class="crest" src="assets/img/logo-icon.png" alt="" />
       </picture>
+      <span class="discord-widget" data-discord-widget hidden></span>
       <p>&copy; <span id="year"></span> Shaheen &mdash; <span lang="ur">بلندیوں کی جانب</span>. Data from the Brawlhalla API.</p>
     </div>
   </footer>
@@ -133,6 +187,7 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/scroll.js"></script>
+  <script src="assets/js/pillar-scroll.js"></script>
   <script src="assets/js/pages/home.js"></script>
 </body>
 </html>

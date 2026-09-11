@@ -34,7 +34,11 @@ const ShaheenMotion = (() => {
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  const revealTargets = document.querySelectorAll(".reveal");
+  // .clan-reveal (clan.html's diagonal clip-path wipe, docs/DECISIONS.md
+  // ADR-066) shares the exact same "add .in-view once visible, then stop
+  // watching" behavior as .reveal — its actual animation lives entirely
+  // in style.css's .clan-reveal.in-view rule, so no extra JS branch here.
+  const revealTargets = document.querySelectorAll(".reveal, .clan-reveal");
 
   if (ShaheenMotion.reduced || !("IntersectionObserver" in window)) {
     revealTargets.forEach((el) => {

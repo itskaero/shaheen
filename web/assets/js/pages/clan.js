@@ -4,7 +4,7 @@
   try {
     const clan = await ShaheenAPI.getClan();
     el.innerHTML = `
-      <div class="card">
+      <div class="card clan-reveal">
         <p class="motto" style="text-align: center">${clan.motto}</p>
         <p class="tagline" style="text-align: center; margin: 0">${clan.tagline}</p>
       </div>
@@ -31,6 +31,19 @@
         </a>
       </div>
     `;
+
+    // The clan-reveal wipe (style.css's .clan-reveal.in-view) is normally
+    // triggered by scroll.js's IntersectionObserver, but this card is
+    // injected into the DOM well after DOMContentLoaded (once the fetch
+    // resolves) so that observer never sees it — and it's the very first
+    // thing on the page anyway, so a scroll trigger isn't the right fit
+    // here. Two rAFs so the browser paints the closed clip-path first,
+    // then the transition to .in-view actually animates instead of
+    // snapping straight to its end state in the same frame.
+    const revealCard = el.querySelector(".clan-reveal");
+    if (revealCard) {
+      requestAnimationFrame(() => requestAnimationFrame(() => revealCard.classList.add("in-view")));
+    }
   } catch (err) {
     el.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
     return;
@@ -49,34 +62,25 @@
     }
 
     const rows = entries
-      .map(
-        (entry, i) => `
-        <tr>
-          <td>${rankHtml(i + 1)}</td>
-          <td>${escapeHtml(entry.player_name)}</td>
-          <td>${escapeHtml(entry.rank_title)}</td>
-          <td>${formatNumber(entry.level)}</td>
-          <td>${formatNumber(entry.xp)}</td>
-        </tr>`
-      )
+      .map((entry, i) => {
+        const currentThreshold = xpForLevel(entry.level);
+        const nextThreshold = xpForLevel(entry.level + 1);
+        const span = Math.max(1, nextThreshold - currentThreshold);
+        const progressPct = Math.min(100, Math.max(4, Math.round(((entry.xp - currentThreshold) / span) * 100)));
+        return `
+        <li class="chat-activity-row">
+          ${rankHtml(i + 1)}
+          <span class="chat-activity-name">${escapeHtml(entry.player_name)}</span>
+          ${chatRankBadge(entry.rank_title)}
+          <div class="chat-activity-progress">
+            <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${progressPct}%"></div></div>
+            <span class="legend-meta">Level ${formatNumber(entry.level)} &middot; ${formatNumber(entry.xp)} XP</span>
+          </div>
+        </li>`;
+      })
       .join("");
 
-    activityEl.innerHTML = `
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Player</th>
-              <th>Title</th>
-              <th>Level</th>
-              <th>XP</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
+    activityEl.innerHTML = `<ul class="chat-activity-list">${rows}</ul>`;
   } catch (err) {
     activityEl.innerHTML = `<p class="state-msg error">Couldn't load community activity: ${err.message}</p>`;
   }

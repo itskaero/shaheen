@@ -62,3 +62,32 @@ function legendDisplayName(legendNameKey) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+// Chat-gamification rank titles (services/chat_gamification.py's
+// RANK_TITLES, docs/DECISIONS.md ADR-065/066) — a badge in the same visual
+// language as tierBadge() above, keyed to its own CSS class set
+// (.rank-hatchling..rank-valhallan in style.css) since this is a distinct
+// ladder from Brawlhalla's own ranked tiers.
+const CHAT_RANK_CLASS = {
+  Hatchling: "rank-hatchling",
+  Brawler: "rank-brawler",
+  Warrior: "rank-warrior",
+  Veteran: "rank-veteran",
+  Elite: "rank-elite",
+  Legend: "rank-legend",
+  Valhallan: "rank-valhallan",
+};
+
+function chatRankBadge(rankTitle) {
+  const cls = CHAT_RANK_CLASS[rankTitle] || "rank-hatchling";
+  return `<span class="rank-title-badge ${cls}">${escapeHtml(rankTitle)}</span>`;
+}
+
+// Mirrors services/chat_gamification.py's xp_for_level exactly (xp_for_level(n)
+// = 100 * (n-1)**2) — used only to compute progress-to-next-level for the
+// Community Activity progress bar; the API itself sends level/xp/rank_title,
+// not a next-level threshold, so this stays a tiny duplicated pure function
+// rather than a new API field for one progress bar.
+function xpForLevel(level) {
+  return level <= 1 ? 0 : 100 * (level - 1) ** 2;
+}

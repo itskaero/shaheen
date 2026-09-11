@@ -92,7 +92,38 @@ function wireDiscordLink() {
   }
 }
 
+// Live member/online-count badge, fed by Discord's own public widget
+// endpoint (docs/DECISIONS.md ADR-066) — no bot/API involvement at all.
+// Best-effort only: silently stays hidden if DISCORD_GUILD_ID isn't set,
+// the widget isn't enabled on the server, or the request fails for any
+// reason. Fills every element carrying [data-discord-widget] on the page
+// (the header and footer both have one).
+async function wireDiscordWidgets() {
+  const targets = document.querySelectorAll("[data-discord-widget]");
+  if (!targets.length || typeof DISCORD_GUILD_ID === "undefined" || !DISCORD_GUILD_ID) {
+    return;
+  }
+  try {
+    const response = await fetch(
+      `https://discord.com/api/guilds/${encodeURIComponent(DISCORD_GUILD_ID)}/widget.json`
+    );
+    if (!response.ok) {
+      return;
+    }
+    const widget = await response.json();
+    const online = Array.isArray(widget.members) ? widget.members.length : 0;
+    targets.forEach((el) => {
+      el.innerHTML = `<span class="dot" aria-hidden="true"></span>${online.toLocaleString()} online now`;
+      el.hidden = false;
+    });
+  } catch {
+    // Widget disabled, network hiccup, whatever — the badge just never
+    // appears. Never surface an error for a purely decorative element.
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setYear();
   wireDiscordLink();
+  wireDiscordWidgets();
 });

@@ -36,6 +36,7 @@ async def get_player_profile(
         rating=ranking.rating if ranking else None,
         peak_rating=ranking.peak_rating if ranking else None,
         tier=ranking.tier if ranking else None,
+        global_rank=profile.global_rank,
         achievements=[
             AchievementResponse(
                 key=achievement.key,
@@ -83,6 +84,8 @@ async def get_player_legends(
             games=legend.games,
             wins=legend.wins,
             kos=legend.kos,
+            damagedealt=legend.damagedealt,
+            falls=legend.falls,
         )
         for legend in legends
     ]
