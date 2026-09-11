@@ -50,6 +50,17 @@ Private / in development. Implemented so far:
   global rank, region, member-since); Hall of Fame milestone/achievement
   posts include a branded generated image (`src/services/image_service.py`,
   Pillow, no external AI API).
+- Phase 8 — moderation + chat gamification (docs/DECISIONS.md ADR-065): a
+  restricted `#mod-log` channel plus `/warn`, `/warnings`, `/clearwarnings`,
+  and staff-gated `/kick`/`/ban`/`/timeout`/`/purge` wrappers, everything
+  logged with an audit trail. Message-based chat XP/leveling with
+  Brawlhalla-themed rank titles (Hatchling → ... → Valhallan), `/level`,
+  `/chatboard`, and a privacy-filtered "Community Activity" leaderboard on
+  the website (`GET /community/activity` — linked members only, shown by
+  Brawlhalla player name, never Discord identity — ADR-040). Per-member
+  join/leave now post a branded welcome/goodbye card (reusing the owner's
+  template art, ADR-062's text-effect stack) to `#welcome`, and new
+  members auto-get the Guest role on arrival.
 
 ## Getting started
 

@@ -81,11 +81,79 @@ Create a clan challenge.
 ### /scrim
 Create/announce a scrim.
 
-### /match
-Create or inspect a match.
+### /match create
+Log a match directly between named players.
+
+### /match view <match>
+Inspect a match's current status.
 
 ### /report
 Report a match result.
+
+### /matches [user]
+Show a Shaheen member's match history.
+
+### /tournament create <name> <kind>
+Create a tournament (staff only).
+
+### /tournament register
+Register for a tournament.
+
+### /tournament start
+Start a tournament and generate the bracket (staff only).
+
+### /tournament bracket <tournament>
+Show a tournament's current bracket.
+
+### /tournament resolve
+Force-resolve a stuck or disputed bracket match (staff only).
+
+## Phase 8 — Moderation
+
+All commands below require `require_staff_authorized()` (docs/PERMISSIONS.md)
+and log to `#mod-log` (docs/DECISIONS.md ADR-065). Destructive actions
+(`/clearwarnings`, `/kick`, `/ban`) go through `ConfirmView` first.
+
+### /warn <user> <reason>
+Record a warning against a member — best-effort DMs them, posts to
+`#mod-log`, confirms to the moderator. Not FK'd through `/link` — a
+member can be warned whether or not they've ever linked a Brawlhalla
+profile.
+
+### /warnings <user>
+List a member's active warnings (reason, issuer, timestamp).
+
+### /clearwarnings <user>
+Soft-clears every active warning for a member after confirmation —
+rows stay in the table (`active=False`) for the audit trail, nothing is
+deleted.
+
+### /kick <user> [reason]
+Kick a member after confirmation.
+
+### /ban <user> [reason] [delete_message_days]
+Ban a member after confirmation.
+
+### /timeout <user> <minutes> [reason]
+Timeout a member for the given duration.
+
+### /purge <amount> [user]
+Bulk-delete up to `amount` recent messages in the current channel,
+optionally filtered to one user's messages.
+
+## Phase 8 — Chat gamification
+
+No permission check on either command below — same "any member" posture
+as `/profile` (docs/DECISIONS.md ADR-065).
+
+### /level [user]
+Show a member's chat level, XP, rank title and progress to the next
+level. Defaults to the invoking member.
+
+### /chatboard
+Show the top 10 most active chatters in the server by chat XP (Discord
+-only ranking — the public website's Community Activity section is
+privacy-filtered to actively-linked members only, see ADR-065).
 
 ## Standing panels
 

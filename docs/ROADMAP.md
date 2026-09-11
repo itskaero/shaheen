@@ -54,6 +54,14 @@
 - [x] match history on player profiles
 - [x] tournament list + bracket viewer
 
+## Phase 8 — Moderation + Chat Gamification
+- [x] `#mod-log` + `/warn`, `/warnings`, `/clearwarnings`
+- [x] `/kick`, `/ban`, `/timeout`, `/purge` slash wrappers
+- [x] chat-message XP/leveling, Brawlhalla-themed rank titles
+- [x] `/level`, `/chatboard`
+- [x] Community Activity leaderboard on the website
+- [x] branded welcome + goodbye cards, auto-assigned Guest role on join
+
 ## Rule
 
 Do not implement a later phase merely because it is documented. Finish the

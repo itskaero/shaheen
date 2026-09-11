@@ -58,3 +58,21 @@ DEVELOPMENT category:
 
 Do not grant Administrator permission to the bot merely because it simplifies
 implementation. Request only required permissions.
+
+## Moderation
+
+MODERATION category (`#mod-log`): restricted the same way as DEVELOPMENT —
+hidden from everyone but `ROLES_WITH_STAFF_ACCESS` (docs/DECISIONS.md
+ADR-065).
+
+`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`, `/timeout`,
+`/purge` (`bot/cogs/moderation.py`) all require
+`require_staff_authorized()` — the same check `/setup` uses: a server
+administrator, or a member holding Leader or Moderator. This gates who can
+*invoke* the command; it does not grant the bot itself any Discord
+permission it doesn't already have — `/kick`/`/ban`/`/timeout` still fail
+with a clear error if the bot's own role lacks the matching native
+permission.
+
+`/level` and `/chatboard` (`bot/cogs/engagement.py`) have no permission
+check — same "any member" posture as `/profile`.

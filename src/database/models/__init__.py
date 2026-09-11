@@ -4,6 +4,7 @@ from database.models.achievement import Achievement
 from database.models.base import Base
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
+from database.models.chat_activity import ChatActivity
 from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
 from database.models.legend_snapshot import LegendSnapshot
@@ -22,6 +23,7 @@ from database.models.tournament import (
     TournamentMatchStatus,
     TournamentStatus,
 )
+from database.models.warning import Warning
 
 __all__ = [
     "Achievement",
@@ -29,6 +31,7 @@ __all__ = [
     "BrawlhallaPlayer",
     "Challenge",
     "ChallengeStatus",
+    "ChatActivity",
     "DiscordUser",
     "GuildSettings",
     "LegendSnapshot",
@@ -52,4 +55,5 @@ __all__ = [
     "TournamentMatch",
     "TournamentMatchStatus",
     "TournamentStatus",
+    "Warning",
 ]

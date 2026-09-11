@@ -1567,3 +1567,153 @@ motto all render in the calligraphic Nastaliq style rather than a generic fallba
 Grepped `lang="ur"` counts against expected occurrences per page (3 on the 5 ticker
 pages, 1 on tournament.html/404.html, 2 on join.html) — all matched. No JS/build step for
 `web/`; visual confirmation is the verification, same as every prior website ADR.
+
+## ADR-065 — Moderation commands, Brawlhalla-themed chat gamification, and branded welcome/leave cards
+
+Decision: add a structured, bot-tracked moderation system with an audit trail (owner
+request — the bot had zero bot-side moderation commands; `ROLE_MODERATOR` only got native
+Discord kick/timeout/purge through Discord's own UI, with no warning system, no log, no
+slash-command discoverability), build message-based chat XP/leveling now rather than just
+designing it, and replace the one-time static `#welcome` embed with per-member join *and*
+leave cards using owner-supplied branded templates.
+
+### Part A — Moderation + `#mod-log`
+
+New restricted category `🛡️ MODERATION` (`category:moderation`, `bot/constants.py`) —
+`restricted=True`, same visibility treatment as `DEVELOPMENT`/`SHAHEEN ARENA` — holding one
+channel, `channel:mod_log`. Picked up automatically by the next `/setup run` on any
+existing guild, same as every other `CATEGORIES` addition in this repo's history — no
+Discord-structure migration needed.
+
+New table `warnings` (`src/database/models/warning.py`, migration `0005`): `guild_id`/
+`discord_id` (BigInteger, indexed) identify the warned member by raw Discord ID —
+deliberately **not** FK'd through `DiscordUser`/`ShaheenMember`, since a member can be
+warned without ever having run `/link`. `active` (default `True`) lets `/clearwarnings`
+soft-clear rather than delete, preserving the audit trail. `WarningRepository`: `add`,
+`list_active_for_member`, `count_active_for_member`, `clear_all_for_member`.
+
+New cog `bot/cogs/moderation.py` (`ModerationCog`), every command gated by
+`require_staff_authorized()` (no new permission tier — reuses the exact check `/setup`
+already uses): `/warn`, `/warnings`, `/clearwarnings` (new — nothing native did this),
+plus thin `/kick`/`/ban`/`/timeout`/`/purge` wrappers around discord.py's own
+`Member.kick`/`ban`/`timeout`/`TextChannel.purge`. Destructive actions
+(`/clearwarnings`, `/kick`, `/ban`) go through `ConfirmView` (`bot/views/confirm.py`,
+already used by `/unlink`/`/setup reset`) first; a shared `_confirm()` helper collapses
+the kick/ban confirmation boilerplate into one method. Every action posts an embed to
+`#mod-log` (`resolve_provisioned_channel`, the same reusable channel-lookup function
+`bot/cogs/competition.py` already exposes for `#hall-of-fame`). `discord.Forbidden` is
+caught everywhere a Discord call can fail because the bot's own role lacks a native
+permission — a separate concern from `require_staff_authorized()`, which only gates who
+can *invoke* the command, not what the bot itself is allowed to do.
+
+### Part B — Chat-message XP/leveling, surfaced on the website
+
+New pure-logic module `services/chat_gamification.py` (Discord/DB-free, same shape as
+`services/achievements.py`, ADR-030's precedent — deliberately a *separate* system from
+achievements, which track Brawlhalla-API progress, not in-Discord activity):
+- A quadratic XP curve, `xp_for_level(n) = 100 * (n-1)**2` / its exact inverse
+  `level_for_xp`. Level 2 at 100xp, level 3 at 400xp, level 10 at 8,100xp — fast early
+  levels, slowing down at higher ones, standard Discord-bot XP pacing.
+- A Brawlhalla-flavored rank-title ladder, deliberately distinct from Brawlhalla's own
+  ranked tiers so a chat level is never confused with ranked standing: Hatchling (1) →
+  Brawler (5) → Warrior (10) → Veteran (15) → Elite (20) → Legend (25) → **Valhallan**
+  (30+) — a single deliberate echo of Brawlhalla's own top ranked tier, reused as the
+  chat ladder's capstone.
+- `roll_message_xp()` — a random 5–15 XP per eligible message, not a fixed amount, so
+  activity isn't perfectly predictable/farmable.
+
+New table `chat_activity` (same migration as Part A): `guild_id`/`discord_id` (unique
+together, same "not FK'd through ShaheenMember" reasoning as `warnings` — everyone who
+talks earns XP, not just linked members), `xp`, `level`, `message_count`, `last_xp_at`
+(drives a 60s anti-spam cooldown, `MESSAGE_XP_COOLDOWN_SECONDS`). `level` is a write-path
+convenience only, set by the caller on a detected level-up so it can diff old-vs-new —
+`ChatActivityRepository.record_message` deliberately never writes it itself. **Every read
+site must derive the level live** via `level_for_xp(xp)` rather than trust the stored
+column, since a message that doesn't cross a level threshold leaves it stale; this was
+caught during manual end-to-end verification (a 150xp member showed level 1 instead of
+the correct level 2) and fixed at all three read sites — `bot/cogs/engagement.py`'s
+`/level` and `/chatboard`, and `services/website_service.py`'s `get_community_activity`.
+
+New cog `bot/cogs/engagement.py` (`EngagementCog`) — chat XP and welcome/leave together
+(both are Discord-event listeners, not staff-gated, a natural pairing distinct from
+`ModerationCog`'s permission model): `on_message` applies the cooldown, awards XP, and on
+a detected level-up posts a `render_milestone_card`-based announcement to `#hall-of-fame`
+(already the "something worth celebrating" channel). `/level [user]` and `/chatboard` —
+no permission check, same posture as `/profile`.
+
+**Website surface, reconciled with ADR-040's privacy stance.** `website_service.py`
+never exposes raw Discord identity — only `BrawlhallaPlayer` fields are public. Publishing
+a raw chat leaderboard by Discord username would cross that line, so the public
+**Community Activity** section only includes members who are *also* actively linked to a
+Brawlhalla profile, displayed by their **Brawlhalla player name**, never their Discord
+handle — the same identity rule every other `website_service.py` method already follows.
+A member who chats a lot but hasn't run `/link` still earns XP and shows up in
+`/chatboard` inside Discord, just not on the public site — not a new carve-out, the
+existing "public site mirrors linked, public Brawlhalla data" rule applied here too.
+`get_community_activity` (`website_service.py`) → `CommunityActivityEntryResponse`
+(`api/schemas.py`) → `GET /community/activity` (`api/routers/community.py`, registered in
+`api/app.py` next to the other four routers, no CORS change needed — ADR-043 already
+allows any origin for GET) → `ShaheenAPI.getCommunityActivity` (`web/assets/js/api.js`) →
+a new "Community Activity" table on `web/clan.html` (`web/assets/js/pages/clan.js`,
+mirroring `leaderboard.js`'s map→string→`innerHTML` pattern, in its own try/catch so a
+failure there can't take down the rest of the page).
+
+**Operational note**: chat-XP tracking needs the **`message_content` privileged intent**
+enabled for this application in the Discord Developer Portal (the code already requests
+every intent via `discord.Intents.all()`, `bot/client.py` — but that portal toggle lives
+outside this repo). Without it, `on_message` simply never fires with readable content and
+no XP is ever awarded — fails safe, the rest of the bot is unaffected either way, but
+worth flipping before/soon after this ships.
+
+### Part C — Welcome / leave cards, using the owner's branded templates
+
+The owner supplied a branded "WELCOME TO SHAHEEN CLAN" / "GOODBYE UNTIL WE MEET AGAIN"
+composite template (same visual family as `achievement_template.png` — crest, gradient,
+corner taglines, an empty rectangular cutout for dynamic text) — superseding the earlier
+plan of a plain-text leave message: both join *and* leave now render a real branded card.
+Split into `src/assets/img/welcome_template.png`/`goodbye_template.png` at the composite's
+visible center divider, shipped the same way `achievement_template.png` already does
+(`src/assets/img/`, `Dockerfile`'s `COPY src/`). `image_service.py` gained
+`render_welcome_card`/`render_goodbye_card`, sibling functions reusing every existing
+ADR-062 building block (`_render_styled_text`, `_fit_font`, `_trim`, the gradient/
+extrusion/stroke/glow text treatment) — only the template path and each template's own
+measured cutout-box coordinates differ; `render_milestone_card` itself is untouched.
+
+Both post to the existing `#welcome` channel — no new channel. `on_member_join` also
+**auto-assigns the Guest role** (`ROLE_GUEST`, resolved via `ProvisionedResourceRepository`
+the same way every other role/channel lookup in this codebase works) before posting the
+welcome card, so the rank ladder means something from a member's very first message
+rather than only starting at `/link`-triggered promotion. `on_member_remove` posts the
+goodbye card with a low-key caption — no mention/ping, since the member has already left
+and a ping would fail anyway. Both renders run off-thread (`asyncio.to_thread`, same
+CPU-bound-off-the-event-loop reasoning as `render_milestone_card`'s call site) and are
+wrapped in try/except so a render failure or `discord.Forbidden` never crashes the
+listener — the card render is best-effort, not load-bearing.
+
+### Part D — Further community-enthusiasm ideas (discussed, not built this round)
+
+Written up for the owner to pick from later:
+
+| Idea | What it is | Rough effort |
+|---|---|---|
+| Weekly recap digest | Auto-posted Sunday summary: top rating gains, most active chatters, matches played | Small — reuses snapshot loop's weekly cadence + existing repos |
+| MVP of the Week | Auto- or staff-picked member (biggest rating jump / most chat XP that week) gets a callout + a temporary cosmetic role | Small-medium — needs a "top mover this week" query, a temp-role assign/remove job |
+| Clan-wide milestone bar | A shared goal (e.g. "1,000 combined ranked wins") with a progress announcement at each 10% | Medium — needs a running clan-wide counter + threshold-crossing detection, mirrors the achievement-evaluator shape |
+| Member spotlight | Staff-triggered `/spotlight user note` posting a featured-member embed | Small |
+| Suggestions inbox | `/suggest text` posts anonymously to `#suggestions` with 👍/👎 reactions for the community to vote | Small |
+| Casual matchmaking panel | A persistent "Looking to duo/scrim" panel beyond ranked spars, extending the existing spar-kiosk pattern (ADR-058) | Medium — new persistent view, mirrors `bot/views/roles.py`/spar kiosk exactly |
+| "On this day" nostalgia | Auto-posts a past achievement/milestone from N months ago | Small, needs a scheduled job + a query over existing achievement/snapshot history |
+| Opt-in birthday shoutouts | Member-set birthday (month/day only), auto-shoutout on the day | Small, but privacy-sensitive — must be opt-in and store no year/exact DOB |
+
+Verified: `uv run pytest` (190 passed, including new `test_chat_gamification.py` — exact
+curve thresholds + monotonicity, `test_warning_repository.py`, `test_chat_activity_
+repository.py`, and extended `test_website_service.py`/`test_constants.py` coverage);
+`uv run ruff check src tests` / `uv run mypy src` clean. `GET /community/activity`
+exercised against a seeded test DB confirming both halves of the ADR-040 reconciliation:
+a linked member with chat activity appears under their Brawlhalla name, an unlinked-but-
+chatty member (99,999 XP) does not appear at all. `render_welcome_card`/
+`render_goodbye_card` rendered directly against sample names and sent to the owner for a
+look, the same verification step ADR-062's achievement card got, confirming the cutout-
+box coordinates were measured correctly against each new template. Cog loading smoke-
+tested the same way every other cog in this repo is (no live-Discord test harness exists
+for anything making real Discord calls).

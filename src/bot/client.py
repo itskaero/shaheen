@@ -35,6 +35,8 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.profile",
     "bot.cogs.clan",
     "bot.cogs.competition",
+    "bot.cogs.moderation",
+    "bot.cogs.engagement",
 )
 
 

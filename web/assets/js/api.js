@@ -48,6 +48,7 @@ const ShaheenAPI = (() => {
       get(`/players/${encodeURIComponent(brawlhallaId)}/matches?limit=${limit}`),
     getTournaments: (limit = 20) => get(`/tournaments?limit=${limit}`),
     getTournamentBracket: (id) => get(`/tournaments/${encodeURIComponent(id)}`),
+    getCommunityActivity: (limit = 10) => get(`/community/activity?limit=${limit}`),
   };
 })();
 
