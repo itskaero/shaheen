@@ -53,6 +53,14 @@ class PlayerProfile:
     latest_ranking: RankingSnapshot | None
     achievements: list[tuple[Achievement, datetime]]
 
+    @property
+    def global_rank(self) -> int | None:
+        """Already captured on every RankingSnapshot (docs/DECISIONS.md
+        ADR-066) but never surfaced publicly until now — no new snapshot
+        field, just exposing what's already stored.
+        """
+        return self.latest_ranking.global_rank if self.latest_ranking else None
+
 
 @dataclass
 class LegendMastery:
@@ -60,6 +68,8 @@ class LegendMastery:
     games: int
     wins: int
     kos: int
+    damagedealt: int
+    falls: int
 
 
 @dataclass
@@ -206,7 +216,14 @@ class WebsiteService:
             return None
         snapshots = await self._legends.list_latest_per_legend(player.id)
         return [
-            LegendMastery(legend_name_key=s.legend_name_key, games=s.games, wins=s.wins, kos=s.kos)
+            LegendMastery(
+                legend_name_key=s.legend_name_key,
+                games=s.games,
+                wins=s.wins,
+                kos=s.kos,
+                damagedealt=s.damagedealt,
+                falls=s.falls,
+            )
             for s in snapshots[:limit]
         ]
 

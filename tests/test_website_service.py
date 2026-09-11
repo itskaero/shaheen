@@ -75,6 +75,7 @@ async def test_get_player_profile_includes_ranking_and_achievements(
             tier="Platinum I",
             wins=5,
             games=10,
+            global_rank=42,
         )
     )
     await MemberAchievementRepository(session).award(
@@ -86,6 +87,7 @@ async def test_get_player_profile_includes_ranking_and_achievements(
     assert profile.player.player_name == "P10"
     assert profile.latest_ranking is not None
     assert profile.latest_ranking.tier == "Platinum I"
+    assert profile.global_rank == 42
     assert [a.key for a, _ in profile.achievements] == ["games_100"]
 
 
@@ -97,6 +99,7 @@ async def test_get_player_profile_has_no_achievements_when_unlinked(session: Asy
     assert profile is not None
     assert profile.achievements == []
     assert profile.latest_ranking is None
+    assert profile.global_rank is None
 
 
 async def test_get_leaderboard_orders_by_rating_and_excludes_no_snapshot(
@@ -220,6 +223,8 @@ async def test_get_player_legends_returns_latest_snapshot_per_legend_sorted_by_g
     assert result is not None
     assert [entry.legend_name_key for entry in result] == ["hattori", "bodvar"]
     assert result[0].games == 25  # the later snapshot, not the first
+    assert result[0].damagedealt == 3000
+    assert result[0].falls == 10
 
 
 # ---------- match history ----------

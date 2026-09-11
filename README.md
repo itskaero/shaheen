@@ -61,6 +61,14 @@ Private / in development. Implemented so far:
   join/leave now post a branded welcome/goodbye card (reusing the owner's
   template art, ADR-062's text-effect stack) to `#welcome`, and new
   members auto-get the Guest role on arrival.
+- Website redesign (docs/DECISIONS.md ADR-066): a calmer, premium
+  esports-team/stat-tracker visual direction replacing the earlier neon
+  treatment — Bebas Neue display type, one consolidated transparent crest
+  asset everywhere, a scroll-mapped 5-pillar homepage hero built around
+  the clan's character banner, a diagonal-wipe reveal on the Clan page, a
+  live Discord member/online widget, and two cheap Brawlhalla stats
+  (global rank, per-legend damage/falls) surfaced on player profiles that
+  were already being captured but never shown.
 
 ## Getting started
 
@@ -89,11 +97,18 @@ ADR-047/ADR-048):
   used as the homepage's `.cinematic-strip` and every inner page's
   `.page-banner`. Swap in an updated one by replacing both files (keep the
   ~2.5:1 width:height ratio) — no other change needed.
-- `web/assets/img/logo-full.*` / `logo-icon.*` — the circular crest, used
-  as the animated homepage hero (`logo-full`, includes the wordmark) and
-  the nav/footer/favicon mark (`logo-icon`, crest only — legible at small
-  sizes). Regenerate `favicon-32.png` / `favicon-48.png` /
-  `apple-touch-icon.png` from a new crest at 32/48/180px square.
+- `web/assets/img/shaheen-lockup.*` / `logo-icon.*` — the one crest asset
+  (docs/DECISIONS.md ADR-066): `shaheen-lockup` (crest + wordmark) is the
+  animated hero on `index.html`/`join.html`, `logo-icon` (a crop of the
+  same art, crest only — legible at small sizes) is the nav/footer/favicon
+  mark. Swap the crest by replacing `shaheen-lockup.png/.webp`, then
+  re-crop `logo-icon.png/.webp` and regenerate `favicon-32.png` /
+  `favicon-48.png` / `apple-touch-icon.png` from the same new art at
+  256/32/48/180px square so every touchpoint stays consistent.
+- `web/assets/img/hero-characters.jpg` / `.webp` — the 5-character banner
+  behind the homepage's scroll-mapped pillar hero (ADR-066). Swapping this
+  also means re-checking each `.pillar-panel[data-focus-x]`'s percentage in
+  `index.html` against the new art's character positions.
 
 To preview the static frontend locally, point `web/assets/js/config.js`'s
 `API_BASE_URL` at your running API (`http://127.0.0.1:8000` by default),

@@ -67,6 +67,11 @@
           </div>
           <div class="stat"><span class="value">${formatNumber(profile.rating)}</span><span class="label">Rating</span></div>
           <div class="stat"><span class="value">${formatNumber(profile.peak_rating)}</span><span class="label">Peak Rating</span></div>
+          ${
+            profile.global_rank
+              ? `<div class="stat"><span class="value">#${formatNumber(profile.global_rank)}</span><span class="label">Global Rank</span></div>`
+              : ""
+          }
         </div>
 
         <div class="card">
@@ -114,7 +119,7 @@
               <li>
                 <div class="legend-row">
                   <span class="legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
-                  <span class="legend-meta">${legend.games} games · ${winRate}% WR · ${legend.kos} KOs</span>
+                  <span class="legend-meta">${legend.games} games · ${winRate}% WR · ${legend.kos} KOs · ${formatNumber(legend.damagedealt)} DMG · ${legend.falls} falls</span>
                 </div>
                 <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${width}%"></div></div>
               </li>`;

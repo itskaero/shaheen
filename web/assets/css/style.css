@@ -1,37 +1,38 @@
 /* Shaheen — public website
-   Dark neon esports-team direction (owner request), reconciled with
-   docs/BRAND.md (ADR-049): brand-colored neon only — green + gold, a hint
-   of cyan in gradients — never a rainbow, kept to a few deliberate accents
-   (buttons, ticker, badges, hover glow) rather than covering everything,
-   so it reads as a competitive-gaming org site, not a generic gamer
-   cliché. The falcon crest (web/assets/img/logo-full/-icon.*) and banner
-   (web/assets/img/banner.*) are unchanged — only the chrome around them
-   changed. Base hues still trace back to src/bot/palette.py. */
+   Premium esports-team / stat-tracker direction (docs/DECISIONS.md ADR-066)
+   — supersedes ADR-049's neon-cyberpunk treatment: green/gold only (no
+   cyan), glow reserved for a few deliberate accent moments instead of
+   sitting on every piece of text, angular diagonal-cut shapes kept as the
+   one strong graphic motif. Bebas Neue replaces Orbitron for display type
+   — a sports/esports-team jersey face, not a sci-fi/technoware one. The
+   falcon crest (web/assets/img/logo-icon.*, shaheen-lockup.*) and banner
+   (web/assets/img/banner.*, hero-characters.*) are unchanged — only the
+   chrome around them changed. Base hues still trace back to
+   src/bot/palette.py and docs/BRAND.md. */
 
 :root {
   --void: #030604;
-  --bg-deep: #061a12;
+  --bg-deep: #0a1f15;
   --bg-mid: #071008;
-  --neon-green: #39ffb0;
-  --neon-green-soft: #1fe89a;
-  --neon-cyan: #2af0ff;
-  --neon-gold: #ffd23f;
-  --neon-gold-soft: #f4b93c;
+  --green: #2fe89a;
+  --green-soft: #1fb87e;
+  --gold: #ffd23f;
+  --gold-soft: #e8b52f;
   --cream: #eaf6ef;
-  --grey: #86958d;
-  --ink: #040e08;
-  --card-bg: linear-gradient(165deg, rgba(57, 255, 176, 0.07), rgba(3, 6, 4, 0.82));
-  --card-border: rgba(57, 255, 176, 0.22);
-  --card-border-hover: rgba(57, 255, 176, 0.65);
+  --grey: #8a9992;
+  --ink: #04120a;
+  --card-bg: linear-gradient(165deg, rgba(47, 232, 154, 0.06), rgba(3, 6, 4, 0.86));
+  --card-border: rgba(47, 232, 154, 0.2);
+  --card-border-hover: rgba(47, 232, 154, 0.55);
   --radius: 8px;
-  --max-width: 1040px;
-  /* Orbitron stays for the big display wordmark (distinctive, not what
-     reads as dated). Rajdhani/Poppins swapped for Space Grotesk/Sora
-     (owner feedback: the old pairing looked stale) — both modern
-     geometric sans faces, same "confident, technical" register. */
-  --font-display: "Orbitron", "Space Grotesk", "Sora", sans-serif;
+  --max-width: 1080px;
+  /* Bebas Neue: bold condensed caps, the standard sports/esports-team
+     display face — reads "competitive team," not "neon sign" or
+     "sci-fi HUD" (docs/DECISIONS.md ADR-066). Space Grotesk/Sora carry
+     over unchanged from ADR-064. */
+  --font-display: "Bebas Neue", "Space Grotesk", sans-serif;
   --font-heading: "Space Grotesk", "Sora", sans-serif;
-  --cut: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  --cut: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
   --cut-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 
   /* tier accent colours — distinct per rank, still a closed green/gold/
@@ -40,9 +41,19 @@
   --tier-bronze: #d98a44;
   --tier-silver: #c7d4d1;
   --tier-gold: #ffd23f;
-  --tier-platinum: #42e8d0;
-  --tier-diamond: #4fc3ff;
-  --tier-valhallan: #c974ff;
+  --tier-platinum: #3ed9c2;
+  --tier-diamond: #4fb8e8;
+  --tier-valhallan: #b478e8;
+}
+
+/* Progressive enhancement only — lets --focus-x (the pillar-hero spotlight
+   position) transition smoothly in browsers that support typed custom
+   properties. Every browser without it just gets an instant snap instead,
+   never a broken layout (docs/DECISIONS.md ADR-066). */
+@property --focus-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
 }
 
 * {
@@ -59,50 +70,25 @@ body {
   min-height: 100vh;
   background-color: var(--void);
   background-image:
-    radial-gradient(ellipse 780px 480px at 12% -8%, rgba(57, 255, 176, 0.18), transparent 60%),
-    radial-gradient(ellipse 680px 440px at 88% 6%, rgba(255, 210, 63, 0.12), transparent 55%),
-    radial-gradient(ellipse 620px 480px at 50% 115%, rgba(42, 240, 255, 0.08), transparent 60%),
+    radial-gradient(ellipse 780px 480px at 12% -8%, rgba(47, 232, 154, 0.14), transparent 60%),
+    radial-gradient(ellipse 680px 440px at 88% 6%, rgba(255, 210, 63, 0.1), transparent 55%),
     linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 42%, var(--void) 100%);
-  background-attachment: fixed, fixed, fixed, fixed;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed, fixed, fixed;
+  background-repeat: no-repeat, no-repeat, no-repeat;
   color: var(--cream);
   font-family: "Sora", "Segoe UI", system-ui, sans-serif;
   line-height: 1.55;
   overflow-x: hidden;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(57, 255, 176, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(57, 255, 176, 0.07) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: radial-gradient(ellipse 900px 700px at 50% 0%, black 0%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 900px 700px at 50% 0%, black 0%, transparent 75%);
-  animation: gridDrift 50s linear infinite;
-}
-
-@keyframes gridDrift {
-  from {
-    background-position: 0 0, 0 0;
-  }
-
-  to {
-    background-position: 84px 0, 0 84px;
-  }
-}
-
 a {
-  color: var(--neon-green);
+  color: var(--green);
   text-decoration: none;
 }
 
 a:hover,
 a:focus-visible {
-  color: var(--neon-gold);
+  color: var(--gold);
   text-decoration: underline;
 }
 
@@ -116,8 +102,8 @@ a:focus-visible {
 
 .ticker {
   overflow: hidden;
-  border-bottom: 1px solid rgba(57, 255, 176, 0.22);
-  background: rgba(57, 255, 176, 0.04);
+  border-bottom: 1px solid rgba(47, 232, 154, 0.18);
+  background: rgba(47, 232, 154, 0.03);
 }
 
 .ticker-track {
@@ -125,7 +111,7 @@ a:focus-visible {
   width: max-content;
   gap: 3rem;
   padding: 0.45rem 0;
-  animation: tickerScroll 24s linear infinite;
+  animation: tickerScroll 26s linear infinite;
 }
 
 .ticker-track span {
@@ -135,13 +121,12 @@ a:focus-visible {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--neon-green);
-  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+  color: var(--green);
+  opacity: 0.85;
 }
 
 .ticker-track span:nth-child(4n) {
-  color: var(--neon-gold);
-  text-shadow: 0 0 8px rgba(255, 210, 63, 0.5);
+  color: var(--gold);
 }
 
 @keyframes tickerScroll {
@@ -157,13 +142,13 @@ a:focus-visible {
 /* ---------- header ---------- */
 
 .site-header {
-  border-bottom: 1px solid rgba(57, 255, 176, 0.18);
-  background: rgba(3, 8, 5, 0.78);
+  border-bottom: 1px solid rgba(47, 232, 154, 0.16);
+  background: rgba(3, 8, 5, 0.82);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
-  z-index: 10;
-  box-shadow: 0 1px 0 rgba(57, 255, 176, 0.08), 0 12px 28px -14px rgba(0, 0, 0, 0.75);
+  z-index: 20;
+  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.75);
 }
 
 .site-header .wrap {
@@ -171,14 +156,14 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.6rem;
   color: var(--cream);
 }
 
@@ -187,46 +172,22 @@ a:focus-visible {
 }
 
 .brand-mark {
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0 0 7px rgba(57, 255, 176, 0.6));
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
+  width: 32px;
+  height: 32px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .brand:hover .brand-mark,
 .brand:focus-visible .brand-mark {
-  transform: rotate(-8deg) scale(1.1);
-  filter: drop-shadow(0 0 14px rgba(57, 255, 176, 0.9));
+  transform: rotate(-6deg) scale(1.08);
 }
 
 .brand-name {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  font-size: 1.3rem;
   color: var(--cream);
-}
-
-.brand:hover .brand-name {
-  animation: textGlitch 0.4s steps(3) 1;
-}
-
-@keyframes textGlitch {
-  0% {
-    text-shadow: -2px 0 var(--neon-cyan), 2px 0 var(--neon-gold);
-  }
-
-  30% {
-    text-shadow: 2px 0 var(--neon-cyan), -2px 0 var(--neon-gold);
-  }
-
-  60% {
-    text-shadow: -1px 0 var(--neon-cyan), 1px 0 var(--neon-gold);
-  }
-
-  100% {
-    text-shadow: none;
-  }
 }
 
 nav.site-nav {
@@ -241,10 +202,10 @@ nav.site-nav a {
   color: var(--cream);
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 0.92rem;
-  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  opacity: 0.72;
+  opacity: 0.68;
   padding-bottom: 0.3rem;
 }
 
@@ -255,8 +216,7 @@ nav.site-nav a::after {
   right: 0;
   bottom: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
-  box-shadow: 0 0 8px rgba(57, 255, 176, 0.7);
+  background: var(--green);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.2s ease;
@@ -265,10 +225,9 @@ nav.site-nav a::after {
 
 nav.site-nav a:hover,
 nav.site-nav a.active {
-  color: var(--neon-green);
+  color: var(--green);
   opacity: 1;
   text-decoration: none;
-  text-shadow: 0 0 10px rgba(57, 255, 176, 0.5);
 }
 
 nav.site-nav a:hover::after,
@@ -280,7 +239,7 @@ nav.site-nav a.active::after {
   padding: 0.4rem 1rem !important;
   clip-path: var(--cut-sm);
   border: 1px solid var(--card-border);
-  background: rgba(57, 255, 176, 0.08);
+  background: rgba(47, 232, 154, 0.07);
 }
 
 .nav-cta::after {
@@ -288,16 +247,57 @@ nav.site-nav a.active::after {
 }
 
 .nav-cta:hover {
-  background: rgba(57, 255, 176, 0.18);
+  background: rgba(47, 232, 154, 0.16);
   border-color: var(--card-border-hover);
 }
 
-/* ---------- hero: animated crest logo (homepage) ---------- */
+/* live Discord widget badge — header/footer, best-effort (docs/DECISIONS.md
+   ADR-066). Hidden by default; JS unhides it only once a real widget
+   response comes back, so a disabled/unreachable widget never leaves a
+   broken-looking "0 online" badge on the page. */
+.discord-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--grey);
+}
+
+.discord-widget .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  flex: none;
+  animation: dotPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.site-footer .discord-widget {
+  justify-content: center;
+  margin: 0.5rem 0 0.75rem;
+}
+
+/* ---------- hero: crest lockup (homepage / join) ---------- */
 
 .hero-logo {
   position: relative;
   text-align: center;
-  padding: 4rem 1.5rem 2.5rem;
+  padding: 3.5rem 1.5rem 2rem;
   overflow: hidden;
 }
 
@@ -308,18 +308,9 @@ nav.site-nav a.active::after {
   width: min(520px, 80vw);
   height: min(520px, 80vw);
   transform: translate(-50%, -50%);
-  background: conic-gradient(
-    from 0deg,
-    transparent 0%,
-    rgba(57, 255, 176, 0.32) 18%,
-    transparent 36%,
-    transparent 60%,
-    rgba(255, 210, 63, 0.24) 78%,
-    transparent 100%
-  );
-  filter: blur(46px);
+  background: radial-gradient(circle, rgba(47, 232, 154, 0.2), transparent 65%);
+  filter: blur(50px);
   border-radius: 50%;
-  animation: heroRotate 18s linear infinite;
   pointer-events: none;
   z-index: 0;
 }
@@ -327,58 +318,38 @@ nav.site-nav a.active::after {
 .hero-logo-wrap {
   position: relative;
   z-index: 1;
-  animation: heroEntrance 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: heroEntrance 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .hero-logo-img {
-  width: clamp(200px, 30vw, 340px);
+  width: clamp(220px, 30vw, 360px);
   height: auto;
-  animation: heroFloat 5.5s ease-in-out infinite;
-  /* the source art is a badge on its own near-black square canvas — fade
-     that square's edges into the page background instead of showing a
-     visible rectangle, so it reads as a glowing emblem, not a pasted photo */
-  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
-  mask-image: radial-gradient(circle at 50% 45%, #000 58%, transparent 80%);
-}
-
-/* The join.html hero lockup is a second, more detailed brand asset that's
-   already genuinely transparent (unlike logo-full.png's near-black square
-   canvas, which needs the radial mask above to fake it) — reuse .hero-
-   logo-img's float animation but drop the mask and size it a little
-   larger, since on join.html it stands in for a separate <h1> wordmark. */
-.hero-lockup-img {
-  width: clamp(240px, 34vw, 420px);
-  -webkit-mask-image: none;
-  mask-image: none;
+  animation: heroFloat 6s ease-in-out infinite;
 }
 
 .hero-logo h1 {
   position: relative;
   z-index: 1;
   font-family: var(--font-display);
-  font-weight: 900;
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  letter-spacing: 0.14em;
-  margin: 0.5rem 0 0;
-  background: linear-gradient(100deg, var(--neon-green) 0%, var(--cream) 35%, var(--neon-gold) 60%, var(--neon-green) 100%);
-  background-size: 240% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shine 6s linear infinite;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 6vw, 3.4rem);
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+  margin: 0.4rem 0 0;
+  color: var(--cream);
+  text-transform: uppercase;
 }
 
-@keyframes shine {
-  to {
-    background-position: -240% center;
-  }
+.hero-logo h1 em {
+  font-style: normal;
+  color: var(--green);
 }
 
 .hero-logo .tagline {
   position: relative;
   z-index: 1;
-  margin: 0.5rem 0 1.85rem;
-  animation: fadeInUp 0.8s ease-out 0.5s both;
+  margin: 0.6rem 0 1.85rem;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
 .hero-actions {
@@ -388,11 +359,9 @@ nav.site-nav a.active::after {
   justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
-  animation: fadeInUp 0.8s ease-out 0.65s both;
+  animation: fadeInUp 0.8s ease-out 0.55s both;
 }
 
-/* purely decorative divider strip using the clan's action-art banner —
-   keeps that artwork in the page without competing with the crest hero */
 .cinematic-strip {
   position: relative;
   height: 150px;
@@ -400,8 +369,8 @@ nav.site-nav a.active::after {
     url("../img/banner.jpg");
   background-size: cover;
   background-position: center 15%;
-  border-top: 1px solid rgba(57, 255, 176, 0.25);
-  border-bottom: 1px solid rgba(57, 255, 176, 0.25);
+  border-top: 1px solid rgba(47, 232, 154, 0.22);
+  border-bottom: 1px solid rgba(47, 232, 154, 0.22);
 }
 
 .scroll-cue {
@@ -410,10 +379,10 @@ nav.site-nav a.active::after {
   justify-content: center;
   width: 30px;
   height: 30px;
-  margin: 2.25rem auto 0;
+  margin: 2rem auto 0;
   border: 1px solid var(--card-border);
   border-radius: 50%;
-  color: var(--neon-green);
+  color: var(--green);
   font-size: 0.9rem;
   animation: bounce 2.2s ease-in-out infinite;
   position: relative;
@@ -436,7 +405,171 @@ nav.site-nav a.active::after {
   }
 }
 
-/* ---------- scroll-triggered reveal (landing page sections) ---------- */
+/* ---------- diagonal section divider (PlayerX-style angular band) ---------- */
+
+.slant-divider {
+  position: relative;
+  height: 64px;
+  margin-top: -1px;
+  background: linear-gradient(115deg, rgba(47, 232, 154, 0.1) 0%, transparent 45%),
+    var(--void);
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+
+/* ---------- pillar-scroll hero (homepage, docs/DECISIONS.md ADR-066) ---------- */
+
+.pillar-hero {
+  position: relative;
+}
+
+.pillar-stage {
+  display: grid;
+}
+
+.pillar-visual {
+  grid-area: 1 / 1;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.pillar-banner-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85) brightness(0.8);
+}
+
+.pillar-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      ellipse 32vw 62vh at var(--focus-x, 50%) 48%,
+      transparent 0%,
+      rgba(3, 6, 4, 0.35) 42%,
+      rgba(3, 6, 4, 0.9) 76%
+    ),
+    linear-gradient(180deg, rgba(3, 6, 4, 0.5) 0%, transparent 22%, transparent 70%, rgba(3, 6, 4, 0.85) 100%);
+  transition: background 0.7s ease;
+}
+
+.pillar-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8%;
+  text-align: center;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pillar-caption .eyebrow {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+
+.pillar-caption h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 7vw, 3.6rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.pillar-panels {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 1;
+}
+
+.pillar-panel {
+  min-height: 100vh;
+  display: flex;
+  /* Centered, not bottom-aligned: the panel-card needs to land on screen
+     at roughly the same scroll position where pillar-scroll.js's
+     IntersectionObserver (threshold 0.55, i.e. "panel is centered in the
+     viewport") flips it to .in-view — bottom-aligning it meant the card
+     was still below the fold when the observer fired. */
+  align-items: center;
+}
+
+.pillar-panel .wrap {
+  width: 100%;
+}
+
+.pillar-panel-card {
+  max-width: 420px;
+  background: rgba(3, 8, 5, 0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.6rem;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.pillar-panel.in-view .pillar-panel-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pillar-panel-card p {
+  margin: 0.6rem 0 0.9rem;
+  color: var(--grey);
+}
+
+.pillar-panel-card a {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Sticky scrollytelling gets cramped/unreliable on short mobile viewports
+   (address-bar resize, iOS Safari quirks) — fall back to a simple static
+   stack: no sticky pin, a fixed-height banner, panels in normal flow. */
+@media (max-width: 720px), (max-height: 560px) {
+  .pillar-visual {
+    position: relative;
+    height: 46vh;
+    min-height: 260px;
+  }
+
+  .pillar-panels {
+    position: relative;
+  }
+
+  .pillar-panel {
+    min-height: auto;
+    padding: 2rem 0;
+    align-items: center;
+  }
+
+  .pillar-panel-card {
+    opacity: 1;
+    transform: none;
+    max-width: none;
+  }
+
+  .pillar-caption {
+    bottom: 6%;
+  }
+}
+
+/* ---------- scroll-triggered reveal ---------- */
 
 .reveal {
   opacity: 0;
@@ -449,17 +582,49 @@ nav.site-nav a.active::after {
   transform: translateY(0);
 }
 
+/* clan.html's "The Clan" card — a diagonal clip-path wipe instead of a
+   plain fade, with the crest watermark fading in behind the copy
+   (docs/DECISIONS.md ADR-066). */
+.clan-reveal {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  transition: clip-path 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.clan-reveal.in-view {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.clan-reveal::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -8%;
+  width: 60%;
+  height: 140%;
+  background-image: url("../img/logo-icon.webp");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.1s ease 0.3s;
+  pointer-events: none;
+}
+
+.clan-reveal.in-view::before {
+  opacity: 0.08;
+}
+
 @keyframes heroEntrance {
   from {
     opacity: 0;
-    transform: scale(0.86);
-    filter: blur(8px);
+    transform: scale(0.88);
   }
 
   to {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0);
   }
 }
 
@@ -467,18 +632,10 @@ nav.site-nav a.active::after {
   0%,
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 26px rgba(57, 255, 176, 0.4));
   }
 
   50% {
-    transform: translateY(-12px);
-    filter: drop-shadow(0 0 46px rgba(255, 210, 63, 0.42));
-  }
-}
-
-@keyframes heroRotate {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: translateY(-10px);
   }
 }
 
@@ -494,12 +651,9 @@ nav.site-nav a.active::after {
   }
 }
 
-/* Every Urdu text run in the site — the ticker, the footer tagline, the
-   join.html motto — gets the real Nastaliq calligraphic face, not
-   whatever generic Arabic-capable font the browser happens to fall back
-   to. Marked with lang="ur" wherever Urdu is mixed into an otherwise-
-   English element, so this one rule covers all of it instead of a
-   one-off class per spot. */
+/* Every Urdu text run in the site gets the real Nastaliq calligraphic
+   face (docs/DECISIONS.md ADR-064) — marked lang="ur" wherever Urdu is
+   mixed into an otherwise-English element. */
 [lang="ur"] {
   font-family: "Noto Nastaliq Urdu", serif;
   direction: rtl;
@@ -510,8 +664,7 @@ nav.site-nav a.active::after {
   font-family: "Noto Nastaliq Urdu", serif;
   direction: rtl;
   font-size: 1.35rem;
-  color: var(--neon-gold);
-  text-shadow: 0 0 14px rgba(255, 210, 63, 0.35);
+  color: var(--gold);
   margin: 0.25rem 0;
 }
 
@@ -531,7 +684,7 @@ nav.site-nav a.active::after {
   font-size: 0.95rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border: 1px solid var(--neon-green);
+  border: 1px solid var(--green);
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
@@ -542,45 +695,39 @@ nav.site-nav a.active::after {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--neon-green), var(--neon-green-soft));
+  background: linear-gradient(135deg, var(--green), var(--green-soft));
   color: var(--ink);
-  box-shadow: 0 0 22px -4px rgba(57, 255, 176, 0.7);
+  box-shadow: 0 0 20px -6px rgba(47, 232, 154, 0.6);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 0 32px -2px rgba(57, 255, 176, 0.9);
+  box-shadow: 0 0 28px -4px rgba(47, 232, 154, 0.8);
 }
 
-/* A subtle pulsing glow ring on join.html's primary Discord CTA — draws
-   the eye to the one action that matters on a recruitment page, without
-   introducing any new color (same --neon-green already used everywhere
-   else on .btn-primary). Covered by the prefers-reduced-motion kill-
-   switch below like every other animation in this file. */
 .cta-pulse {
-  animation: ctaPulse 2.2s ease-in-out infinite;
+  animation: ctaPulse 2.4s ease-in-out infinite;
 }
 
 @keyframes ctaPulse {
   0%,
   100% {
-    box-shadow: 0 0 22px -4px rgba(57, 255, 176, 0.7);
+    box-shadow: 0 0 20px -6px rgba(47, 232, 154, 0.6);
   }
 
   50% {
-    box-shadow: 0 0 40px 4px rgba(57, 255, 176, 0.85);
+    box-shadow: 0 0 34px 2px rgba(47, 232, 154, 0.8);
   }
 }
 
 .btn-ghost {
-  background: rgba(57, 255, 176, 0.04);
-  color: var(--neon-green);
+  background: rgba(47, 232, 154, 0.04);
+  color: var(--green);
   border-color: var(--card-border);
 }
 
 .btn-ghost:hover {
-  background: rgba(57, 255, 176, 0.12);
-  border-color: var(--neon-green);
-  box-shadow: 0 0 22px -6px rgba(57, 255, 176, 0.55);
+  background: rgba(47, 232, 154, 0.1);
+  border-color: var(--green);
 }
 
 /* ---------- layout / cards ---------- */
@@ -598,7 +745,7 @@ main {
     url("../img/banner.jpg");
   background-size: cover;
   background-position: center 0%;
-  border-bottom: 1px solid rgba(57, 255, 176, 0.22);
+  border-bottom: 1px solid rgba(47, 232, 154, 0.2);
   margin-bottom: 2.5rem;
 }
 
@@ -612,21 +759,17 @@ main {
   margin: 0;
 }
 
-.page-banner .page-title {
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
-}
-
 .page-banner .page-subtitle {
   margin-top: 0.35rem;
 }
 
 .page-title {
-  font-family: var(--font-heading);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 400;
   text-transform: uppercase;
-  font-size: 1.9rem;
+  font-size: 2.4rem;
+  letter-spacing: 0.02em;
   margin-bottom: 0.25rem;
-  letter-spacing: 0.03em;
 }
 
 .page-subtitle {
@@ -640,7 +783,7 @@ main {
   align-items: center;
   gap: 0.75rem;
   margin: 2.5rem 0;
-  color: var(--neon-green);
+  color: var(--green);
 }
 
 .divider::before,
@@ -648,7 +791,7 @@ main {
   content: "";
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(57, 255, 176, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(47, 232, 154, 0.4), transparent);
 }
 
 .divider span {
@@ -657,8 +800,7 @@ main {
   font-size: 0.72rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--neon-green);
-  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+  color: var(--green);
 }
 
 .card {
@@ -680,19 +822,18 @@ main {
   left: 1.25rem;
   right: 1.25rem;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-gold), transparent);
-  opacity: 0.8;
+  background: linear-gradient(90deg, transparent, var(--green), var(--gold), transparent);
+  opacity: 0.7;
   border-radius: 2px;
 }
 
-/* cursor-follow highlight (assets/js/spotlight.js sets --mx/--my) —
-   a vanilla-CSS/JS take on the reactbits "spotlight card" effect */
+/* cursor-follow highlight (assets/js/spotlight.js sets --mx/--my) */
 .card::after,
 .stat::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(57, 255, 176, 0.16), transparent 65%);
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(47, 232, 154, 0.12), transparent 65%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -705,7 +846,7 @@ main {
 
 .card:hover {
   border-color: var(--card-border-hover);
-  box-shadow: 0 22px 46px -26px rgba(57, 255, 176, 0.4);
+  box-shadow: 0 22px 46px -26px rgba(47, 232, 154, 0.35);
   transform: translateY(-2px);
 }
 
@@ -748,10 +889,10 @@ main {
 .stat .value {
   display: block;
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.6rem;
-  color: var(--neon-green);
-  text-shadow: 0 0 18px rgba(57, 255, 176, 0.45);
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  color: var(--green);
 }
 
 .stat .label {
@@ -783,7 +924,7 @@ table {
 }
 
 thead {
-  background: rgba(57, 255, 176, 0.08);
+  background: rgba(47, 232, 154, 0.07);
 }
 
 th,
@@ -795,7 +936,7 @@ td {
 }
 
 th {
-  color: var(--neon-green);
+  color: var(--green);
   font-family: var(--font-heading);
   font-weight: 700;
   text-transform: uppercase;
@@ -809,7 +950,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(57, 255, 176, 0.06);
+  background: rgba(47, 232, 154, 0.05);
 }
 
 .player-cell {
@@ -821,7 +962,7 @@ tbody tr:hover {
 }
 
 .player-cell:hover {
-  color: var(--neon-green);
+  color: var(--green);
   text-decoration: none;
 }
 
@@ -833,10 +974,10 @@ tbody tr:hover {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid rgba(57, 255, 176, 0.35);
+  border: 1px solid rgba(47, 232, 154, 0.3);
   color: var(--cream);
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
 }
 
 /* ---------- rank medals ---------- */
@@ -863,23 +1004,21 @@ tbody tr:hover {
 }
 
 .rank-gold {
-  background: linear-gradient(155deg, #fff0b0, var(--neon-gold));
-  box-shadow: 0 0 16px rgba(255, 210, 63, 0.65);
+  background: linear-gradient(155deg, #fff0b0, var(--gold));
 }
 
 .rank-silver {
   background: linear-gradient(155deg, #eef2f3, #a9b4b8);
-  box-shadow: 0 0 12px rgba(180, 195, 199, 0.4);
 }
 
 .rank-bronze {
   background: linear-gradient(155deg, #e3a469, #a35f2c);
-  box-shadow: 0 0 12px rgba(181, 114, 46, 0.4);
 }
 
-/* ---------- tier badges ---------- */
+/* ---------- tier / rank badges ---------- */
 
-.tier-badge {
+.tier-badge,
+.rank-title-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -890,18 +1029,16 @@ tbody tr:hover {
   font-weight: 700;
   letter-spacing: 0.02em;
   border: 1px solid currentColor;
-  background: rgba(57, 255, 176, 0.08);
-  background: color-mix(in srgb, currentColor 16%, transparent);
-  text-shadow: 0 0 8px currentColor;
+  background: color-mix(in srgb, currentColor 14%, transparent);
 }
 
-.tier-badge::before {
+.tier-badge::before,
+.rank-title-badge::before {
   content: "";
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 6px currentColor;
 }
 
 .tier-unranked {
@@ -936,6 +1073,38 @@ tbody tr:hover {
   color: var(--tier-valhallan);
 }
 
+/* chat-gamification rank titles (docs/DECISIONS.md ADR-065/066) — a
+   distinct 7-tier ladder from Brawlhalla's own ranked tiers above, mapped
+   onto the same closed green/gold-family palette so it still reads as
+   one system. */
+.rank-hatchling {
+  color: var(--tier-tin);
+}
+
+.rank-brawler {
+  color: var(--tier-bronze);
+}
+
+.rank-warrior {
+  color: var(--tier-silver);
+}
+
+.rank-veteran {
+  color: var(--green);
+}
+
+.rank-elite {
+  color: var(--tier-platinum);
+}
+
+.rank-legend {
+  color: var(--gold);
+}
+
+.rank-valhallan {
+  color: var(--tier-valhallan);
+}
+
 /* ---------- forms ---------- */
 
 .search-form {
@@ -956,15 +1125,15 @@ tbody tr:hover {
 }
 
 .search-form input:focus {
-  outline: 2px solid var(--neon-green);
+  outline: 2px solid var(--green);
   outline-offset: 1px;
 }
 
 .search-form button {
   padding: 0.7rem 1.6rem;
   clip-path: var(--cut-sm);
-  border: 1px solid var(--neon-green);
-  background: linear-gradient(135deg, var(--neon-green), var(--neon-green-soft));
+  border: 1px solid var(--green);
+  background: linear-gradient(135deg, var(--green), var(--green-soft));
   color: var(--ink);
   font-family: var(--font-heading);
   font-weight: 700;
@@ -975,7 +1144,7 @@ tbody tr:hover {
 }
 
 .search-form button:hover {
-  box-shadow: 0 0 24px -4px rgba(57, 255, 176, 0.7);
+  box-shadow: 0 0 22px -6px rgba(47, 232, 154, 0.6);
   transform: translateY(-1px);
 }
 
@@ -994,7 +1163,7 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(57, 255, 176, 0.06);
+  background: rgba(47, 232, 154, 0.05);
   border: 1px solid var(--card-border);
   border-radius: 999px;
   padding: 0.45rem 1rem 0.45rem 0.7rem;
@@ -1009,15 +1178,14 @@ tbody tr:hover {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  background: linear-gradient(155deg, var(--neon-gold), var(--neon-gold-soft));
+  background: linear-gradient(155deg, var(--gold), var(--gold-soft));
   color: var(--ink);
   font-size: 0.85rem;
-  box-shadow: 0 0 12px rgba(255, 210, 63, 0.55);
   flex: none;
 }
 
 .badge-list li strong {
-  color: var(--neon-green);
+  color: var(--green);
 }
 
 /* ---------- player profile header ---------- */
@@ -1073,18 +1241,16 @@ canvas#history-chart {
   gap: 0.1rem;
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
-  border: 1px solid rgba(57, 255, 176, 0.4);
+  border: 1px solid rgba(47, 232, 154, 0.35);
   background: rgba(4, 10, 7, 0.92);
-  box-shadow: 0 0 16px rgba(57, 255, 176, 0.3);
   pointer-events: none;
   white-space: nowrap;
   font-family: var(--font-heading);
 }
 
 .chart-tooltip strong {
-  color: var(--neon-green);
+  color: var(--green);
   font-size: 0.95rem;
-  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
 }
 
 .chart-tooltip span {
@@ -1097,7 +1263,7 @@ canvas#history-chart {
 /* ---------- footer ---------- */
 
 .site-footer {
-  border-top: 1px solid rgba(57, 255, 176, 0.18);
+  border-top: 1px solid rgba(47, 232, 154, 0.16);
   color: var(--grey);
   font-size: 0.85rem;
   text-align: center;
@@ -1109,13 +1275,12 @@ canvas#history-chart {
   height: 30px;
   margin-bottom: 0.6rem;
   opacity: 0.85;
-  transition: transform 0.5s ease, opacity 0.3s ease, filter 0.5s ease;
+  transition: transform 0.5s ease, opacity 0.3s ease;
 }
 
 .site-footer .crest:hover {
   opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(57, 255, 176, 0.7));
-  transform: rotate(-10deg) scale(1.1);
+  transform: rotate(-8deg) scale(1.08);
 }
 
 .site-footer a {
@@ -1124,9 +1289,7 @@ canvas#history-chart {
 
 /* ---------- truck-art divider ----------
    An abstracted nod to Pakistani truck art's decorative floral borders —
-   restrained: one small repeating motif, muted rather than the art form's
-   usual riot of colour, used once as a closing flourish rather than
-   everywhere (docs/DECISIONS.md ADR-051, docs/BRAND.md). */
+   restrained: one small repeating motif (docs/DECISIONS.md ADR-051/066). */
 
 .divider-truck {
   height: 20px;
@@ -1135,6 +1298,45 @@ canvas#history-chart {
   background-repeat: repeat-x;
   background-position: center;
   opacity: 0.9;
+}
+
+/* ---------- community activity (chat gamification, ADR-066) ---------- */
+
+.chat-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.chat-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  flex-wrap: wrap;
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+.chat-activity-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--cream);
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.chat-activity-progress {
+  flex: 1 1 200px;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 /* ---------- legend mastery ---------- */
@@ -1172,7 +1374,7 @@ canvas#history-chart {
 .legend-bar-track {
   height: 8px;
   border-radius: 4px;
-  background: rgba(57, 255, 176, 0.08);
+  background: rgba(47, 232, 154, 0.08);
   border: 1px solid var(--card-border);
   overflow: hidden;
 }
@@ -1180,8 +1382,7 @@ canvas#history-chart {
 .legend-bar-fill {
   height: 100%;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--neon-green-soft), var(--neon-green));
-  box-shadow: 0 0 10px rgba(57, 255, 176, 0.6);
+  background: linear-gradient(90deg, var(--green-soft), var(--green));
 }
 
 /* ---------- match history ---------- */
@@ -1217,9 +1418,8 @@ canvas#history-chart {
 }
 
 .match-win .match-result {
-  color: var(--neon-green);
-  background: rgba(57, 255, 176, 0.14);
-  text-shadow: 0 0 8px rgba(57, 255, 176, 0.5);
+  color: var(--green);
+  background: rgba(47, 232, 154, 0.12);
 }
 
 .match-loss .match-result {
@@ -1300,15 +1500,14 @@ canvas#history-chart {
   height: 0.45rem;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 6px currentColor;
 }
 
 .status-registration {
-  color: var(--neon-gold);
+  color: var(--gold);
 }
 
 .status-in_progress {
-  color: var(--neon-green);
+  color: var(--green);
 }
 
 .status-completed {
@@ -1342,7 +1541,7 @@ canvas#history-chart {
   font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--neon-green);
+  color: var(--green);
   text-align: center;
   margin-bottom: 0.25rem;
 }
@@ -1362,7 +1561,7 @@ canvas#history-chart {
   right: -1.25rem;
   width: 1.25rem;
   height: 1px;
-  background: rgba(57, 255, 176, 0.35);
+  background: rgba(47, 232, 154, 0.3);
 }
 
 .bracket-round:last-child .bracket-match::after {
@@ -1384,9 +1583,9 @@ canvas#history-chart {
 }
 
 .bracket-entrant.winner {
-  color: var(--neon-green);
+  color: var(--green);
   font-weight: 700;
-  background: rgba(57, 255, 176, 0.06);
+  background: rgba(47, 232, 154, 0.05);
 }
 
 .bracket-entrant.eliminated {
@@ -1414,18 +1613,14 @@ canvas#history-chart {
     height: 100px;
   }
 
-  /* Below ~640px the banner photo can't crop to a clean strip without
-     cutting into the logotype (its 2.5:1 aspect ratio nearly matches the
-     viewport at this width) — fall back to a plain themed gradient band. */
   .page-banner {
     background-image: linear-gradient(160deg, rgba(6, 26, 18, 0.5), rgba(3, 6, 4, 0.97));
     min-height: 128px;
   }
 }
 
-/* Motion is decorative everywhere here (entrances, float, glow, hover
-   lift, ticker, spotlight) — never load-bearing for meaning, so it's safe
-   to remove wholesale. */
+/* Motion is decorative everywhere here — never load-bearing for meaning,
+   so it's safe to remove wholesale. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1440,7 +1635,21 @@ canvas#history-chart {
     animation: none;
   }
 
-  body::before {
-    animation: none;
+  .pillar-visual {
+    position: relative;
+    height: 46vh;
+    min-height: 260px;
+  }
+
+  .pillar-panel {
+    min-height: auto;
+    padding: 2rem 0;
+    align-items: center;
+  }
+
+  .pillar-panel-card {
+    opacity: 1;
+    transform: none;
+    max-width: none;
   }
 }
