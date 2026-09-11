@@ -70,6 +70,16 @@ Admin-only initially.
 - 🐛 bug-reports
 - 📝 development-log
 
+### 🛡️ MODERATION
+(docs/DECISIONS.md ADR-065)
+
+Restricted the same way as DEVELOPMENT — hidden from everyone but
+`ROLES_WITH_STAFF_ACCESS`.
+
+- 🛡️-mod-log — every `/warn`, `/clearwarnings`, `/kick`, `/ban`,
+  `/timeout`, `/purge` action, posted automatically by
+  `bot/cogs/moderation.py`.
+
 ## Initial launch behavior
 
 The server may remain private during development. The setup system must support
@@ -98,13 +108,31 @@ everything else here:
   same flow as `/scrim`.
 
 Every other text channel also gets a short static intro embed on launch
-(docs/DECISIONS.md ADR-059 — `bot/content/channel_intros.py`; 20 channels,
+(docs/DECISIONS.md ADR-059 — `bot/content/channel_intros.py`; 21 channels,
 one builder each, wired into `bot/cogs/setup.py`'s `_launch_messages()`):
 📢 announcements, 🦅 clan-info, 💬 general, 🇵🇰 pakistan-chat, 😂 memes,
 🎬 clips, 🎮 brawlhalla, 🧠 tips-guides, 🐺 legend-talk, ⚔️ 1v1, 👥 2v2,
 ⚔️ scrims, 🏆 tournaments, 📊 leaderboard, 🥇 hall-of-fame, 🤖 bot-testing,
-🌐 website-testing, 🧪 commands, 🐛 bug-reports, 📝 development-log — i.e.
-every text channel `bot.constants.CATEGORIES` defines gets *something*;
-only the 4 voice channels get nothing (no text to post). A regression test
-(`tests/test_setup_launch_messages.py`) checks this stays true if a new
-channel is ever added.
+🌐 website-testing, 🧪 commands, 🐛 bug-reports, 📝 development-log,
+🛡️-mod-log — i.e. every text channel `bot.constants.CATEGORIES` defines
+gets *something*; only the 4 voice channels get nothing (no text to
+post). A regression test (`tests/test_setup_launch_messages.py`) checks
+this stays true if a new channel is ever added.
+
+## Welcome / leave messages (docs/DECISIONS.md ADR-065)
+
+`bot/cogs/engagement.py` listens for `on_member_join`/`on_member_remove`
+and posts a branded card to 👋 welcome for each — reusing the owner-
+supplied `welcome_template.png`/`goodbye_template.png` art the same way
+`render_milestone_card` uses `achievement_template.png` (ADR-062). Both
+renders run off-thread (`asyncio.to_thread`) and are wrapped in
+try/except so a render or permission failure never crashes the listener.
+
+- **Join**: assigns the Guest role automatically
+  (`bot.constants.ROLE_GUEST`, resolved via `ProvisionedResourceRepository`
+  so the rank ladder means something from the member's very first
+  message), then posts the welcome card with a caption pointing at
+  📜-rules and `/link`.
+- **Leave**: posts the goodbye card with a short, low-key caption — no
+  mention/ping, since the member has already left and a ping would fail
+  anyway.

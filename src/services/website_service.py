@@ -18,6 +18,7 @@ from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.match import MatchSide, MatchStatus
 from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
+from database.repositories.chat_activity_repository import ChatActivityRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.match_repository import MatchRepository
 from database.repositories.member_achievement_repository import MemberAchievementRepository
@@ -29,6 +30,7 @@ from database.repositories.tournament_repository import (
     TournamentMatchRepository,
     TournamentRepository,
 )
+from services.chat_gamification import level_for_xp, rank_title_for_level
 
 
 @dataclass
@@ -103,6 +105,14 @@ class TournamentBracket:
     matches: list[BracketMatch]
 
 
+@dataclass
+class CommunityActivityEntry:
+    player_name: str
+    level: int
+    rank_title: str
+    xp: int
+
+
 class WebsiteService:
     def __init__(self, session: AsyncSession) -> None:
         self._links = MemberPlayerLinkRepository(session)
@@ -115,6 +125,7 @@ class WebsiteService:
         self._tournaments = TournamentRepository(session)
         self._entrants = TournamentEntrantRepository(session)
         self._tournament_matches = TournamentMatchRepository(session)
+        self._chat_activity = ChatActivityRepository(session)
 
     async def get_clan_info(self, guild_id: int) -> ClanInfo:
         member_count = await self._members.count_for_guild(guild_id)
@@ -130,6 +141,39 @@ class WebsiteService:
             key=lambda entry: entry.snapshot.rating if entry.snapshot.rating is not None else -1,
             reverse=True,
         )
+        return entries[:limit]
+
+    async def get_community_activity(
+        self, guild_id: int, *, limit: int = 10
+    ) -> list[CommunityActivityEntry]:
+        """Chat-XP leaderboard, filtered to actively-linked members only
+        and showing their Brawlhalla player name — never a Discord handle
+        (docs/DECISIONS.md ADR-065, holding the same identity boundary as
+        every other method here, ADR-040). A member who chats a lot but
+        hasn't run /link still earns XP (visible via /chatboard in
+        Discord) but doesn't appear on the public site, same as any other
+        unlinked member's data.
+        """
+        entries: list[CommunityActivityEntry] = []
+        for _member, player, discord_id in await self._links.list_active_for_guild(guild_id):
+            activity = await self._chat_activity.get(guild_id=guild_id, discord_id=discord_id)
+            if activity is None or activity.xp == 0:
+                continue
+            # Derived live from xp, not the stored `level` column — that
+            # column is only updated on a detected level-up (bot/cogs/
+            # engagement.py), so trusting it here could show a stale
+            # value if it and xp ever drift apart. xp is the single
+            # source of truth; level_for_xp is cheap and pure.
+            level = level_for_xp(activity.xp)
+            entries.append(
+                CommunityActivityEntry(
+                    player_name=player.player_name,
+                    level=level,
+                    rank_title=rank_title_for_level(level),
+                    xp=activity.xp,
+                )
+            )
+        entries.sort(key=lambda entry: entry.xp, reverse=True)
         return entries[:limit]
 
     async def get_player_profile(self, brawlhalla_player_id: int) -> PlayerProfile | None:

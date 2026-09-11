@@ -42,6 +42,8 @@ from bot.palette import GOLD
 
 _ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 _TEMPLATE_PATH = _ASSETS_DIR / "img" / "achievement_template.png"
+_WELCOME_TEMPLATE_PATH = _ASSETS_DIR / "img" / "welcome_template.png"
+_GOODBYE_TEMPLATE_PATH = _ASSETS_DIR / "img" / "goodbye_template.png"
 _TITLE_FONT_PATH = _ASSETS_DIR / "fonts" / "Orbitron-Variable.ttf"
 _SUBTITLE_FONT_PATH = _ASSETS_DIR / "fonts" / "Rajdhani-SemiBold.ttf"
 
@@ -55,6 +57,14 @@ CARD_HEIGHT = 941
 # (confirmed visually against the template asset).
 _CUTOUT_BOX = (330, 355, 1345, 745)
 _CUTOUT_TEXT_MARGIN = 60  # keeps long strings clear of the gold frame edges
+
+# welcome_template.png / goodbye_template.png (owner-supplied, split from one
+# side-by-side composite — docs/DECISIONS.md ADR-065) share this same empty-
+# rectangle geometry; both are 971x809.
+WELCOME_CARD_WIDTH = 971
+WELCOME_CARD_HEIGHT = 809
+_WELCOME_CUTOUT_BOX = (265, 442, 705, 553)
+_WELCOME_CUTOUT_TEXT_MARGIN = 30
 
 # --- Brand colors -----------------------------------------------------------
 
@@ -333,3 +343,45 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
     # infrequent (one per announcement) to risk blocking the event loop.
     image.convert("RGB").save(buffer, format="PNG")
     return buffer.getvalue()
+
+
+def _render_arrival_card(template_path: Path, *, member_name: str) -> bytes:
+    """Shared renderer for the welcome/goodbye cards (docs/DECISIONS.md
+    ADR-065) — same "bevel & highlight" text treatment as
+    render_milestone_card, but a single centered line (the member's name)
+    set into the template's own empty cutout rectangle, since these
+    templates carry their own "WELCOME"/"GOODBYE" headline baked into the
+    artwork already.
+    """
+    template = Image.open(template_path).convert("RGBA")
+    image = template.copy()
+
+    x0, y0, x1, y1 = _WELCOME_CUTOUT_BOX
+    center_x = (x0 + x1) // 2
+    center_y = (y0 + y1) // 2
+    max_text_width = (x1 - x0) - _WELCOME_CUTOUT_TEXT_MARGIN * 2
+
+    name_font = _fit_font(
+        member_name, _TITLE_FONT_PATH, variation="Bold", max_width=max_text_width,
+        initial_size=48, min_size=20,
+    )
+    name_layer = _trim(_render_styled_text(member_name, name_font, padding=24))
+
+    dest = (center_x - name_layer.width // 2, center_y - name_layer.height // 2)
+    image.alpha_composite(name_layer, dest=dest)
+
+    buffer = io.BytesIO()
+    image.convert("RGB").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def render_welcome_card(*, member_name: str) -> bytes:
+    """A branded welcome card for a new member, using the owner-supplied
+    welcome_template.png (docs/DECISIONS.md ADR-065)."""
+    return _render_arrival_card(_WELCOME_TEMPLATE_PATH, member_name=member_name)
+
+
+def render_goodbye_card(*, member_name: str) -> bytes:
+    """A branded goodbye card for a departing member, using the owner-
+    supplied goodbye_template.png (docs/DECISIONS.md ADR-065)."""
+    return _render_arrival_card(_GOODBYE_TEMPLATE_PATH, member_name=member_name)

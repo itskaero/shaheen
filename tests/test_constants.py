@@ -53,3 +53,17 @@ def test_announcements_channel_is_staff_only_send() -> None:
     all_channels = (c for category in CATEGORIES for c in category.channels)
     channel = next(c for c in all_channels if c.logical_key == "channel:announcements")
     assert channel.staff_only_send is True
+
+
+def test_moderation_category_is_restricted_to_staff() -> None:
+    """docs/DECISIONS.md ADR-065 — #mod-log must stay staff-only, same as
+    the DEVELOPMENT/SHAHEEN ARENA restricted categories.
+    """
+    category = next(c for c in CATEGORIES if c.logical_key == "category:moderation")
+    assert category.restricted is True
+
+
+def test_mod_log_channel_exists_in_moderation_category() -> None:
+    category = next(c for c in CATEGORIES if c.logical_key == "category:moderation")
+    channel = next(c for c in category.channels if c.logical_key == "channel:mod_log")
+    assert channel.kind == "text"

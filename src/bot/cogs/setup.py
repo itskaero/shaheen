@@ -35,6 +35,7 @@ from bot.content.channel_intros import (
     build_leaderboard_intro_embed,
     build_legend_talk_intro_embed,
     build_memes_intro_embed,
+    build_mod_log_intro_embed,
     build_one_v_one_intro_embed,
     build_pakistan_chat_intro_embed,
     build_scrims_intro_embed,
@@ -105,6 +106,7 @@ _LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
     "channel:commands",
     "channel:bug_reports",
     "channel:development_log",
+    "channel:mod_log",
 )
 
 
@@ -303,6 +305,7 @@ def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | 
         "channel:commands": [(build_commands_intro_embed(), None)],
         "channel:bug_reports": [(build_bug_reports_intro_embed(), None)],
         "channel:development_log": [(build_development_log_intro_embed(), None)],
+        "channel:mod_log": [(build_mod_log_intro_embed(), None)],
     }
 
 

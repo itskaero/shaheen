@@ -356,6 +356,19 @@ CATEGORIES: tuple[CategorySpec, ...] = (
         ),
     ),
     CategorySpec(
+        logical_key="category:moderation",
+        name="🛡️ MODERATION",
+        restricted=True,  # staff-only — ROLES_WITH_STAFF_ACCESS (docs/DECISIONS.md ADR-065)
+        channels=(
+            ChannelSpec(
+                "channel:mod_log",
+                "🛡️-mod-log",
+                "text",
+                topic="Moderation action log — staff only. | نگرانی کا ریکارڈ — صرف اسٹاف کے لیے۔",
+            ),
+        ),
+    ),
+    CategorySpec(
         logical_key="category:development",
         name="🛠️ DEVELOPMENT",
         restricted=True,  # admin-only

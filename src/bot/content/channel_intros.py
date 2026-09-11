@@ -190,3 +190,17 @@ def build_development_log_intro_embed() -> discord.Embed:
         description="Notable changes and deploys, for staff reference.",
         colour=GREY,
     )
+
+
+# --- MODERATION ----------------------------------------------------------
+
+
+def build_mod_log_intro_embed() -> discord.Embed:
+    return discord.Embed(
+        title="🛡️ Mod Log",
+        description=(
+            "Every `/warn`, `/kick`, `/ban`, `/timeout`, `/purge`, and `/clearwarnings` "
+            "is logged here automatically — staff reference, not a discussion channel."
+        ),
+        colour=GREY,
+    )

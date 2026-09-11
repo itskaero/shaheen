@@ -15,6 +15,7 @@ from database.models.match import MatchKind, MatchSide
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.tournament import TournamentMatchStatus
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
+from database.repositories.chat_activity_repository import ChatActivityRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.match_repository import MatchRepository
@@ -372,3 +373,76 @@ async def test_get_tournament_bracket_unlinked_entrant_shows_as_unknown(
     result = await WebsiteService(session).get_tournament_bracket(tournament.id)
     assert result is not None
     assert result.entrants[0].names == ["Unknown"]
+
+
+async def test_get_community_activity_shows_linked_member_by_player_name(
+    session: AsyncSession,
+) -> None:
+    _member, player = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await ChatActivityRepository(session).record_message(
+        guild_id=GUILD_ID, discord_id=1, xp_gain=150, now=datetime.now(UTC)
+    )
+    await session.commit()
+
+    entries = await WebsiteService(session).get_community_activity(GUILD_ID)
+    assert len(entries) == 1
+    assert entries[0].player_name == player.player_name
+    assert entries[0].xp == 150
+
+
+async def test_get_community_activity_derives_level_live_from_xp(session: AsyncSession) -> None:
+    """Regression guard: ChatActivityRepository.record_message deliberately
+    never updates the stored `level` column (docs/DECISIONS.md ADR-065) —
+    this must derive level from xp at read time, not trust the column.
+    """
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await ChatActivityRepository(session).record_message(
+        guild_id=GUILD_ID, discord_id=1, xp_gain=150, now=datetime.now(UTC)
+    )
+    await session.commit()
+
+    entries = await WebsiteService(session).get_community_activity(GUILD_ID)
+    assert entries[0].level == 2  # level_for_xp(150) == 2, not the stale stored level == 1
+    assert entries[0].rank_title == "Hatchling"
+
+
+async def test_get_community_activity_excludes_unlinked_members(session: AsyncSession) -> None:
+    """ADR-040's identity boundary: an unlinked-but-chatty member never
+    appears on the public site, regardless of how much XP they have.
+    """
+    _member, player = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await ChatActivityRepository(session).record_message(
+        guild_id=GUILD_ID, discord_id=1, xp_gain=10, now=datetime.now(UTC)
+    )
+    # Unlinked member — chats a lot, but has never run /link.
+    await ChatActivityRepository(session).record_message(
+        guild_id=GUILD_ID, discord_id=999, xp_gain=99_999, now=datetime.now(UTC)
+    )
+    await session.commit()
+
+    entries = await WebsiteService(session).get_community_activity(GUILD_ID)
+    assert len(entries) == 1
+    assert entries[0].player_name == player.player_name
+
+
+async def test_get_community_activity_excludes_linked_members_with_no_activity(
+    session: AsyncSession,
+) -> None:
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await session.commit()
+
+    entries = await WebsiteService(session).get_community_activity(GUILD_ID)
+    assert entries == []
+
+
+async def test_get_community_activity_orders_by_xp_descending(session: AsyncSession) -> None:
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    activity = ChatActivityRepository(session)
+    now = datetime.now(UTC)
+    await activity.record_message(guild_id=GUILD_ID, discord_id=1, xp_gain=10, now=now)
+    await activity.record_message(guild_id=GUILD_ID, discord_id=2, xp_gain=500, now=now)
+    await session.commit()
+
+    entries = await WebsiteService(session).get_community_activity(GUILD_ID)
+    assert [e.xp for e in entries] == [500, 10]

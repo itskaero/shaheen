@@ -96,3 +96,10 @@ class TournamentBracketResponse(BaseModel):
     tournament: TournamentSummaryResponse
     entrants: list[BracketEntrantResponse]
     matches: list[BracketMatchResponse]
+
+
+class CommunityActivityEntryResponse(BaseModel):
+    player_name: str
+    level: int
+    rank_title: str
+    xp: int
