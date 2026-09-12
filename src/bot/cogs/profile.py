@@ -41,13 +41,19 @@ class ProfileCog(commands.Cog):
             return
 
         async with session_scope(self.bot.session_factory) as session:
-            service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
+            service = ProfileService(
+                session, LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla
+            )
             linked = await self._require_link(interaction, service, member, is_self=user is None)
             if linked is None:
                 return
             shaheen_member, player = linked
             stats = await service.get_stats(player.brawlhalla_player_id)
             ranked = await service.get_ranked(player.brawlhalla_player_id)
+            chat_activity = await service.get_chat_activity(
+                guild_id=member.guild.id, discord_id=member.id
+            )
+            achievements = await service.get_achievements(shaheen_member.id)
 
         embed = build_profile_embed(
             display_name=member.display_name,
@@ -56,6 +62,8 @@ class ProfileCog(commands.Cog):
             stats=stats,
             ranked=ranked,
             joined_at=shaheen_member.joined_at,
+            chat_activity=chat_activity,
+            achievements=achievements,
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
 
@@ -69,7 +77,9 @@ class ProfileCog(commands.Cog):
             return
 
         async with session_scope(self.bot.session_factory) as session:
-            service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
+            service = ProfileService(
+                session, LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla
+            )
             linked = await self._require_link(interaction, service, member, is_self=user is None)
             if linked is None:
                 return
@@ -89,7 +99,9 @@ class ProfileCog(commands.Cog):
             return
 
         async with session_scope(self.bot.session_factory) as session:
-            service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
+            service = ProfileService(
+                session, LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla
+            )
             linked = await self._require_link(interaction, service, member, is_self=user is None)
             if linked is None:
                 return
@@ -109,7 +121,9 @@ class ProfileCog(commands.Cog):
             return
 
         async with session_scope(self.bot.session_factory) as session:
-            service = ProfileService(LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla)
+            service = ProfileService(
+                session, LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla
+            )
             linked = await self._require_link(interaction, service, member, is_self=user is None)
             if linked is None:
                 return

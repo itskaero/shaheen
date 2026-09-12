@@ -49,9 +49,12 @@ Remove the active player association after confirmation.
 
 ### /profile [user]
 One-look profile card: Brawlhalla name/level, games/wins/win-rate, tier/
-rating/peak, global rank, region, and clan "member since" date
-(docs/DECISIONS.md ADR-059). `/rank`, `/stats`, `/legends` below still
-exist as focused single-stat views.
+rating/peak, global + region rank, region, clan "member since" date, chat
+rank/level (docs/DECISIONS.md ADR-065), an achievement count with the
+latest earned, and a link to the full website profile for what an embed
+can't show — rating history and match record (ADR-059, extended in
+ADR-067). `/rank`, `/stats`, `/legends` below still exist as focused
+single-stat views.
 
 ### /rank [user]
 Show current ranked information.
@@ -60,7 +63,9 @@ Show current ranked information.
 Show useful player statistics.
 
 ### /legends [user]
-Show per-Legend statistics.
+Show per-Legend statistics: games, wins, KOs, damage dealt, and falls
+(ADR-067 — damage/falls already existed in the API response, just wasn't
+shown here before).
 
 ## Phase 3 — Clan
 

@@ -8,10 +8,21 @@ import discord
 
 from bot.constants import ROLE_TRIAL
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
+from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.models.chat_activity import ChatActivity
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
+from services.chat_gamification import level_for_xp, rank_title_for_level
 
 _LEGENDS_SHOWN = 10
+
+# GitHub Pages' default project-site URL for this repo (docs/DECISIONS.md
+# ADR-047/054) — there's no custom domain configured (no CNAME in web/), and
+# no WEBSITE_URL setting exists in core/config.py, so this stays a constant
+# here rather than a new required env var just for a footer link. Update
+# this (or promote it to a real Settings field) if a custom domain is ever
+# set up for the site.
+_WEBSITE_BASE_URL = "https://itskaero.github.io/shaheen"
 
 
 def _legend_display_name(legend_name_key: str) -> str:
@@ -69,12 +80,16 @@ def build_profile_embed(
     stats: PlayerStatsResponse,
     ranked: PlayerRankedResponse | None,
     joined_at: datetime | None,
+    chat_activity: ChatActivity | None,
+    achievements: list[tuple[Achievement, datetime]],
 ) -> discord.Embed:
     """The one-look profile card — folds in what /rank, /stats, and /legends
-    each show separately (win rate, tier/rating/peak, global rank, region)
-    plus clan join date, which wasn't surfaced anywhere before
-    (docs/DECISIONS.md ADR-059). /rank/-stats/-legends stay as-is for a
-    quick single-stat check.
+    each show separately (win rate, tier/rating/peak, global/region rank)
+    plus clan join date, chat-gamification standing, and earned
+    achievements (docs/DECISIONS.md ADR-059, extended in ADR-067 — those
+    last three already existed elsewhere in the system but never made it
+    onto this card). /rank/-stats/-legends stay as-is for a quick
+    single-stat check.
     """
     embed = discord.Embed(title=f"🦅 {display_name}", colour=FOREST_GREEN)
     if avatar_url:
@@ -97,8 +112,37 @@ def build_profile_embed(
         )
         if ranked.global_rank:
             embed.add_field(name="Global Rank", value=f"#{ranked.global_rank}", inline=True)
+        if ranked.region_rank:
+            embed.add_field(name="Region Rank", value=f"#{ranked.region_rank}", inline=True)
         if ranked.region:
             embed.add_field(name="Region", value=ranked.region, inline=True)
+
+    # Derived live from xp, never trusted from ChatActivity's stored
+    # `level` column — same rule as bot/cogs/engagement.py's /level and
+    # website_service.py's get_community_activity (that column is only
+    # updated on a detected level-up, so it can go stale between messages).
+    if chat_activity is not None and chat_activity.xp > 0:
+        level = level_for_xp(chat_activity.xp)
+        embed.add_field(
+            name="Chat Rank",
+            value=f"{rank_title_for_level(level)} — Level {level} ({chat_activity.xp:,} XP)",
+            inline=False,
+        )
+
+    if achievements:
+        latest_names = ", ".join(a.name for a, _ in achievements[-3:])
+        embed.add_field(
+            name=f"Achievements ({len(achievements)})", value=latest_names, inline=False
+        )
+
+    # Embed footers are plain text (no clickable links) — a field value
+    # supports markdown, so the link goes here instead, pointing at what a
+    # Discord embed structurally can't show: a rating-history trend chart
+    # and full match history (docs/DECISIONS.md ADR-067).
+    website_url = f"{_WEBSITE_BASE_URL}/player.html?id={player.brawlhalla_player_id}"
+    embed.add_field(
+        name="Full Profile", value=f"[Rating trend & match history]({website_url})", inline=False
+    )
     return embed
 
 
@@ -146,7 +190,7 @@ def build_legends_embed(
     top = sorted(stats.legends, key=lambda legend: legend.games, reverse=True)[:_LEGENDS_SHOWN]
     lines = [
         f"**{_legend_display_name(legend.legend_name_key)}** — {legend.games} games, "
-        f"{legend.wins} wins, {legend.kos} KOs"
+        f"{legend.wins} wins, {legend.kos} KOs, {legend.damagedealt:,} DMG, {legend.falls} falls"
         for legend in top
     ]
     embed.description = "\n".join(lines)
