@@ -129,6 +129,14 @@ All commands below require `require_staff_authorized()` (docs/PERMISSIONS.md)
 and log to `#mod-log` (docs/DECISIONS.md ADR-065). Destructive actions
 (`/clearwarnings`, `/kick`, `/ban`) go through `ConfirmView` first.
 
+### /verify <user>
+Manually verify a new member — promotes Guest to Ally, granting access to
+the gated categories (THE NEST, BRAWLHALLA, VOICE) hidden from everyone
+until then (docs/DECISIONS.md ADR-069). Not destructive, no confirmation
+step. Idempotent: a no-op on a member who already holds any rank role above
+Guest. Best-effort DM to the member; logs to `#mod-log` like every other
+command in this section.
+
 ### /warn <user> <reason>
 Record a warning against a member — best-effort DMs them, posts to
 `#mod-log`, confirms to the moderator. Not FK'd through `/link` — a

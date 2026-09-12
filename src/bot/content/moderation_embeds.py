@@ -93,6 +93,31 @@ def build_clearwarnings_log_embed(
     )
 
 
+def build_verify_success_embed(*, target: discord.abc.User) -> discord.Embed:
+    return discord.Embed(
+        title="✅ Member Verified",
+        description=f"{target.mention} can now see the rest of the server.",
+        colour=GOLD,
+    )
+
+
+def build_already_verified_embed(*, target: discord.abc.User) -> discord.Embed:
+    return discord.Embed(
+        title="Already Verified",
+        description=f"{target.mention} already holds a rank role above Guest — nothing to do.",
+        colour=GOLD,
+    )
+
+
+def build_verify_dm_embed(*, guild_name: str) -> discord.Embed:
+    return discord.Embed(
+        title=f"✅ You're verified in {guild_name}!",
+        description="A staff member manually verified you — you now have full access to the "
+        "rest of the server. Welcome in!",
+        colour=GOLD,
+    )
+
+
 def build_purge_log_embed(
     *,
     moderator: discord.abc.User,

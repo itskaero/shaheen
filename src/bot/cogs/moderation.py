@@ -25,11 +25,15 @@ from discord.utils import format_dt
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
+from bot.constants import ROLE_ALLY, ROLE_GUEST, ROLES
 from bot.content.moderation_embeds import (
+    build_already_verified_embed,
     build_clearwarnings_log_embed,
     build_mod_confirm_embed,
     build_mod_log_embed,
     build_purge_log_embed,
+    build_verify_dm_embed,
+    build_verify_success_embed,
     build_warn_confirmation_embed,
     build_warn_dm_embed,
     build_warnings_embed,
@@ -64,6 +68,62 @@ class ModerationCog(commands.Cog):
             await channel.send(embed=embed)
         except discord.Forbidden:
             logger.warning("Missing permission to post in #mod-log")
+
+    # --- /verify ---------------------------------------------------------------
+
+    @app_commands.command(
+        name="verify",
+        description="Manually verify a new member, granting access to member channels (staff only)",
+    )
+    @app_commands.describe(user="Who to verify")
+    @require_staff_authorized()
+    async def verify(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        moderator = _require_member(interaction)
+        await interaction.response.defer(ephemeral=True)
+
+        # Anyone already holding a rank role above Guest is already verified
+        # (docs/DECISIONS.md ADR-069) — mirrors LinkCog._maybe_promote's own
+        # "already ranked, leave alone" check (bot/cogs/link.py).
+        rank_role_names = {
+            role.name for role in ROLES if role.logical_key != ROLE_GUEST.logical_key
+        }
+        if {role.name for role in user.roles} & rank_role_names:
+            await interaction.followup.send(
+                embed=build_already_verified_embed(target=user), ephemeral=True
+            )
+            return
+
+        guild = moderator.guild
+        guest_role = discord.utils.get(guild.roles, name=ROLE_GUEST.name)
+        ally_role = discord.utils.get(guild.roles, name=ROLE_ALLY.name)
+        if ally_role is None:
+            raise ShaheenError(
+                f"The {ROLE_ALLY.name} role doesn't exist yet — run /setup run first."
+            )
+
+        try:
+            if guest_role is not None and guest_role in user.roles:
+                await user.remove_roles(guest_role, reason=f"Shaheen /verify by {moderator}")
+            await user.add_roles(ally_role, reason=f"Shaheen /verify by {moderator}")
+        except discord.Forbidden as exc:
+            raise ShaheenError("Missing permission to assign roles for /verify.") from exc
+
+        with contextlib.suppress(discord.Forbidden):
+            # Best-effort — DMs closed doesn't block verification.
+            await user.send(embed=build_verify_dm_embed(guild_name=guild.name))
+
+        await self._log(
+            guild,
+            build_mod_log_embed(
+                action="Member Verified",
+                target=user,
+                moderator=moderator,
+                detail=f"Promoted to **{ROLE_ALLY.name}**.",
+            ),
+        )
+        await interaction.followup.send(
+            embed=build_verify_success_embed(target=user), ephemeral=True
+        )
 
     # --- /warn / /warnings / /clearwarnings --------------------------------
 
