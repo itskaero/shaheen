@@ -74,3 +74,40 @@ async def test_list_top_respects_limit(session: AsyncSession) -> None:
 
     top = await repo.list_top(GUILD_ID, limit=2)
     assert len(top) == 2
+
+
+async def test_record_message_increments_weekly_xp_alongside_xp(session: AsyncSession) -> None:
+    repo = ChatActivityRepository(session)
+    row = await repo.record_message(guild_id=GUILD_ID, discord_id=100, xp_gain=10, now=NOW)
+    assert row.weekly_xp == 10
+    row = await repo.record_message(guild_id=GUILD_ID, discord_id=100, xp_gain=5, now=NOW)
+    assert row.weekly_xp == 15
+
+
+async def test_list_top_weekly_orders_by_weekly_xp_and_excludes_zero(
+    session: AsyncSession,
+) -> None:
+    repo = ChatActivityRepository(session)
+    await repo.record_message(guild_id=GUILD_ID, discord_id=1, xp_gain=10, now=NOW)
+    await repo.record_message(guild_id=GUILD_ID, discord_id=2, xp_gain=50, now=NOW)
+    await repo.get_or_create(guild_id=GUILD_ID, discord_id=3)  # never talked — weekly_xp stays 0
+
+    top = await repo.list_top_weekly(GUILD_ID, limit=10)
+    assert [row.discord_id for row in top] == [2, 1]
+
+
+async def test_reset_weekly_zeroes_weekly_xp_but_not_xp(session: AsyncSession) -> None:
+    repo = ChatActivityRepository(session)
+    await repo.record_message(guild_id=GUILD_ID, discord_id=1, xp_gain=10, now=NOW)
+    await repo.record_message(guild_id=2, discord_id=1, xp_gain=99, now=NOW)  # other guild
+
+    await repo.reset_weekly(GUILD_ID)
+
+    row = await repo.get(guild_id=GUILD_ID, discord_id=1)
+    assert row is not None
+    assert row.weekly_xp == 0
+    assert row.xp == 10  # all-time total untouched
+
+    other_guild_row = await repo.get(guild_id=2, discord_id=1)
+    assert other_guild_row is not None
+    assert other_guild_row.weekly_xp == 99  # a different guild's counter is untouched

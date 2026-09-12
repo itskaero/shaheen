@@ -28,6 +28,8 @@ from bot.content.engagement_embeds import (
     build_chatboard_embed,
     build_level_embed,
     build_level_up_embed,
+    build_suggestion_confirmation_embed,
+    build_suggestion_embed,
 )
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
@@ -45,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 _WELCOME_KEY = "channel:welcome"
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
+_SUGGESTIONS_KEY = "channel:suggestions"
+_SUGGESTION_VOTES = ("👍", "👎")
 
 
 class EngagementCog(commands.Cog):
@@ -148,6 +152,35 @@ class EngagementCog(commands.Cog):
             entries.append((name, level_for_xp(row.xp), row.xp))
 
         await interaction.followup.send(embed=build_chatboard_embed(entries), ephemeral=True)
+
+    # --- /suggest --------------------------------------------------------------
+
+    @app_commands.command(
+        name="suggest", description="Anonymously suggest something for the clan"
+    )
+    @app_commands.describe(text="Your suggestion")
+    async def suggest(self, interaction: discord.Interaction, text: str) -> None:
+        if interaction.guild is None:
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        await interaction.response.defer(ephemeral=True)
+
+        channel = await resolve_provisioned_channel(self.bot, interaction.guild, _SUGGESTIONS_KEY)
+        if channel is None:
+            raise ShaheenError(
+                "The suggestions channel isn't set up yet — ask staff to run /setup."
+            )
+
+        try:
+            message = await channel.send(embed=build_suggestion_embed(text))
+            for emoji in _SUGGESTION_VOTES:
+                await message.add_reaction(emoji)
+        except discord.Forbidden as exc:
+            raise ShaheenError("Missing permission to post in the suggestions channel.") from exc
+
+        await interaction.followup.send(
+            embed=build_suggestion_confirmation_embed(channel_mention=channel.mention),
+            ephemeral=True,
+        )
 
     # --- welcome / leave -------------------------------------------------------
 

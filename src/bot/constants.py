@@ -124,6 +124,16 @@ ROLE_GUEST = RoleSpec(
     hoist=False,
 )
 
+# Purely cosmetic, system-rotated weekly by ClanCog's digest loop — never
+# self-assigned, not part of the rank ladder or VERIFIED_ROLES (docs/
+# DECISIONS.md ADR-070). Held by at most one member at a time.
+ROLE_MVP = RoleSpec(
+    logical_key="role:mvp_of_the_week",
+    name="🌟 MVP of the Week",
+    color=GOLD,
+    hoist=True,
+)
+
 # --- Self-assignable roles (opt-in pings/tags, not clan rank) ---------------
 #
 # Deliberately separate from the rank ladder above: these carry no
@@ -197,6 +207,7 @@ ROLES: tuple[RoleSpec, ...] = (
     ROLE_TRIAL,
     ROLE_ALLY,
     ROLE_GUEST,
+    ROLE_MVP,
     *SELF_ASSIGN_ROLES,
 )
 
@@ -257,6 +268,13 @@ CATEGORIES: tuple[CategorySpec, ...] = (
                 "🦅-clan-info",
                 "text",
                 topic="About Shaheen. | شاہین کے بارے میں۔",
+            ),
+            ChannelSpec(
+                "channel:suggestions",
+                "💡-suggestions",
+                "text",
+                topic="Suggest anything for the clan — posted anonymously via /suggest. | "
+                "کلان کے لیے کوئی بھی تجویز — /suggest کے ذریعے گمنام طور پر پوسٹ کریں۔",
             ),
         ),
     ),

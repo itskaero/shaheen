@@ -40,3 +40,19 @@ def build_level_up_embed(*, mention: str, level: int) -> discord.Embed:
         description=f"{mention} reached **Level {level}** — *{rank_title_for_level(level)}*!",
         colour=GOLD,
     )
+
+
+def build_suggestion_embed(text: str) -> discord.Embed:
+    """Deliberately carries no author info — /suggest posts anonymously
+    (docs/DECISIONS.md ADR-070).
+    """
+    return discord.Embed(title="💡 New Suggestion", description=text, colour=GOLD)
+
+
+def build_suggestion_confirmation_embed(*, channel_mention: str) -> discord.Embed:
+    return discord.Embed(
+        title="✅ Suggestion Posted",
+        description=f"Your suggestion was posted anonymously to {channel_mention} — nobody can "
+        "see it came from you.",
+        colour=GOLD,
+    )

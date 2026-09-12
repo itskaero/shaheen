@@ -24,6 +24,11 @@ Guest and is not part of this hierarchy: no permissions, not staff-
 assigned, members toggle them themselves via the panel `/setup run
 mode:launch` posts to #roles.
 
+🌟 MVP of the Week (`bot.constants.ROLE_MVP`) is also outside this
+hierarchy — purely cosmetic, no permissions, held by at most one member at
+a time, and rotated automatically by `ClanCog`'s weekly digest job rather
+than self-assigned or staff-assigned (docs/DECISIONS.md ADR-070).
+
 ## Per-channel send permissions
 
 Beyond the category-level visibility overwrites (restricted categories
@@ -89,7 +94,8 @@ hidden from everyone but `ROLES_WITH_STAFF_ACCESS` (docs/DECISIONS.md
 ADR-065).
 
 `/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`, `/timeout`,
-`/purge`, `/verify` (`bot/cogs/moderation.py`) all require
+`/purge`, `/verify` (`bot/cogs/moderation.py`), and `/spotlight`
+(`bot/cogs/clan.py`, docs/DECISIONS.md ADR-070) all require
 `require_staff_authorized()` — the same check `/setup` uses: a server
 administrator, or a member holding Leader or Moderator. This gates who can
 *invoke* the command; it does not grant the bot itself any Discord
