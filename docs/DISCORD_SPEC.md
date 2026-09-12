@@ -18,6 +18,10 @@ skipped.
 ### 🏯 SHAHEEN HQ
 Urdu: شاہین مرکز
 
+Deliberately ungated (docs/DECISIONS.md ADR-069) — a brand-new, unverified
+Guest still needs somewhere to read the rules and find `#roles` before staff
+can `/verify` them.
+
 - 📢 announcements
 - 👋 welcome
 - 📜 rules
@@ -27,6 +31,9 @@ Urdu: شاہین مرکز
 ### 🪹 THE NEST
 Urdu: آشیانہ
 
+Gated (docs/DECISIONS.md ADR-069) — hidden from `@everyone` and Guest until
+a staff member runs `/verify`.
+
 - 💬 general
 - 🇵🇰 pakistan-chat
 - 😂 memes
@@ -34,6 +41,8 @@ Urdu: آشیانہ
 
 ### ⚔️ BRAWLHALLA
 Urdu: میدانِ براولہلا
+
+Gated (docs/DECISIONS.md ADR-069) — same as THE NEST.
 
 - 🎮 brawlhalla
 - 🧠 tips-guides
@@ -54,6 +63,8 @@ Initially hidden/disabled from public users until there is a need.
 
 ### 🎙️ VOICE
 Urdu: آواز
+
+Gated (docs/DECISIONS.md ADR-069) — same as THE NEST.
 
 - 🔊 The Nest
 - 🎮 Gaming

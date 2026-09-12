@@ -33,6 +33,29 @@ hidden from everyone but staff), individual channels can restrict who can
 everything else here is (docs/DECISIONS.md ADR-060). Currently only
 `#announcements`: everyone can read it, only Leader/Moderator can post.
 
+## Manual verification gate
+
+`CategorySpec.gated` (`bot/constants.py`, docs/DECISIONS.md ADR-069) — the
+same shape as `restricted`, inverted: hidden from `@everyone` **and** Guest
+(the role auto-assigned on join, ADR-065), visible to every other rank role
+(`VERIFIED_ROLES` = everything except Guest). Currently THE NEST, BRAWLHALLA,
+and VOICE. SHAHEEN HQ (`#welcome`/`#rules`/`#roles`/`#clan-info`/
+`#announcements`) is deliberately **not** gated — a brand-new Guest needs
+somewhere to read the rules before they can be verified.
+
+A staff member runs `/verify <member>` (`bot/cogs/moderation.py`) to promote
+a Guest to Ally, which is what actually grants access to the gated
+categories — mirrors the existing Guest→Trial Shaheen promotion `/link`
+already does (`LinkCog._maybe_promote`), just staff-triggered instead of
+Brawlhalla-link-triggered. Idempotent: running it on an already-ranked
+member is a no-op, not an error.
+
+`/setup run` now always reconciles every channel/category's overwrites —
+including clearing them back to "none" — instead of only touching the ones
+with a special (`restricted`/`gated`/`staff_only_send`) spec. A manually
+added overwrite anywhere the bot manages gets corrected back on the next
+`/setup run`, matching ADR-060's original idempotent-repair promise.
+
 ## General principles
 
 - Use least privilege.
@@ -66,7 +89,7 @@ hidden from everyone but `ROLES_WITH_STAFF_ACCESS` (docs/DECISIONS.md
 ADR-065).
 
 `/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`, `/timeout`,
-`/purge` (`bot/cogs/moderation.py`) all require
+`/purge`, `/verify` (`bot/cogs/moderation.py`) all require
 `require_staff_authorized()` — the same check `/setup` uses: a server
 administrator, or a member holding Leader or Moderator. This gates who can
 *invoke* the command; it does not grant the bot itself any Discord

@@ -1932,3 +1932,60 @@ detection, `tier_index` ordering, `legend_meta` aggregation and its games thresh
 tallying both directions/ignoring unconfirmed matches/ignoring third-party matches/zeroing for
 never-played pairs, plus embed-construction tests for all three new builders), `uv run ruff check
 src tests` / `uv run mypy src` clean.
+
+## ADR-069 — A real manual-verification gate, and a permission-drift self-heal fix
+
+Reported bug: `#general`/`#pakistan-chat` were visible even though the server's `@everyone` is
+meant to hide every channel until a member is manually approved. Investigation found two
+distinct, real problems, not one — both fixed here.
+
+**The bot had zero concept of a verification gate.** `CategorySpec.restricted` only ever existed
+for 3 staff-only categories (SHAHEEN ARENA, MODERATION, DEVELOPMENT). SHAHEEN HQ and THE NEST
+(which hold `#general`/`#pakistan-chat`) were never modeled as gated — `/setup` built **no
+overwrite at all** for them, so it couldn't be the source of the bypass, but it also wasn't
+enforcing the intended gate. A new `CategorySpec.gated` field (`bot/constants.py`) mirrors
+`restricted` exactly, inverted: hidden from `@everyone` **and** the auto-assigned-on-join Guest
+role (ADR-065), visible to a new `VERIFIED_ROLES` constant (every rank role except Guest —
+Leader/Moderator/Elite/Shaheen/Trial/Ally). `_category_overwrites` (`setup_service.py`) branches
+on `restricted` vs. `gated` — the two are mutually exclusive by construction, no spec sets both.
+`gated=True` on THE NEST, BRAWLHALLA, and VOICE. **SHAHEEN HQ stays deliberately ungated** — a
+brand-new Guest needs somewhere to read `#welcome`/`#rules`/`#roles` before staff can verify them;
+gating the onboarding category itself would strand new members with nothing to look at.
+
+**A real bug that let any such drift persist forever.** `_apply_categories`/`_apply_channels`
+only called `.edit(overwrites=...)` when the computed overwrite dict was non-empty (`if
+overwrites:` guards). For every channel/category whose spec says "no special overwrite" — which
+was every channel outside the 4 previously-special-cased ones — `/setup run` never called
+`.edit()` at all, so a manually-added overwrite (e.g. one set directly in Discord's UI) could
+never be cleared. This directly contradicted the code's own existing comment ("a manually changed
+permission on Discord's side gets corrected back," ADR-060) and is the actual reason the stray
+overwrite on `#general`/`#pakistan-chat` never self-healed across any number of `/setup run`s.
+Fixed by removing both guards: `.edit(overwrites=...)` is now called unconditionally on every
+non-CREATE pass, even with `{}` — `discord.py`'s `edit(overwrites=...)` fully replaces a channel's
+overwrite set, so this is what actually wipes a stray overwrite instead of silently leaving it.
+Only `/setup run` calls `apply()`; `/setup verify` stays fully read-only (`service.plan()` only),
+so this doesn't change `/setup verify`'s non-destructive contract. Note for the live server: this
+fixes drift going forward, but the *currently-live* stray overwrite on those two channels won't
+clear until `/setup run` is actually re-run against the real guild.
+
+**Manual approval (`/verify <member>`).** Mirrors the *existing* Guest→Trial Shaheen promotion
+`LinkCog._maybe_promote` already does on `/link` (`bot/cogs/link.py`) — same idiom (check for any
+rank role above Guest already held, resolve roles by name via `discord.utils.get`, remove Guest,
+add the target role), opposite trigger (staff command vs. an automatic Brawlhalla-link side
+effect). New in `bot/cogs/moderation.py` — staff commands already live here, all under
+`require_staff_authorized()` — promoting to Ally ("friends of the clan" per `embeds.py`'s
+`build_roles_embed`, already the correct "verified, not yet a clan member" tier — no wording
+changes needed). Not destructive, no `ConfirmView` (same posture as `/warn`); idempotent — running
+it on an already-ranked member replies "already verified" instead of erroring; logs to `#mod-log`
+via the cog's existing `_log()` helper; best-effort DM to the member.
+
+Files: `bot/constants.py` (`CategorySpec.gated`, `VERIFIED_ROLES`, `gated=True` on THE
+NEST/BRAWLHALLA/VOICE), `services/setup_service.py` (`_category_overwrites` gated branch, both
+guard removals), `bot/cogs/moderation.py` (`/verify`), `bot/content/moderation_embeds.py`
+(`build_verify_success_embed`, `build_already_verified_embed`, `build_verify_dm_embed`),
+`docs/PERMISSIONS.md`/`docs/DISCORD_SPEC.md`/`docs/COMMANDS.md`.
+
+Verified: `uv run pytest` (225 passed — new: `_category_overwrites` for gated vs. restricted vs.
+neither, a regression test asserting `_apply_categories`/`_apply_channels` call `.edit()` even
+with an empty overwrite dict, plus embed-construction tests for the three new `/verify` builders),
+`uv run ruff check src tests` / `uv run mypy src` clean.

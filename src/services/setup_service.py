@@ -16,8 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.constants import (
     CATEGORIES,
+    ROLE_GUEST,
     ROLES,
     ROLES_WITH_STAFF_ACCESS,
+    VERIFIED_ROLES,
     CategorySpec,
     ChannelSpec,
 )
@@ -340,10 +342,13 @@ class SetupService:
                             await resolved_category.edit(
                                 name=spec.name, reason="Shaheen /setup (repair)"
                             )
-                        if overwrites:
-                            await resolved_category.edit(
-                                overwrites=overwrites, reason="Shaheen /setup"
-                            )
+                        # Always reconciled — even an empty dict here is a
+                        # meaningful "no overwrites should exist," and
+                        # discord.py's edit(overwrites=...) fully replaces
+                        # the category's overwrite set, so this is what
+                        # clears a stray manual overwrite instead of
+                        # silently leaving it (docs/DECISIONS.md ADR-069).
+                        await resolved_category.edit(overwrites=overwrites, reason="Shaheen /setup")
 
                 category_by_key[spec.logical_key] = resolved_category
                 await self._remember(ResourceType.CATEGORY, spec.logical_key, resolved_category.id)
@@ -357,16 +362,31 @@ class SetupService:
     def _category_overwrites(
         self, spec: CategorySpec, role_by_key: dict[str, discord.Role]
     ) -> dict[OverwriteTarget, discord.PermissionOverwrite]:
-        if not spec.restricted:
-            return {}
-        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
-            self._guild.default_role: discord.PermissionOverwrite(view_channel=False)
-        }
-        for staff_spec in ROLES_WITH_STAFF_ACCESS:
-            role = role_by_key.get(staff_spec.logical_key)
-            if role is not None:
-                overwrites[role] = discord.PermissionOverwrite(view_channel=True)
-        return overwrites
+        if spec.restricted:
+            overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
+                self._guild.default_role: discord.PermissionOverwrite(view_channel=False)
+            }
+            for staff_spec in ROLES_WITH_STAFF_ACCESS:
+                role = role_by_key.get(staff_spec.logical_key)
+                if role is not None:
+                    overwrites[role] = discord.PermissionOverwrite(view_channel=True)
+            return overwrites
+        if spec.gated:
+            # Hidden from @everyone AND Guest; visible to every other rank
+            # role once a member is manually verified — docs/DECISIONS.md
+            # ADR-069.
+            gated_overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
+                self._guild.default_role: discord.PermissionOverwrite(view_channel=False)
+            }
+            guest_role = role_by_key.get(ROLE_GUEST.logical_key)
+            if guest_role is not None:
+                gated_overwrites[guest_role] = discord.PermissionOverwrite(view_channel=False)
+            for verified_spec in VERIFIED_ROLES:
+                role = role_by_key.get(verified_spec.logical_key)
+                if role is not None:
+                    gated_overwrites[role] = discord.PermissionOverwrite(view_channel=True)
+            return gated_overwrites
+        return {}
 
     async def _apply_channels(
         self,
@@ -424,10 +444,14 @@ class SetupService:
                     # Re-applied every non-recreate pass too (not just on
                     # REPAIR), same as _category_overwrites — a manually
                     # changed permission on Discord's side gets corrected
-                    # back, not just left drifted (docs/DECISIONS.md ADR-060).
-                    if overwrites and isinstance(
-                        resolved_channel, discord.TextChannel | discord.VoiceChannel
-                    ):
+                    # back, not just left drifted (docs/DECISIONS.md
+                    # ADR-060/ADR-069). Always called, even with an empty
+                    # dict: discord.py's edit(overwrites=...) fully replaces
+                    # the channel's overwrite set, so this is what actually
+                    # clears a stray manual overwrite (e.g. one added
+                    # directly in Discord's UI) instead of leaving it in
+                    # place forever.
+                    if isinstance(resolved_channel, discord.TextChannel | discord.VoiceChannel):
                         await resolved_channel.edit(overwrites=overwrites, reason="Shaheen /setup")
 
                 await self._remember(ResourceType.CHANNEL, spec.logical_key, resolved_channel.id)

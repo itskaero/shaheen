@@ -50,6 +50,11 @@ class CategorySpec:
     channels: tuple[ChannelSpec, ...]
     # Restricted categories are hidden from @everyone; only ROLES_WITH_STAFF_ACCESS can see them.
     restricted: bool = False
+    # Gated categories are hidden from @everyone AND Guest; visible to every
+    # other rank role (VERIFIED_ROLES) once a member is manually verified —
+    # docs/DECISIONS.md ADR-069, docs/PERMISSIONS.md. Mutually exclusive with
+    # `restricted`: a category is either staff-only or verified-only, never both.
+    gated: bool = False
 
 
 # --- Roles, highest to lowest (docs/PERMISSIONS.md) -------------------------
@@ -200,6 +205,19 @@ ROLES: tuple[RoleSpec, ...] = (
 # bot/checks/permissions.py.
 ROLES_WITH_STAFF_ACCESS: tuple[RoleSpec, ...] = (ROLE_LEADER, ROLE_MODERATOR)
 
+# Roles authorized to see gated categories — every rank role except Guest,
+# i.e. everyone who has been manually verified (docs/DECISIONS.md ADR-069).
+# Guest is deliberately excluded even though it's a rank role: it's the
+# auto-assigned, not-yet-verified state a new member starts in.
+VERIFIED_ROLES: tuple[RoleSpec, ...] = (
+    ROLE_LEADER,
+    ROLE_MODERATOR,
+    ROLE_ELITE,
+    ROLE_SHAHEEN,
+    ROLE_TRIAL,
+    ROLE_ALLY,
+)
+
 
 # --- Categories & channels (docs/DISCORD_SPEC.md) ---------------------------
 
@@ -245,6 +263,7 @@ CATEGORIES: tuple[CategorySpec, ...] = (
     CategorySpec(
         logical_key="category:the_nest",
         name="🪹 THE NEST",
+        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
         channels=(
             ChannelSpec(
                 "channel:general",
@@ -275,6 +294,7 @@ CATEGORIES: tuple[CategorySpec, ...] = (
     CategorySpec(
         logical_key="category:brawlhalla",
         name="⚔️ BRAWLHALLA",
+        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
         channels=(
             ChannelSpec(
                 "channel:brawlhalla",
@@ -348,6 +368,7 @@ CATEGORIES: tuple[CategorySpec, ...] = (
     CategorySpec(
         logical_key="category:voice",
         name="🎙️ VOICE",
+        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
         channels=(
             ChannelSpec("channel:voice_the_nest", "🔊-the-nest", "voice"),
             ChannelSpec("channel:voice_gaming", "🎮-gaming", "voice"),
