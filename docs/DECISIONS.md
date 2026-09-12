@@ -1827,3 +1827,53 @@ disables every animation. Data-dependent pages (clan/leaderboard/tournaments) co
 showed the site's existing "failed to fetch" error state rather than breaking, since this
 sandbox's egress proxy can't reach the live Render-hosted API — a sandbox network
 limitation, not a defect in this change.
+
+## ADR-067 — `/profile` finished absorbing chat gamification, achievements, and unused API data
+
+Decision: fix `/profile`'s "doesn't show much info" gap (owner report) by finishing what its own
+docstring already claimed it was — "the one-look profile card" — rather than adding new data
+sources. Read the actual implementation rather than trusting the docs: `build_profile_embed`
+showed exactly six fields (Brawlhalla name/level, games/wins/win-rate, member-since, tier/
+rating/peak, global rank, region), while `region_rank` was fetched from the Brawlhalla API on
+every call and discarded, achievements were fully built (`/achievements`, a 5-entry catalog,
+awarded and announced) but never mentioned on `/profile`, chat level/rank (ADR-065) lived only in
+the separate `/level` command, and per-legend `damagedealt`/`falls` were already in the API
+response `/legends` receives but never displayed (the website's equivalent view already showed
+them, per ADR-066). None of this needed a new fetch, a new table, or a migration — every field
+was already sitting somewhere in the system, just not assembled.
+
+**`bot/content/profile_embeds.py`**: `build_profile_embed` gained two new parameters —
+`chat_activity: ChatActivity | None` and `achievements: list[tuple[Achievement, datetime]]` —
+plus a `Region Rank` field next to the existing `Global Rank` (from `ranked.region_rank`, already
+on `PlayerRankedResponse`). Chat rank is derived live via
+`services.chat_gamification.level_for_xp(chat_activity.xp)`, never read from `ChatActivity`'s
+stored `level` column — same staleness rule established in ADR-065/066 (`bot/cogs/engagement.py`'s
+`/level`, `website_service.py`'s `get_community_activity`), since that column only updates on a
+detected level-up and can drift from `xp` between messages. Achievements show a count plus the
+latest up to 3 by name. A new `Full Profile` field links to the website's `player.html?id=...` —
+what a Discord embed can't show at all (the rating-history trend chart, full match history) —
+using a small `_WEBSITE_BASE_URL` constant (GitHub Pages' default project-site URL for this repo,
+no CNAME configured) rather than adding a new required env var just for one footer link;
+Discord embed footers are plain text with no clickable links anyway, so the URL lives in a
+regular field instead, which does support markdown links. `build_legends_embed` now includes
+`damagedealt`/`falls` per Legend row, pulled straight from the `LegendStat` objects `/legends`
+already fetches from the live API — no DB round trip needed, unlike the website's version which
+reads them from the persisted `LegendSnapshot`.
+
+**`src/services/profile_service.py`**: `ProfileService` now takes the `AsyncSession` directly
+(alongside the existing `LinkService`/`BrawlhallaService`) so it can construct
+`ChatActivityRepository`/`MemberAchievementRepository` itself, mirroring how every other service
+in this codebase holds its own session-scoped repositories. Two new read-only methods,
+`get_chat_activity` and `get_achievements`, both thin wrappers around existing repository calls —
+the same ones `/level` and `/achievements` already use.
+
+**`bot/cogs/profile.py`**: all four `ProfileService(...)` construction sites updated for the new
+constructor signature; `/profile`'s handler fetches chat activity and achievements alongside the
+existing stats/ranked calls and passes them through.
+
+Verified: `uv run pytest` (198 passed, including new `tests/test_profile_embeds.py` — region rank
+present/absent, chat rank derived live from xp rather than a deliberately-stale stored `level`
+column, achievement count/names, the website link, and legend damage/falls), `uv run ruff check
+src tests` / `uv run mypy src` clean. No live-Discord test harness exists in this repo (consistent
+with every prior round), so the embed builders — pure functions given already-fetched data — are
+exercised directly instead, the same pattern used throughout this project's test suite.
