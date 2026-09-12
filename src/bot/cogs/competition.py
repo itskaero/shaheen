@@ -29,6 +29,7 @@ from bot.content.competition_embeds import (
     build_match_history_embed,
     build_report_outcome_embed,
     build_report_preview_embed,
+    build_rivalry_embed,
     build_scrim_embed,
     build_scrim_full_embed,
     build_tournament_created_embed,
@@ -198,6 +199,34 @@ class CompetitionCog(commands.Cog):
             )
 
         embed = build_match_history_embed(display_name=target.display_name, matches=history)
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(
+        name="rivalry", description="Show the head-to-head record between two clan members"
+    )
+    @app_commands.describe(member_a="First member", member_b="Second member")
+    async def rivalry(
+        self, interaction: discord.Interaction, member_a: discord.Member, member_b: discord.Member
+    ) -> None:
+        _require_member(interaction)
+        if member_a.id == member_b.id:
+            raise ShaheenError("Pick two different members.")
+        if interaction.guild is None:
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        await interaction.response.defer(ephemeral=True)
+
+        async with session_scope(self.bot.session_factory) as session:
+            result = await MatchService(session).head_to_head(
+                guild_id=interaction.guild.id, discord_id_a=member_a.id, discord_id_b=member_b.id
+            )
+
+        embed = build_rivalry_embed(
+            name_a=member_a.display_name,
+            name_b=member_b.display_name,
+            member_a_wins=result.member_a_wins,
+            member_b_wins=result.member_b_wins,
+            total_matches=result.total_matches,
+        )
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     # --- /match -----------------------------------------------------------

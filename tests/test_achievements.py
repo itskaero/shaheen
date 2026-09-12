@@ -9,7 +9,21 @@ from services.achievements import (
     TIER_PLATINUM,
     evaluate_snapshot_achievements,
     tier_at_least,
+    tier_index,
 )
+
+
+def test_tier_index_orders_families_low_to_high() -> None:
+    assert tier_index("Gold I") < tier_index("Platinum III")
+    assert tier_index("Platinum I") < tier_index("Diamond I")
+
+
+def test_tier_index_same_within_a_family() -> None:
+    assert tier_index("Gold I") == tier_index("Gold III")
+
+
+def test_tier_index_none_for_unrecognized_tier() -> None:
+    assert tier_index("Some New Tier Name") is None
 
 
 def test_tier_at_least_matches_exact_and_prefixed_names() -> None:

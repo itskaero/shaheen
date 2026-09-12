@@ -37,6 +37,13 @@ class ScrimJoinResult:
     side_counts: tuple[int, int]  # (side A, side B) after this join
 
 
+@dataclass
+class RivalryResult:
+    member_a_wins: int
+    member_b_wins: int
+    total_matches: int
+
+
 class MatchService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -287,3 +294,38 @@ class MatchService:
     ) -> list[Match]:
         member_id = await self._member_id(guild_id=guild_id, discord_id=discord_id)
         return await self._matches.list_recent_for_member(member_id, limit=limit)
+
+    async def _find_member_id(self, *, guild_id: int, discord_id: int) -> int | None:
+        """Read-only counterpart to _member_id — never creates a row.
+        head_to_head is a pure stat lookup; a member who has never
+        interacted with the bot genuinely has zero matches, so there's no
+        reason to create a DiscordUser/ShaheenMember row as a side effect
+        of someone else checking a rivalry (docs/DECISIONS.md ADR-068).
+        """
+        discord_user = await self._discord_users.get_by_discord_id(discord_id)
+        if discord_user is None:
+            return None
+        member = await self._members.get(discord_user_id=discord_user.id, guild_id=guild_id)
+        return member.id if member is not None else None
+
+    async def head_to_head(
+        self, *, guild_id: int, discord_id_a: int, discord_id_b: int
+    ) -> RivalryResult:
+        """Confirmed-match win/loss record between two clan members, from
+        Shaheen's own tracked matches — no Brawlhalla API involvement
+        (docs/DECISIONS.md ADR-068). Zeroed out if either member has never
+        played a tracked match here.
+        """
+        member_a_id = await self._find_member_id(guild_id=guild_id, discord_id=discord_id_a)
+        member_b_id = await self._find_member_id(guild_id=guild_id, discord_id=discord_id_b)
+        if member_a_id is None or member_b_id is None:
+            return RivalryResult(member_a_wins=0, member_b_wins=0, total_matches=0)
+
+        rows = await self._matches.head_to_head(member_a_id, member_b_id)
+        member_a_wins = sum(1 for match, side in rows if match.winning_side == side)
+        total = len(rows)
+        return RivalryResult(
+            member_a_wins=member_a_wins,
+            member_b_wins=total - member_a_wins,
+            total_matches=total,
+        )

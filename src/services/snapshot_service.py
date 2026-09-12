@@ -26,9 +26,16 @@ from database.repositories.member_player_link_repository import MemberPlayerLink
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError
 from integrations.brawlhalla.service import BrawlhallaService
-from services.achievements import AchievementDef, evaluate_snapshot_achievements
+from services.achievements import AchievementDef, evaluate_snapshot_achievements, tier_index
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TierChange:
+    old_tier: str
+    new_tier: str
+    promoted: bool
 
 
 @dataclass
@@ -38,6 +45,7 @@ class Announcement:
     discord_id: int
     achievement: AchievementDef | None = None
     new_peak_rating: int | None = None
+    tier_change: TierChange | None = None
 
 
 @dataclass
@@ -138,6 +146,33 @@ class SnapshotService:
                     new_peak_rating=ranked.peak_rating,
                 )
             )
+
+        if (
+            ranked is not None
+            and ranked.tier is not None
+            and previous is not None
+            and previous.tier is not None
+        ):
+            old_index = tier_index(previous.tier)
+            new_index = tier_index(ranked.tier)
+            # Family-level only (Gold/Platinum/...), not sub-ranks (I/II/
+            # III) — same granularity achievements.py's tier_at_least
+            # already uses, and fails open (no announcement) on either
+            # tier string being unrecognized rather than guessing a
+            # direction.
+            if old_index is not None and new_index is not None and old_index != new_index:
+                result.announcements.append(
+                    Announcement(
+                        member=member,
+                        player=player,
+                        discord_id=discord_id,
+                        tier_change=TierChange(
+                            old_tier=previous.tier,
+                            new_tier=ranked.tier,
+                            promoted=new_index > old_index,
+                        ),
+                    )
+                )
 
         await self._award_achievements(
             member, player, discord_id, stats.games, ranked.tier if ranked else None, result

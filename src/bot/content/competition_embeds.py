@@ -121,6 +121,23 @@ def build_match_history_embed(*, display_name: str, matches: list[Match]) -> dis
     return embed
 
 
+def build_rivalry_embed(
+    *, name_a: str, name_b: str, member_a_wins: int, member_b_wins: int, total_matches: int
+) -> discord.Embed:
+    """docs/DECISIONS.md ADR-068 — head-to-head record from Shaheen's own
+    tracked matches, purely internal, no Brawlhalla API involvement.
+    """
+    embed = discord.Embed(title=f"⚔️ {name_a} vs {name_b}", colour=GOLD)
+    if total_matches == 0:
+        embed.description = f"**{name_a}** and **{name_b}** haven't played a tracked match yet."
+        return embed
+
+    embed.add_field(name=name_a, value=f"{member_a_wins}W", inline=True)
+    embed.add_field(name=name_b, value=f"{member_b_wins}W", inline=True)
+    embed.set_footer(text=f"{total_matches} confirmed match(es) between them")
+    return embed
+
+
 def build_tournament_created_embed(*, tournament: Tournament) -> discord.Embed:
     return discord.Embed(
         title=f"🏆 {tournament.name}",

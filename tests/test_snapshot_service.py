@@ -165,6 +165,70 @@ async def test_run_for_guild_no_milestone_on_first_ever_snapshot(
     assert milestones == []
 
 
+async def test_run_for_guild_detects_tier_promotion(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    await _setup_linked_member(session)
+
+    first_service = SnapshotService(session, _FakeBrawlhalla(tier="Gold I"))  # type: ignore[arg-type]
+    await first_service.run_for_guild(GUILD_ID)
+
+    second_service = SnapshotService(session, _FakeBrawlhalla(tier="Platinum III"))  # type: ignore[arg-type]
+    result = await second_service.run_for_guild(GUILD_ID)
+
+    changes = [a.tier_change for a in result.announcements if a.tier_change is not None]
+    assert len(changes) == 1
+    assert changes[0].old_tier == "Gold I"
+    assert changes[0].new_tier == "Platinum III"
+    assert changes[0].promoted is True
+
+
+async def test_run_for_guild_detects_tier_demotion(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    await _setup_linked_member(session)
+
+    first_service = SnapshotService(session, _FakeBrawlhalla(tier="Diamond I"))  # type: ignore[arg-type]
+    await first_service.run_for_guild(GUILD_ID)
+
+    second_service = SnapshotService(session, _FakeBrawlhalla(tier="Platinum III"))  # type: ignore[arg-type]
+    result = await second_service.run_for_guild(GUILD_ID)
+
+    changes = [a.tier_change for a in result.announcements if a.tier_change is not None]
+    assert len(changes) == 1
+    assert changes[0].promoted is False
+
+
+async def test_run_for_guild_no_tier_change_within_same_family(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Gold I -> Gold III is a sub-rank move, not a family-level tier
+    change — should stay silent (docs/DECISIONS.md ADR-068).
+    """
+    await _setup_linked_member(session)
+
+    first_service = SnapshotService(session, _FakeBrawlhalla(tier="Gold I"))  # type: ignore[arg-type]
+    await first_service.run_for_guild(GUILD_ID)
+
+    second_service = SnapshotService(session, _FakeBrawlhalla(tier="Gold III"))  # type: ignore[arg-type]
+    result = await second_service.run_for_guild(GUILD_ID)
+
+    changes = [a.tier_change for a in result.announcements if a.tier_change is not None]
+    assert changes == []
+
+
+async def test_run_for_guild_no_tier_change_on_first_ever_snapshot(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla(tier="Platinum II"))  # type: ignore[arg-type]
+
+    result = await service.run_for_guild(GUILD_ID)
+
+    changes = [a.tier_change for a in result.announcements if a.tier_change is not None]
+    assert changes == []
+
+
 async def test_snapshot_member_persists_a_single_snapshot(
     session: AsyncSession, achievement_catalog: dict[str, Achievement]
 ) -> None:

@@ -78,6 +78,11 @@ Show earned achievements.
 ### /history [user]
 Show stored rating/history snapshots.
 
+### /legendmeta
+Clan-wide Legend popularity and win rate — every actively-linked member's
+latest per-legend stats aggregated together, filtered to Legends with
+enough combined games to be meaningful (docs/DECISIONS.md ADR-068).
+
 ## Phase 4 — Competition
 
 ### /challenge <user>
@@ -97,6 +102,11 @@ Report a match result.
 
 ### /matches [user]
 Show a Shaheen member's match history.
+
+### /rivalry <member_a> <member_b>
+Head-to-head win/loss record between two clan members, from Shaheen's own
+tracked confirmed matches — no Brawlhalla API involved (docs/DECISIONS.md
+ADR-068).
 
 ### /tournament create <name> <kind>
 Create a tournament (staff only).
