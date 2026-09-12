@@ -2112,3 +2112,43 @@ local `uv run uvicorn` + seeded scratch database via headless Chromium (desktop 
 mobile widths): roster correctly shows a `—` row for an unranked member instead of omitting it;
 the achievement gallery correctly dims zero-holder achievements and shows accurate completion
 percentages; nav links resolve correctly from every page.
+
+## ADR-072 — Channels now carry an explicit copy of their category's gate/restriction
+
+Reported: after ADR-069's gate shipped and `/setup run` was re-run on the live server, newly
+created channels still showed no permission restriction. ADR-069's design relied entirely on
+Discord's own category→channel permission cascade: `_category_overwrites` set the deny/allow on
+the *category* (THE NEST/BRAWLHALLA/VOICE/the 3 `restricted` categories), while every child
+channel was created or reconciled with an *empty* overwrite dict, trusting Discord to apply the
+category's overwrite to any channel with no overwrites of its own. That cascade is real — but
+Discord's own client never actually relies on it silently: when a channel is created inside a
+category through the Discord app, the client explicitly **copies** the category's current
+overwrites onto the new channel ("Permissions Synced"), rather than leaving it with an empty
+overwrite list and trusting the cascade. Given a live report that channels weren't ending up
+restricted, the safer, verifiable fix is to do the same thing Discord's own client does —
+stop relying on cross-level inheritance holding for every code path, and copy the overwrite down
+explicitly ourselves.
+
+`_channel_overwrites` (`setup_service.py`) now takes the parent `CategorySpec` alongside the
+channel's own spec: it starts from `_category_overwrites(parent, role_by_key)` — copying each
+`PermissionOverwrite` via `.pair()`/`.from_pair()` so the channel gets independent objects, not
+shared references that a later `staff_only_send` edit could corrupt — then layers `staff_only_send`
+on top via `.update()` (which sets one flag without clobbering ones already copied from the
+parent, e.g. a channel that's both gated *and* staff-only-send keeps the parent's `view_channel`
+grants while adding its own `send_messages` restriction). `_apply_channels` builds a
+`category_spec_by_key` lookup from `bot.constants.CATEGORIES` to resolve each channel's parent
+spec by its `category_logical_key`. Every channel in THE NEST/BRAWLHALLA/VOICE (and the 3
+`restricted` categories) now gets its own explicit copy of the gate on every `/setup run` —
+including at creation time for a brand-new channel, not just reconciled after the fact.
+
+Files: `services/setup_service.py` (`_channel_overwrites` signature + body, `_apply_channels`'
+`category_spec_by_key` lookup).
+
+Verified: `uv run pytest` (260 passed — 6 new: a channel copies a gated/restricted parent's
+overwrite, no parent + not staff_only_send stays empty (regression, matches prior behavior),
+staff_only_send layers over a gated parent without losing its view_channel grants, the copies are
+independent objects rather than shared references, and an end-to-end test using the real
+`channel:general`/`category:the_nest` specs from `bot/constants.py` confirming `.edit()` is
+called with the correct gate applied), `uv run ruff check src tests` / `uv run mypy src` clean.
+Note: this — like ADR-069's own fix — only takes effect once `/setup run` is actually re-run
+against the live server; the currently-live channels won't self-correct until then.
