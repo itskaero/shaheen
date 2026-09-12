@@ -2051,3 +2051,64 @@ weekly-XP ranking vs. all-time XP, confirmed-match counting, MVP priority/fallba
 weekly-XP reset-after-read, plus embed-construction tests for all five new builders), `uv run ruff
 check src tests` / `uv run mypy src` clean, a scratch-database `alembic upgrade head` confirming
 migration 0006 applies cleanly on top of 0001-0005.
+
+## ADR-071 — Full clan roster page + achievement gallery (Part D)
+
+Decision: build the two website-side companions named in ADR-067's Part D roadmap — a full
+roster page (every actively-linked member, not `/leaderboard`'s top-N) and an achievement
+gallery (clan-wide completion stats, including achievements nobody's earned yet). Neither had
+backend support: `get_leaderboard` caps at 100 and silently drops any unranked member, and no
+method anywhere queried achievements clan-wide (`MemberAchievementRepository` is strictly
+per-member; the catalog reader `AchievementRepository` wasn't even wired into `WebsiteService`).
+
+**Roster.** New `WebsiteService.get_roster`/`RosterEntry` — the same `list_active_for_guild`
+loop `get_leaderboard`/`get_community_activity` already use, but keeping every member
+(`snapshot=None` instead of dropping them) and taking no `limit`, since "everyone" is the whole
+point. `RosterEntry` also carries `joined_at` straight off `ShaheenMember` — already fetched by
+`list_active_for_guild`, just unused until now. `GET /roster` (`src/api/routers/roster.py`)
+mirrors `leaderboard.py` exactly, minus the `limit` query param.
+
+**Achievement gallery.** New `WebsiteService.get_achievement_gallery`/`AchievementGalleryEntry` —
+same "loop the small set of linked members in Python" shape `ClanService.legend_meta` already
+uses rather than a SQL aggregate. Starts from the full catalog (`AchievementRepository.list_all`,
+newly added to `WebsiteService.__init__`) so a zero-holder achievement still gets an entry, then
+tallies `MemberAchievementRepository.list_earned_keys` per linked member into a holder count.
+`completion_pct` is a computed property, not a stored field — `LegendMetaEntry.win_rate` is the
+direct precedent. Catalog order, not sorted by rarity: a gallery reads as a fixed checklist, not
+a leaderboard. `GET /achievements` (`src/api/routers/achievements.py`) mirrors `clan.py`'s
+zero-param shape.
+
+Both stay inside ADR-040's identity boundary for free — `list_active_for_guild`'s `discord_id` is
+discarded (`_discord_id`) exactly like every other method in this service.
+
+**Frontend.** `web/roster.html`/`web/achievements.html` clone `web/leaderboard.html`'s shell
+verbatim (this repo has no templating system — every page hand-repeats header/ticker/banner/
+footer/script-tags on purpose, so matching that is the correct move, not a shortcut).
+`pages/roster.js` is `pages/leaderboard.js`'s table almost unchanged, plus a Member Since column
+and `—` instead of a dropped row for unranked members. `pages/achievements.js` renders a
+`.achievement-grid` of cards — the existing gold `.badge-icon` circle plus name/description/
+progress-bar (`.legend-bar-track`/`.legend-bar-fill`, reused from the Community Activity
+progress bars, not reinvented) — with one small new CSS block (`.achievement-grid`/
+`.achievement-card`, only existing custom properties, no new tokens) since nothing existing was
+quite this shape. A zero-holder achievement gets a dimmed/greyscale card so the gallery reads as
+"earned vs. not" at a glance. Both new links were added to every existing page's identical
+copy-pasted nav block (`web/*.html`, one line added twice each) — same as every prior page
+addition to this site.
+
+Files: `services/website_service.py` (`RosterEntry`, `get_roster`, `AchievementGalleryEntry`,
+`get_achievement_gallery`), `api/schemas.py` (`RosterEntryResponse`,
+`AchievementGalleryEntryResponse`), `api/routers/roster.py`, `api/routers/achievements.py` (new,
+registered in `api/app.py`), `web/roster.html`, `web/achievements.html`,
+`web/assets/js/pages/roster.js`, `web/assets/js/pages/achievements.js` (new),
+`web/assets/js/api.js` (`getRoster`, `getAchievements`), `web/assets/css/style.css`
+(`.achievement-grid`/`.achievement-card`), every existing `web/*.html`'s nav block.
+
+Verified: `uv run pytest` (254 passed — 11 new: roster includes unranked members/orders ranked
+members first/carries member_since/empty-guild case, achievement gallery includes zero-holder
+achievements/counts holders and completion_pct/handles zero-members without a division-by-zero,
+plus `TestClient` integration tests for both new routes including the ADR-040 identity-boundary
+check), `uv run ruff check src tests` / `uv run mypy src` clean. Both pages verified against a
+local `uv run uvicorn` + seeded scratch database via headless Chromium (desktop and ~400px
+mobile widths): roster correctly shows a `—` row for an unranked member instead of omitting it;
+the achievement gallery correctly dims zero-holder achievements and shows accurate completion
+percentages; nav links resolve correctly from every page.

@@ -18,11 +18,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from api.app import app
 from api.dependencies import get_session, get_settings
 from core.config import Settings
+from database.models.achievement import Achievement
 from database.models.match import MatchKind, MatchSide
 from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.match_repository import MatchRepository
+from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
@@ -30,6 +32,7 @@ from database.repositories.tournament_repository import (
     TournamentEntrantRepository,
     TournamentRepository,
 )
+from services.achievements import CATALOG
 
 GUILD_ID = 1
 
@@ -93,6 +96,19 @@ def test_clan_endpoint(client: TestClient) -> None:
 
 def test_leaderboard_empty(client: TestClient) -> None:
     response = client.get("/leaderboard")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_roster_empty(client: TestClient) -> None:
+    response = client.get("/roster")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_achievements_empty_catalog(client: TestClient) -> None:
+    # No achievements seeded — the catalog itself is empty in a fresh test DB.
+    response = client.get("/achievements")
     assert response.status_code == 200
     assert response.json() == []
 
@@ -236,3 +252,65 @@ async def test_player_matches_and_tournament_bracket_reflect_seeded_data(
     assert bracket["tournament"]["name"] == "Winter Cup"
     (entrant,) = bracket["entrants"]
     assert entrant["names"] == ["Foo"]
+
+
+async def test_roster_includes_unranked_member_unlike_leaderboard(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        # Ranked member (via the shared helper) plus a second, never-snapshotted one.
+        await _seed_linked_player(session)
+        users = DiscordUserRepository(session)
+        members = ShaheenMemberRepository(session)
+        players = BrawlhallaPlayerRepository(session)
+        links = MemberPlayerLinkRepository(session)
+        user = await users.get_or_create(2)
+        member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
+        player = await players.upsert(brawlhalla_player_id=20, player_name="Bar", region=None)
+        await links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
+        await session.commit()
+
+    response = client.get("/roster")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2  # /leaderboard would have dropped the unranked one
+    names = {entry["player_name"] for entry in body}
+    assert names == {"Foo", "Bar"}
+    unranked = next(entry for entry in body if entry["player_name"] == "Bar")
+    assert unranked["rating"] is None
+    assert unranked["tier"] is None
+    assert "discord_id" not in unranked  # ADR-040
+
+
+async def test_achievement_gallery_reflects_seeded_catalog_and_awards(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # member with games_100
+        catalog: dict[str, Achievement] = {}
+        for definition in CATALOG:
+            row = Achievement(
+                key=definition.key, name=definition.name, description=definition.description
+            )
+            session.add(row)
+            catalog[definition.key] = row
+        await session.flush()
+
+        users = DiscordUserRepository(session)
+        members = ShaheenMemberRepository(session)
+        user = await users.get_or_create(1)
+        member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
+        await MemberAchievementRepository(session).award(
+            shaheen_member_id=member.id, achievement_id=catalog["games_100"].id
+        )
+        await session.commit()
+
+    response = client.get("/achievements")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == len(CATALOG)  # every catalog entry, not just earned ones
+    by_key = {entry["key"]: entry for entry in body}
+    assert by_key["games_100"]["holder_count"] == 1
+    assert by_key["games_100"]["total_members"] == 1
+    assert by_key["games_100"]["completion_pct"] == 100.0
+    assert by_key["games_500"]["holder_count"] == 0

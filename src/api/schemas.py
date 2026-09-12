@@ -29,11 +29,30 @@ class LeaderboardEntryResponse(BaseModel):
     tier: str | None
 
 
+class RosterEntryResponse(BaseModel):
+    brawlhalla_id: int
+    player_name: str
+    region: str | None
+    rating: int | None
+    peak_rating: int | None
+    tier: str | None
+    member_since: datetime | None
+
+
 class AchievementResponse(BaseModel):
     key: str
     name: str
     description: str
     awarded_at: datetime
+
+
+class AchievementGalleryEntryResponse(BaseModel):
+    key: str
+    name: str
+    description: str
+    holder_count: int
+    total_members: int
+    completion_pct: float
 
 
 class PlayerProfileResponse(BaseModel):

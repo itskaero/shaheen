@@ -17,6 +17,7 @@ from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.match import MatchSide, MatchStatus
 from database.models.ranking_snapshot import RankingSnapshot
+from database.repositories.achievement_repository import AchievementRepository
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.chat_activity_repository import ChatActivityRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
@@ -45,6 +46,18 @@ class ClanInfo:
 class LeaderboardEntry:
     player: BrawlhallaPlayer
     snapshot: RankingSnapshot
+
+
+@dataclass
+class RosterEntry:
+    """Every actively-linked member, unlike LeaderboardEntry — a member with
+    no ranking snapshot yet still gets a row (`snapshot=None`) instead of
+    being dropped (docs/DECISIONS.md ADR-071).
+    """
+
+    player: BrawlhallaPlayer
+    snapshot: RankingSnapshot | None
+    joined_at: datetime | None
 
 
 @dataclass
@@ -123,6 +136,22 @@ class CommunityActivityEntry:
     xp: int
 
 
+@dataclass
+class AchievementGalleryEntry:
+    """Every catalog achievement, including ones nobody's earned yet —
+    unlike PlayerProfile.achievements, which is per-member and only ever
+    lists what that one member holds (docs/DECISIONS.md ADR-071).
+    """
+
+    achievement: Achievement
+    holder_count: int
+    total_members: int
+
+    @property
+    def completion_pct(self) -> float:
+        return (self.holder_count / self.total_members * 100) if self.total_members else 0.0
+
+
 class WebsiteService:
     def __init__(self, session: AsyncSession) -> None:
         self._links = MemberPlayerLinkRepository(session)
@@ -130,6 +159,7 @@ class WebsiteService:
         self._players = BrawlhallaPlayerRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._awards = MemberAchievementRepository(session)
+        self._achievement_catalog = AchievementRepository(session)
         self._legends = LegendSnapshotRepository(session)
         self._matches = MatchRepository(session)
         self._tournaments = TournamentRepository(session)
@@ -152,6 +182,24 @@ class WebsiteService:
             reverse=True,
         )
         return entries[:limit]
+
+    async def get_roster(self, guild_id: int) -> list[RosterEntry]:
+        """Every actively-linked member, unlimited (docs/DECISIONS.md
+        ADR-071) — the full-clan companion to get_leaderboard's top-N view.
+        """
+        entries = [
+            RosterEntry(
+                player=player,
+                snapshot=await self._ranking.get_latest(player.id),
+                joined_at=member.joined_at,
+            )
+            for member, player, _discord_id in await self._links.list_active_for_guild(guild_id)
+        ]
+        entries.sort(
+            key=lambda e: e.snapshot.rating if e.snapshot and e.snapshot.rating is not None else -1,
+            reverse=True,
+        )
+        return entries
 
     async def get_community_activity(
         self, guild_id: int, *, limit: int = 10
@@ -185,6 +233,29 @@ class WebsiteService:
             )
         entries.sort(key=lambda entry: entry.xp, reverse=True)
         return entries[:limit]
+
+    async def get_achievement_gallery(self, guild_id: int) -> list[AchievementGalleryEntry]:
+        """Clan-wide achievement completion, including zero-holder
+        achievements — same "loop the small set of linked members in
+        Python" shape ClanService.legend_meta already uses rather than a
+        SQL aggregate (docs/DECISIONS.md ADR-071). Catalog order, not
+        rarity-sorted — a gallery reads as a fixed checklist.
+        """
+        catalog = await self._achievement_catalog.list_all()
+        linked = await self._links.list_active_for_guild(guild_id)
+        holder_counts: dict[str, int] = {achievement.key: 0 for achievement in catalog}
+        for member, _player, _discord_id in linked:
+            for key in await self._awards.list_earned_keys(member.id):
+                if key in holder_counts:
+                    holder_counts[key] += 1
+        return [
+            AchievementGalleryEntry(
+                achievement=achievement,
+                holder_count=holder_counts[achievement.key],
+                total_members=len(linked),
+            )
+            for achievement in catalog
+        ]
 
     async def get_player_profile(self, brawlhalla_player_id: int) -> PlayerProfile | None:
         player = await self._players.get_by_brawlhalla_id(brawlhalla_player_id)

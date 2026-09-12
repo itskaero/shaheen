@@ -451,3 +451,104 @@ async def test_get_community_activity_orders_by_xp_descending(session: AsyncSess
 
     entries = await WebsiteService(session).get_community_activity(GUILD_ID)
     assert [e.xp for e in entries] == [500, 10]
+
+
+# ---------- roster (docs/DECISIONS.md ADR-071) ----------
+
+
+async def test_get_roster_includes_members_without_a_snapshot(session: AsyncSession) -> None:
+    """Unlike get_leaderboard, get_roster must never drop an unranked
+    member — it's the whole-clan view, not a top-N view.
+    """
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+
+    entries = await WebsiteService(session).get_roster(GUILD_ID)
+    assert len(entries) == 1
+    assert entries[0].snapshot is None
+    assert entries[0].player.brawlhalla_player_id == 10
+
+
+async def test_get_roster_orders_ranked_members_first_by_rating(session: AsyncSession) -> None:
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)  # unranked
+    _member_b, player_b = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=player_b.id,
+            captured_at=datetime.now(UTC),
+            rating=1500,
+            peak_rating=1500,
+            tier="Gold",
+            wins=1,
+            games=2,
+        )
+    )
+
+    entries = await WebsiteService(session).get_roster(GUILD_ID)
+    assert [e.player.brawlhalla_player_id for e in entries] == [20, 10]
+
+
+async def test_get_roster_carries_member_since(session: AsyncSession) -> None:
+    users = DiscordUserRepository(session)
+    members = ShaheenMemberRepository(session)
+    players = BrawlhallaPlayerRepository(session)
+    links = MemberPlayerLinkRepository(session)
+
+    user = await users.get_or_create(1)
+    joined_at = datetime(2025, 6, 1, tzinfo=UTC)
+    member = await members.get_or_create(
+        discord_user_id=user.id, guild_id=GUILD_ID, joined_at=joined_at
+    )
+    player = await players.upsert(brawlhalla_player_id=10, player_name="P10", region=None)
+    await links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
+
+    entries = await WebsiteService(session).get_roster(GUILD_ID)
+    assert entries[0].joined_at == joined_at
+
+
+async def test_get_roster_empty_for_guild_with_no_linked_members(session: AsyncSession) -> None:
+    entries = await WebsiteService(session).get_roster(GUILD_ID)
+    assert entries == []
+
+
+# ---------- achievement gallery (docs/DECISIONS.md ADR-071) ----------
+
+
+async def test_achievement_gallery_includes_every_catalog_achievement(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Even achievements nobody has earned yet must appear — this is the
+    whole point vs. the per-member PlayerProfile.achievements.
+    """
+    entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
+    assert {e.achievement.key for e in entries} == set(achievement_catalog.keys())
+    assert all(e.holder_count == 0 for e in entries)
+    assert all(e.completion_pct == 0.0 for e in entries)
+
+
+async def test_achievement_gallery_counts_holders_and_completion_pct(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member_a, _player_a = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    member_b, _player_b = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    awards = MemberAchievementRepository(session)
+    await awards.award(
+        shaheen_member_id=member_a.id, achievement_id=achievement_catalog["games_100"].id
+    )
+    await awards.award(
+        shaheen_member_id=member_b.id, achievement_id=achievement_catalog["games_100"].id
+    )
+
+    entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
+    entry_by_key = {e.achievement.key: e for e in entries}
+    assert entry_by_key["games_100"].holder_count == 2
+    assert entry_by_key["games_100"].total_members == 2
+    assert entry_by_key["games_100"].completion_pct == 100.0
+    assert entry_by_key["games_500"].holder_count == 0
+
+
+async def test_achievement_gallery_zero_members_has_zero_pct_not_a_crash(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
+    assert all(e.total_members == 0 for e in entries)
+    assert all(e.completion_pct == 0.0 for e in entries)  # no division-by-zero
