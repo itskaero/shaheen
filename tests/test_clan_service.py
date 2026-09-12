@@ -7,9 +7,11 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.achievement import Achievement
+from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
@@ -110,3 +112,62 @@ async def test_achievements_for_member_orders_oldest_first(
         "games_100",
         "tier_platinum",
     ]
+
+
+async def test_legend_meta_aggregates_across_linked_members(session: AsyncSession) -> None:
+    _member_a, player_a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _member_b, player_b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    legends = LegendSnapshotRepository(session)
+    await legends.add_all(
+        [
+            LegendSnapshot(
+                brawlhalla_player_id=player_a.id,
+                captured_at=datetime.now(UTC),
+                legend_id=1,
+                legend_name_key="bodvar",
+                games=30,
+                wins=20,
+                kos=0,
+                damagedealt=0,
+                falls=0,
+            ),
+            LegendSnapshot(
+                brawlhalla_player_id=player_b.id,
+                captured_at=datetime.now(UTC),
+                legend_id=1,
+                legend_name_key="bodvar",
+                games=10,
+                wins=5,
+                kos=0,
+                damagedealt=0,
+                falls=0,
+            ),
+            # Below the min-games-for-meta threshold — should be excluded.
+            LegendSnapshot(
+                brawlhalla_player_id=player_a.id,
+                captured_at=datetime.now(UTC),
+                legend_id=2,
+                legend_name_key="hattori",
+                games=3,
+                wins=1,
+                kos=0,
+                damagedealt=0,
+                falls=0,
+            ),
+        ]
+    )
+    await session.commit()
+
+    entries = await ClanService(session).legend_meta(GUILD_ID)
+    assert [e.legend_name_key for e in entries] == ["bodvar"]
+    bodvar = entries[0]
+    assert bodvar.total_games == 40
+    assert bodvar.total_wins == 25
+    assert bodvar.player_count == 2
+    assert bodvar.win_rate == 62.5
+
+
+async def test_legend_meta_empty_when_no_data(session: AsyncSession) -> None:
+    await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    entries = await ClanService(session).legend_meta(GUILD_ID)
+    assert entries == []

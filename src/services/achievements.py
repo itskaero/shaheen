@@ -58,7 +58,12 @@ SNAPSHOT_EVALUATED: tuple[AchievementDef, ...] = (
 )
 
 
-def _tier_index(tier: str) -> int | None:
+def tier_index(tier: str) -> int | None:
+    """This tier's position in _TIER_ORDER (higher = better), or None if
+    unrecognized. Public — also used by services/snapshot_service.py to
+    detect a tier promotion/demotion between two snapshots (docs/
+    DECISIONS.md ADR-068), same "fails open, never raises" posture.
+    """
     normalized = tier.strip().lower()
     for index, name in enumerate(_TIER_ORDER):
         if normalized.startswith(name):
@@ -70,10 +75,10 @@ def tier_at_least(tier: str | None, threshold: str) -> bool:
     """True if `tier` is at or above `threshold` in _TIER_ORDER. Fails open (False)."""
     if tier is None:
         return False
-    tier_index = _tier_index(tier)
-    if tier_index is None:
+    index = tier_index(tier)
+    if index is None:
         return False
-    return tier_index >= _TIER_ORDER.index(threshold)
+    return index >= _TIER_ORDER.index(threshold)
 
 
 def evaluate_snapshot_achievements(

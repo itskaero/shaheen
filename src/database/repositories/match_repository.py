@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from database.models.discord_user import DiscordUser
 from database.models.match import Match, MatchKind, MatchParticipant, MatchSide, MatchStatus
@@ -96,6 +97,33 @@ class MatchRepository:
             MatchParticipant.match_id == match_id, MatchParticipant.side == side
         )
         return list((await self._session.execute(stmt)).scalars().all())
+
+    async def head_to_head(
+        self, member_a_id: int, member_b_id: int
+    ) -> list[tuple[Match, MatchSide]]:
+        """Confirmed matches where both members played on opposite sides
+        (docs/DECISIONS.md ADR-068) — each row is (match, the side
+        member_a_id played on), so the caller can tell who won by
+        comparing against `match.winning_side`. `MatchParticipant`'s
+        `(match_id, shaheen_member_id)` unique constraint means each side
+        can match at most once per row, so no de-duplication is needed.
+        """
+        side_a = aliased(MatchParticipant)
+        side_b = aliased(MatchParticipant)
+        stmt = (
+            select(Match, side_a.side)
+            .join(side_a, side_a.match_id == Match.id)
+            .join(side_b, side_b.match_id == Match.id)
+            .where(
+                Match.status == MatchStatus.CONFIRMED,
+                side_a.shaheen_member_id == member_a_id,
+                side_b.shaheen_member_id == member_b_id,
+                side_a.side != side_b.side,
+            )
+            .order_by(Match.confirmed_at.desc())
+        )
+        result = await self._session.execute(stmt)
+        return [(match, side) for match, side in result]
 
     async def discord_ids_on_side(self, match_id: int, side: MatchSide) -> list[int]:
         stmt = (

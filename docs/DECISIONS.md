@@ -1877,3 +1877,58 @@ column, achievement count/names, the website link, and legend damage/falls), `uv
 src tests` / `uv run mypy src` clean. No live-Discord test harness exists in this repo (consistent
 with every prior round), so the embed builders — pure functions given already-fetched data — are
 exercised directly instead, the same pattern used throughout this project's test suite.
+
+## ADR-068 — Rank promotion/demotion announcements, clan-wide Legend meta, head-to-head rivalry stats
+
+Decision: build the first wave of the "gameplay/stat-tracking" roadmap (planned in ADR-067)
+— three small features, each reusing data already being collected, no new tables or
+migrations.
+
+**Rank promotion/demotion announcements.** `services/snapshot_service.py`'s `snapshot_member`
+already diffed consecutive `RankingSnapshot`s for a new career-peak rating; it now also diffs
+`tier` the same way. Comparison is family-level only (Gold/Platinum/Diamond/...), not sub-rank
+(Platinum III → Platinum II doesn't fire), using a newly-public `services.achievements.tier_index`
+(renamed from the module-private `_tier_index` it already had — same "fails open on an
+unrecognized tier string, never raises" posture `tier_at_least` already relied on). A new
+`TierChange` dataclass (`old_tier`, `new_tier`, `promoted`) on `Announcement` lets
+`bot/cogs/clan.py`'s existing `_announce` dispatch handle it as a third branch alongside
+achievements and peak-rating milestones — same `#hall-of-fame` channel, same
+`render_milestone_card` treatment. Demotions are announced too, not just promotions: hiding them
+would read as inconsistent given the brand's own "ranked by results, not excuses" copy voice
+(ADR-063), so `build_tier_change_announcement_embed` just gives demotions a calmer, non-exclamation
+tone (forest green, "dropped from" vs. promotions' gold "climbed from").
+
+**Clan-wide Legend meta (`/legendmeta`).** `ClanService` gained a `legend_meta` method and a
+`LegendMetaEntry` dataclass, following the exact same shape `leaderboard()` already uses: loop
+`list_active_for_guild`'s small set of linked members in Python and aggregate their latest
+per-legend snapshot (`LegendSnapshotRepository.list_latest_per_legend`, already built for the
+website's legend-mastery view) rather than one large SQL aggregate — the member count here is
+small enough that this stays simple and fast. A `_MIN_GAMES_FOR_LEGEND_META = 20` threshold
+(combined across the whole clan) keeps a single 2-game outlier from dominating the "meta" — this
+is a UX/noise decision, not a technical constraint.
+
+**Head-to-head rivalry (`/rivalry <a> <b>`).** Purely internal — `Match`/`MatchParticipant` data
+Shaheen already tracks via `/report`/`/match create`, zero Brawlhalla API involvement.
+`MatchRepository.head_to_head` joins `MatchParticipant` to itself (aliased) to find confirmed
+matches where both members played on opposite sides, returning `(Match, the side member_a played)`
+tuples so the caller can tell who won per match by comparing against `Match.winning_side` — no
+de-duplication needed since `MatchParticipant`'s `(match_id, shaheen_member_id)` unique constraint
+guarantees at most one row per side per match. `MatchService.head_to_head` resolves both Discord
+IDs to `ShaheenMember` ids via a new **read-only** `_find_member_id` — deliberately not the
+existing `_member_id` (which creates rows), since checking a stat shouldn't have a side effect of
+creating a database row for someone who's never interacted with the bot; a rivalry between two
+people who've never played is just a zeroed result, not an error.
+
+Files: `services/achievements.py` (public `tier_index`), `services/snapshot_service.py`
+(`TierChange`, tier-diff detection), `bot/content/clan_embeds.py`
+(`build_tier_change_announcement_embed`, `build_legend_meta_embed`), `bot/cogs/clan.py` (`_announce`
+branch, `/legendmeta`), `services/clan_service.py` (`LegendMetaEntry`, `legend_meta`),
+`database/repositories/match_repository.py` (`head_to_head`), `services/match_service.py`
+(`RivalryResult`, `head_to_head`, `_find_member_id`), `bot/content/competition_embeds.py`
+(`build_rivalry_embed`), `bot/cogs/competition.py` (`/rivalry`).
+
+Verified: `uv run pytest` (217 passed — 19 new: tier promotion/demotion/no-change/first-snapshot
+detection, `tier_index` ordering, `legend_meta` aggregation and its games threshold, `head_to_head`
+tallying both directions/ignoring unconfirmed matches/ignoring third-party matches/zeroing for
+never-played pairs, plus embed-construction tests for all three new builders), `uv run ruff check
+src tests` / `uv run mypy src` clean.

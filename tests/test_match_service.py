@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.exceptions import NotFoundError, PermissionDeniedError, ShaheenError
 from database.models.match import MatchKind, MatchSide, MatchStatus
 from database.models.scrim import ScrimStatus
-from services.match_service import MatchService
+from services.match_service import MatchService, RivalryResult
 
 GUILD_ID = 1
 
@@ -196,3 +196,72 @@ async def test_match_history_returns_recent_matches_for_participant(session: Asy
 
     other_history = await service.get_match_history(guild_id=GUILD_ID, discord_id=999)
     assert other_history == []
+
+
+async def _confirmed_match(
+    service: MatchService, *, winner_discord_id: int, loser_discord_id: int
+) -> None:
+    match = await service.create_match(
+        guild_id=GUILD_ID,
+        kind=MatchKind.ONE_V_ONE,
+        side_a=[(winner_discord_id, None)],
+        side_b=[(loser_discord_id, None)],
+    )
+    await service.report_result(
+        match_id=match.id,
+        guild_id=GUILD_ID,
+        reporter_discord_id=winner_discord_id,
+        reporter_won=True,
+    )
+    await service.confirm_result(
+        match_id=match.id, guild_id=GUILD_ID, confirmer_discord_id=loser_discord_id
+    )
+
+
+async def test_head_to_head_tallies_confirmed_wins_each_way(session: AsyncSession) -> None:
+    service = MatchService(session)
+    await _confirmed_match(service, winner_discord_id=1, loser_discord_id=2)
+    await _confirmed_match(service, winner_discord_id=1, loser_discord_id=2)
+    await _confirmed_match(service, winner_discord_id=2, loser_discord_id=1)
+
+    result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=1, discord_id_b=2)
+    assert result.member_a_wins == 2
+    assert result.member_b_wins == 1
+    assert result.total_matches == 3
+
+    # Symmetric from the other direction.
+    reversed_result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=2, discord_id_b=1)
+    assert reversed_result.member_a_wins == 1
+    assert reversed_result.member_b_wins == 2
+
+
+async def test_head_to_head_ignores_unconfirmed_matches(session: AsyncSession) -> None:
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(1, None)], side_b=[(2, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=1, reporter_won=True
+    )
+    # never confirmed
+
+    result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=1, discord_id_b=2)
+    assert result.total_matches == 0
+
+
+async def test_head_to_head_zero_for_members_who_never_played(session: AsyncSession) -> None:
+    service = MatchService(session)
+    result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=1, discord_id_b=2)
+    assert result == RivalryResult(member_a_wins=0, member_b_wins=0, total_matches=0)
+
+
+async def test_head_to_head_only_counts_matches_against_each_other(session: AsyncSession) -> None:
+    """A confirmed match against a third member shouldn't count toward
+    the rivalry between member_a and member_b.
+    """
+    service = MatchService(session)
+    await _confirmed_match(service, winner_discord_id=1, loser_discord_id=2)
+    await _confirmed_match(service, winner_discord_id=1, loser_discord_id=999)
+
+    result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=1, discord_id_b=2)
+    assert result.total_matches == 1

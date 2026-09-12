@@ -20,7 +20,9 @@ from bot.content.clan_embeds import (
     build_achievements_embed,
     build_history_embed,
     build_leaderboard_embed,
+    build_legend_meta_embed,
     build_milestone_announcement_embed,
+    build_tier_change_announcement_embed,
 )
 from bot.content.profile_embeds import build_not_linked_embed
 from core.exceptions import ShaheenError
@@ -95,6 +97,20 @@ class ClanCog(commands.Cog):
                 new_peak_rating=announcement.new_peak_rating,
             )
             subtitle = f"New peak rating: {announcement.new_peak_rating}!"
+        elif announcement.tier_change is not None:
+            change = announcement.tier_change
+            embed = build_tier_change_announcement_embed(
+                display_name=display_name,
+                player_name=announcement.player.player_name,
+                old_tier=change.old_tier,
+                new_tier=change.new_tier,
+                promoted=change.promoted,
+            )
+            subtitle = (
+                f"Promoted to {change.new_tier}!"
+                if change.promoted
+                else f"Dropped to {change.new_tier}"
+            )
         else:
             return
 
@@ -205,6 +221,19 @@ class ClanCog(commands.Cog):
             display_name=member.display_name, player_name=player.player_name, snapshots=snapshots
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(
+        name="legendmeta", description="Show the clan's most-played Legends and their win rates"
+    )
+    async def legendmeta(self, interaction: discord.Interaction) -> None:
+        if interaction.guild is None:
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        await interaction.response.defer(ephemeral=True)
+
+        async with session_scope(self.bot.session_factory) as session:
+            entries = await ClanService(session).legend_meta(interaction.guild.id)
+
+        await interaction.followup.send(embed=build_legend_meta_embed(entries), ephemeral=True)
 
     async def _resolve_member(
         self, interaction: discord.Interaction, user: discord.Member | None

@@ -12,6 +12,16 @@ from bot.palette import EMERALD, FOREST_GREEN, GOLD
 from database.models.achievement import Achievement
 from database.models.ranking_snapshot import RankingSnapshot
 from services.achievements import AchievementDef
+from services.clan_service import LegendMetaEntry
+
+
+def _legend_display_name(legend_name_key: str) -> str:
+    # Same heuristic as bot/content/profile_embeds.py's private helper of
+    # the same name — the API only gives an internal key (e.g. "bodvar"),
+    # title-cased as a reasonable display name. Small intentional
+    # duplication rather than a cross-module import for one string
+    # formatting rule.
+    return legend_name_key.replace("_", " ").title()
 
 
 def build_leaderboard_embed(
@@ -84,3 +94,43 @@ def build_milestone_announcement_embed(
         f"**{new_peak_rating}**.",
         colour=FOREST_GREEN,
     )
+
+
+def build_tier_change_announcement_embed(
+    *, display_name: str, player_name: str, old_tier: str, new_tier: str, promoted: bool
+) -> discord.Embed:
+    """docs/DECISIONS.md ADR-068 — a tier change is family-level only
+    (Gold -> Platinum), not sub-rank (Platinum III -> Platinum II).
+    """
+    if promoted:
+        return discord.Embed(
+            title="🔼 Ranked Promotion!",
+            description=f"**{display_name}** ({player_name}) climbed from **{old_tier}** to "
+            f"**{new_tier}**!",
+            colour=GOLD,
+        )
+    return discord.Embed(
+        title="🔽 Ranked Demotion",
+        description=f"**{display_name}** ({player_name}) dropped from **{old_tier}** to "
+        f"**{new_tier}**.",
+        colour=FOREST_GREEN,
+    )
+
+
+def build_legend_meta_embed(entries: list[LegendMetaEntry]) -> discord.Embed:
+    """Clan-wide Legend popularity/win-rate (docs/DECISIONS.md ADR-068) —
+    entries already sorted most-played-first and filtered to a minimum
+    combined-games threshold by ClanService.legend_meta.
+    """
+    embed = discord.Embed(title="🐺 Shaheen Legend Meta", colour=EMERALD)
+    if not entries:
+        embed.description = "Not enough played games yet to show a meaningful Legend meta."
+        return embed
+
+    lines = [
+        f"**{idx}. {_legend_display_name(e.legend_name_key)}** — {e.total_games} games "
+        f"across {e.player_count} member(s), {e.win_rate:.0f}% win rate"
+        for idx, e in enumerate(entries, start=1)
+    ]
+    embed.description = "\n".join(lines)
+    return embed
