@@ -395,10 +395,12 @@ class SetupService:
         role_by_key: dict[str, discord.Role],
         report: SetupReport,
     ) -> None:
+        category_spec_by_key = {category.logical_key: category for category in CATEGORIES}
         for action in actions:
             spec = action.spec
             category = category_by_key.get(action.category_logical_key)
-            overwrites = self._channel_overwrites(spec, role_by_key)
+            parent_spec = category_spec_by_key.get(action.category_logical_key)
+            overwrites = self._channel_overwrites(spec, parent_spec, role_by_key)
             try:
                 resolved_channel: discord.TextChannel | discord.VoiceChannel | None
                 if action.type is ActionType.CREATE:
@@ -481,19 +483,40 @@ class SetupService:
         )
 
     def _channel_overwrites(
-        self, spec: ChannelSpec, role_by_key: dict[str, discord.Role]
+        self,
+        spec: ChannelSpec,
+        parent: CategorySpec | None,
+        role_by_key: dict[str, discord.Role],
     ) -> dict[OverwriteTarget, discord.PermissionOverwrite]:
-        """Mirrors _category_overwrites: @everyone can still view/read;
-        only ROLES_WITH_STAFF_ACCESS can send (docs/DECISIONS.md ADR-060).
-        Empty overwrites leave Send Messages inherited from the category.
+        """@everyone can still view/read a plain channel; only
+        ROLES_WITH_STAFF_ACCESS can send when staff_only_send is set
+        (docs/DECISIONS.md ADR-060).
+
+        Starts from the parent category's own restricted/gated overwrite
+        (docs/DECISIONS.md ADR-072) instead of leaving a channel with zero
+        overwrites of its own and trusting Discord to cascade the
+        category's overwrite down to it — Discord's own client explicitly
+        copies a category's overwrites onto every channel created inside
+        it ("Permissions Synced"); this does the same, so a brand-new
+        channel in a gated/restricted category is correctly locked down
+        from the moment it's created, not just eventually reconciled on a
+        later /setup run.
         """
-        if not spec.staff_only_send:
-            return {}
-        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
-            self._guild.default_role: discord.PermissionOverwrite(send_messages=False)
-        }
-        for staff_spec in ROLES_WITH_STAFF_ACCESS:
-            role = role_by_key.get(staff_spec.logical_key)
-            if role is not None:
-                overwrites[role] = discord.PermissionOverwrite(send_messages=True)
+        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {}
+        if parent is not None:
+            for target, parent_overwrite in self._category_overwrites(parent, role_by_key).items():
+                allow, deny = parent_overwrite.pair()
+                overwrites[target] = discord.PermissionOverwrite.from_pair(allow, deny)
+
+        if spec.staff_only_send:
+            everyone_overwrite = overwrites.setdefault(
+                self._guild.default_role, discord.PermissionOverwrite()
+            )
+            everyone_overwrite.update(send_messages=False)
+            for staff_spec in ROLES_WITH_STAFF_ACCESS:
+                role = role_by_key.get(staff_spec.logical_key)
+                if role is not None:
+                    staff_overwrite = overwrites.setdefault(role, discord.PermissionOverwrite())
+                    staff_overwrite.update(send_messages=True)
+
         return overwrites

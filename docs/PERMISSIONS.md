@@ -61,6 +61,14 @@ with a special (`restricted`/`gated`/`staff_only_send`) spec. A manually
 added overwrite anywhere the bot manages gets corrected back on the next
 `/setup run`, matching ADR-060's original idempotent-repair promise.
 
+Every channel also carries its own explicit copy of its parent category's
+`restricted`/`gated` overwrite (docs/DECISIONS.md ADR-072) — the same thing
+Discord's own client does when you create a channel inside a category
+("Permissions Synced") — rather than being left with zero overwrites of its
+own and relying on Discord's category→channel cascade to apply the
+category's restriction. This is what actually locks a brand-new channel
+down from the moment it's created.
+
 ## General principles
 
 - Use least privilege.
