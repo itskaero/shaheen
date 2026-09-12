@@ -1196,6 +1196,60 @@ tbody tr:hover {
   color: var(--green);
 }
 
+/* ---------- achievement gallery ---------- */
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.achievement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.achievement-card .achievement-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 1.1rem;
+}
+
+.achievement-card h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--cream);
+}
+
+.achievement-card p {
+  margin: 0;
+  color: var(--grey);
+  font-size: 0.88rem;
+}
+
+.achievement-card .achievement-progress {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Nobody's earned it yet — same card, dimmed so the gallery reads as
+   "earned vs. not" at a glance without a separate empty state. */
+.achievement-card.unearned .achievement-icon {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.achievement-card.unearned h3,
+.achievement-card.unearned p {
+  opacity: 0.6;
+}
+
 /* ---------- player profile header ---------- */
 
 .profile-head {
