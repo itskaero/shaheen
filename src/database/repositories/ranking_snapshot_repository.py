@@ -9,6 +9,8 @@ never `player.brawlhalla_player_id`, here).
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,5 +41,20 @@ class RankingSnapshotRepository:
             .where(RankingSnapshot.brawlhalla_player_id == player_id)
             .order_by(RankingSnapshot.captured_at.desc())
             .limit(limit)
+        )
+        return list((await self._session.execute(stmt)).scalars().all())
+
+    async def list_since(self, player_id: int, since: datetime) -> list[RankingSnapshot]:
+        """Oldest first (unlike list_recent) — services/digest_service.py
+        diffs the first and last entries to get a rating gain over the
+        window (docs/DECISIONS.md ADR-070).
+        """
+        stmt = (
+            select(RankingSnapshot)
+            .where(
+                RankingSnapshot.brawlhalla_player_id == player_id,
+                RankingSnapshot.captured_at >= since,
+            )
+            .order_by(RankingSnapshot.captured_at.asc())
         )
         return list((await self._session.execute(stmt)).scalars().all())

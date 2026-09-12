@@ -35,6 +35,15 @@ def build_clan_info_intro_embed() -> discord.Embed:
     )
 
 
+def build_suggestions_intro_embed() -> discord.Embed:
+    return discord.Embed(
+        title="💡 Suggestions",
+        description="Got an idea for the clan? Run `/suggest` anywhere — it posts here "
+        "anonymously, and everyone can vote with 👍/👎.",
+        colour=GOLD,
+    )
+
+
 # --- THE NEST ------------------------------------------------------------
 
 

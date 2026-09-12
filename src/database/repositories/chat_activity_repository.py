@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.chat_activity import ChatActivity
@@ -46,6 +46,7 @@ class ChatActivityRepository:
         """
         row = await self.get_or_create(guild_id=guild_id, discord_id=discord_id)
         row.xp += xp_gain
+        row.weekly_xp += xp_gain
         row.message_count += 1
         row.last_xp_at = now
         await self._session.flush()
@@ -59,3 +60,25 @@ class ChatActivityRepository:
             .limit(limit)
         )
         return list((await self._session.execute(stmt)).scalars().all())
+
+    async def list_top_weekly(self, guild_id: int, *, limit: int = 10) -> list[ChatActivity]:
+        """docs/DECISIONS.md ADR-070 — weekly_xp, not the all-time xp
+        list_top ranks by.
+        """
+        stmt = (
+            select(ChatActivity)
+            .where(ChatActivity.guild_id == guild_id, ChatActivity.weekly_xp > 0)
+            .order_by(ChatActivity.weekly_xp.desc())
+            .limit(limit)
+        )
+        return list((await self._session.execute(stmt)).scalars().all())
+
+    async def reset_weekly(self, guild_id: int) -> None:
+        """Zeroes every member's weekly_xp for this guild — called by the
+        weekly digest job (services/digest_service.py) right after it reads
+        list_top_weekly, so next week starts empty (docs/DECISIONS.md
+        ADR-070). Does not touch the all-time `xp` column.
+        """
+        stmt = update(ChatActivity).where(ChatActivity.guild_id == guild_id).values(weekly_xp=0)
+        await self._session.execute(stmt)
+        await self._session.flush()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -124,6 +124,17 @@ class MatchRepository:
         )
         result = await self._session.execute(stmt)
         return [(match, side) for match, side in result]
+
+    async def count_confirmed_since(self, guild_id: int, since: datetime) -> int:
+        """docs/DECISIONS.md ADR-070 — the weekly digest's "matches played"
+        count.
+        """
+        stmt = select(func.count()).select_from(Match).where(
+            Match.guild_id == guild_id,
+            Match.status == MatchStatus.CONFIRMED,
+            Match.confirmed_at >= since,
+        )
+        return (await self._session.execute(stmt)).scalar_one()
 
     async def discord_ids_on_side(self, match_id: int, side: MatchSide) -> list[int]:
         stmt = (

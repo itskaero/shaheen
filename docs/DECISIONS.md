@@ -1989,3 +1989,65 @@ Verified: `uv run pytest` (225 passed — new: `_category_overwrites` for gated 
 neither, a regression test asserting `_apply_categories`/`_apply_channels` call `.edit()` even
 with an empty overwrite dict, plus embed-construction tests for the three new `/verify` builders),
 `uv run ruff check src tests` / `uv run mypy src` clean.
+
+## ADR-070 — Weekly recap + MVP of the Week, suggestions inbox, member spotlight
+
+Decision: build the "Part C" community-engagement roadmap items flagged small/high-visibility in
+ADR-067's plan — weekly recap, MVP of the Week (sharing the recap's own query), `/suggest`, and
+`/spotlight`.
+
+**Weekly digest + MVP of the Week.** The recap needed three numbers per week: top rating gains,
+top chatters, and matches played. Two of those were free — `RankingSnapshot` and `Match` are
+already durable, timestamped history, so `RankingSnapshotRepository.list_since`/
+`MatchRepository.count_confirmed_since` just window a query that already existed in a different
+shape (`list_recent`/`head_to_head`'s CONFIRMED filter). Chat XP wasn't: `ChatActivity.xp` is a
+single cumulative running total with no history, so "most active this week" had no signal to read
+without adding state. Rather than a new time-series table, `ChatActivity` gained one more
+column — `weekly_xp`, incremented alongside `xp` in `ChatActivityRepository.record_message` — that
+the digest job zeroes (`reset_weekly`) right after reading it each week; same "stored counter,
+periodically reset" shape used nowhere else in this codebase yet, but simpler than either a new
+table or losing the all-time `/chatboard` ranking by repurposing `xp` itself. `services/
+digest_service.py`'s `WeeklyDigestService.build_and_rotate` assembles `RatingGain`/`TopChatter`
+dataclasses (raw `discord_id` + numbers — Discord display-name resolution stays in `ClanCog`,
+same "service returns data, cog resolves live Discord state" split `/leaderboard` already uses)
+and picks an MVP: biggest rating gain, falling back to the top chatter in a ranked-quiet week, and
+`None` (no role change, no false MVP) if the whole week was quiet on both fronts.
+
+`ClanCog` gained a second `tasks.loop`, alongside the existing snapshot loop, but shaped
+differently on purpose: `tasks.loop(hours=24*7)` would drift against the calendar depending on
+whenever the bot last happened to restart, so instead it's a **daily** loop fixed to a UTC
+time-of-day that no-ops on every weekday but Sunday — the same total behavior, without the drift.
+On the Sunday it fires, it posts the recap to `#announcements` and, if an MVP was picked, rotates
+a new 🌟 MVP of the Week role: a purely cosmetic `RoleSpec` (`ROLE_MVP`, no permissions, not part
+of `VERIFIED_ROLES` or the rank ladder) that `/setup run` creates/repairs like any other role,
+removed from whoever held it and added to the new winner in the same tick.
+
+**`/suggest <text>`.** Posts anonymously (the embed builder deliberately takes no author
+parameter — nothing to leak) to a new `#suggestions` channel in SHAHEEN HQ, with 👍/👎 reactions
+added automatically. Placed in SHAHEEN HQ rather than THE NEST specifically so it stays usable by
+an unverified Guest (ADR-069's gate hides THE NEST/BRAWLHALLA/VOICE, not SHAHEEN HQ) — a new
+member's very first idea for the clan shouldn't have to wait on `/verify`. No permission check,
+same "any member" posture as `/level`; no new table, the message itself with its two reactions is
+the entire feature.
+
+**`/spotlight <user> <note>`.** A staff-only manual callout posted to `#announcements`
+(`require_staff_authorized()`, same check `/verify`/moderation commands use) — no new data model,
+purely a formatted embed with the note and the staff member's name in the footer.
+
+Files: `database/models/chat_activity.py` (`weekly_xp`), `alembic/versions/0006_weekly_digest.py`,
+`database/repositories/chat_activity_repository.py` (`list_top_weekly`, `reset_weekly`, `weekly_xp`
+increment), `database/repositories/ranking_snapshot_repository.py` (`list_since`), `database/
+repositories/match_repository.py` (`count_confirmed_since`), `services/digest_service.py` (new),
+`bot/content/clan_embeds.py` (`build_weekly_digest_embed`, `build_mvp_announcement_embed`,
+`build_spotlight_embed`), `bot/content/engagement_embeds.py` (`build_suggestion_embed`,
+`build_suggestion_confirmation_embed`), `bot/content/channel_intros.py`
+(`build_suggestions_intro_embed`), `bot/constants.py` (`ROLE_MVP`, `channel:suggestions`),
+`bot/cogs/clan.py` (weekly digest loop, `/spotlight`), `bot/cogs/engagement.py` (`/suggest`),
+`bot/cogs/setup.py` (`channel:suggestions` launch content), `docs/COMMANDS.md`/
+`docs/DISCORD_SPEC.md`/`docs/PERMISSIONS.md`.
+
+Verified: `uv run pytest` (243 passed — 18 new: rating-gain windowing/sorting/skip-on-no-change,
+weekly-XP ranking vs. all-time XP, confirmed-match counting, MVP priority/fallback/quiet-week-none,
+weekly-XP reset-after-read, plus embed-construction tests for all five new builders), `uv run ruff
+check src tests` / `uv run mypy src` clean, a scratch-database `alembic upgrade head` confirming
+migration 0006 applies cleanly on top of 0001-0005.

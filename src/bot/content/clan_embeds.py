@@ -117,6 +117,51 @@ def build_tier_change_announcement_embed(
     )
 
 
+def build_weekly_digest_embed(
+    *,
+    rating_gains: list[tuple[str, int]],
+    top_chatters: list[tuple[str, int]],
+    matches_played: int,
+) -> discord.Embed:
+    """docs/DECISIONS.md ADR-070. `rating_gains`/`top_chatters` are already
+    resolved (display_name, value) pairs, sorted best-first — the cog
+    resolves discord_id -> display_name the same way /leaderboard does,
+    since bot/content stays Discord-agnostic-data-in, embed-out.
+    """
+    embed = discord.Embed(title="📅 Weekly Shaheen Recap", colour=GOLD)
+    if rating_gains:
+        lines = [
+            f"**{i}.** {name} (+{gain})"
+            for i, (name, gain) in enumerate(rating_gains, start=1)
+        ]
+        embed.add_field(name="📈 Top Rating Gains", value="\n".join(lines), inline=False)
+    if top_chatters:
+        lines = [f"**{i}.** {name} ({xp} XP)" for i, (name, xp) in enumerate(top_chatters, start=1)]
+        embed.add_field(name="💬 Most Active Chatters", value="\n".join(lines), inline=False)
+    embed.add_field(name="⚔️ Matches Played", value=str(matches_played), inline=False)
+    if not rating_gains and not top_chatters and not matches_played:
+        embed.description = "A quiet week — nothing to report yet."
+    return embed
+
+
+def build_mvp_announcement_embed(*, display_name: str, reason: str) -> discord.Embed:
+    return discord.Embed(
+        title="🌟 MVP of the Week",
+        description=f"**{display_name}** — {reason}. Wear the crown proudly!",
+        colour=GOLD,
+    )
+
+
+def build_spotlight_embed(*, display_name: str, note: str, staff_name: str) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"✨ Member Spotlight — {display_name}",
+        description=note,
+        colour=GOLD,
+    )
+    embed.set_footer(text=f"Featured by {staff_name}")
+    return embed
+
+
 def build_legend_meta_embed(entries: list[LegendMetaEntry]) -> discord.Embed:
     """Clan-wide Legend popularity/win-rate (docs/DECISIONS.md ADR-068) —
     entries already sorted most-played-first and filtered to a minimum

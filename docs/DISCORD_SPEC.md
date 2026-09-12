@@ -27,6 +27,8 @@ can `/verify` them.
 - 📜 rules
 - 🎭 roles
 - 🦅 clan-info
+- 💡 suggestions — `/suggest` posts anonymously here, with 👍/👎 reactions
+  auto-added (docs/DECISIONS.md ADR-070)
 
 ### 🪹 THE NEST
 Urdu: آشیانہ

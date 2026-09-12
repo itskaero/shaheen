@@ -83,6 +83,11 @@ Clan-wide Legend popularity and win rate — every actively-linked member's
 latest per-legend stats aggregated together, filtered to Legends with
 enough combined games to be meaningful (docs/DECISIONS.md ADR-068).
 
+### /spotlight <user> <note>
+Feature a member in `#announcements` (staff only, `require_staff_
+authorized()`) — a manual celebratory callout, no new data model (docs/
+DECISIONS.md ADR-070).
+
 ## Phase 4 — Competition
 
 ### /challenge <user>
@@ -177,6 +182,21 @@ level. Defaults to the invoking member.
 Show the top 10 most active chatters in the server by chat XP (Discord
 -only ranking — the public website's Community Activity section is
 privacy-filtered to actively-linked members only, see ADR-065).
+
+### /suggest <text>
+Anonymously post a clan suggestion to `#suggestions`, with 👍/👎 reactions
+added automatically for voting (docs/DECISIONS.md ADR-070). No permission
+check, same "any member" posture as `/level`.
+
+## Weekly digest (standing job, not a command)
+
+`ClanCog`'s second scheduled loop (alongside the ranking-snapshot loop,
+docs/DECISIONS.md ADR-028) checks daily and posts every Sunday to
+`#announcements`: top 3 rating gains this week, top 3 chatters by weekly XP,
+and matches played. It also picks an MVP of the Week — biggest rating gain,
+falling back to the top chatter in a quiet ranked week — and rotates the
+🌟 MVP of the Week role onto them, removing it from last week's holder
+(docs/DECISIONS.md ADR-070).
 
 ## Standing panels
 

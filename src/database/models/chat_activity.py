@@ -23,6 +23,10 @@ class ChatActivity(TimestampMixin, Base):
     guild_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     discord_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     xp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Same running total as xp, but zeroed by services.digest_service's
+    # weekly digest job after each read — powers "most active chatters
+    # this week" without a new history table (docs/DECISIONS.md ADR-070).
+    weekly_xp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     # Stored redundantly for fast display/level-up diffing — always
     # derivable from xp via services.chat_gamification.level_for_xp.
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
