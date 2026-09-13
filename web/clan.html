@@ -57,8 +57,8 @@
          via assets/js/spirit-scroll.js — the backdrop itself never pans,
          unlike the homepage's pillar-hero. -->
     <section class="spirit-hero" id="spirit-hero" aria-label="The Spirit of Shaheen">
-      <div class="spirit-stage">
-        <div class="spirit-visual">
+      <div class="spirit-stage" data-scroll-stage>
+        <div class="spirit-visual" data-scroll-visual>
           <picture>
             <source srcset="assets/img/spirit-hero.webp" type="image/webp" />
             <img src="assets/img/spirit-hero.jpg" alt="" class="spirit-backdrop-img" />
@@ -67,9 +67,9 @@
         </div>
 
         <div class="spirit-panels">
-          <div class="spirit-panel" data-panel="intro">
+          <div class="spirit-panel" data-scroll-panel data-panel="intro">
             <div class="wrap">
-              <div class="spirit-panel-card">
+              <div class="spirit-panel-card" data-scroll-card>
                 <div class="divider"><span>The Spirit of Shaheen</span></div>
                 <p class="spirit-intro">
                   Allama Muhammad Iqbal used the image of the Shaheen to awaken a spirit in the
@@ -80,9 +80,9 @@
             </div>
           </div>
 
-          <div class="spirit-panel" data-panel="couplet-1">
+          <div class="spirit-panel" data-scroll-panel data-panel="couplet-1">
             <div class="wrap">
-              <div class="spirit-panel-card couplet">
+              <div class="spirit-panel-card couplet" data-scroll-card>
                 <p lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</p>
                 <p class="couplet-en">Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.</p>
                 <cite>— Allama Iqbal, Bal-e-Jibril</cite>
@@ -90,9 +90,9 @@
             </div>
           </div>
 
-          <div class="spirit-panel" data-panel="couplet-2">
+          <div class="spirit-panel" data-scroll-panel data-panel="couplet-2">
             <div class="wrap">
-              <div class="spirit-panel-card couplet">
+              <div class="spirit-panel-card couplet" data-scroll-card>
                 <p lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</p>
                 <p class="couplet-en">You are a Shaheen; flight is your purpose — there are yet more skies before you.</p>
                 <cite>— Allama Iqbal</cite>
@@ -100,9 +100,9 @@
             </div>
           </div>
 
-          <div class="spirit-panel" data-panel="closing">
+          <div class="spirit-panel" data-scroll-panel data-panel="closing">
             <div class="wrap">
-              <div class="spirit-panel-card">
+              <div class="spirit-panel-card" data-scroll-card>
                 <p class="spirit-intro" style="margin-bottom: 0">
                   The Shaheen doesn't settle. It doesn't fear the heights. It keeps flying,
                   keeps fighting, and never stops chasing bigger skies.
@@ -116,59 +116,127 @@
     </section>
 
     <div id="clan-spirit">
-      <section class="wrap reveal">
-        <div class="divider"><span>What We Stand For</span></div>
-        <div class="carousel" data-carousel>
-          <button class="carousel-arrow carousel-arrow-prev" type="button" data-carousel-prev aria-label="Previous value" hidden>&larr;</button>
-          <ul class="carousel-track" data-carousel-track>
-            <li class="carousel-card stat" style="--pillar-i: 0">
-              <span class="pillar-card-art" aria-hidden="true"></span>
-              <span class="label">Ambition</span>
-              <p class="stat-desc">We always aim higher. There is always another sky.</p>
-            </li>
-            <li class="carousel-card stat" style="--pillar-i: 1">
-              <span class="pillar-card-art" aria-hidden="true"></span>
-              <span class="label">Competition</span>
-              <p class="stat-desc">We play to win. Every match is a step forward.</p>
-            </li>
-            <li class="carousel-card stat" style="--pillar-i: 2">
-              <span class="pillar-card-art" aria-hidden="true"></span>
-              <span class="label">Improvement</span>
-              <p class="stat-desc">We learn, adapt and become better every day.</p>
-            </li>
-            <li class="carousel-card stat" style="--pillar-i: 3">
-              <span class="pillar-card-art" aria-hidden="true"></span>
-              <span class="label">Brotherhood</span>
-              <p class="stat-desc">We rise together. We support, respect and push each other.</p>
-            </li>
-            <li class="carousel-card stat" style="--pillar-i: 4">
-              <span class="pillar-card-art" aria-hidden="true"></span>
-              <span class="label">Integrity</span>
-              <p class="stat-desc">No toxicity. No excuses. Only growth.</p>
-            </li>
-          </ul>
-          <button class="carousel-arrow carousel-arrow-next" type="button" data-carousel-next aria-label="Next value" hidden>&rarr;</button>
+      <!-- Pin + horizontal-pan section (docs/DECISIONS.md ADR-076, supersedes
+           ADR-075's carousel). Same sticky-stage/panel-column skeleton as
+           .spirit-hero, generalized via assets/js/scroll-pan.js: scrolling
+           vertically through 5 stacked panels crossfades each value's
+           caption card AND pans spirit-pillars-strip.jpg horizontally in 5
+           discrete steps (one per statue) via --pan-x. -->
+      <section class="values-hero" id="values-hero" aria-label="What We Stand For">
+        <div class="values-stage" data-scroll-stage>
+          <div class="values-visual" data-scroll-visual>
+            <div class="values-vignette" aria-hidden="true"></div>
+          </div>
+          <div class="values-panels">
+            <div class="values-panel" data-scroll-panel data-pan-x="0">
+              <div class="wrap">
+                <div class="values-panel-card" data-scroll-card>
+                  <div class="divider"><span>What We Stand For</span></div>
+                  <span class="label">Ambition</span>
+                  <p class="stat-desc">We always aim higher. There is always another sky.</p>
+                </div>
+              </div>
+            </div>
+            <div class="values-panel" data-scroll-panel data-pan-x="25">
+              <div class="wrap">
+                <div class="values-panel-card" data-scroll-card>
+                  <span class="label">Competition</span>
+                  <p class="stat-desc">We play to win. Every match is a step forward.</p>
+                </div>
+              </div>
+            </div>
+            <div class="values-panel" data-scroll-panel data-pan-x="50">
+              <div class="wrap">
+                <div class="values-panel-card" data-scroll-card>
+                  <span class="label">Improvement</span>
+                  <p class="stat-desc">We learn, adapt and become better every day.</p>
+                </div>
+              </div>
+            </div>
+            <div class="values-panel" data-scroll-panel data-pan-x="75">
+              <div class="wrap">
+                <div class="values-panel-card" data-scroll-card>
+                  <span class="label">Brotherhood</span>
+                  <p class="stat-desc">We rise together. We support, respect and push each other.</p>
+                </div>
+              </div>
+            </div>
+            <div class="values-panel" data-scroll-panel data-pan-x="100">
+              <div class="wrap">
+                <div class="values-panel-card" data-scroll-card>
+                  <span class="label">Integrity</span>
+                  <p class="stat-desc">No toxicity. No excuses. Only growth.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="wrap reveal">
-        <div class="divider"><span>Shaheen Is More Than a Name</span></div>
-        <p class="spirit-intro">
-          We are a Pakistan-based Brawlhalla clan built for players who are serious about the
-          game and the journey. From ranked queues to tournaments, from scrims to achievements
-          — every moment we build our legacy.
-        </p>
-        <div class="carousel carousel-backdrop" data-carousel>
-          <button class="carousel-arrow carousel-arrow-prev" type="button" data-carousel-prev aria-label="Previous feature" hidden>&larr;</button>
-          <ul class="carousel-track" data-carousel-track>
-            <li class="carousel-card stat"><span class="value">🎯</span><span class="label">Ranked Play</span></li>
-            <li class="carousel-card stat"><span class="value">🏋️</span><span class="label">Scrims &amp; Training</span></li>
-            <li class="carousel-card stat"><span class="value">🥇</span><span class="label">Tournaments</span></li>
-            <li class="carousel-card stat"><span class="value">🏅</span><span class="label">Achievements</span></li>
-            <li class="carousel-card stat"><span class="value">📊</span><span class="label">Leaderboards</span></li>
-            <li class="carousel-card stat"><span class="value">👥</span><span class="label">Active Community</span></li>
-          </ul>
-          <button class="carousel-arrow carousel-arrow-next" type="button" data-carousel-next aria-label="Next feature" hidden>&rarr;</button>
+      <!-- Same mechanism as .values-hero above, but panned continuously
+           (not in 5 hard stops) since more-than-name.jpg is one continuous
+           cityscape panorama rather than pictorially distinct stops. -->
+      <section class="more-hero" id="more-hero" aria-label="Shaheen Is More Than a Name">
+        <div class="more-stage" data-scroll-stage>
+          <div class="more-visual" data-scroll-visual>
+            <div class="more-vignette" aria-hidden="true"></div>
+          </div>
+          <div class="more-panels">
+            <div class="more-panel" data-scroll-panel data-pan-x="0">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <div class="divider"><span>Shaheen Is More Than a Name</span></div>
+                  <p class="spirit-intro">
+                    We are a Pakistan-based Brawlhalla clan built for players who are serious
+                    about the game and the journey. From ranked queues to tournaments, from
+                    scrims to achievements — every moment we build our legacy.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="0">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">🎯</span><span class="label">Ranked Play</span>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="20">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">🏋️</span><span class="label">Scrims &amp; Training</span>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="40">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">🥇</span><span class="label">Tournaments</span>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="60">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">🏅</span><span class="label">Achievements</span>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="80">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">📊</span><span class="label">Leaderboards</span>
+                </div>
+              </div>
+            </div>
+            <div class="more-panel" data-scroll-panel data-pan-x="100">
+              <div class="wrap">
+                <div class="more-panel-card" data-scroll-card>
+                  <span class="value">👥</span><span class="label">Active Community</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -204,8 +272,7 @@
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/scroll.js"></script>
-  <script src="assets/js/spirit-scroll.js"></script>
-  <script src="assets/js/carousel.js"></script>
+  <script src="assets/js/scroll-pan.js"></script>
   <script src="assets/js/pages/clan.js"></script>
 </body>
 </html>

@@ -2343,3 +2343,79 @@ icons at desktop and ~400px widths; `.spirit-banner`'s new background doesn't hu
 legibility; the untouched `#clan-content` block below (API motto card, stats, activity, Explore
 grid) still renders and animates correctly, no regression to ADR-074's `scroll.js` wiring. No
 Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-076 — Fix blurred poster crops, replace the carousel with scroll-jacked horizontal pan
+
+Requested: corrective feedback on ADR-075's just-shipped work, via two annotated screenshots.
+(1) `spirit-hero.jpg`'s background showed visible blur/haloing behind the second Iqbal couplet.
+(2) The manual/touch carousel shipped for "What We Stand For" and "Shaheen Is More Than a Name"
+was the wrong interaction model — normal vertical page-scrolling should drive horizontal panning
+across a single wide image, with content fading in as a card block (not a swipe/click carousel).
+"The Spirit of Shaheen" keeps its existing single-image + vertical-scroll-driven fade — that part
+already matched what was asked; only its image quality needed fixing.
+
+**Blur root cause**: `spirit-hero.jpg` was cropped from a tiny ~348×250px region of the 726px-
+wide source poster, then upscaled 4.5x with `UnsharpMask(radius=2, percent=60, threshold=3)` on
+top — that combination (small native crop blown way up, then sharpened) is exactly what produces
+visible smearing and halo/ringing. Fix: crop wider/taller native regions (less zoomed-in framing)
+so the needed upscale drops to ~2.3–3.7x, and drop the unsharp pass entirely — a plain `LANCZOS`
+resize read noticeably cleaner once actually rendered on the page than the same crop with heavy
+sharpening baked in, confirming the sharpening (not just the upscale ratio) was compounding the
+"distorted" look. Applied to all four poster-derived assets (`spirit-hero.jpg`/`.webp`,
+`spirit-pillars-strip.jpg`, `more-than-name.jpg`, `spirit-banner-bg.jpg`) for consistency, since
+the latter two are being promoted from small thumbnails/card-backdrops into full 100vh sticky
+hero backgrounds by this same round and need the same headroom. Every crop still deliberately
+excludes the poster's own baked headings/labels (ADR-075's original lesson) — confirmed this
+round while widening `spirit-pillars-strip.jpg`'s candidate crops, several of which reintroduced
+baked "WHAT WE STAND FOR" heading text or per-pillar name labels that would have duplicated the
+site's own `.values-panel-card` text once that backdrop became a full-bleed pan target instead of
+a 150px thumbnail.
+
+**New mechanism**: `assets/js/scroll-pan.js` (new) generalizes `spirit-scroll.js`'s proven
+sticky-stage/panel-column crossfade — one `IntersectionObserver({threshold: 0.55})` per stage,
+mutual exclusion so only one `[data-scroll-card]` is ever `opacity: 1` within that stage's panels
+at a time, meaning the outgoing card block fades to 0 at the same moment the incoming one fades
+to 1, a true crossfade in both scroll directions — and adds one optional, data-attribute-gated
+behavior: a panel carrying `data-pan-x` writes that value to a `--pan-x` custom property scoped
+to *its own stage's* sticky visual element, read by that section's CSS to pan a background image
+horizontally via `background-position`. `spirit-scroll.js` is deleted; Section A migrates onto
+the new shared module too (adding `data-scroll-stage`/`-visual`/`-panel`/`-card` attributes,
+no `data-pan-x`, so its behavior is unchanged) rather than leaving three near-identical sticky-
+crossfade scripts on one page. Unlike the homepage's `--focus-x` (global on `<html>`, fine since
+`pillar-scroll.js` runs exactly one stage), `--pan-x` is deliberately set per-stage-element: this
+page runs three independent scrollytelling stages at once, and global state would make "What We
+Stand For" and "Shaheen Is More Than a Name" fight over the same property. Registered via
+`@property --pan-x` next to the existing `--focus-x`, so the pan transitions smoothly.
+
+**Section B** ("What We Stand For") reuses the exact panning technique from the retired
+`.pillar-card-art` (`background-size: 500% 100%`, one image, `background-position` stepped in
+25% increments) — now driving `.values-visual`'s full sticky backdrop instead of a 150px card
+thumbnail, in 5 discrete steps matching the strip's 5 statues. **Section C** ("Shaheen Is More
+Than a Name") pans the same way but *continuously*, not in 6 hard stops: `more-than-name.jpg` is
+one unbroken cityscape panorama, not six pictorially distinct positions, so an overscanned
+`background-size: 145% 100%` and a slower transition read as a smooth pan rather than a jump-cut
+— judged more honest to the source than forcing 6 fake "stops" out of one continuous scene. Both
+share `.spirit-hero`'s exact mobile/short-viewport fallback (`@media (max-width: 720px),
+(max-height: 560px)`: disable the sticky pin, static ~42vh backdrop, cards always visible) and
+`prefers-reduced-motion` fallback — trading away the retired carousel's native-touch swipe on
+mobile for the same single-markup-plus-fallback simplicity already used everywhere else on this
+page, rather than maintaining two parallel markups per breakpoint.
+
+**Removed**: `assets/js/carousel.js`, `assets/js/spirit-scroll.js`, and the `.carousel*`/
+`.pillar-card-art`/`.carousel-backdrop` CSS block from ADR-075 — the carousel was the wrong
+interaction model, not a bug to patch.
+
+Files: `web/clan.html`, `web/assets/css/style.css`, `web/assets/js/scroll-pan.js` (new),
+`web/assets/js/spirit-scroll.js` + `web/assets/js/carousel.js` (deleted), all four
+`web/assets/img/spirit-*.jpg`/`more-than-name.jpg` (+webp) assets regenerated.
+
+Verified: headless-Chromium pass — regenerated images show no visible upscale smear or
+sharpening halo at actual render size; scrolling down through sections A→B→C shows exactly one
+`.in-view` card per stage at a time, with `--pan-x` advancing 0→25→50→75→100 through section B
+and 0→0→20→40→60→80→100 through section C as each panel centers; scrolling back **up** through
+all three confirms bidirectional re-crossfade and `--pan-x` correctly restoring for the
+re-entered panel (the main regression risk of generalizing the observer); ~400px width and a
+short-viewport-height window both fall back to a static, fully-visible stacked layout with no
+sticky pin; `prefers-reduced-motion: reduce` renders everything statically; no broken images; the
+closing tagline banner and the API-driven `#clan-content` block below still render and animate
+correctly. No Python changes — `ruff`/`mypy`/`pytest` untouched.

@@ -56,6 +56,16 @@
   initial-value: 50%;
 }
 
+/* Same purpose as --focus-x above, for clan.html's .values-hero/.more-hero
+   horizontal-pan sections (docs/DECISIONS.md ADR-076) — set per-stage by
+   assets/js/scroll-pan.js, not globally on <html>, since three independent
+   stages run on that page at once. */
+@property --pan-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -677,115 +687,155 @@ nav.site-nav a.active::after {
   }
 }
 
-/* ---------- horizontal carousels (clan.html, docs/DECISIONS.md ADR-075) ----------
-   The site's first scroll-snap pattern. Native CSS does all the real
-   scrolling/snapping; assets/js/carousel.js only adds optional prev/next
-   buttons (shipped `hidden`, unhidden once wired — same posture as the
-   header's .discord-widget). */
+/* ---------- values / more-hero pin+pan sections (clan.html, docs/DECISIONS.md
+   ADR-076, supersedes ADR-075's manual/touch carousel) ----------
+   Same sticky-stage/panel-column skeleton as .spirit-hero above, generalized
+   via assets/js/scroll-pan.js: each panel optionally carries data-pan-x,
+   written to --pan-x on the stage's own sticky visual, panning a single
+   wide background image horizontally as the visitor scrolls vertically —
+   the pillar-card-art background-position technique this replaces, now
+   driving a full sticky backdrop instead of a 150px card thumbnail. */
 
-.carousel {
+.values-hero,
+.more-hero {
   position: relative;
 }
 
-.carousel-track {
-  display: flex;
-  gap: 1.25rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-left: 1.5rem;
-  padding: 0.25rem 1.5rem 1rem;
-  margin: 0 -1.5rem;
-  list-style: none;
-  scrollbar-width: none;
+.values-stage,
+.more-stage {
+  display: grid;
 }
 
-.carousel-track::-webkit-scrollbar {
-  display: none;
-}
-
-.carousel::after {
-  /* right-edge fade hinting there's more to scroll to */
-  content: "";
-  position: absolute;
+.values-visual,
+.more-visual {
+  grid-area: 1 / 1;
+  position: sticky;
   top: 0;
-  right: 0;
-  bottom: 1rem;
-  width: 56px;
-  background: linear-gradient(90deg, transparent, var(--void) 88%);
-  pointer-events: none;
+  height: 100vh;
+  overflow: hidden;
+  filter: saturate(0.9) brightness(0.75);
 }
 
-.carousel-card {
-  scroll-snap-align: start;
-  flex: 0 0 auto;
-  width: min(78vw, 280px);
-}
-
-@media (min-width: 720px) {
-  .carousel-card {
-    width: 300px;
-  }
-}
-
-.carousel-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--card-border);
-  background: rgba(3, 8, 5, 0.85);
-  color: var(--green);
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.carousel-arrow:hover {
-  border-color: var(--card-border-hover);
-  background: rgba(47, 232, 154, 0.1);
-}
-
-.carousel-arrow:disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.carousel-arrow-prev {
-  left: -8px;
-}
-
-.carousel-arrow-next {
-  right: -8px;
-}
-
-/* Pillar card art — one shared strip image, panned per card via
-   background-position (mirrors pillar-scroll.js's single-source-pan
-   convention rather than 5 separate low-res crops). --pillar-i (0-4) is
-   set inline per card. */
-.pillar-card-art {
-  display: block;
-  height: 150px;
-  margin: -1.2rem -1rem 0.85rem;
-  border-radius: var(--radius) var(--radius) 0 0;
+.values-visual {
   background-image: url("../img/spirit-pillars-strip.jpg");
   background-size: 500% 100%;
-  background-position: calc(var(--pillar-i, 0) * 25%) center;
+  background-position: var(--pan-x, 0%) center;
+  transition: background-position 0.7s ease;
 }
 
-.carousel-backdrop {
-  padding: 2rem 0 0.25rem;
-  background-image: linear-gradient(180deg, rgba(3, 6, 4, 0.72) 0%, rgba(3, 6, 4, 0.88) 60%, var(--void) 100%),
-    url("../img/more-than-name.jpg");
-  background-size: cover;
-  background-position: center 40%;
+.more-visual {
+  /* Overscanned (unlike .values-visual's segmented 500%/25%-step art) —
+     more-than-name.jpg is one continuous panorama, not pictorially
+     distinct stops, so it pans smoothly rather than snapping. */
+  background-size: 145% 100%;
+  background-image: url("../img/more-than-name.jpg");
+  background-position: var(--pan-x, 0%) center;
+  transition: background-position 0.9s ease;
+}
+
+.values-vignette,
+.more-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(3, 6, 4, 0.6) 0%,
+    rgba(3, 6, 4, 0.22) 30%,
+    rgba(3, 6, 4, 0.38) 70%,
+    rgba(3, 6, 4, 0.9) 100%
+  );
+}
+
+.values-panels,
+.more-panels {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 1;
+}
+
+.values-panel,
+.more-panel {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.values-panel .wrap,
+.more-panel .wrap {
+  width: 100%;
+}
+
+.values-panel-card,
+.more-panel-card {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  background: rgba(3, 8, 5, 0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.values-panel-card.in-view,
+.more-panel-card.in-view {
+  opacity: 1;
+}
+
+.values-panel-card .label,
+.more-panel-card .label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.more-panel-card .value {
+  display: block;
+  font-size: 2.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.more-panel-card .label {
+  color: var(--cream);
+}
+
+.values-panel-card .stat-desc {
+  color: var(--grey);
+  margin: 0;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .values-visual,
+  .more-visual {
+    position: relative;
+    height: 42vh;
+    min-height: 240px;
+    background-position: center center;
+  }
+
+  .values-panels,
+  .more-panels {
+    position: relative;
+  }
+
+  .values-panel,
+  .more-panel {
+    min-height: auto;
+    padding: 1.25rem 0;
+  }
+
+  .values-panel-card,
+  .more-panel-card {
+    opacity: 1;
+    max-width: none;
+  }
 }
 
 /* ---------- scroll-triggered reveal ---------- */
@@ -2125,6 +2175,25 @@ canvas#history-chart {
   }
 
   .spirit-panel-card {
+    opacity: 1;
+    max-width: none;
+  }
+
+  .values-visual,
+  .more-visual {
+    position: relative;
+    height: 42vh;
+    min-height: 240px;
+  }
+
+  .values-panel,
+  .more-panel {
+    min-height: auto;
+    padding: 1.25rem 0;
+  }
+
+  .values-panel-card,
+  .more-panel-card {
     opacity: 1;
     max-width: none;
   }
