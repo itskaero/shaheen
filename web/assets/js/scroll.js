@@ -34,31 +34,45 @@ const ShaheenMotion = (() => {
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
+  const plainRevealTargets = document.querySelectorAll(".reveal");
   // .clan-reveal (clan.html's diagonal clip-path wipe, docs/DECISIONS.md
-  // ADR-066) shares the exact same "add .in-view once visible, then stop
-  // watching" behavior as .reveal — its actual animation lives entirely
-  // in style.css's .clan-reveal.in-view rule, so no extra JS branch here.
-  const revealTargets = document.querySelectorAll(".reveal, .clan-reveal");
+  // ADR-066/074) starts from a degenerate zero-area clip-path
+  // (`polygon(0 0, 0 0, 0 100%, 0 100%)`) until `.in-view` grows it — and at
+  // least this Chromium build computes intersectionRatio against that
+  // *clipped* (post-clip-path) area, so it's permanently ~0 no matter how
+  // visible the element actually is. A 0.2 threshold (fine for plain
+  // opacity-based .reveal) would therefore never cross for .clan-reveal, so
+  // it needs its own observer at threshold 0, where isIntersecting only
+  // needs the (unclipped) layout box to overlap the root at all.
+  const clanRevealTargets = document.querySelectorAll(".clan-reveal");
 
   if (ShaheenMotion.reduced || !("IntersectionObserver" in window)) {
-    revealTargets.forEach((el) => {
+    [...plainRevealTargets, ...clanRevealTargets].forEach((el) => {
       el.classList.add("in-view");
       el.querySelectorAll("[data-count-to]").forEach(ShaheenMotion.countUp);
     });
   } else {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            entry.target.querySelectorAll("[data-count-to]").forEach(ShaheenMotion.countUp);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
+    const reveal = (observer) => (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in-view");
+          entry.target.querySelectorAll("[data-count-to]").forEach(ShaheenMotion.countUp);
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+
+    const plainObserver = new IntersectionObserver(
+      (entries) => reveal(plainObserver)(entries),
       { threshold: 0.2, rootMargin: "0px 0px -60px 0px" }
     );
-    revealTargets.forEach((el) => observer.observe(el));
+    plainRevealTargets.forEach((el) => plainObserver.observe(el));
+
+    const clanObserver = new IntersectionObserver(
+      (entries) => reveal(clanObserver)(entries),
+      { threshold: 0, rootMargin: "0px 0px -60px 0px" }
+    );
+    clanRevealTargets.forEach((el) => clanObserver.observe(el));
   }
 
   const strip = document.querySelector(".cinematic-strip");
