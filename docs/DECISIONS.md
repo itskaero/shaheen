@@ -2268,3 +2268,78 @@ cleanly at ~400px, and — the one real regression risk — the existing API-inj
 still animates exactly once via its own manual trigger with `scroll.js` now also loaded on the
 page, with member count / community activity / the existing Explore grid all still rendering
 unaffected below the new sections. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-075 — "Spirit of Shaheen" rebuilt as fade-scrollytelling, art cropped from the reference poster
+
+Requested: replace ADR-074's four static reveal-on-scroll sections with proper scrollytelling
+("scroll + storytelling") in the homepage's animation family, styled after an uploaded reference
+poster. Two explicit steering decisions when asked to clarify: (1) crop the actual uploaded
+poster image into web assets — not the existing `hero-characters.jpg`/`banner.jpg` site imagery,
+and not freshly generated art — with a fade/crossfade scroll mechanic, explicitly not the
+homepage's `pillar-scroll.js` pin-and-pan mechanic; (2) both the "What We Stand For" and
+"Shaheen Is More Than a Name" sections get horizontal-scroll-snap carousel treatment, not just
+one.
+
+**Image pipeline.** The poster (726×2167px portrait) was cropped into four assets with Pillow —
+`Image.LANCZOS` upscale + `UnsharpMask` to counter the source being much narrower than a
+purpose-built asset like `hero-characters.jpg` (2172×724): `spirit-hero.{jpg,webp}` (the eagle
+cliff/mountain scene), `spirit-pillars-strip.jpg` (all 5 value statues, one shared strip —
+mirrors `pillar-scroll.js`'s own "one source image, shift it" philosophy rather than 5 separate
+low-res crops), `more-than-name.jpg` (the cityscape band), `spirit-banner-bg.jpg` (the closing
+floating-islands scene). Every crop was deliberately chosen to **exclude the poster's own baked
+headings/paragraphs** — an early pass reused crops that still carried the poster's own text
+(e.g. "THE SPIRIT OF SHAHEEN"), and rendering confirmed it read as an unintended duplicate/ghost
+of the real foreground heading rather than atmosphere, even under the vignette's darkening; the
+final crops are pure scenery, letting the site's own HTML/CSS text be the only text layer.
+
+**Section A — `assets/js/spirit-scroll.js`, new, sibling to `pillar-scroll.js`.** Same
+sticky-stage/panel-column skeleton (`.spirit-hero` > `.spirit-stage` > `.spirit-visual` [sticky,
+`height:100vh`] + `.spirit-panels`) and the same `IntersectionObserver({threshold: 0.55})`
+shape, but the backdrop stays one static crop — no `--focus-x` pan. Instead, one
+`.spirit-panel-card` is ever `opacity:1` at a time across the 4 panels (intro, two Iqbal
+couplets, closing line): the observer callback removes `.in-view` from every sibling before
+adding it to the entering card, which is what makes it read as a genuine crossfade in *both*
+scroll directions — `pillar-scroll.js` by contrast never un-marks a panel once revealed, since
+its effect (panning) only ever needs to move forward. Same mobile/short-viewport
+(`@media (max-width: 720px), (max-height: 560px)`) and `prefers-reduced-motion` fallback posture
+as `.pillar-hero`: no sticky pin, cards permanently visible.
+
+**Sections B & C — `assets/js/carousel.js` + `.carousel*` CSS, new: the site's first
+horizontal-scroll-snap pattern.** No such pattern existed anywhere before (`.table-scroll`/
+`.bracket` are bare `overflow-x:auto`, no snap, no JS). Native `scroll-snap-type: x mandatory`
+does all the real scrolling; `carousel.js` only adds optional prev/next buttons for
+keyboard/no-trackpad users — shipped `hidden` in markup, unhidden only once JS actually wires
+them, same posture as the header's `.discord-widget`, so a JS failure never leaves a dead button
+behind. Cards reuse `.stat`'s existing card chrome (`class="carousel-card stat"`) rather than a
+new tile style. Section B's 5 cards each show a `.pillar-card-art` slice of
+`spirit-pillars-strip.jpg` via `background-position` (one image, five uses); since that art
+already carries its own icon glyph per pillar, the redundant emoji icon was dropped from those
+cards. Section C's `.carousel-backdrop` uses `more-than-name.jpg` as a shared background behind
+all 6 feature cards — its overlay gradient was strengthened (to `0.72`/`0.88` alpha) after an
+initial pass showed the backdrop's own city-light detail reducing card-text contrast once real
+content sat on top of it.
+
+**Section D** — kept `.card.clan-reveal.spirit-banner` exactly as ADR-074 shipped it (still the
+page's one "hero moment" wipe). Added a low-opacity (`0.32`) `spirit-banner-bg.jpg` layer via a
+plain `<div>` rather than reusing the `::before` slot, since `.clan-reveal::before` already owns
+that slot for its crest watermark — both effects now show together.
+
+**Removed:** the old `#clan-spirit` markup and its `.spirit-couplets` grid CSS (ADR-074).
+**Kept and reused as-is:** `.spirit-intro`, `.couplet`/`.couplet-en`/`cite`, `.stat-desc`, and
+the whole `.spirit-banner*` block. `core/brand.py` and the Discord bot remain untouched — this
+is a `web/`-only change.
+
+Files: `web/clan.html`, `web/assets/css/style.css`, `web/assets/js/spirit-scroll.js` (new),
+`web/assets/js/carousel.js` (new), `web/assets/img/spirit-hero.{jpg,webp}`,
+`spirit-pillars-strip.jpg`, `more-than-name.jpg`, `spirit-banner-bg.jpg` (all new, cropped from
+the uploaded poster — no raw poster file committed).
+
+Verified: headless-Chromium pass — exactly one `.spirit-panel-card` is `opacity:1` at any scroll
+position, confirmed scrolling both down and back up (re-entering an earlier panel correctly
+re-lights it); the mobile/short-viewport and `prefers-reduced-motion` fallbacks render a static,
+fully-visible, non-sticky stack; both carousels scroll/snap correctly, their prev/next buttons
+unhide once wired and correctly disable at each end; all 4 new images load with no broken-image
+icons at desktop and ~400px widths; `.spirit-banner`'s new background doesn't hurt text
+legibility; the untouched `#clan-content` block below (API motto card, stats, activity, Explore
+grid) still renders and animates correctly, no regression to ADR-074's `scroll.js` wiring. No
+Python changes — `ruff`/`mypy`/`pytest` untouched.
