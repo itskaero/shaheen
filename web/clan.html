@@ -52,203 +52,95 @@
   </div>
 
   <main class="wrap" style="padding-top: 0">
-    <!-- Scroll-mapped fade hero (docs/DECISIONS.md ADR-075): a sticky
-         backdrop stays pinned while four text cards crossfade in and out
-         via assets/js/spirit-scroll.js — the backdrop itself never pans,
-         unlike the homepage's pillar-hero. -->
-    <section class="spirit-hero" id="spirit-hero" aria-label="The Spirit of Shaheen">
-      <div class="spirit-stage" data-scroll-stage>
-        <div class="spirit-visual" data-scroll-visual>
-          <picture>
-            <source srcset="assets/img/spirit-hero.webp" type="image/webp" />
-            <img src="assets/img/spirit-hero.jpg" alt="" class="spirit-backdrop-img" />
-          </picture>
-          <div class="spirit-vignette" aria-hidden="true"></div>
-        </div>
+    <!-- Full-story scrollytelling (docs/DECISIONS.md ADR-077, supersedes
+         ADR-074/075/076's three-section approach entirely): one sticky
+         stage pinned for 650vh of scroll, driven by a continuous
+         scroll-position formula in assets/js/clan-story.js — not discrete
+         IntersectionObserver stops. Ported from a delivered prototype
+         (shaheen_scrollytelling_v2), retyped onto the site's own
+         Bebas Neue/Space Grotesk/Sora + --gold/--cream/--void tokens; its
+         own fake top nav was dropped in favor of the real .site-header
+         above it. -->
+    <div class="story-stage" id="story-stage">
+      <div class="story-scene-bg active" data-bg="0" style="background-image:url('assets/img/story/01-hero.jpg')"></div>
+      <div class="story-scene-bg" data-bg="1" style="background-image:url('assets/img/story/02-spirit.jpg')"></div>
+      <div class="story-scene-bg" data-bg="2" style="background-image:url('assets/img/story/03-pillars.jpg')"></div>
+      <div class="story-scene-bg" data-bg="3" style="background-image:url('assets/img/story/04-journey.jpg')"></div>
+      <div class="story-scene-bg" data-bg="4" style="background-image:url('assets/img/story/05-legacy.jpg')"></div>
+      <div class="story-layer" aria-hidden="true"></div>
 
-        <div class="spirit-panels">
-          <div class="spirit-panel" data-scroll-panel data-panel="intro">
-            <div class="wrap">
-              <div class="spirit-panel-card" data-scroll-card>
-                <div class="divider"><span>The Spirit of Shaheen</span></div>
-                <p class="spirit-intro">
-                  Allama Muhammad Iqbal used the image of the Shaheen to awaken a spirit in the
-                  youth — a spirit of freedom, courage, ambition, self-reliance and endless
-                  striving for higher goals.
-                </p>
-              </div>
-            </div>
-          </div>
+      <div class="story-progress" id="story-progress" aria-hidden="true"></div>
+      <div class="story-counter" id="story-counter" aria-hidden="true">01 / 05</div>
 
-          <div class="spirit-panel" data-scroll-panel data-panel="couplet-1">
-            <div class="wrap">
-              <div class="spirit-panel-card couplet" data-scroll-card>
-                <p lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</p>
-                <p class="couplet-en">Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.</p>
-                <cite>— Allama Iqbal, Bal-e-Jibril</cite>
-              </div>
-            </div>
+      <main class="story-content">
+        <section class="story-panel story-hero active">
+          <div>
+            <div class="story-eyebrow">Pakistan's Competitive Brawlhalla Clan</div>
+            <h1>Shaheen</h1>
+            <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
+            <div class="story-eyebrow">Higher Together</div>
           </div>
+        </section>
 
-          <div class="spirit-panel" data-scroll-panel data-panel="couplet-2">
-            <div class="wrap">
-              <div class="spirit-panel-card couplet" data-scroll-card>
-                <p lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</p>
-                <p class="couplet-en">You are a Shaheen; flight is your purpose — there are yet more skies before you.</p>
-                <cite>— Allama Iqbal</cite>
-              </div>
+        <section class="story-panel story-spirit">
+          <div class="story-poetry" id="story-poetry">
+            <div class="story-eyebrow">The Spirit of Shaheen</div>
+            <div class="story-quote-mark" aria-hidden="true">&ldquo;</div>
+            <div class="story-quote active" data-quote="0">
+              <div class="story-urdu" lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</div>
+              <div class="story-translation">&ldquo;Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.&rdquo;<br /><br />— Allama Iqbal, <i>Bal-e-Jibril</i></div>
+            </div>
+            <div class="story-quote" data-quote="1">
+              <div class="story-urdu" lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</div>
+              <div class="story-translation">&ldquo;You are a Shaheen; flight is your purpose — there are yet more skies before you.&rdquo;<br /><br />— Allama Iqbal</div>
             </div>
           </div>
+        </section>
 
-          <div class="spirit-panel" data-scroll-panel data-panel="closing">
-            <div class="wrap">
-              <div class="spirit-panel-card" data-scroll-card>
-                <p class="spirit-intro" style="margin-bottom: 0">
-                  The Shaheen doesn't settle. It doesn't fear the heights. It keeps flying,
-                  keeps fighting, and never stops chasing bigger skies.
-                  <strong style="color: var(--gold)">That is the mindset of Shaheen.</strong>
-                </p>
-              </div>
-            </div>
+        <section class="story-panel story-pillars-panel">
+          <div class="story-pillars-title">
+            <div class="story-eyebrow">Five Pillars &middot; One Sky</div>
+            <h2>What We Stand For</h2>
           </div>
-        </div>
-      </div>
-    </section>
+          <div class="story-pillars-track" id="story-pillars">
+            <article class="story-pillar"><span aria-hidden="true">⛰️</span><b>Ambition</b><p>We always aim higher. There is always another sky.</p></article>
+            <article class="story-pillar"><span aria-hidden="true">⚔️</span><b>Competition</b><p>We play to win. Every match is a step forward.</p></article>
+            <article class="story-pillar"><span aria-hidden="true">📈</span><b>Improvement</b><p>We learn, adapt and become better every day.</p></article>
+            <article class="story-pillar"><span aria-hidden="true">🤝</span><b>Brotherhood</b><p>We rise together. We support, respect and push each other.</p></article>
+            <article class="story-pillar"><span aria-hidden="true">🛡️</span><b>Integrity</b><p>No toxicity. No excuses. Only growth.</p></article>
+          </div>
+        </section>
 
-    <div id="clan-spirit">
-      <!-- Pin + horizontal-pan section (docs/DECISIONS.md ADR-076, supersedes
-           ADR-075's carousel). Same sticky-stage/panel-column skeleton as
-           .spirit-hero, generalized via assets/js/scroll-pan.js: scrolling
-           vertically through 5 stacked panels crossfades each value's
-           caption card AND pans spirit-pillars-strip.jpg horizontally in 5
-           discrete steps (one per statue) via --pan-x. -->
-      <section class="values-hero" id="values-hero" aria-label="What We Stand For">
-        <div class="values-stage" data-scroll-stage>
-          <div class="values-visual" data-scroll-visual>
-            <div class="values-vignette" aria-hidden="true"></div>
-          </div>
-          <div class="values-panels">
-            <div class="values-panel" data-scroll-panel data-pan-x="0">
-              <div class="wrap">
-                <div class="values-panel-card" data-scroll-card>
-                  <div class="divider"><span>What We Stand For</span></div>
-                  <span class="label">Ambition</span>
-                  <p class="stat-desc">We always aim higher. There is always another sky.</p>
-                </div>
-              </div>
-            </div>
-            <div class="values-panel" data-scroll-panel data-pan-x="25">
-              <div class="wrap">
-                <div class="values-panel-card" data-scroll-card>
-                  <span class="label">Competition</span>
-                  <p class="stat-desc">We play to win. Every match is a step forward.</p>
-                </div>
-              </div>
-            </div>
-            <div class="values-panel" data-scroll-panel data-pan-x="50">
-              <div class="wrap">
-                <div class="values-panel-card" data-scroll-card>
-                  <span class="label">Improvement</span>
-                  <p class="stat-desc">We learn, adapt and become better every day.</p>
-                </div>
-              </div>
-            </div>
-            <div class="values-panel" data-scroll-panel data-pan-x="75">
-              <div class="wrap">
-                <div class="values-panel-card" data-scroll-card>
-                  <span class="label">Brotherhood</span>
-                  <p class="stat-desc">We rise together. We support, respect and push each other.</p>
-                </div>
-              </div>
-            </div>
-            <div class="values-panel" data-scroll-panel data-pan-x="100">
-              <div class="wrap">
-                <div class="values-panel-card" data-scroll-card>
-                  <span class="label">Integrity</span>
-                  <p class="stat-desc">No toxicity. No excuses. Only growth.</p>
-                </div>
-              </div>
+        <section class="story-panel story-journey">
+          <div class="story-journey-card">
+            <div class="story-eyebrow">More Than a Name</div>
+            <h2>Build the <span class="story-gold">legacy.</span></h2>
+            <p>A Pakistan-based Brawlhalla clan built for players serious about the game and the journey. Every match, achievement and tournament becomes part of the record.</p>
+            <div class="story-features">
+              <div class="story-feature"><b>Ranked</b>Climb the ladder.</div>
+              <div class="story-feature"><b>Scrims</b>Train together.</div>
+              <div class="story-feature"><b>Tournaments</b>Compete.</div>
+              <div class="story-feature"><b>Achievements</b>Earn your mark.</div>
+              <div class="story-feature"><b>Leaderboards</b>Track the climb.</div>
+              <div class="story-feature"><b>Community</b>Rise together.</div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Same mechanism as .values-hero above, but panned continuously
-           (not in 5 hard stops) since more-than-name.jpg is one continuous
-           cityscape panorama rather than pictorially distinct stops. -->
-      <section class="more-hero" id="more-hero" aria-label="Shaheen Is More Than a Name">
-        <div class="more-stage" data-scroll-stage>
-          <div class="more-visual" data-scroll-visual>
-            <div class="more-vignette" aria-hidden="true"></div>
+        <section class="story-panel story-legacy">
+          <div>
+            <div class="story-eyebrow">Shaheen &middot; Pakistan</div>
+            <h2>Fly High.<br />Fight Hard.<br />Leave a Legacy.</h2>
+            <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
+            <div class="story-eyebrow">Higher Together</div>
+            <a class="story-cta" href="join.html">Join the journey &rarr;</a>
           </div>
-          <div class="more-panels">
-            <div class="more-panel" data-scroll-panel data-pan-x="0">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <div class="divider"><span>Shaheen Is More Than a Name</span></div>
-                  <p class="spirit-intro">
-                    We are a Pakistan-based Brawlhalla clan built for players who are serious
-                    about the game and the journey. From ranked queues to tournaments, from
-                    scrims to achievements — every moment we build our legacy.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="0">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">🎯</span><span class="label">Ranked Play</span>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="20">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">🏋️</span><span class="label">Scrims &amp; Training</span>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="40">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">🥇</span><span class="label">Tournaments</span>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="60">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">🏅</span><span class="label">Achievements</span>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="80">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">📊</span><span class="label">Leaderboards</span>
-                </div>
-              </div>
-            </div>
-            <div class="more-panel" data-scroll-panel data-pan-x="100">
-              <div class="wrap">
-                <div class="more-panel-card" data-scroll-card>
-                  <span class="value">👥</span><span class="label">Active Community</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      <section class="wrap">
-        <div class="card clan-reveal spirit-banner">
-          <div class="spirit-banner-bg" aria-hidden="true"></div>
-          <h2>Fly High. Fight Hard. Leave a Legacy.</h2>
-          <p lang="ur">بلندیوں کی جانب</p>
-          <p class="spirit-banner-en">Higher Together</p>
-        </div>
-      </section>
+      <div class="story-scroll-hint" aria-hidden="true">Scroll to explore</div>
     </div>
+    <div class="story-scroll-area"></div>
 
     <div id="clan-content">
       <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
@@ -272,7 +164,7 @@
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/scroll.js"></script>
-  <script src="assets/js/scroll-pan.js"></script>
+  <script src="assets/js/clan-story.js"></script>
   <script src="assets/js/pages/clan.js"></script>
 </body>
 </html>
