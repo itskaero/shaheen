@@ -2486,3 +2486,117 @@ the active scene; scrolling back up reverses cleanly; desktop and ~400px widths 
 present and no sticky pin or JS scroll listener attached; no broken images; the untouched
 API-driven `#clan-content` block below still renders and animates correctly. No Python changes —
 `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-078 — real eagle animation, card-free Pillars, new Legends scene
+
+Requested: three of ADR-077's five story beats fell short of a fuller scrollytelling spec —
+Hero/Spirit needed a real animated eagle (perched → taking off → flying) instead of a static
+baked bird; Pillars needed to drop its sliding card row entirely ("no cards, boxes or borders")
+in favor of one static environment with a moving spotlight; and a "Legends" roster beat (horizontal
+scroll-driven character strip, "slide + fade, not individual cards") didn't exist at all — the
+Journey scene it replaces was a generic boxed feature-grid card. A second asset delivery
+(`shaheen_story_web_1.zip`) provided what ADR-077 didn't have: three transparent eagle-pose
+cutouts (`eagle_perched/launch/flying.png`) and five transparent character cutouts
+(`legend_mordex/brynn/tezca/nix/jaeyun.png`) — true layered foreground art, not another flattened
+scene mockup. The zip's own `hero.png`/`pillars.png`/`legends.png`/`storyboard.png` are browser
+screenshots of its own demo (baked-in fake nav, headline, dot indicators) and were treated as
+visual reference only, not assets — reusing them as backgrounds would have reintroduced the
+exact "one giant flattened image" problem this round moves away from. `01-hero.jpg`…`05-legacy.jpg`
+(ADR-077, already reconciled to this site's tokens) stay as the environment layers underneath the
+new foreground cutouts.
+
+Requested roster was eight legends (Orion, Artemis, Mordex, Brynn, Tezca, Nix, Jaeyun, Petra);
+finished cinematic-style cutout art exists for five. A follow-up reference sheet confirmed all
+eight are real Brawlhalla legends worth including eventually, but its own art for them is a flat
+"chibi rock-pedestal" icon style that doesn't match the five cinematic cutouts already on hand —
+mixing styles would read as an error, not a roster. Per confirmed direction, this round ships
+exactly the five with matching art; Orion/Artemis/Petra are a follow-up once art exists in the
+same style. No image-generation or true AI-upscaling tool is available in this environment, so
+neither the missing three nor any "higher-resolution" regeneration of existing assets was
+possible this round — confirmed directly with the user rather than assumed.
+
+**Eagle** (`.story-eagle`, `web/assets/img/story/eagle_{perched,launch,flying}.png`): an
+independent foreground layer inside `.story-stage`, not scoped to a single `.story-panel` — it
+spans the Hero (scene 0) and Spirit (scene 1) scenes together, crossfading perched → launch →
+flight as `clan-story.js`'s overall scroll formula advances through both. This needed a layout
+change to avoid colliding with text: both panels' copy was center/right-anchored in the vertical
+middle of the frame, exactly where a foreground eagle wants to sit, so both were re-anchored to
+the lower frame (`align-items: flex-end`) leaving the eagle the upper two-thirds, left-of-center.
+
+**Pillars** (`.story-pillar-spotlight`, `.story-pillar-captions`): the sliding bordered
+`.story-pillar` cards are gone. The background (`03-pillars.jpg`) already shows all five totems
+across one mountain range, so a radial-gradient spotlight now sweeps a `--focus` position across
+five stops to brighten whichever totem is active, while a plain unboxed caption (index, name,
+tagline, one-line description) crossfades in sync — text swaps discretely and stays readable,
+the environment is what visibly highlights. All five captions live statically in the DOM (same
+"both in the DOM, crossfade via opacity" pattern as the Spirit scene's two quotes) rather than
+one JS-`textContent`-swapped slot — the latter would have silently dropped four of the five
+captions for `prefers-reduced-motion` visitors, the same class of bug ADR-077 already caught and
+fixed once for the Iqbal quotes; no reason to reintroduce it here.
+
+**Legends** (new `.story-legends` scene, replaces the old "Journey" boxed feature-grid card;
+`web/assets/img/story/legend_{mordex,brynn,tezca,nix,jaeyun}.png`): a horizontal roster strip
+driven by vertical scroll, background reused from `04-journey.jpg` (its "different paths, one
+sky" mood fits; the zip's own `legends.png` bakes a *different* set of character renders directly
+into its pixels, which would visibly double up against the real cutouts layered on top). All five
+cutouts + names + traits are static DOM elements (`.story-legend`); `clan-story.js` only toggles
+which is `.active` (full opacity/scale, others dimmed/blurred/scaled down — "slide + fade") and
+translates the strip to center the active one, with the step width measured live via
+`getBoundingClientRect` rather than hardcoded so it stays correct at the mobile breakpoint's
+narrower cards.
+
+**Legacy**: the six feature words (Ranked/Scrims/Tournaments/Achievements/Leaderboards/Community)
+moved out of the deleted Journey grid into the Legacy scene as a single plain, unboxed strap-line
+above the closing headline — "integrate into the environment rather than cards," per the request.
+`05-legacy.jpg`'s existing pull-back fortress framing already supports this; no new background
+needed. The closing headline, Urdu line, "Higher Together" and the join CTA are unchanged.
+
+`.story-scroll-area` grew from 650vh to 800vh to give the new Legends beat proper scroll room
+without compressing the other four.
+
+Two real bugs found and fixed while verifying this round, neither introduced by this round but
+both surfaced by it:
+
+1. `clan-story.js`'s scroll-progress formula divided by `document.body.scrollHeight - innerHeight`
+   — the whole page's scrollable height, including `#clan-content` and the footer below the
+   story. Since the sticky stage's actual pin range never covers that extra height, the Legacy
+   scene (the last of the five) only reached its `.active` state right as, or after, the stage
+   had already started unpinning — it could flash in but never settle fully on screen. Fixed by
+   measuring progress against the story section's own pin range instead, anchored off
+   `.story-scroll-area` (a plain, non-sticky block) rather than the sticky stage itself: reading
+   `offsetTop` on a `position: sticky` element returns its current *stuck* render position in
+   this browser once scrolled, not its static one, so it can't be used as a stable boundary.
+2. The reduced-motion fallback's `.story-panel` override never reset the base rule's
+   `display: flex`, so a panel with more than one now-`position: static` child laid its children
+   out side by side in a row instead of stacking them. Invisible while every panel had at most one
+   multi-part block (ADR-077), but latent even then in the Pillars scene's title + track pair;
+   newly obvious once this round's captions/legends markup added more such panels. Fixed with one
+   `display: block` on the fallback's `.story-panel` rule.
+
+Files: `web/clan.html` (Hero/Spirit panels re-anchored to the lower frame; `#story-eagle` layer
+added; Pillars track markup replaced with spotlight + five static captions; Journey section
+replaced with the new Legends section; the six feature words moved into Legacy as a strap-line),
+`web/assets/css/style.css` (`.story-eagle`/`.story-eagle-pose` added; `.story-pillar`/
+`.story-pillars-track` replaced with `.story-pillar-spotlight`/`.story-pillar-captions`/
+`.story-pillar-caption`; `.story-legends-caption`/`.story-legends-strip`/`.story-legend` added;
+`.story-features`/`.story-feature`/`.story-journey`/`.story-journey-card` removed;
+`.story-legacy-features` added; `@media (max-width: 800px)` and the global
+`prefers-reduced-motion` block both updated for all of the above), `web/assets/js/clan-story.js`
+(eagle sub-beat spanning scenes 0–1 added; pillar `translateX` pan logic replaced with the
+`--focus` spotlight sweep + caption crossfade; legends sub-beat added), `web/assets/img/story/
+eagle_{perched,launch,flying}.png` + `legend_{mordex,brynn,tezca,nix,jaeyun}.png` (new, copied
+from the delivered zip as-is), `docs/DECISIONS.md` (this entry).
+
+Verified: headless-Chromium pass — the eagle visibly steps perched → launch → flight across the
+Hero and Spirit scenes without covering their text, and the Iqbal couplets still crossfade
+correctly underneath it; the pillar spotlight sweeps across the totems roughly in sync with their
+positions in the art, captions and progress track correctly, no card/border/box renders anywhere
+in that scene; the legends strip slides through all five, the active one is sharp/large/full
+opacity and the rest are visibly dimmed/blurred/small, no card/border box; the legacy strap-line
+renders as plain inline text with the closing headline and CTA unchanged; reverse-scroll holds up
+for all of the above; desktop (~1440px) and ~400px mobile widths both hold up; `prefers-reduced-
+motion: reduce` renders a static, fully-visible stack — all five pillar captions, the full
+legends roster, and both Iqbal quotes all present and readable, decorative-only layers (eagle,
+background art, spotlight) simply hidden rather than frozen mid-pose; no broken images, no
+console errors; the untouched API-driven `#clan-content` block below still renders and animates
+correctly. No Python changes — `ruff`/`mypy`/`pytest` untouched.

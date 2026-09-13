@@ -700,6 +700,8 @@ nav.site-nav a.active::after {
 .story-hero {
   text-align: center;
   justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 9vh;
 }
 
 .story-hero h1 {
@@ -715,7 +717,8 @@ nav.site-nav a.active::after {
 
 .story-spirit {
   justify-content: flex-end;
-  padding: 0 10vw 0 5vw;
+  align-items: flex-end;
+  padding: 0 10vw 9vh 5vw;
 }
 
 .story-poetry {
@@ -757,6 +760,38 @@ nav.site-nav a.active::after {
   line-height: 0.5;
 }
 
+/* Independent animated foreground layer (docs/DECISIONS.md ADR-078) --
+   not scoped to a single .story-panel, it spans the Hero + Spirit scenes
+   together (perched -> launch -> flight) while their text stays anchored
+   to the lower frame, so art and copy never collide. Sits above the
+   background/drift layers but below .story-content so text always wins
+   if they ever overlap at narrow viewports. */
+.story-eagle {
+  position: absolute;
+  z-index: 3;
+  left: 6vw;
+  top: 10vh;
+  width: clamp(220px, 30vw, 460px);
+  aspect-ratio: 1022 / 724;
+  pointer-events: none;
+  filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.55));
+}
+
+.story-eagle-pose {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.story-eagle-pose.active {
+  opacity: 1;
+}
+
 .story-pillars-panel {
   justify-content: center;
 }
@@ -777,106 +812,174 @@ nav.site-nav a.active::after {
   color: var(--cream);
 }
 
-.story-pillars-track {
-  display: flex;
-  gap: 18px;
+/* Spotlight sweep (docs/DECISIONS.md ADR-078, replaces the old sliding
+   .story-pillars-track cards): the background stays static and this
+   radial-gradient layer brightens whichever totem is active. */
+.story-pillar-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --focus: 12%;
+  background: radial-gradient(circle at var(--focus) 55%, rgba(255, 210, 63, 0.24), transparent 32%);
+  mix-blend-mode: screen;
+}
+
+.story-pillar-captions {
   position: absolute;
   left: 50%;
-  bottom: 13%;
-  width: max-content;
+  bottom: 15%;
+  width: min(520px, 82vw);
   transform: translateX(-50%);
-  will-change: transform;
-}
-
-.story-pillar {
-  width: 210px;
-  min-height: 205px;
-  padding: 24px 16px;
   text-align: center;
-  background: linear-gradient(180deg, rgba(3, 6, 4, 0.35), rgba(3, 6, 4, 0.9));
-  border: 1px solid rgba(255, 210, 63, 0.35);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  transition: transform 0.4s ease;
 }
 
-.story-pillar:hover {
-  transform: translateY(-8px);
+/* Same "both live in the DOM, crossfade via opacity" pattern as the Spirit
+   scene's two quotes -- all five pillar captions stay readable under
+   prefers-reduced-motion without any JS. */
+.story-pillar-caption {
+  position: absolute;
+  inset: auto 0 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.story-pillar b {
-  display: block;
+.story-pillar-caption.active {
+  position: relative;
+  opacity: 1;
+}
+
+.story-pillar-index {
   font-family: var(--font-heading);
+  font-size: 10px;
+  letter-spacing: 0.3em;
   color: var(--gold);
-  letter-spacing: 0.12em;
-  margin: 9px 0;
-  font-size: 13px;
 }
 
-.story-pillar p {
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--grey);
-}
-
-.story-journey {
-  padding: 0 6vw;
-}
-
-.story-journey-card {
-  max-width: 680px;
-  padding: 34px;
-  background: rgba(3, 6, 4, 0.62);
-  border: 1px solid rgba(255, 210, 63, 0.3);
-  backdrop-filter: blur(7px);
-  box-shadow: 0 25px 90px rgba(0, 0, 0, 0.35);
-}
-
-.story-journey-card h2 {
+.story-pillar-caption h3 {
   font-family: var(--font-display);
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  font-size: clamp(34px, 5vw, 64px);
-  margin: 5px 0 12px;
+  font-size: clamp(34px, 5vw, 62px);
+  margin: 10px 0 4px;
   color: var(--cream);
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+.story-pillar-caption p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--cream);
+  max-width: 420px;
+  margin: 12px auto 0;
 }
 
 .story-gold {
   color: var(--gold);
 }
 
-.story-journey-card p {
-  line-height: 1.7;
-  max-width: 600px;
+/* Legends (new in ADR-078, replaces the old boxed "Journey" content card):
+   horizontal roster, vertical-scroll driven, slide + fade -- no cards or
+   borders on any item. All five live statically in the DOM (image + name
+   + trait) so the roster is readable under prefers-reduced-motion without
+   JS; clan-story.js only handles the active/inactive emphasis + slide. */
+.story-legends {
+  padding: 0;
+}
+
+.story-legends-caption {
+  position: absolute;
+  z-index: 4;
+  left: 7vw;
+  top: 16vh;
+  max-width: 340px;
+}
+
+.story-legends-caption h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: clamp(32px, 4.5vw, 58px);
+  margin: 8px 0 10px;
   color: var(--cream);
 }
 
-.story-features {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 22px;
+.story-legends-caption p {
+  color: var(--cream);
+  line-height: 1.6;
+  font-size: 0.9rem;
 }
 
-.story-feature {
-  padding: 13px;
-  border-top: 1px solid rgba(255, 210, 63, 0.32);
-  font-size: 11px;
-  color: var(--grey);
+.story-legends-strip {
+  position: absolute;
+  left: 0;
+  top: 54%;
+  display: flex;
+  align-items: center;
+  gap: 42px;
+  will-change: transform;
 }
 
-.story-feature b {
+.story-legend {
+  flex: 0 0 220px;
+  text-align: center;
+  opacity: 0.22;
+  filter: blur(2px) saturate(0.55);
+  transform: scale(0.8);
+  transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
+}
+
+.story-legend img {
+  width: 100%;
+  height: 290px;
+  object-fit: contain;
+  object-position: bottom;
+}
+
+.story-legend.active {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.12);
+}
+
+.story-legend-name {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 22px;
+  color: var(--cream);
+}
+
+.story-legend-trait {
   display: block;
   font-family: var(--font-heading);
-  color: var(--gold);
   font-size: 10px;
-  letter-spacing: 0.14em;
-  margin-bottom: 5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 4px;
 }
 
 .story-legacy {
   justify-content: center;
   text-align: center;
+}
+
+/* Environment strap-line (ADR-078) -- the six feature words folded into
+   the Legacy pull-back as plain text, not a card grid. */
+.story-legacy-features {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.85;
+  margin: 0 0 18px;
 }
 
 .story-legacy h2 {
@@ -944,14 +1047,21 @@ nav.site-nav a.active::after {
   color: var(--gold);
 }
 
+/* 800vh (was 650vh pre-ADR-078) to give the new Legends beat its own
+   proper scroll room without compressing the other four. */
 .story-scroll-area {
-  height: 650vh;
+  height: 800vh;
 }
 
 @media (max-width: 800px) {
+  .story-hero {
+    padding-bottom: 20vh;
+  }
+
   .story-spirit {
     justify-content: center;
-    padding: 0 8vw;
+    align-items: flex-end;
+    padding: 0 8vw 16vh;
   }
 
   .story-poetry {
@@ -962,22 +1072,28 @@ nav.site-nav a.active::after {
     text-align: left;
   }
 
-  .story-pillars-track {
-    bottom: 10%;
+  .story-eagle {
+    left: 4vw;
+    top: 4vh;
+    width: 46vw;
   }
 
-  .story-pillar {
-    width: 175px;
-    min-height: 180px;
+  .story-pillar-captions {
+    bottom: 11%;
   }
 
-  .story-journey {
-    justify-content: center;
-    padding: 0 7vw;
+  .story-legends-caption {
+    left: 6vw;
+    top: 9vh;
+    max-width: 78vw;
   }
 
-  .story-features {
-    grid-template-columns: 1fr 1fr;
+  .story-legend {
+    flex-basis: 165px;
+  }
+
+  .story-legend img {
+    height: 210px;
   }
 
   .story-progress {
@@ -2192,11 +2308,14 @@ canvas#history-chart {
     max-width: none;
   }
 
-  /* clan.html's story section (docs/DECISIONS.md ADR-077): clan-story.js
+  /* clan.html's story section (docs/DECISIONS.md ADR-077/078): clan-story.js
      never attaches its scroll listener under reduced motion, so this has
      to independently produce a readable, fully-static fallback — no
-     sticky pin, every scene in normal document flow, both Iqbal couplets
-     visible (not just whichever one JS would have crossfaded to). */
+     sticky pin, every scene in normal document flow, both Iqbal couplets,
+     all five pillar captions and the full legends roster all visible (not
+     just whichever one JS would have crossfaded/emphasized). Decorative-
+     only layers (background art, the animated eagle, the pillar spotlight)
+     are simply hidden rather than frozen mid-pose. */
   .story-stage {
     position: static;
     height: auto;
@@ -2205,6 +2324,8 @@ canvas#history-chart {
 
   .story-scene-bg,
   .story-layer,
+  .story-eagle,
+  .story-pillar-spotlight,
   .story-progress,
   .story-counter,
   .story-scroll-hint,
@@ -2217,6 +2338,7 @@ canvas#history-chart {
   }
 
   .story-panel {
+    display: block;
     position: static;
     opacity: 1;
     pointer-events: auto;
@@ -2236,13 +2358,37 @@ canvas#history-chart {
     margin-bottom: 1.5rem;
   }
 
-  .story-pillars-track {
+  .story-pillar-captions {
     position: static;
+    width: auto;
+    transform: none;
+  }
+
+  .story-pillar-caption {
+    position: static;
+    opacity: 1;
+    margin-bottom: 2rem;
+  }
+
+  .story-legends-caption {
+    position: static;
+    max-width: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .story-legends-strip {
+    position: static;
+    top: auto;
     left: auto;
-    bottom: auto;
     transform: none;
     flex-wrap: wrap;
     justify-content: center;
-    margin: 0 auto;
+    row-gap: 24px;
+  }
+
+  .story-legend {
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
 }
