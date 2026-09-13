@@ -624,6 +624,103 @@ nav.site-nav a.active::after {
   opacity: 0.08;
 }
 
+/* ---------- "Spirit of Shaheen" (clan.html, docs/DECISIONS.md ADR-074) ---------- */
+
+.spirit-intro {
+  max-width: 720px;
+  margin: 0 auto 1.75rem;
+  text-align: center;
+  color: var(--grey);
+}
+
+.spirit-couplets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 1.75rem 0;
+}
+
+.couplet {
+  text-align: center;
+}
+
+.couplet p[lang="ur"] {
+  font-size: 1.15rem;
+  color: var(--gold);
+  line-height: 1.9;
+  margin: 0 0 0.85rem;
+}
+
+.couplet-en {
+  color: var(--cream);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 0.6rem;
+  font-style: italic;
+}
+
+.couplet cite {
+  display: block;
+  font-family: var(--font-heading);
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+.spirit-banner {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.spirit-banner::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(480px, 90%);
+  height: min(300px, 90%);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 210, 63, 0.18), transparent 65%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.spirit-banner h2 {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  letter-spacing: 0.03em;
+  color: var(--cream);
+  margin: 0 0 0.75rem;
+}
+
+.spirit-banner p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.spirit-banner p[lang="ur"] {
+  color: var(--gold);
+  font-size: 1.3rem;
+  margin-bottom: 0.15rem;
+}
+
+.spirit-banner-en {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
 @keyframes heroEntrance {
   from {
     opacity: 0;
@@ -912,6 +1009,13 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-top: 0.35rem;
+}
+
+.stat-desc {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: var(--grey);
+  line-height: 1.4;
 }
 
 /* ---------- tables ---------- */

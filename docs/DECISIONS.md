@@ -2205,3 +2205,66 @@ visual language at desktop and ~400px widths, that both autoplay outcomes (allow
 leave the button in the correct state including the first-interaction fallback actually starting
 playback, and that the mute preference and resume position both survive a simulated page
 navigation. No Python changes in this round — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-074 — "Spirit of Shaheen" animated section on clan.html
+
+Requested: a branded infographic (Iqbal's Shaheen poetry, a "What We Stand For" values list,
+"Shaheen Is More Than a Name", and a closing "Fly High. Fight Hard. Leave a Legacy." tagline)
+added to the website animated in the homepage's style, plus the same content split into a text
+block and a separate image for posting in Discord. None of this copy existed anywhere in the
+repo before this round — `docs/BRAND.md` and `src/core/brand.py` carry only the base
+motto/tagline, not this supplementary content — so it's new copy, not a reuse of existing
+strings. `core/brand.py`'s `MOTTO`/`TAGLINE` are untouched; the Discord side is two deliverable
+files (a text block + `web/assets/img/shaheen-lockup.png`), not bot/cog/embed code — the user
+explicitly scoped that half to "deliverable files only."
+
+`web/clan.html` (the "About the Clan" page) was chosen over the homepage or a new page: it
+currently has zero static philosophy/values content — everything there is API-injected (motto
+card, member count, community activity, explore links) — so this is a natural, non-duplicative
+home for identity/brand content, and it can render immediately rather than waiting on the API
+fetch that gates the rest of the page (which can take "up to a minute" on first load).
+
+Four new sections were inserted in `<main>` **before** the existing `#clan-content` div: "The
+Spirit of Shaheen" (intro + two Iqbal couplets + closing line), "What We Stand For" (5 value
+tiles), "Shaheen Is More Than a Name" (intro + 6 feature tiles), and a closing tagline banner.
+Each reuses existing components — `.wrap.reveal`, `.divider`, `.card`, `.stat-grid`/`.stat`,
+`[lang="ur"]` (Nastaliq + RTL is already global) — rather than inventing new ones; new CSS is
+limited to genuine gaps: `.spirit-intro` (centered paragraph), `.spirit-couplets`/`.couplet` (a
+2-column Urdu/English quote layout with an auto-collapsing `auto-fit minmax(260px,1fr)` grid),
+`.stat-desc` (an optional third description line under `.stat`'s existing value+label — reused
+by the values grid, useful for any future `.stat` tile that needs one), and `.spirit-banner` (a
+gold radial-glow banner inspired by the homepage hero's `.hero-glow` technique, self-contained
+via a `::after` pseudo-element instead of `.hero-glow`'s separate sibling-div structure). The
+6-tile feature grid needed zero new CSS — it's an exact reuse of the pattern this same page
+already uses for its own "Explore" grid, just non-linked.
+
+Animation is deliberately not uniform: the first three sections use plain `.reveal` (fade +
+slide) — dignified rather than flashy, appropriate for poetry/values copy per BRAND.md's
+"avoid... childish copy... cluttered" guidance. The closing tagline banner alone uses
+`.clan-reveal` (this page's existing diagonal-wipe + crest-watermark treatment, until now used
+only on the API-injected motto card) — reserving the more elaborate animation for one true "hero
+moment" rather than overusing it across every section.
+
+This surfaced and fixed a real gap: `clan.html` never loaded `assets/js/scroll.js`. Its only
+prior `.clan-reveal` usage (the motto card) is injected by `pages/clan.js` *after* an async API
+fetch resolves, well after `DOMContentLoaded` — so `clan.js` has always hand-rolled its own
+reveal trigger (a manual double-`requestAnimationFrame` then `classList.add("in-view")`) instead
+of relying on scroll.js's shared `IntersectionObserver`, which only observes elements present in
+the DOM at `DOMContentLoaded`. The four new sections above ARE static markup present at that
+point, so they need scroll.js's observer to fire their entrances. Added the script tag,
+positioned to match `index.html`'s load order (`spotlight.js` → `scroll.js` → page script) —
+zero JS code changes needed. No conflict with the existing motto card: scroll.js's
+`querySelectorAll(".reveal, .clan-reveal")` runs once at `DOMContentLoaded`, before clan.js's
+fetch has injected anything, so the two reveal mechanisms never observe the same element — the
+new sections are handled by scroll.js, the motto card keeps animating exactly as it did before.
+
+Files: `web/clan.html` (4 new sections + one new `<script>` tag), `web/assets/css/style.css`
+(`.spirit-intro`, `.spirit-couplets`/`.couplet`, `.stat-desc`, `.spirit-banner`).
+
+Verified: headless-Chromium pass — each new section's entrance animation fires once on scroll
+(three plain fades, one diagonal wipe), Urdu couplets and the banner's Urdu line render in
+Nastaliq/RTL correctly, the 5-tile and 6-tile grids sit as single rows on desktop and wrap
+cleanly at ~400px, and — the one real regression risk — the existing API-injected motto card
+still animates exactly once via its own manual trigger with `scroll.js` now also loaded on the
+page, with member count / community activity / the existing Explore grid all still rendering
+unaffected below the new sections. No Python changes — `ruff`/`mypy`/`pytest` untouched.
