@@ -2152,3 +2152,56 @@ independent objects rather than shared references, and an end-to-end test using 
 called with the correct gate applied), `uv run ruff check src tests` / `uv run mypy src` clean.
 Note: this — like ADR-069's own fix — only takes effect once `/setup run` is actually re-run
 against the live server; the currently-live channels won't self-correct until then.
+
+## ADR-073 — Site-wide autoplay background audio (clan anthem)
+
+Requested: play the clan's anthem (`assets/audio/anthem.mp3`, a 60s Urdu-language track ending
+in the brand's own "HIGHER TOGETHER" line) automatically on every page of the website.
+
+Constraint that shapes the whole design: no current browser (Chrome, Firefox, Safari) allows
+unconditional autoplay-with-sound on page load without prior engagement from the visitor on
+that origin — this is a deliberate, unbypassable browser policy, not a bug to chase later. The
+only honest implementation is the pattern every site with background audio actually uses: call
+`audio.play()` immediately, and if the returned promise rejects (autoplay blocked), fall back
+to starting playback on the visitor's very first `click`/`keydown`/`touchstart` anywhere on the
+page. `assets/js/audio.js` implements exactly that, plus a persistent mute toggle and playback
+position, and nothing more.
+
+The site is 10 hand-authored static pages with no templating or shared shell, so the module is
+deliberately self-contained — no dependency on `config.js`/`api.js` — and wired in with one
+identical `<script src="assets/js/audio.js"></script>` tag added as the *first* script on every
+page, the same mechanical one-line-per-file pattern used for prior site-wide additions (nav
+links, etc.).
+
+This feature introduces two firsts for the site, both used minimally and defensively:
+
+- **First `localStorage` usage.** Two keys: `shaheen-audio-muted` (a visitor's explicit
+  mute/unmute choice, so muting on one page stays muted across the next) and
+  `shaheen-audio-position` (a throttled, `timeupdate`/`pagehide`-driven save of playback
+  position, so clicking to a new page resumes roughly where the anthem left off instead of
+  visibly restarting from 0:00 every navigation — this is a 10-page static site, not an SPA, so
+  audio genuinely tears down and rebuilds on every page load). Every read/write is wrapped in
+  try/catch: private browsing or a locked-down context can throw on `localStorage` access, and
+  the feature must degrade to "just doesn't persist" rather than breaking the page.
+- **First `position: fixed` UI element.** The mute/unmute toggle (`.audio-toggle`,
+  `web/assets/css/style.css`) is a small circular button pinned bottom-left, always reachable
+  regardless of scroll position. It reuses the existing `--card-bg`/`--card-border` treatment
+  and the same green-glow family as `.btn-primary`/`.cta-pulse`, with its own `.is-pending`
+  pulse (gold, not green) to signal "autoplay was blocked — tap anywhere to start" whenever the
+  fallback path is active, and an `.is-muted` state that dims it to `--grey`. A
+  `@media (max-width: 640px)` rule shrinks and repositions it slightly, matching the site's one
+  existing narrow-viewport breakpoint.
+
+Icon is an inline SVG (speaker + sound-wave arcs, with a muted/slash variant), not an emoji
+glyph, so it renders crisply at 1x and stays colorable with `currentColor` across every OS
+without emoji-rendering variance.
+
+Files: `web/assets/audio/anthem.mp3` (new), `web/assets/js/audio.js` (new),
+`web/assets/css/style.css` (`.audio-toggle` block + `audioTogglePending` keyframes + one mobile
+rule), every `web/*.html` file (one new `<script>` tag each).
+
+Verified: headless-Chromium pass confirming the toggle renders correctly and matches the site's
+visual language at desktop and ~400px widths, that both autoplay outcomes (allowed and blocked)
+leave the button in the correct state including the first-interaction fallback actually starting
+playback, and that the mute preference and resume position both survive a simulated page
+navigation. No Python changes in this round — `ruff`/`mypy`/`pytest` untouched.
