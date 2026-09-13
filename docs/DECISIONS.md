@@ -2419,3 +2419,70 @@ short-viewport-height window both fall back to a static, fully-visible stacked l
 sticky pin; `prefers-reduced-motion: reduce` renders everything statically; no broken images; the
 closing tagline banner and the API-driven `#clan-content` block below still render and animate
 correctly. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-077 — clan.html's story replaced wholesale with a delivered scrollytelling prototype
+
+Requested: a complete, self-contained prototype (`shaheen_scrollytelling_v2.zip` — `index.html` +
+five purpose-made 1920×1080 scene images) that does what ADR-074/075/076 were reaching for
+properly: one continuous scroll-jacked story — hero title → Iqbal's poetry → a horizontally
+sweeping pillar-values row → "more than a name" → closing legacy tagline — driven by a single
+sticky stage and a continuous scroll-position formula, not discrete `IntersectionObserver` stops.
+This **replaces** ADR-074/075/076's three-section approach entirely (`.spirit-hero`/
+`.values-hero`/`.more-hero`/`.spirit-banner`, `scroll-pan.js`, and the small cropped-poster
+images that round kept fighting blur on) — not an iteration on top of it. Two integration
+decisions confirmed before implementation: reconcile the prototype's own Inter font and muted
+gold/cream palette onto this site's existing Bebas Neue/Space Grotesk/Sora + `--gold`/`--cream`/
+`--void` tokens, rather than introducing a second parallel style system; and drop the
+prototype's own fake top nav (logo + Home/About/Community/Tournaments/Join) since the site's
+real sticky `.site-header` above it is sufficient.
+
+The five scene images are used as delivered (1920×1080, no upscaling needed — the blur problem
+from the last two rounds was specific to the 726px source poster this round's assets don't share)
+under `web/assets/img/story/`. They deliberately carry some baked scene text as art direction
+behind the real DOM content, not a duplication bug like the earlier rounds' poster crops: the
+real interactive cards sit on top with their own dark backing, so the baked text reads as
+atmosphere rather than a legibility collision.
+
+`web/assets/js/clan-story.js` (new, replaces the deleted `spirit-scroll.js`/`scroll-pan.js`) is
+a near-verbatim port of the prototype's engine, selectors renamed to this page's `story-`
+prefixed classes (chosen because the prototype's own short class names — `.eyebrow`, `.legacy`,
+`.cta`, `.feature` — were fine in a standalone page but too generic for a 1700-line shared
+stylesheet). One continuous formula (`scrollY / max → per-scene fractional progress`) drives
+everything: which of the five `.story-scene-bg`/`.story-panel` pairs is active, a subtle
+background zoom, the two-Iqbal-quote crossfade as an independent sub-beat within the spirit
+scene, and the pillar row's `translateX` sweep as a sub-beat within the pillars scene — genuine
+continuous panning, not the discrete `--pan-x` steps ADR-076 used.
+
+One real gap found while porting, not present in the standalone prototype: its poetry beat
+templated whichever Iqbal couplet was active into a single DOM slot via JS. Since this site's
+`prefers-reduced-motion` convention is to never attach a scrollytelling module's scroll listener
+at all (matching `pillar-scroll.js`/`scroll.js`), that would have left reduced-motion visitors
+with an empty, never-populated verse — silently dropping both Iqbal quotes for anyone who
+prefers-reduced-motion. Fixed by writing both couplets statically into the HTML as two stacked
+`.story-quote` elements instead of one JS-templated slot; `clan-story.js` crossfades between them
+via `opacity` for normal-motion visitors, while the reduced-motion CSS fallback below simply
+shows both in static normal flow — the content is now in the DOM regardless of whether JS runs.
+
+No separate mobile/short-viewport static fallback was built this round (unlike ADR-074/075/076's
+discrete-panel sections) — this design has exactly one sticky element for the whole page instead
+of three stacked independent ones, architecturally simpler and less prone to the compounding
+sticky-context quirks that motivated the earlier `@media (max-width: 720px), (max-height: 560px)`
+fallback. Verified visually at ~400px instead; flagged as a follow-up if it turns out to jitter
+on real devices, rather than pre-built speculatively.
+
+Files: `web/clan.html` (old sections removed, new `.story-stage`/`.story-scroll-area` section
+added), `web/assets/css/style.css` (`.spirit-*`/`.values-*`/`.more-*`/`@property --pan-x` removed,
+new `.story-*` block added plus its `prefers-reduced-motion` fallback), `web/assets/js/clan-story.js`
+(new), `web/assets/js/spirit-scroll.js` + `web/assets/js/scroll-pan.js` (deleted),
+`web/assets/img/story/01-hero.jpg` … `05-legacy.jpg` (new, copied from the delivered prototype
+as-is), `web/assets/img/spirit-hero.{jpg,webp}`/`spirit-pillars-strip.jpg`/`more-than-name.jpg`/
+`spirit-banner-bg.jpg` (deleted — no longer referenced by anything).
+
+Verified: headless-Chromium pass — scrolling the full 650vh steps through all five scenes with
+correct background crossfades; the two Iqbal couplets crossfade within the spirit scene; the
+pillar row visibly sweeps horizontally as a continuous pan; progress dots and the counter track
+the active scene; scrolling back up reverses cleanly; desktop and ~400px widths both hold up;
+`prefers-reduced-motion: reduce` renders a static, fully-visible stack with both Iqbal couplets
+present and no sticky pin or JS scroll listener attached; no broken images; the untouched
+API-driven `#clan-content` block below still renders and animates correctly. No Python changes —
+`ruff`/`mypy`/`pytest` untouched.
