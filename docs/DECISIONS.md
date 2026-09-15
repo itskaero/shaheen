@@ -2600,3 +2600,89 @@ legends roster, and both Iqbal quotes all present and readable, decorative-only 
 background art, spotlight) simply hidden rather than frozen mid-pose; no broken images, no
 console errors; the untouched API-driven `#clan-content` block below still renders and animates
 correctly. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-079 — first-visit "Shaheen" landing gate; clan.html's story goes fully static
+
+Requested: bring the delivered `shaheen-scenes.html` film into the site as a one-time landing page
+for brand-new visitors, so the clan makes a cinematic first impression before anyone touches the
+home page — but never trap anyone: once seen (or on any exit/CTA click) it must not come back on
+its own, and it must stay reachable on demand from the site nav. In the same pass, clan.html's
+five-beat story section was to lose its scroll-driven stage entirely and read as a simple stacked
+narrative.
+
+**Landing page** (`shaheen-scenes.html` → `web/landing.html`): the delivered scenes file was
+promoted into the site as `web/landing.html` (relative asset paths resolve correctly from the
+`web/` root; the root-level original is left untouched as the source copy). Its prototype nav
+anchors were replaced with real page links (Home, Clan, Roster, Tournaments, Leaderboard, Join) and
+its Legacy-scene CTAs now target `join.html`/`roster.html`/`index.html`. The first-visit gate is a
+single localStorage key `shaheen_landing_viewed`: only `index.html` carries a pre-paint redirect —
+if the key is absent it runs `location.replace("landing.html")` from a `<script>` in `<head>`,
+wrapped in a try/catch so private-mode/blocked-storage browsers fall through to the normal homepage
+instead of erroring. `landing.html` itself never redirects and sets the key three ways: scrolling
+the closing Legacy scene to its end (`p >= 0.98`), clicking any `[data-leave]` link (normal anchor
+behaviour, key set), or clicking `[data-enter]` (key set, then navigated via `leaveTo(href)`).
+"Scenes" was added to the nav of every page so the film is always one click away.
+
+**Static story** (`web/clan.html`, `web/assets/css/style.css`): the sticky stage
+(`.story-stage`/`.story-scroll-area`), `clan-story.js`, the eagle poses, the pillar spotlight, the
+progress dots, the scene counter and the scroll hint are all removed. The five beats (Hero, Spirit,
+Pillars, Legends, Legacy) are now ordinary stacked `<section>`s inside a `.story-static` wrapper,
+each with its story art behind a dark gradient and all copy statically in the DOM — the layout
+ADR-077/078 only produced under `prefers-reduced-motion`, now the only path. The old animated
+`.story-*` rules and their reduced-motion overrides were replaced by a scoped
+`.story-static .story-*` block (the reduced-motion media query otherwise is unchanged for the rest
+of the site). `web/assets/js/clan-story.js` is deleted as dead code. The API-driven
+`#clan-content` block below the story was already wrapped in its own `.wrap` and is unchanged.
+
+Files: `web/landing.html` (new, from `shaheen-scenes.html`), `web/index.html` (pre-paint redirect +
+Scenes nav), `web/clan.html` (static story rewrite, Scenes nav, `clan-story.js` include removed),
+`web/assets/js/clan-story.js` (deleted), `web/assets/css/style.css` (`.story-static` block in,
+animated story rules out, reduced-motion story overrides removed), the other nine `web/*.html`
+pages (Scenes nav), `docs/DECISIONS.md` (this entry).
+
+Verified: with no flag, index.html routes to landing.html before first paint; with the flag set it
+loads normally, and landing.html loads directly in every case; finishing the Legacy scene, clicking
+any `[data-leave]` link and clicking `[data-enter]` each set the key; all nav links and CTAs land
+on the right pages. clan.html renders the five beats as readable stacked sections with art behind a
+gradient at desktop and ~400px widths, copy fully present with no JS, and the `#clan-content` block
+below unaffected. No references to `clan-story.js` or the removed story classes remain anywhere in
+`web/`. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-080 — landing page rethemed to the site palette; clan anthem added
+
+Requested: the first-visit landing page (ADR-079) still carried the delivered prototype's muted
+antique-gold / cold blue-grey cinematic palette, which reads against the premium green/gold site
+theme (ADR-066) — bring its colors into the site token set. In the same pass it was to get the
+site-wide background audio (ADR-073) like every other page.
+
+**Palette** (`web/landing.html`): the page's own `:root` tokens now mirror the site
+(`assets/css/style.css :root`): `--ink:#030604`/`--stone:#0a1f15`/`--slate:#071008` (the green-tinted
+darks), `--gold:#ffd23f`/`--gold-dim:#e8b52f`, `--gold-hi` and `--mist` both `#eaf6ef` (site cream —
+highlights and body alike, exactly as the site uses cream for text), `--muted:#8a9992` (site grey),
+plus the site's `--green:#2fe89a`/`--green-soft:#1fb87e` secondary accent. The bulk of the page was
+already token-driven, so the recolor came from swapping those values; the remaining hardcoded
+literals were shifted hue-for-hue from the old cool blue-grey ramp to green-tinted equivalents
+(text greys, scene scrims/overlays `rgba(4,6,9,…)` → green-tinted darks, white dims →
+`rgba(47,232,154,…)`) and every old gold glow `rgba(207,165,80,…)` → `rgba(255,210,63,…)`. Green now
+carries the interactive accents the way the site does: nav hover, the scene-4 primary CTA
+(`.btn` — green border/cream text, green fill on hover), the ghost button borders, and the ambient
+glows behind the pillar ring and legend cutouts. The scene-4 eyes/hover text-on-gold darks became
+the site's `#04120a`.
+
+**Music** (`web/landing.html`, reusable `web/assets/js/audio.js`): the landing page now includes
+`assets/js/audio.js` like every other page, so the clan anthem and its mute state/position follow
+the same localStorage keys (`shaheen-audio-muted`, `shaheen-audio-position`) across the whole site.
+Because the page is self-contained (no `style.css`), the `.audio-toggle` button is styled inline in
+the page's own green/gold tokens — same geometry, hover, muted and is-pending (autoplay-waiting)
+states as the site-wide button, bottom-left, shrinking to 44px below 1100px. The full-width
+`.footline` strip is padded 64px on its left so the fixed button never sits on the corner text; the
+hero scene's word rail on phones is a decorative strip beneath a non-interactive overlay and is
+left alone.
+
+Files: `web/landing.html` (token remap + literal recolors + audio toggle CSS + `audio.js` include),
+`docs/DECISIONS.md` (this entry).
+
+Verified: no old-palette literals remain in `web/landing.html` (grep sweep of the retired hexes and
+rgba seeds); the inline `<style>` still has balanced braces (290/290); the toggle renders
+bottom-left with footline text cleared, and returns to the same size/position convention as the
+rest of the site. No Python changes — `ruff`/`mypy`/`pytest` untouched.

@@ -14,6 +14,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <script>
+    /* First-visit routing (docs/DECISIONS.md): brand-new visitors are sent
+       through the cinematic landing page once. finishing or skipping it sets
+       shaheen_landing_viewed so returning visitors land straight on the
+       homepage. Runs before paint to avoid a homepage flash; the landing page
+       itself never redirects, so "Scenes" in the menu always works. */
+    try {
+      if (!localStorage.getItem("shaheen_landing_viewed")) {
+        location.replace("landing.html");
+      }
+    } catch (err) {
+      /* localStorage blocked/private — show the homepage normally */
+    }
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -27,6 +41,7 @@
       </a>
       <nav class="site-nav">
         <a href="index.html" class="active">Home</a>
+        <a href="landing.html">Scenes</a>
         <a href="clan.html">Clan</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="roster.html">Roster</a>

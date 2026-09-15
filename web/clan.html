@@ -24,6 +24,7 @@
       </a>
       <nav class="site-nav">
         <a href="index.html">Home</a>
+        <a href="landing.html">Scenes</a>
         <a href="clan.html" class="active">Clan</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="roster.html">Roster</a>
@@ -51,168 +52,133 @@
     </div>
   </div>
 
-  <main class="wrap" style="padding-top: 0">
-    <!-- Full-story scrollytelling (docs/DECISIONS.md ADR-077, supersedes
-         ADR-074/075/076's three-section approach entirely; ADR-078 reworks
-         the Pillars/Legends/Legacy beats and adds the eagle layer -- see
-         below): one sticky stage pinned for scroll, driven by a continuous
-         scroll-position formula in assets/js/clan-story.js — not discrete
-         IntersectionObserver stops. Retyped onto the site's own
-         Bebas Neue/Space Grotesk/Sora + --gold/--cream/--void tokens; a
-         fake top nav was dropped in favor of the real .site-header
-         above it. -->
-    <div class="story-stage" id="story-stage">
-      <div class="story-scene-bg active" data-bg="0" style="background-image:url('assets/img/story/01-hero.jpg')"></div>
-      <div class="story-scene-bg" data-bg="1" style="background-image:url('assets/img/story/02-spirit.jpg')"></div>
-      <div class="story-scene-bg" data-bg="2" style="background-image:url('assets/img/story/03-pillars.jpg')"></div>
-      <div class="story-scene-bg" data-bg="3" style="background-image:url('assets/img/story/04-journey.jpg')"></div>
-      <div class="story-scene-bg" data-bg="4" style="background-image:url('assets/img/story/05-legacy.jpg')"></div>
-      <div class="story-layer" aria-hidden="true"></div>
+  <main style="padding-top: 0">
+    <!-- Clan story — five static full-screen beats (docs/DECISIONS.md
+         ADR-077/078 reworked): the previous sticky scrollytelling stage
+         (clan-story.js, eagle poses, spotlight sweep, progress dots,
+         crossfading panels) has been removed in favour of a simple stacked
+         layout — each beat is a normal <section> with its story art behind
+         a dark gradient. No JS, no scroll motion; the whole story is
+         readable at a glance. -->
+    <div class="story-static">
+      <section class="story-panel story-hero">
+        <div class="story-panel-inner">
+          <div class="story-eyebrow">Pakistan's Competitive Brawlhalla Clan</div>
+          <h1>Shaheen</h1>
+          <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
+          <div class="story-eyebrow">Higher Together</div>
+        </div>
+      </section>
 
-      <!-- Eagle foreground layer (docs/DECISIONS.md ADR-078): independent of
-           the background art, spans the Hero + Spirit scenes together —
-           perched -> launch -> flight, driven by clan-story.js. -->
-      <div class="story-eagle" id="story-eagle" aria-hidden="true">
-        <img class="story-eagle-pose active" data-pose="0" src="assets/img/story/eagle_perched.png" alt="" />
-        <img class="story-eagle-pose" data-pose="1" src="assets/img/story/eagle_launch.png" alt="" />
-        <img class="story-eagle-pose" data-pose="2" src="assets/img/story/eagle_flying.png" alt="" />
-      </div>
-
-      <div class="story-progress" id="story-progress" aria-hidden="true"></div>
-      <div class="story-counter" id="story-counter" aria-hidden="true">01 / 05</div>
-
-      <main class="story-content">
-        <section class="story-panel story-hero active">
-          <div>
-            <div class="story-eyebrow">Pakistan's Competitive Brawlhalla Clan</div>
-            <h1>Shaheen</h1>
-            <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
-            <div class="story-eyebrow">Higher Together</div>
+      <section class="story-panel story-spirit">
+        <div class="story-poetry">
+          <div class="story-eyebrow">The Spirit of Shaheen</div>
+          <div class="story-quote-mark" aria-hidden="true">&ldquo;</div>
+          <div class="story-quote">
+            <div class="story-urdu" lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</div>
+            <div class="story-translation">&ldquo;Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.&rdquo;<br /><br />— Allama Iqbal, <i>Bal-e-Jibril</i></div>
           </div>
-        </section>
+          <div class="story-quote">
+            <div class="story-urdu" lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</div>
+            <div class="story-translation">&ldquo;You are a Shaheen; flight is your purpose — there are yet more skies before you.&rdquo;<br /><br />— Allama Iqbal</div>
+          </div>
+        </div>
+      </section>
 
-        <section class="story-panel story-spirit">
-          <div class="story-poetry" id="story-poetry">
-            <div class="story-eyebrow">The Spirit of Shaheen</div>
-            <div class="story-quote-mark" aria-hidden="true">&ldquo;</div>
-            <div class="story-quote active" data-quote="0">
-              <div class="story-urdu" lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</div>
-              <div class="story-translation">&ldquo;Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.&rdquo;<br /><br />— Allama Iqbal, <i>Bal-e-Jibril</i></div>
-            </div>
-            <div class="story-quote" data-quote="1">
-              <div class="story-urdu" lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</div>
-              <div class="story-translation">&ldquo;You are a Shaheen; flight is your purpose — there are yet more skies before you.&rdquo;<br /><br />— Allama Iqbal</div>
-            </div>
+      <section class="story-panel story-pillars-panel">
+        <div class="story-pillars-title">
+          <div class="story-eyebrow">Five Pillars &middot; One Sky</div>
+          <h2>What We Stand For</h2>
+        </div>
+        <div class="story-pillar-captions">
+          <div class="story-pillar-caption">
+            <div class="story-pillar-index">01 / 05</div>
+            <h3>Ambition</h3>
+            <div class="story-eyebrow">A Higher Aim</div>
+            <p>We always aim higher. There is always another sky.</p>
           </div>
-        </section>
+          <div class="story-pillar-caption">
+            <div class="story-pillar-index">02 / 05</div>
+            <h3>Competition</h3>
+            <div class="story-eyebrow">Sharpens Us</div>
+            <p>We play to win. Every match is a step forward.</p>
+          </div>
+          <div class="story-pillar-caption">
+            <div class="story-pillar-index">03 / 05</div>
+            <h3>Improvement</h3>
+            <div class="story-eyebrow">Never Settle</div>
+            <p>We learn, adapt and become better every day.</p>
+          </div>
+          <div class="story-pillar-caption">
+            <div class="story-pillar-index">04 / 05</div>
+            <h3>Brotherhood</h3>
+            <div class="story-eyebrow">Stronger Together</div>
+            <p>We rise together. We support, respect and push each other.</p>
+          </div>
+          <div class="story-pillar-caption">
+            <div class="story-pillar-index">05 / 05</div>
+            <h3>Integrity</h3>
+            <div class="story-eyebrow">Stays With Us</div>
+            <p>No toxicity. No excuses. Only growth.</p>
+          </div>
+        </div>
+      </section>
 
-        <!-- No cards/boxes here by design (ADR-078): the background
-             (03-pillars.jpg) already shows all five totems across one
-             mountain range, so a moving spotlight highlights the active one
-             instead of a sliding card row. Captions live statically in the
-             DOM (like the Spirit scene's two quotes) so all five are
-             readable under prefers-reduced-motion without JS. -->
-        <section class="story-panel story-pillars-panel">
-          <div class="story-pillars-title">
-            <div class="story-eyebrow">Five Pillars &middot; One Sky</div>
-            <h2>What We Stand For</h2>
-          </div>
-          <div class="story-pillar-spotlight" id="story-pillar-spotlight" aria-hidden="true"></div>
-          <div class="story-pillar-captions" id="story-pillar-captions">
-            <div class="story-pillar-caption active" data-pillar="0">
-              <div class="story-pillar-index">01 / 05</div>
-              <h3>Ambition</h3>
-              <div class="story-eyebrow">A Higher Aim</div>
-              <p>We always aim higher. There is always another sky.</p>
-            </div>
-            <div class="story-pillar-caption" data-pillar="1">
-              <div class="story-pillar-index">02 / 05</div>
-              <h3>Competition</h3>
-              <div class="story-eyebrow">Sharpens Us</div>
-              <p>We play to win. Every match is a step forward.</p>
-            </div>
-            <div class="story-pillar-caption" data-pillar="2">
-              <div class="story-pillar-index">03 / 05</div>
-              <h3>Improvement</h3>
-              <div class="story-eyebrow">Never Settle</div>
-              <p>We learn, adapt and become better every day.</p>
-            </div>
-            <div class="story-pillar-caption" data-pillar="3">
-              <div class="story-pillar-index">04 / 05</div>
-              <h3>Brotherhood</h3>
-              <div class="story-eyebrow">Stronger Together</div>
-              <p>We rise together. We support, respect and push each other.</p>
-            </div>
-            <div class="story-pillar-caption" data-pillar="4">
-              <div class="story-pillar-index">05 / 05</div>
-              <h3>Integrity</h3>
-              <div class="story-eyebrow">Stays With Us</div>
-              <p>No toxicity. No excuses. Only growth.</p>
-            </div>
-          </div>
-        </section>
+      <!-- Legends: the five finished cutouts (Mordex, Brynn, Tezca, Nix,
+           Jaeyun) plus their names and traits, all statically in the DOM —
+           the horizontal-slide-and-emphasis behaviour was animation and has
+           been dropped. -->
+      <section class="story-panel story-legends">
+        <div class="story-legends-caption">
+          <div class="story-eyebrow">Our Legends</div>
+          <h2>Different Legends. <span class="story-gold">One Sky.</span></h2>
+          <p>Not just characters we play. But qualities we live by.</p>
+        </div>
+        <div class="story-legends-strip">
+          <article class="story-legend">
+            <img src="assets/img/story/legend_mordex.png" alt="Mordex" loading="lazy" />
+            <span class="story-legend-name">Mordex</span>
+            <span class="story-legend-trait">Relentless</span>
+          </article>
+          <article class="story-legend">
+            <img src="assets/img/story/legend_brynn.png" alt="Brynn" loading="lazy" />
+            <span class="story-legend-name">Brynn</span>
+            <span class="story-legend-trait">Strength</span>
+          </article>
+          <article class="story-legend">
+            <img src="assets/img/story/legend_tezca.png" alt="Tezca" loading="lazy" />
+            <span class="story-legend-name">Tezca</span>
+            <span class="story-legend-trait">Power</span>
+          </article>
+          <article class="story-legend">
+            <img src="assets/img/story/legend_nix.png" alt="Nix" loading="lazy" />
+            <span class="story-legend-name">Nix</span>
+            <span class="story-legend-trait">Adaptability</span>
+          </article>
+          <article class="story-legend">
+            <img src="assets/img/story/legend_jaeyun.png" alt="Jaeyun" loading="lazy" />
+            <span class="story-legend-name">Jaeyun</span>
+            <span class="story-legend-trait">Resolve</span>
+          </article>
+        </div>
+      </section>
 
-        <!-- Legends (new in ADR-078, replaces the old "Journey" content
-             card): a horizontal roster driven by vertical scroll. All five
-             cutouts + names + traits live statically in the DOM so the
-             full roster is readable under prefers-reduced-motion without
-             JS; clan-story.js only handles the slide + emphasis. Ships
-             with the 5 legends we have finished art for (Mordex, Brynn,
-             Tezca, Nix, Jaeyun) -- Orion, Artemis and Petra are a known
-             follow-up once matching-style art exists for them. -->
-        <section class="story-panel story-legends">
-          <div class="story-legends-caption">
-            <div class="story-eyebrow">Our Legends</div>
-            <h2>Different Legends. <span class="story-gold">One Sky.</span></h2>
-            <p>Not just characters we play. But qualities we live by.</p>
-          </div>
-          <div class="story-legends-strip" id="story-legends">
-            <article class="story-legend active" data-legend="0">
-              <img src="assets/img/story/legend_mordex.png" alt="Mordex" loading="lazy" />
-              <span class="story-legend-name">Mordex</span>
-              <span class="story-legend-trait">Relentless</span>
-            </article>
-            <article class="story-legend" data-legend="1">
-              <img src="assets/img/story/legend_brynn.png" alt="Brynn" loading="lazy" />
-              <span class="story-legend-name">Brynn</span>
-              <span class="story-legend-trait">Strength</span>
-            </article>
-            <article class="story-legend" data-legend="2">
-              <img src="assets/img/story/legend_tezca.png" alt="Tezca" loading="lazy" />
-              <span class="story-legend-name">Tezca</span>
-              <span class="story-legend-trait">Power</span>
-            </article>
-            <article class="story-legend" data-legend="3">
-              <img src="assets/img/story/legend_nix.png" alt="Nix" loading="lazy" />
-              <span class="story-legend-name">Nix</span>
-              <span class="story-legend-trait">Adaptability</span>
-            </article>
-            <article class="story-legend" data-legend="4">
-              <img src="assets/img/story/legend_jaeyun.png" alt="Jaeyun" loading="lazy" />
-              <span class="story-legend-name">Jaeyun</span>
-              <span class="story-legend-trait">Resolve</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="story-panel story-legacy">
-          <div>
-            <p class="story-legacy-features">Ranked &middot; Scrims &middot; Tournaments &middot; Achievements &middot; Leaderboards &middot; Community</p>
-            <div class="story-eyebrow">Shaheen &middot; Pakistan</div>
-            <h2>Fly High.<br />Fight Hard.<br />Leave a Legacy.</h2>
-            <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
-            <div class="story-eyebrow">Higher Together</div>
-            <a class="story-cta" href="join.html">Join the journey &rarr;</a>
-          </div>
-        </section>
-      </main>
-
-      <div class="story-scroll-hint" aria-hidden="true">Scroll to explore</div>
+      <section class="story-panel story-legacy">
+        <div class="story-panel-inner">
+          <p class="story-legacy-features">Ranked &middot; Scrims &middot; Tournaments &middot; Achievements &middot; Leaderboards &middot; Community</p>
+          <div class="story-eyebrow">Shaheen &middot; Pakistan</div>
+          <h2>Fly High.<br />Fight Hard.<br />Leave a Legacy.</h2>
+          <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
+          <div class="story-eyebrow">Higher Together</div>
+          <a class="story-cta" href="join.html">Join the journey &rarr;</a>
+        </div>
+      </section>
     </div>
-    <div class="story-scroll-area"></div>
 
-    <div id="clan-content">
-      <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
+    <div class="wrap">
+      <div id="clan-content">
+        <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
+      </div>
     </div>
   </main>
 
@@ -233,7 +199,6 @@
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/scroll.js"></script>
-  <script src="assets/js/clan-story.js"></script>
   <script src="assets/js/pages/clan.js"></script>
 </body>
 </html>
