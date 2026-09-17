@@ -2573,6 +2573,86 @@ both surfaced by it:
    newly obvious once this round's captions/legends markup added more such panels. Fixed with one
    `display: block` on the fallback's `.story-panel` rule.
 
+## ADR-079 — clan page cleanup + aggregate Discord guild stats (member count, boost tier)
+
+Requested: clean up `web/clan.html`'s `#clan-content` and improve/add Discord-integration
+features now that the guild ID is configured. Two things were wrong with `#clan-content`
+specifically: its first `.stat-grid` only ever filled 1 of the 3 tiles the CSS was already
+built/animated for (`style.css`'s `.stat-grid`/`.stat`, `:nth-child(2)`/`(3)` stagger delays going
+unused), and a 3-link "Explore" block just duplicated the site's own top nav (Leaderboard/Player
+Profiles/Tournaments) for no reason. Separately, the client-side live widget badge
+(`[data-discord-widget]`, ADR-066) had existed since that round but had never actually rendered
+anywhere: `web/assets/js/config.js`'s `DISCORD_GUILD_ID` was blank, so `wireDiscordWidgets()`
+always early-returned. And beyond that badge, the site had **no real Discord guild data anywhere**
+— `WebsiteService`/the API are deliberately Discord-agnostic (ADR-040/042), so `member_count` on
+the clan page has only ever meant "linked Brawlhalla accounts," never an actual Discord server
+member count.
+
+Confirmed before implementing: new Discord-integration features stay within ADR-040's boundary —
+**aggregate/guild-wide numbers only** (member count, server boost tier), never anything tied to a
+specific person (no avatars/usernames/online-status lists). This round reaffirms that boundary
+rather than reversing it.
+
+**Architecture constraint that shaped the design**: the API (Render, `shaheen-api`) and the bot
+(Fly.io) are separate deployed processes — the API has no live discord.py gateway connection, so
+it can never read `guild.member_count` itself; only the bot can. `ClanCog._snapshot_tick`
+(`src/bot/cogs/clan.py`) already fetches `guild = self.bot.get_guild(...)` on every scheduled
+tick for the existing Brawlhalla snapshot; `guild.member_count`, `guild.premium_tier`, and
+`guild.premium_subscription_count` are all already-cached fields on that same object
+(`Intents.all()` already enabled — no new intents, permissions, or Discord API calls needed). So
+the bot now persists a lightweight `GuildSnapshot` row on every tick — append-only, same shape as
+`RankingSnapshot` — and the already-read-only API serves the latest one, the exact same bot → DB
+→ API → website pipeline every other stat on this site already uses, just with a guild-level
+table instead of a per-player one.
+
+New pieces: `src/database/models/guild_snapshot.py` (`GuildSnapshot`: `guild_id`, `captured_at`,
+`member_count`, `boost_tier`, `boost_count`) + `alembic/versions/0007_guild_snapshots.py` +
+`src/database/repositories/guild_snapshot_repository.py` (`add`/`get_latest`, mirrors
+`RankingSnapshotRepository`). `src/services/guild_snapshot_service.py` is a new, separate,
+deliberately Discord-agnostic service (takes plain ints, never a `discord.Guild` object) — it
+doesn't belong inside `SnapshotService`, which is Brawlhalla-API-driven and explicitly documented
+as never touching Discord; guild member/boost counts come from Discord, not Brawlhalla.
+`ClanCog._snapshot_tick` calls it right alongside the existing `SnapshotService.run_for_guild`
+call, same session, same cadence (`snapshot_interval_hours`) — no new loop.
+
+`ClanInfo` (`services/website_service.py`) and `ClanInfoResponse` (`api/schemas.py`) both gained
+three nullable fields (`discord_member_count`, `discord_boost_tier`, `discord_boost_count`) —
+nullable because a fresh deploy has no `GuildSnapshot` row yet until the bot's next tick, and the
+frontend must degrade gracefully rather than show a misleading `0`.
+
+Frontend (`web/assets/js/pages/clan.js`, `style.css`): the stat grid now renders up to 3 tiles
+(Linked Members always; Discord Members and Server Boost only when their value is present/
+nonzero — no snapshot yet just means those tiles don't render, not a broken "0" state). The
+"Explore" block is gone, replaced by a small "Join the Community" strip: the existing
+`DISCORD_INVITE_URL` button plus a third `[data-discord-widget]` instance — giving the
+already-built widget an actual home in the page's own content instead of only header/footer
+chrome. That third badge didn't exist yet when `api.js`'s `DOMContentLoaded` handler first ran
+`wireDiscordWidgets()` (this card renders later, once its fetch resolves), so `clan.js` re-invokes
+that same global best-effort function after rendering — no new widget logic, just re-running the
+existing one now that its target exists. A couple of inline `style="..."` attributes in the motto/
+tagline markup were replaced with two small CSS classes (`.motto-centered`/`.tagline-centered`),
+matching the rest of the codebase's class-driven convention.
+
+`web/assets/js/config.js`'s `DISCORD_GUILD_ID` was filled in with the real numeric guild ID
+(public, not secret — same treatment as the already-hardcoded `DISCORD_INVITE_URL`) to finally
+activate the dormant widget badge. Still best-effort: it requires "Server Widget" enabled under
+Discord's Server Settings → Widget, an out-of-repo portal toggle ADR-066 already flagged; the
+badge simply stays hidden if that's off, same as before.
+
+Files: `src/database/models/guild_snapshot.py` (new), `src/database/repositories/
+guild_snapshot_repository.py` (new), `src/services/guild_snapshot_service.py` (new),
+`alembic/versions/0007_guild_snapshots.py` (new), `tests/test_guild_snapshot_service.py` (new),
+`src/bot/cogs/clan.py`, `src/api/schemas.py`, `src/services/website_service.py`,
+`src/api/routers/clan.py`, `web/assets/js/config.js`, `web/assets/js/pages/clan.js`,
+`web/assets/css/style.css`, `tests/test_api.py`.
+
+Verified: `ruff`/`mypy`/`pytest` (full suite including the new/extended tests) pass; the Alembic
+migration applies and rolls back cleanly; headless-Chromium pass on `web/clan.html` confirms the
+stat grid renders correctly both with and without the Discord fields present, the "Explore" block
+is gone, and the "Join the Community" strip renders with a working invite link. The live widget's
+actual output against the real `discord.com` widget endpoint couldn't be verified from this
+sandboxed environment — the wiring and graceful-fallback logic were verified instead.
+
 Files: `web/clan.html` (Hero/Spirit panels re-anchored to the lower frame; `#story-eagle` layer
 added; Pillars track markup replaced with spotlight + five static captions; Journey section
 replaced with the new Legends section; the six feature words moved into Legacy as a strap-line),

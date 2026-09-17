@@ -20,6 +20,7 @@ from database.models.ranking_snapshot import RankingSnapshot
 from database.repositories.achievement_repository import AchievementRepository
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.chat_activity_repository import ChatActivityRepository
+from database.repositories.guild_snapshot_repository import GuildSnapshotRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.match_repository import MatchRepository
 from database.repositories.member_achievement_repository import MemberAchievementRepository
@@ -40,6 +41,9 @@ class ClanInfo:
     motto: str
     tagline: str
     member_count: int
+    discord_member_count: int | None = None
+    discord_boost_tier: int | None = None
+    discord_boost_count: int | None = None
 
 
 @dataclass
@@ -166,10 +170,20 @@ class WebsiteService:
         self._entrants = TournamentEntrantRepository(session)
         self._tournament_matches = TournamentMatchRepository(session)
         self._chat_activity = ChatActivityRepository(session)
+        self._guild_snapshots = GuildSnapshotRepository(session)
 
     async def get_clan_info(self, guild_id: int) -> ClanInfo:
         member_count = await self._members.count_for_guild(guild_id)
-        return ClanInfo(name=NAME, motto=MOTTO, tagline=TAGLINE, member_count=member_count)
+        guild_snapshot = await self._guild_snapshots.get_latest(guild_id)
+        return ClanInfo(
+            name=NAME,
+            motto=MOTTO,
+            tagline=TAGLINE,
+            member_count=member_count,
+            discord_member_count=guild_snapshot.member_count if guild_snapshot else None,
+            discord_boost_tier=guild_snapshot.boost_tier if guild_snapshot else None,
+            discord_boost_count=guild_snapshot.boost_count if guild_snapshot else None,
+        )
 
     async def get_leaderboard(self, guild_id: int, *, limit: int = 10) -> list[LeaderboardEntry]:
         entries: list[LeaderboardEntry] = []

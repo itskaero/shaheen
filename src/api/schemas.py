@@ -18,6 +18,9 @@ class ClanInfoResponse(BaseModel):
     motto: str
     tagline: str
     member_count: int
+    discord_member_count: int | None
+    discord_boost_tier: int | None
+    discord_boost_count: int | None
 
 
 class LeaderboardEntryResponse(BaseModel):

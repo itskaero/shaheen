@@ -33,6 +33,7 @@ from database.repositories.tournament_repository import (
     TournamentRepository,
 )
 from services.achievements import CATALOG
+from services.guild_snapshot_service import GuildSnapshotService
 
 GUILD_ID = 1
 
@@ -92,6 +93,27 @@ def test_clan_endpoint(client: TestClient) -> None:
     body = response.json()
     assert body["name"] == "Shaheen"
     assert body["member_count"] == 0
+    # No GuildSnapshot recorded yet on a fresh deploy -> null, not 0/misleading.
+    assert body["discord_member_count"] is None
+    assert body["discord_boost_tier"] is None
+    assert body["discord_boost_count"] is None
+
+
+async def test_clan_endpoint_reflects_latest_guild_snapshot(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        service = GuildSnapshotService(session)
+        await service.record(GUILD_ID, member_count=120, boost_tier=1, boost_count=3)
+        await service.record(GUILD_ID, member_count=125, boost_tier=2, boost_count=8)
+        await session.commit()
+
+    response = client.get("/clan")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["discord_member_count"] == 125
+    assert body["discord_boost_tier"] == 2
+    assert body["discord_boost_count"] == 8
 
 
 def test_leaderboard_empty(client: TestClient) -> None:
