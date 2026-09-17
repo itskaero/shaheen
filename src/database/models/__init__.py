@@ -7,6 +7,7 @@ from database.models.challenge import Challenge, ChallengeStatus
 from database.models.chat_activity import ChatActivity
 from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
+from database.models.guild_snapshot import GuildSnapshot
 from database.models.legend_snapshot import LegendSnapshot
 from database.models.match import Match, MatchKind, MatchParticipant, MatchSide, MatchStatus
 from database.models.member_achievement import MemberAchievement
@@ -34,6 +35,7 @@ __all__ = [
     "ChatActivity",
     "DiscordUser",
     "GuildSettings",
+    "GuildSnapshot",
     "LegendSnapshot",
     "Match",
     "MatchKind",

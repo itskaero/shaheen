@@ -3,32 +3,45 @@
 
   try {
     const clan = await ShaheenAPI.getClan();
+
+    // Linked Members always shows; the two Discord-sourced tiles are
+    // guild-wide numbers captured by the bot's snapshot tick (never
+    // per-member identity — docs/DECISIONS.md) and only render once a
+    // snapshot actually exists, so a fresh deploy degrades to just the
+    // one tile instead of showing "0"/misleading placeholders.
+    const statTiles = [
+      `<div class="stat"><span class="value">${formatNumber(clan.member_count)}</span><span class="label">Linked Members</span></div>`,
+    ];
+    if (clan.discord_member_count != null) {
+      statTiles.push(
+        `<div class="stat"><span class="value">${formatNumber(clan.discord_member_count)}</span><span class="label">Discord Members</span></div>`
+      );
+    }
+    if (clan.discord_boost_tier) {
+      statTiles.push(
+        `<div class="stat"><span class="value">Level ${clan.discord_boost_tier}</span><span class="label">Server Boost</span></div>`
+      );
+    }
+
+    const inviteLink =
+      typeof DISCORD_INVITE_URL !== "undefined" && DISCORD_INVITE_URL
+        ? `<a class="btn" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Join Discord</a>`
+        : "";
+
     el.innerHTML = `
       <div class="card clan-reveal">
-        <p class="motto" style="text-align: center">${clan.motto}</p>
-        <p class="tagline" style="text-align: center; margin: 0">${clan.tagline}</p>
+        <p class="motto motto-centered">${clan.motto}</p>
+        <p class="tagline tagline-centered">${clan.tagline}</p>
       </div>
-      <div class="stat-grid">
-        <div class="stat">
-          <span class="value">${formatNumber(clan.member_count)}</span>
-          <span class="label">Linked Members</span>
-        </div>
-      </div>
+      <div class="stat-grid">${statTiles.join("")}</div>
       <div class="divider"><span>Community Activity</span></div>
       <div id="community-activity">
         <p class="state-msg">Loading community activity…</p>
       </div>
-      <div class="divider"><span>Explore</span></div>
-      <div class="stat-grid">
-        <a class="stat" href="leaderboard.html" style="text-decoration: none">
-          <span class="value">🏆</span><span class="label">Leaderboard</span>
-        </a>
-        <a class="stat" href="player.html" style="text-decoration: none">
-          <span class="value">📈</span><span class="label">Player Profiles</span>
-        </a>
-        <a class="stat" href="tournaments.html" style="text-decoration: none">
-          <span class="value">🥇</span><span class="label">Tournaments</span>
-        </a>
+      <div class="divider"><span>Join the Community</span></div>
+      <div class="community-cta">
+        ${inviteLink}
+        <span class="discord-widget" data-discord-widget hidden></span>
       </div>
     `;
 
@@ -43,6 +56,15 @@
     const revealCard = el.querySelector(".clan-reveal");
     if (revealCard) {
       requestAnimationFrame(() => requestAnimationFrame(() => revealCard.classList.add("in-view")));
+    }
+
+    // The content-area widget badge above didn't exist yet when api.js's
+    // own DOMContentLoaded handler first ran wireDiscordWidgets() (this
+    // card renders later, once the fetch resolves) — re-run it now so
+    // that badge gets the same best-effort fill as the header/footer ones
+    // (harmless no-op if DISCORD_GUILD_ID isn't set).
+    if (typeof wireDiscordWidgets === "function") {
+      wireDiscordWidgets();
     }
   } catch (err) {
     el.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;

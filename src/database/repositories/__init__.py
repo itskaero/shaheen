@@ -3,6 +3,7 @@ from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerR
 from database.repositories.challenge_repository import ChallengeRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.guild_settings_repository import GuildSettingsRepository
+from database.repositories.guild_snapshot_repository import GuildSnapshotRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.match_repository import MatchRepository
 from database.repositories.member_achievement_repository import MemberAchievementRepository
@@ -23,6 +24,7 @@ __all__ = [
     "ChallengeRepository",
     "DiscordUserRepository",
     "GuildSettingsRepository",
+    "GuildSnapshotRepository",
     "LegendSnapshotRepository",
     "MatchRepository",
     "MemberAchievementRepository",

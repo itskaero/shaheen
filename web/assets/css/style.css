@@ -994,6 +994,26 @@ nav.site-nav a.active::after {
   font-size: 1.05rem;
 }
 
+.motto-centered,
+.tagline-centered {
+  text-align: center;
+}
+
+.tagline-centered {
+  margin: 0;
+}
+
+/* Clan page "Join the Community" strip: invite button + live widget badge,
+   replacing what used to be a set of nav-duplicate links. */
+.community-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
 /* ---------- buttons ---------- */
 
 .btn {

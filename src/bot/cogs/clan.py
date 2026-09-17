@@ -38,6 +38,7 @@ from database.repositories.provisioned_resource_repository import ProvisionedRes
 from database.session import session_scope
 from services.clan_service import ClanService
 from services.digest_service import WeeklyDigest, WeeklyDigestService
+from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import render_milestone_card
 from services.link_service import LinkService
 from services.snapshot_service import Announcement, SnapshotService
@@ -88,6 +89,21 @@ class ClanCog(commands.Cog):
         async with session_scope(self.bot.session_factory) as session:
             service = SnapshotService(session, self.bot.brawlhalla)
             result = await service.run_for_guild(guild.id)
+
+            # Guild-wide Discord stats (member count, boost tier) for the
+            # website's clan page — deliberately no per-member identity,
+            # just aggregate numbers already free on this cached Guild
+            # object (docs/DECISIONS.md ADR for this round). member_count
+            # is typed Optional by discord.py (unpopulated before the guild
+            # is chunked) even though a guild returned by get_guild() has
+            # it in practice; skip rather than record a misleading 0.
+            if guild.member_count is not None:
+                await GuildSnapshotService(session).record(
+                    guild.id,
+                    member_count=guild.member_count,
+                    boost_tier=guild.premium_tier or 0,
+                    boost_count=guild.premium_subscription_count or 0,
+                )
 
         logger.info(
             "Snapshot cycle: %d member(s), %d error(s), %d announcement(s)",
