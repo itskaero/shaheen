@@ -18,4 +18,4 @@ const DISCORD_INVITE_URL = "https://discord.gg/GTuQaE7WfF";
 // enabled under Discord's Server Settings -> Widget — a portal toggle
 // outside this repo; the badge just stays hidden if it's off or the guild
 // ID below is wrong, it never breaks the page.
-const DISCORD_GUILD_ID = "";
+const DISCORD_GUILD_ID = "1546568759530229961";
