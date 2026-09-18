@@ -79,6 +79,12 @@ class SnapshotRunResult:
     members_processed: int = 0
     errors: list[str] = field(default_factory=list)
     announcements: list[Announcement] = field(default_factory=list)
+    # discord_id -> the tier this run saw, None when unranked. Recorded so
+    # bot/cogs/clan.py can sync rank roles off the same pass rather than
+    # re-reading every snapshot (docs/DECISIONS.md ADR-087). The service
+    # itself stays Discord-agnostic: it reports tiers, it does not assign
+    # anything.
+    tiers: dict[int, str | None] = field(default_factory=dict)
 
 
 @dataclass
@@ -134,6 +140,8 @@ class SnapshotService:
         stats = await self._brawlhalla.get_stats(player.brawlhalla_player_id)
         ranked = await self._brawlhalla.get_ranked(player.brawlhalla_player_id)
         captured_at = datetime.now(UTC)
+
+        result.tiers[discord_id] = ranked.tier if ranked else None
 
         previous = await self._ranking.get_latest(player.id)
 

@@ -319,3 +319,28 @@ async def test_snapshot_persists_region_rank(
 
     row = (await session.execute(select(RankingSnapshot))).scalars().one()
     assert row.region_rank == 7
+
+
+async def test_run_records_each_member_tier_for_rank_role_sync(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """ADR-087: bot/cogs/clan.py syncs Discord rank roles off this map, so the
+    run has to report a tier per member — including None for the unranked.
+    """
+    _member, _player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla(tier="Diamond II"))  # type: ignore[arg-type]
+
+    result = await service.run_for_guild(GUILD_ID)
+
+    assert result.tiers == {discord_id: "Diamond II"}
+
+
+async def test_unranked_member_is_recorded_as_none(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    _member, _player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla(tier=None))  # type: ignore[arg-type]
+
+    result = await service.run_for_guild(GUILD_ID)
+
+    assert result.tiers == {discord_id: None}

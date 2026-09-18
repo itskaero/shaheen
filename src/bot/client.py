@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 INTENTS = discord.Intents.all()
 
 STARTUP_EXTENSIONS = (
+    "bot.cogs.help",
     "bot.cogs.setup",
     "bot.cogs.link",
     "bot.cogs.profile",

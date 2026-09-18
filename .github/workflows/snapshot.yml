@@ -1,0 +1,85 @@
+# Writes the last known API response for each public endpoint into
+# web/data/*.json (docs/DECISIONS.md ADR-087).
+#
+# Why: the API runs on Render's free tier, which sleeps after 15 minutes
+# idle and can take 30-60s to wake. Without this, the first visitor to the
+# clan, leaderboard, roster or achievements page sat on "Loading…" for up to
+# a minute. The site now ships with a recent copy of each response and
+# renders it instantly, then refreshes from the live API in the background.
+#
+# Committing under web/ also triggers pages.yml, so a new snapshot deploys
+# itself. pages.yml never commits, so there is no loop.
+name: Refresh site data snapshots
+
+on:
+  schedule:
+    # Every six hours, matching the bot's own snapshot cadence.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-data-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the API base URL from the site config
+        id: config
+        # Single source of truth: web/assets/js/config.js is what the site
+        # itself uses, so this can't drift from what visitors hit.
+        run: |
+          url=$(sed -n 's/^const API_BASE_URL = "\(.*\)";$/\1/p' web/assets/js/config.js)
+          if [ -z "$url" ]; then
+            echo "Could not parse API_BASE_URL from web/assets/js/config.js" >&2
+            exit 1
+          fi
+          echo "url=${url%/}" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch each endpoint
+        env:
+          API: ${{ steps.config.outputs.url }}
+        # The first request pays the cold start, so it gets a long timeout
+        # and retries; the rest are warm. A failing endpoint leaves its
+        # existing snapshot untouched rather than overwriting good data with
+        # an error page.
+        run: |
+          mkdir -p web/data
+          captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          snapshot() {
+            name="$1"
+            path="$2"
+            echo "Fetching $path"
+            if body=$(curl -fsS --max-time 90 --retry 3 --retry-delay 20 \
+                        --retry-all-errors -H 'Accept: application/json' \
+                        "$API$path"); then
+              printf '%s' "$body" | jq \
+                --arg at "$captured_at" --arg src "$path" \
+                '{captured_at: $at, source: $src, data: .}' \
+                > "web/data/$name.json"
+            else
+              echo "::warning::$path did not respond; keeping the previous snapshot"
+            fi
+          }
+          snapshot clan /clan
+          snapshot leaderboard "/leaderboard?limit=25"
+          snapshot roster /roster
+          snapshot achievements /achievements
+
+      - name: Commit if anything changed
+        run: |
+          if [ -z "$(git status --porcelain web/data)" ]; then
+            echo "No change in the snapshots."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/data
+          git commit -m "chore(web): refresh site data snapshots"
+          git push

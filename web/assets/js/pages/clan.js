@@ -35,9 +35,11 @@
   }
 
   const infoEl = document.getElementById("clan-info");
-  try {
-    const clan = await ShaheenAPI.getClan();
 
+  // Snapshot-first (docs/DECISIONS.md ADR-087): web/data/clan.json ships
+  // with the site, so this renders instantly instead of waiting out a
+  // Render cold start, then re-renders from the live API.
+  function renderClan(clan, meta) {
     // Linked Members always shows; the two Discord-sourced tiles are
     // guild-wide numbers captured by the bot's snapshot tick (never
     // per-member identity — docs/DECISIONS.md) and only render once a
@@ -75,6 +77,17 @@
     if (revealCard) {
       requestAnimationFrame(() => requestAnimationFrame(() => revealCard.classList.add("in-view")));
     }
+
+    if (meta && !meta.live && meta.capturedAt) {
+      infoEl.insertAdjacentHTML(
+        "beforeend",
+        `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
+      );
+    }
+  }
+
+  try {
+    await ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), renderClan);
   } catch (err) {
     infoEl.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
   }

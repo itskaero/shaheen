@@ -1,8 +1,7 @@
-(async function () {
+(function () {
   const el = document.getElementById("leaderboard-content");
 
-  try {
-    const entries = await ShaheenAPI.getLeaderboard(25);
+  function render(entries, meta) {
 
     if (!entries || entries.length === 0) {
       el.innerHTML = '<p class="state-msg">No ranked players yet — link a Brawlhalla account with /link in Discord.</p>';
@@ -45,7 +44,15 @@
         </table>
       </div>
     `;
-  } catch (err) {
-    el.innerHTML = `<p class="state-msg error">Couldn't load the leaderboard: ${err.message}</p>`;
+    if (meta && !meta.live && meta.capturedAt) {
+      el.insertAdjacentHTML(
+        "beforeend",
+        `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
+      );
+    }
   }
+
+  ShaheenAPI.withSnapshot("leaderboard", () => ShaheenAPI.getLeaderboard(25), render).catch((err) => {
+    el.innerHTML = `<p class="state-msg error">Couldn't load the leaderboard: ${err.message}</p>`;
+  });
 })();

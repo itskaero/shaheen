@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import ROLE_MVP
+from bot.constants import RANK_ROLES, ROLE_MVP
 from bot.content.clan_embeds import (
     build_achievement_announcement_embed,
     build_achievements_embed,
@@ -47,6 +47,7 @@ from services.digest_service import WeeklyDigest, WeeklyDigestService
 from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import render_milestone_card
 from services.link_service import LinkService
+from services.rank_roles import plan_rank_roles
 from services.snapshot_service import Announcement, SnapshotService
 
 logger = logging.getLogger(__name__)
@@ -117,6 +118,8 @@ class ClanCog(commands.Cog):
             len(result.errors),
             len(result.announcements),
         )
+        await self._sync_rank_roles(guild, result.tiers)
+
         for announcement in result.announcements:
             await self._announce(guild, announcement)
 
@@ -246,6 +249,66 @@ class ClanCog(commands.Cog):
                 await channel.send(embed=mvp_embed)
             except discord.Forbidden:
                 logger.warning("Missing permission to post MVP announcement")
+
+    async def _sync_rank_roles(
+        self, guild: discord.Guild, tiers: dict[int, str | None]
+    ) -> None:
+        """Mirror each member's Brawlhalla tier onto a Discord rank role.
+
+        The bot has recorded every member's tier every six hours since Phase
+        3 and never acted on it (docs/DECISIONS.md ADR-087). Idempotent: the
+        plan is a diff, so a run where nothing changed makes no API calls,
+        and a member is never left holding two rank roles.
+
+        Best-effort like every other role edit here — a missing role (no
+        /setup run yet) or a missing permission is logged and skipped, never
+        raised into the snapshot loop.
+        """
+        if not tiers:
+            return
+
+        async with session_scope(self.bot.session_factory) as session:
+            repo = ProvisionedResourceRepository(session)
+            role_ids: dict[str, int] = {}
+            for spec in RANK_ROLES:
+                resource = await repo.get(
+                    guild_id=guild.id,
+                    resource_type=ResourceType.ROLE,
+                    logical_key=spec.logical_key,
+                )
+                if resource is not None:
+                    role_ids[spec.logical_key] = resource.discord_id
+
+        if not role_ids:
+            logger.info("Rank roles not provisioned for guild %s — run /setup", guild.id)
+            return
+
+        # Reverse lookup so a member's *current* rank roles can be read off
+        # the member object rather than queried per role.
+        key_by_role_id = {role_id: key for key, role_id in role_ids.items()}
+
+        for discord_id, tier in tiers.items():
+            member = guild.get_member(discord_id)
+            if member is None:
+                continue
+            current = {key_by_role_id[r.id] for r in member.roles if r.id in key_by_role_id}
+            plan = plan_rank_roles(tier=tier, current_keys=current)
+            if plan.is_noop:
+                continue
+
+            reason = f"Shaheen rank sync ({tier or 'unranked'})"
+            try:
+                for key in plan.revoke:
+                    role = guild.get_role(role_ids[key])
+                    if role is not None:
+                        await member.remove_roles(role, reason=reason)
+                if plan.grant is not None:
+                    role = guild.get_role(role_ids[plan.grant])
+                    if role is not None:
+                        await member.add_roles(role, reason=reason)
+            except discord.Forbidden:
+                logger.warning("Missing permission to sync rank roles for %s", discord_id)
+                return
 
     async def _rotate_mvp_role(self, guild: discord.Guild, mvp_discord_id: int) -> None:
         async with session_scope(self.bot.session_factory) as session:
