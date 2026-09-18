@@ -45,135 +45,181 @@
     </div>
   </div>
 
-  <div class="page-banner">
-    <div class="wrap">
-      <h1 class="page-title">The Clan</h1>
-      <p class="page-subtitle">No filler roster. Every name here earned its spot.</p>
+  <!-- Clan page rebuilt in docs/DECISIONS.md ADR-085. The previous version
+       stacked five 100vh "hero" panels, each wallpapered with a
+       story/0X-*.jpg — files that turned out to be screenshots of the
+       original design mockup (baked-in nav bars, duplicate wordmarks,
+       half-cut headlines), so the page printed its own copy on top of a
+       picture of that same copy. Those files are deleted. This is the same
+       story told with the site's own chrome, cards and dividers; the weight
+       comes from type scale and section rhythm, not five full-screen
+       photos. Motion is the site-wide .reveal observer (assets/js/scroll.js)
+       — no page-specific JS. -->
+  <section class="clan-overture">
+    <img
+      class="clan-overture-eagle"
+      src="assets/img/story/eagle_perched.png"
+      alt=""
+      aria-hidden="true"
+    />
+    <div class="clan-overture-inner">
+      <div class="clan-overture-copy">
+        <p class="clan-eyebrow">Pakistan&rsquo;s Competitive Brawlhalla Clan</p>
+        <h1>The <em>Clan</em></h1>
+        <p class="clan-urdu" lang="ur">بلندیوں کی جانب</p>
+        <p class="clan-lede">
+          No filler roster. Every name here earned its spot &mdash; and every
+          rating, match and tournament placement on this site is pulled from
+          the record, not the highlight reel.
+        </p>
+        <div class="clan-overture-actions">
+          <a class="btn btn-primary" href="join.html">Join the Clan</a>
+          <a class="btn btn-ghost" href="leaderboard.html">See the Leaderboard</a>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <main style="padding-top: 0">
-    <!-- Clan story — five static full-screen beats (docs/DECISIONS.md
-         ADR-077/078 reworked): the previous sticky scrollytelling stage
-         (clan-story.js, eagle poses, spotlight sweep, progress dots,
-         crossfading panels) has been removed in favour of a simple stacked
-         layout — each beat is a normal <section> with its story art behind
-         a dark gradient. No JS, no scroll motion; the whole story is
-         readable at a glance. -->
-    <div class="story-static">
-      <section class="story-panel story-hero">
-        <div class="story-panel-inner">
-          <div class="story-eyebrow">Pakistan's Competitive Brawlhalla Clan</div>
-          <h1>Shaheen</h1>
-          <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
-          <div class="story-eyebrow">Higher Together</div>
-        </div>
-      </section>
+  <main class="clan-page" style="padding-top: 0">
+    <section class="clan-section reveal" id="spirit">
+      <div class="divider"><span>The Spirit of Shaheen</span></div>
+      <div class="clan-split">
+        <div>
+          <p class="clan-eyebrow">Where the name comes from</p>
+          <h2>A Bird, and an <em>Instruction</em></h2>
+          <p class="clan-section-intro">
+            Iqbal never wrote the shaheen as an ornament. He wrote it as a
+            standard to be held to &mdash; a bird defined by where it is
+            willing to go next, not by where it already sits.
+          </p>
 
-      <section class="story-panel story-spirit">
-        <div class="story-poetry">
-          <div class="story-eyebrow">The Spirit of Shaheen</div>
-          <div class="story-quote-mark" aria-hidden="true">&ldquo;</div>
-          <div class="story-quote">
-            <div class="story-urdu" lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</div>
-            <div class="story-translation">&ldquo;Your dwelling is not upon the dome of the royal palace; you are a Shaheen — make your home upon the mountain rocks.&rdquo;<br /><br />— Allama Iqbal, <i>Bal-e-Jibril</i></div>
-          </div>
-          <div class="story-quote">
-            <div class="story-urdu" lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</div>
-            <div class="story-translation">&ldquo;You are a Shaheen; flight is your purpose — there are yet more skies before you.&rdquo;<br /><br />— Allama Iqbal</div>
-          </div>
-        </div>
-      </section>
+          <blockquote class="clan-couplet" style="margin-top: 1.75rem">
+            <span class="clan-urdu" lang="ur"
+              >تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</span
+            >
+            <span class="clan-couplet-gloss"
+              >You are a Shaheen &mdash; flight is your work. There are yet more
+              skies before you.</span
+            >
+            <cite>Allama Iqbal</cite>
+          </blockquote>
 
-      <section class="story-panel story-pillars-panel">
-        <div class="story-pillars-title">
-          <div class="story-eyebrow">Five Pillars &middot; One Sky</div>
-          <h2>What We Stand For</h2>
+          <blockquote class="clan-couplet">
+            <span class="clan-urdu" lang="ur"
+              >نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی
+              چٹانوں میں</span
+            >
+            <span class="clan-couplet-gloss"
+              >Your dwelling is not upon the dome of the royal palace; you are a
+              Shaheen &mdash; make your home upon the mountain rocks.</span
+            >
+            <cite>Allama Iqbal &middot; Bal-e-Jibril</cite>
+          </blockquote>
         </div>
-        <div class="story-pillar-captions">
-          <div class="story-pillar-caption">
-            <div class="story-pillar-index">01 / 05</div>
-            <h3>Ambition</h3>
-            <div class="story-eyebrow">A Higher Aim</div>
-            <p>We always aim higher. There is always another sky.</p>
-          </div>
-          <div class="story-pillar-caption">
-            <div class="story-pillar-index">02 / 05</div>
-            <h3>Competition</h3>
-            <div class="story-eyebrow">Sharpens Us</div>
-            <p>We play to win. Every match is a step forward.</p>
-          </div>
-          <div class="story-pillar-caption">
-            <div class="story-pillar-index">03 / 05</div>
-            <h3>Improvement</h3>
-            <div class="story-eyebrow">Never Settle</div>
-            <p>We learn, adapt and become better every day.</p>
-          </div>
-          <div class="story-pillar-caption">
-            <div class="story-pillar-index">04 / 05</div>
-            <h3>Brotherhood</h3>
-            <div class="story-eyebrow">Stronger Together</div>
-            <p>We rise together. We support, respect and push each other.</p>
-          </div>
-          <div class="story-pillar-caption">
-            <div class="story-pillar-index">05 / 05</div>
-            <h3>Integrity</h3>
-            <div class="story-eyebrow">Stays With Us</div>
-            <p>No toxicity. No excuses. Only growth.</p>
-          </div>
-        </div>
-      </section>
 
-      <!-- Legends: the five finished cutouts (Mordex, Brynn, Tezca, Nix,
-           Jaeyun) plus their names and traits, all statically in the DOM —
-           the horizontal-slide-and-emphasis behaviour was animation and has
-           been dropped. -->
-      <section class="story-panel story-legends">
-        <div class="story-legends-caption">
-          <div class="story-eyebrow">Our Legends</div>
-          <h2>Different Legends. <span class="story-gold">One Sky.</span></h2>
-          <p>Not just characters we play. But qualities we live by.</p>
-        </div>
-        <div class="story-legends-strip">
-          <article class="story-legend">
-            <img src="assets/img/story/legend_mordex.png" alt="Mordex" loading="lazy" />
-            <span class="story-legend-name">Mordex</span>
-            <span class="story-legend-trait">Relentless</span>
-          </article>
-          <article class="story-legend">
-            <img src="assets/img/story/legend_brynn.png" alt="Brynn" loading="lazy" />
-            <span class="story-legend-name">Brynn</span>
-            <span class="story-legend-trait">Strength</span>
-          </article>
-          <article class="story-legend">
-            <img src="assets/img/story/legend_tezca.png" alt="Tezca" loading="lazy" />
-            <span class="story-legend-name">Tezca</span>
-            <span class="story-legend-trait">Power</span>
-          </article>
-          <article class="story-legend">
-            <img src="assets/img/story/legend_nix.png" alt="Nix" loading="lazy" />
-            <span class="story-legend-name">Nix</span>
-            <span class="story-legend-trait">Adaptability</span>
-          </article>
-          <article class="story-legend">
-            <img src="assets/img/story/legend_jaeyun.png" alt="Jaeyun" loading="lazy" />
-            <span class="story-legend-name">Jaeyun</span>
-            <span class="story-legend-trait">Resolve</span>
-          </article>
-        </div>
-      </section>
+        <figure class="clan-art-frame" style="margin: 0">
+          <img src="assets/img/story/eagle_flying.png" alt="A shaheen in flight" loading="lazy" />
+        </figure>
+      </div>
+    </section>
 
-      <section class="story-panel story-legacy">
-        <div class="story-panel-inner">
-          <p class="story-legacy-features">Ranked &middot; Scrims &middot; Tournaments &middot; Achievements &middot; Leaderboards &middot; Community</p>
-          <div class="story-eyebrow">Shaheen &middot; Pakistan</div>
-          <h2>Fly High.<br />Fight Hard.<br />Leave a Legacy.</h2>
-          <div class="story-urdu" lang="ur">بلندیوں کی جانب</div>
-          <div class="story-eyebrow">Higher Together</div>
-          <a class="story-cta" href="join.html">Join the journey &rarr;</a>
+    <section class="clan-section reveal" id="pillars">
+      <div class="divider"><span>Five Pillars &middot; One Sky</span></div>
+      <p class="clan-eyebrow">What we stand for</p>
+      <h2>The Standard We <em>Hold</em></h2>
+      <p class="clan-section-intro">
+        Five things every member is measured against &mdash; by each other, not
+        by a rulebook nobody reads.
+      </p>
+
+      <div class="clan-pillars">
+        <article class="card clan-pillar">
+          <span class="clan-pillar-index">01 / 05</span>
+          <h3>Ambition</h3>
+          <span class="clan-eyebrow">A higher aim</span>
+          <p>We always aim higher. There is always another sky.</p>
+        </article>
+        <article class="card clan-pillar">
+          <span class="clan-pillar-index">02 / 05</span>
+          <h3>Competition</h3>
+          <span class="clan-eyebrow">Sharpens us</span>
+          <p>We play to win. Every match is a step forward.</p>
+        </article>
+        <article class="card clan-pillar">
+          <span class="clan-pillar-index">03 / 05</span>
+          <h3>Improvement</h3>
+          <span class="clan-eyebrow">Never settle</span>
+          <p>We learn, adapt and become better every day.</p>
+        </article>
+        <article class="card clan-pillar">
+          <span class="clan-pillar-index">04 / 05</span>
+          <h3>Brotherhood</h3>
+          <span class="clan-eyebrow">Stronger together</span>
+          <p>We rise together. We support, respect and push each other.</p>
+        </article>
+        <article class="card clan-pillar">
+          <span class="clan-pillar-index">05 / 05</span>
+          <h3>Integrity</h3>
+          <span class="clan-eyebrow">Stays with us</span>
+          <p>No toxicity. No excuses. Only growth.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="clan-legends" id="legends">
+      <div class="clan-section reveal" style="text-align: center">
+        <div class="divider"><span>Our Legends</span></div>
+        <p class="clan-eyebrow">Not just characters we play</p>
+        <h2>Different Legends. <em>One Sky.</em></h2>
+        <p class="clan-section-intro" style="margin-left: auto; margin-right: auto">
+          Five Legends, five qualities the clan actually runs on.
+        </p>
+
+        <div class="clan-legend-strip">
+          <article class="clan-legend">
+            <span class="clan-legend-frame"><img src="assets/img/story/legend_mordex.png" alt="Mordex" loading="lazy" /></span>
+            <span class="clan-legend-name">Mordex</span>
+            <span class="clan-legend-trait">Relentless</span>
+          </article>
+          <article class="clan-legend">
+            <span class="clan-legend-frame"><img src="assets/img/story/legend_brynn.png" alt="Brynn" loading="lazy" /></span>
+            <span class="clan-legend-name">Brynn</span>
+            <span class="clan-legend-trait">Strength</span>
+          </article>
+          <article class="clan-legend">
+            <span class="clan-legend-frame"><img src="assets/img/story/legend_tezca.png" alt="Tezca" loading="lazy" /></span>
+            <span class="clan-legend-name">Tezca</span>
+            <span class="clan-legend-trait">Power</span>
+          </article>
+          <article class="clan-legend">
+            <span class="clan-legend-frame"><img src="assets/img/story/legend_nix.png" alt="Nix" loading="lazy" /></span>
+            <span class="clan-legend-name">Nix</span>
+            <span class="clan-legend-trait">Adaptability</span>
+          </article>
+          <article class="clan-legend">
+            <span class="clan-legend-frame"><img src="assets/img/story/legend_jaeyun.png" alt="Jaeyun" loading="lazy" /></span>
+            <span class="clan-legend-name">Jaeyun</span>
+            <span class="clan-legend-trait">Resolve</span>
+          </article>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+
+    <section class="clan-section clan-legacy reveal" id="legacy">
+      <p class="clan-legacy-features">
+        Ranked &middot; Scrims &middot; Tournaments &middot; Achievements &middot; Leaderboards
+        &middot; Community
+      </p>
+      <h2>Fly High.<br />Fight Hard.<br />Leave a <em>Legacy</em>.</h2>
+      <p class="clan-urdu" lang="ur">بلندیوں کی جانب</p>
+      <p class="clan-eyebrow">Higher Together</p>
+      <div class="clan-legacy-actions">
+        <a class="btn btn-primary" href="join.html">Join the journey &rarr;</a>
+        <a class="btn btn-ghost" href="roster.html">Meet the roster</a>
+      </div>
+    </section>
+
+    <div class="divider-truck wrap" aria-hidden="true"></div>
 
     <div class="wrap">
       <div id="clan-content">

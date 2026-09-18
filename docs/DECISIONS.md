@@ -2960,3 +2960,72 @@ fabricated 0, and the ranked-Legend annotation appearing only when ranked data i
 **Note on ADR numbering:** `docs/DECISIONS.md` carries two entries numbered **ADR-079** (the clan
 page cleanup + guild stats round, and the first-visit landing gate). Both are referenced elsewhere,
 so the collision is left documented rather than renumbered; new ADRs continued from 081.
+
+## ADR-085 — clan page rebuilt; the "story art" was screenshots of the mockup
+
+Reported: "clan page have hero sections that is not good, make it again with new template."
+
+**The cause was not styling.** `web/assets/img/story/0{1..5}-*.jpg` — the five full-bleed
+backgrounds behind the clan story — are **screenshots of the original design mockup**, not artwork.
+Opened directly they show the mockup's own nav bar (`HOME ABOUT COMMUNITY TOURNAMENTS JOIN`), its
+own `SHAHEEN` wordmark, a scroll progress bar, social icons, and headlines sliced mid-word by the
+crop (`IGH. FIGHT HARD. / VE A LEGACY.`, `N A NAME`, `T OF / EN`, `alla clan built for players`).
+The page then printed the same copy in HTML on top of a picture of that copy, under a heavy dark
+gradient. Five of those in a row, each `min-height: 100vh`, is what read as "five bad heroes":
+duplicate titles, duplicate pillar cards, and truncated words baked into the pixels. The five
+`legend_*.png` files are the same kind of thing at a smaller scale — rectangular card crops with a
+landscape background, a sliver of the neighbouring legend at the left edge, and the legend's name
+burned into the bottom.
+
+**All five screenshots are deleted**, along with `web/assets/img/banner.webp` (orphaned; the CSS
+only ever referenced `banner.jpg`) and the repo-root `shaheen-scenes.html` (a 3.5 MB pre-retheme
+duplicate of `web/landing.html`, outside the deployed directory, referenced nowhere but this file).
+`banner.jpg` stays — it is the real brand art and backs `.page-banner` site-wide.
+
+**What replaces them.** The page keeps the standard chrome (header, ticker, footer) and the site's
+own card / divider / button language; the cinematic weight now comes from type scale and section
+rhythm rather than full-screen photos:
+
+- **Overture** — one masthead (`min-height: min(76vh, 640px)`) replacing both the old `.page-banner`
+  and the duplicate `story-hero` beneath it. Its field is **pure CSS** — a green-black ground, a low
+  gold horizon and a vignette. `banner.jpg` was tried here and rejected: its own wordmark and
+  strap-lines are baked in, which reproduced the exact duplicate-title problem this rebuild exists
+  to remove.
+- **Spirit** — an asymmetric split: the two Iqbal couplets as real `<blockquote>`s with gold rules
+  and glosses, beside a framed piece of art.
+- **Pillars** — five `.card`s in a five-column grid with gold indices, so `spotlight.js` and the
+  site's card treatment apply for free. Sized to keep "BROTHERHOOD" and "IMPROVEMENT" on one line
+  even when Bebas Neue hasn't loaded and the wider fallback face is in use.
+- **Legends** — the five crops framed as deliberate portrait tiles (`aspect-ratio: 3/4`,
+  `object-fit: cover`, cropped up and right) so the baked-in caption and the neighbouring legend
+  fall outside the frame. The name and trait below each tile are real text.
+- **Legacy** — the closing band, then the site's truck-art divider and the live `#clan-content`
+  block, unchanged.
+
+**The eagle cutouts are now used, not deleted.** `eagle_perched.png` and `eagle_flying.png` were
+orphaned (an earlier plan had them down for removal) but they are the one piece of genuinely clean,
+transparent, on-brand art in the repo. Both carry a stray fragment from their original cutting, so
+each is deliberately oversized and clipped so the fragment lands outside its box.
+
+Motion is the existing site-wide `.reveal` IntersectionObserver in `assets/js/scroll.js` — this page
+adds no JavaScript of its own, and inherits the reduced-motion behaviour unchanged.
+
+**Story duplication collapsed.** The five beats existed in three places: `landing.html` (the
+cinematic first-visit gate), the repo-root `shaheen-scenes.html` (a dead copy of it), and
+`clan.html` (the same beats as flat photo panels). The dead copy is gone; `landing.html` keeps the
+cinematic telling; `clan.html` is now the editorial clan page rather than a third retelling.
+
+Files: `web/clan.html`, `web/assets/css/style.css` (the `.story-static` block, 312 lines, replaced
+by `.clan-*`), `docs/COMMANDS.md` untouched, deletions listed above, this entry.
+
+Verified with Playwright at 1440×900 and 390×844: no broken images, no horizontal overflow, no
+console errors, five pillars and five legend tiles present, every `.reveal` section resolving to
+visible, no surviving reference to `story-panel`/`story-static` or to any deleted screenshot, all
+five pillar headings measured at exactly one line, and a 404 sweep across `index`, `clan`, `join`,
+`achievements`, `player` and `landing` returning none. `web/` drops from ~11.3 MB to 9.3 MB, and the
+repo also sheds the 3.5 MB root prototype. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+**Known, pre-existing and not addressed here:** `.audio-toggle` is `position: fixed` at the
+bottom-left of the viewport site-wide, so it sits over whatever content is in that corner at the
+current scroll position — on a phone that can include this page's first call to action. Changing it
+affects every page and belongs in its own pass.
