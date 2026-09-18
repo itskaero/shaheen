@@ -94,13 +94,24 @@ class ClanService:
         self._awards = MemberAchievementRepository(session)
         self._legends = LegendSnapshotRepository(session)
 
+    async def current_season(self) -> int | None:
+        """The Brawlhalla season every ranking view here is scoped to."""
+        return await self._ranking.current_season()
+
     async def leaderboard(
         self, guild_id: int, *, limit: int = 10
     ) -> list[tuple[ShaheenMember, BrawlhallaPlayer, int, RankingSnapshot]]:
-        """Actively-linked members with a snapshot, ranked by current rating."""
+        """Actively-linked members with a current-season snapshot, by rating.
+
+        Scoped to the current season (docs/DECISIONS.md ADR-088): Brawlhalla
+        wipes ratings at each reset, so a member who has not re-placed yet
+        has no current rating and correctly does not appear, rather than
+        sitting at the top on last season's number.
+        """
+        season = await self._ranking.current_season()
         rows: list[tuple[ShaheenMember, BrawlhallaPlayer, int, RankingSnapshot]] = []
         for member, player, discord_id in await self._links.list_active_for_guild(guild_id):
-            latest = await self._ranking.get_latest(player.id)
+            latest = await self._ranking.get_latest(player.id, season=season)
             if latest is not None:
                 rows.append((member, player, discord_id, latest))
         rows.sort(key=lambda row: row[3].rating if row[3].rating is not None else -1, reverse=True)
@@ -117,9 +128,10 @@ class ClanService:
         Nothing is written and no link is created; this is a read-only
         comparison against the latest snapshot of every ranked member.
         """
+        season = await self._ranking.current_season()
         rated: list[tuple[str, int]] = []
         for _member, player, _discord_id in await self._links.list_active_for_guild(guild_id):
-            latest = await self._ranking.get_latest(player.id)
+            latest = await self._ranking.get_latest(player.id, season=season)
             if latest is not None and latest.rating is not None:
                 rated.append((player.player_name, latest.rating))
         rated.sort(key=lambda row: row[1], reverse=True)

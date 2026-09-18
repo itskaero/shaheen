@@ -374,3 +374,76 @@ async def test_player_achievement_checklist_marks_earned_and_unearned(
 
 def test_player_achievement_checklist_not_found(client: TestClient) -> None:
     assert client.get("/players/99999/achievements").status_code == 404
+
+
+# ---------- ADR-088: season, region rank, award context, match feed ----------
+
+
+async def test_clan_endpoint_reports_the_current_season(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        await _seed_linked_player(session)
+
+    body = client.get("/clan").json()
+    # _seed_linked_player writes an unstamped snapshot, so there is no
+    # current season until a stamped one exists.
+    assert body["season"] is None
+
+
+async def test_player_profile_exposes_region_rank_and_season(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        users = DiscordUserRepository(session)
+        members = ShaheenMemberRepository(session)
+        players = BrawlhallaPlayerRepository(session)
+        links = MemberPlayerLinkRepository(session)
+        user = await users.get_or_create(1)
+        member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
+        player = await players.upsert(brawlhalla_player_id=10, player_name="Foo", region="us-e")
+        await links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
+        await RankingSnapshotRepository(session).add(
+            RankingSnapshot(
+                brawlhalla_player_id=player.id,
+                captured_at=datetime.now(UTC),
+                rating=1500,
+                peak_rating=1600,
+                tier="Platinum I",
+                wins=5,
+                games=10,
+                region_rank=12,
+                season=3,
+            )
+        )
+        await session.commit()
+
+    body = client.get("/players/10").json()
+    assert body["region_rank"] == 12
+    assert body["season"] == 3
+
+    (entry,) = client.get("/players/10/history").json()
+    assert entry["season"] == 3
+
+
+async def test_player_achievement_checklist_includes_award_context(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    async with session_factory() as session:
+        await _seed_linked_player(session)
+        await _seed_catalog_and_award(session, key="games_100")
+
+    body = client.get("/players/10/achievements").json()
+    by_key = {entry["key"]: entry for entry in body}
+    # _seed_catalog_and_award writes no extra, so the field is present and null
+    # rather than missing — the frontend renders nothing for it.
+    assert "context" in by_key["games_100"]
+    assert by_key["games_500"]["context"] is None
+
+
+def test_clan_matches_endpoint_is_empty_without_confirmed_matches(
+    client: TestClient,
+) -> None:
+    response = client.get("/community/matches")
+    assert response.status_code == 200
+    assert response.json() == []

@@ -16,6 +16,10 @@
     <div id="clan-info">
       <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
     </div>
+    <div class="divider"><span>Recent Matches</span></div>
+    <div id="clan-matches">
+      <p class="state-msg">Loading recent matches…</p>
+    </div>
     <div class="divider"><span>Community Activity</span></div>
     <div id="community-activity">
       <p class="state-msg">Loading community activity…</p>
@@ -51,6 +55,11 @@
     if (clan.discord_member_count != null) {
       statTiles.push(
         `<div class="stat"><span class="value">${formatNumber(clan.discord_member_count)}</span><span class="label">Discord Members</span></div>`
+      );
+    }
+    if (clan.season != null) {
+      statTiles.push(
+        `<div class="stat"><span class="value">${clan.season}</span><span class="label">Brawlhalla Season</span></div>`
       );
     }
     if (clan.discord_boost_tier) {
@@ -90,6 +99,38 @@
     await ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), renderClan);
   } catch (err) {
     infoEl.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
+  }
+
+  // Recent confirmed clan matches (docs/DECISIONS.md ADR-088). The whole
+  // competition subsystem — challenges, scrims, matches — has run since
+  // Phase 4 with no public surface; this is the first one. Its own try, so
+  // it can't take down the clan info above.
+  const matchesEl = document.getElementById("clan-matches");
+  try {
+    const matches = await ShaheenAPI.getClanMatches(8);
+    if (!matches || matches.length === 0) {
+      matchesEl.innerHTML =
+        '<p class="state-msg">No confirmed matches yet — settle one with /challenge in Discord.</p>';
+    } else {
+      matchesEl.innerHTML = `
+        <ul class="match-list">
+          ${matches
+            .map(
+              (m) => `
+            <li class="match-win">
+              <span class="match-result">${escapeHtml(m.kind.toUpperCase())}</span>
+              <span class="match-opponents">
+                <strong>${m.winners.length ? escapeHtml(m.winners.join(" & ")) : "Unknown"}</strong>
+                beat ${m.losers.length ? escapeHtml(m.losers.join(" & ")) : "Unknown"}
+              </span>
+              <span class="match-date">${formatDate(m.confirmed_at)}</span>
+            </li>`
+            )
+            .join("")}
+        </ul>`;
+    }
+  } catch (err) {
+    matchesEl.innerHTML = `<p class="state-msg error">Couldn't load recent matches: ${err.message}</p>`;
   }
 
   // A separate fetch/try so a community-activity failure can't take down

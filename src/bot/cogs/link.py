@@ -85,9 +85,11 @@ class LinkCog(commands.Cog):
         # link_service.py's own "region is a nice-to-have" pattern.
         try:
             async with session_scope(self.bot.session_factory) as session:
-                await SnapshotService(session, self.bot.brawlhalla).snapshot_member(
-                    outcome.member, outcome.player, member.id, SnapshotRunResult()
-                )
+                await SnapshotService(
+                    session,
+                    self.bot.brawlhalla,
+                    season=self.bot.settings.brawlhalla_season,
+                ).snapshot_member(outcome.member, outcome.player, member.id, SnapshotRunResult())
         except BrawlhallaAPIError as exc:
             logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)
 

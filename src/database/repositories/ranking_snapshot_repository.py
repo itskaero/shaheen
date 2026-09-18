@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.ranking_snapshot import RankingSnapshot
@@ -26,13 +26,32 @@ class RankingSnapshotRepository:
         await self._session.flush()
         return snapshot
 
-    async def get_latest(self, player_id: int) -> RankingSnapshot | None:
-        stmt = (
-            select(RankingSnapshot)
-            .where(RankingSnapshot.brawlhalla_player_id == player_id)
-            .order_by(RankingSnapshot.captured_at.desc())
-            .limit(1)
-        )
+    async def get_latest(
+        self, player_id: int, *, season: int | None = None
+    ) -> RankingSnapshot | None:
+        """The newest reading for a player, optionally within one season.
+
+        Pass `season` for anything that ranks players against each other:
+        Brawlhalla wipes ratings between seasons, so a stale pre-reset row
+        would otherwise outrank a freshly-placed one (docs/DECISIONS.md
+        ADR-088). Rows with a NULL season predate season tracking and are
+        never treated as current.
+        """
+        stmt = select(RankingSnapshot).where(RankingSnapshot.brawlhalla_player_id == player_id)
+        if season is not None:
+            stmt = stmt.where(RankingSnapshot.season == season)
+        stmt = stmt.order_by(RankingSnapshot.captured_at.desc()).limit(1)
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
+    async def current_season(self) -> int | None:
+        """The highest season any snapshot carries, or None if none do.
+
+        Derived from the data rather than from configuration so every
+        consumer — bot, API, website — agrees without needing the env var
+        set, and so the leaderboard only moves to a new season once real
+        post-reset readings exist.
+        """
+        stmt = select(func.max(RankingSnapshot.season))
         return (await self._session.execute(stmt)).scalar_one_or_none()
 
     async def list_recent(self, player_id: int, *, limit: int = 10) -> list[RankingSnapshot]:

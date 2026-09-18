@@ -1032,6 +1032,19 @@ nav.site-nav a.active::after {
   font-style: italic;
 }
 
+/* The context recorded when an achievement was awarded (ADR-088) — the
+   games count, tournament placement or peak rating that earned it. */
+.achievement-context {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--font-heading);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green);
+  opacity: 0.85;
+}
+
 /* ---------- scroll-triggered reveal ---------- */
 
 .reveal {

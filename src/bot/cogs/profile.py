@@ -210,9 +210,9 @@ class ProfileCog(commands.Cog):
                 return
 
             shaheen_member, player = linked
-            outcome = await SnapshotService(session, self.bot.brawlhalla).refresh_member(
-                shaheen_member, player, member.id
-            )
+            outcome = await SnapshotService(
+                session, self.bot.brawlhalla, season=self.bot.settings.brawlhalla_season
+            ).refresh_member(shaheen_member, player, member.id)
             if not outcome.refreshed:
                 await interaction.followup.send(
                     embed=build_refresh_cooldown_embed(outcome.retry_after_seconds),

@@ -53,6 +53,25 @@ class MemberAchievementRepository:
         )
         return set((await self._session.execute(stmt)).scalars().all())
 
+    async def list_awards(
+        self, shaheen_member_id: int
+    ) -> list[tuple[Achievement, datetime, dict[str, object] | None]]:
+        """list_with_details plus the `extra` context recorded at award time.
+
+        A separate method rather than a wider tuple on list_with_details:
+        the Discord embeds and PlayerProfile only want name + date, and the
+        per-member website checklist is the only caller that needs the
+        context (docs/DECISIONS.md ADR-088).
+        """
+        stmt = (
+            select(Achievement, MemberAchievement.awarded_at, MemberAchievement.extra)
+            .join(MemberAchievement, MemberAchievement.achievement_id == Achievement.id)
+            .where(MemberAchievement.shaheen_member_id == shaheen_member_id)
+            .order_by(MemberAchievement.awarded_at.asc())
+        )
+        result = await self._session.execute(stmt)
+        return [(achievement, awarded_at, extra) for achievement, awarded_at, extra in result]
+
     async def list_with_details(self, shaheen_member_id: int) -> list[tuple[Achievement, datetime]]:
         stmt = (
             select(Achievement, MemberAchievement.awarded_at)

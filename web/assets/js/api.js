@@ -96,6 +96,7 @@ const ShaheenAPI = (() => {
     getTournaments: (limit = 20) => get(`/tournaments?limit=${limit}`),
     getTournamentBracket: (id) => get(`/tournaments/${encodeURIComponent(id)}`),
     getCommunityActivity: (limit = 10) => get(`/community/activity?limit=${limit}`),
+    getClanMatches: (limit = 10) => get(`/community/matches?limit=${limit}`),
   };
 })();
 

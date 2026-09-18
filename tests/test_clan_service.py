@@ -293,3 +293,100 @@ async def test_clan_stats_with_no_snapshots_is_empty(session: AsyncSession) -> N
     assert stats.average_rating is None
     assert stats.median_rating is None
     assert stats.highest is None
+
+
+# --- ADR-088: season scoping ------------------------------------------------
+
+
+async def _snapshot(
+    session: AsyncSession, player, *, rating: int, season: int | None, day: int = 1
+) -> None:
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=player.id,
+            captured_at=datetime(2026, 9, day, tzinfo=UTC),
+            rating=rating,
+            peak_rating=rating,
+            tier="Gold",
+            wins=1,
+            games=2,
+            season=season,
+        )
+    )
+
+
+async def test_leaderboard_ignores_last_seasons_rating(session: AsyncSession) -> None:
+    """The bug this exists to prevent: Brawlhalla wipes ratings between
+    seasons, so a stale 1900 must never outrank a freshly-placed 1500.
+    """
+    _m_a, stale = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _m_b, fresh = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    await _snapshot(session, stale, rating=1900, season=1, day=1)
+    await _snapshot(session, fresh, rating=1500, season=2, day=2)
+
+    rows = await ClanService(session).leaderboard(GUILD_ID)
+
+    assert [row[1].brawlhalla_player_id for row in rows] == [20]
+    assert rows[0][3].rating == 1500
+
+
+async def test_a_member_who_has_not_replaced_is_absent_not_stale(session: AsyncSession) -> None:
+    _m_a, a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _m_b, b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    await _snapshot(session, a, rating=1700, season=1, day=1)
+    await _snapshot(session, a, rating=1400, season=2, day=3)
+    await _snapshot(session, b, rating=1800, season=1, day=1)  # never re-placed
+
+    rows = await ClanService(session).leaderboard(GUILD_ID)
+
+    assert [row[1].brawlhalla_player_id for row in rows] == [10]
+    assert rows[0][3].rating == 1400
+
+
+async def test_current_season_is_the_highest_seen(session: AsyncSession) -> None:
+    _member, player = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    await _snapshot(session, player, rating=1500, season=1, day=1)
+    await _snapshot(session, player, rating=1600, season=3, day=2)
+
+    assert await ClanService(session).current_season() == 3
+
+
+async def test_unstamped_rows_never_count_as_current(session: AsyncSession) -> None:
+    """Rows captured before season tracking have a genuinely unknown season,
+    so they must not be promoted onto the current-season board.
+    """
+    _m_a, old = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _m_b, new = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    await _snapshot(session, old, rating=2000, season=None, day=1)
+    await _snapshot(session, new, rating=1200, season=5, day=2)
+
+    rows = await ClanService(session).leaderboard(GUILD_ID)
+    assert [row[1].brawlhalla_player_id for row in rows] == [20]
+
+
+async def test_with_no_seasons_recorded_everything_still_ranks(session: AsyncSession) -> None:
+    """Before the first stamped snapshot exists, current_season() is None and
+    the board must behave exactly as it did pre-ADR-088.
+    """
+    _m_a, a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _m_b, b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    await _snapshot(session, a, rating=1700, season=None, day=1)
+    await _snapshot(session, b, rating=1300, season=None, day=1)
+
+    service = ClanService(session)
+    assert await service.current_season() is None
+    rows = await service.leaderboard(GUILD_ID)
+    assert [row[1].brawlhalla_player_id for row in rows] == [10, 20]
+
+
+async def test_rank_context_only_compares_within_the_season(session: AsyncSession) -> None:
+    _m_a, a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _m_b, b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+    await _snapshot(session, a, rating=1900, season=1, day=1)  # last season
+    await _snapshot(session, b, rating=1400, season=2, day=2)
+
+    context = await ClanService(session).rank_context(GUILD_ID, 1600)
+
+    assert context.total_ranked == 1
+    assert context.above is None
+    assert context.below == ("P20", 1400)

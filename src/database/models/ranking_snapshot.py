@@ -32,6 +32,10 @@ class RankingSnapshot(TimestampMixin, Base):
     region: Mapped[str | None] = mapped_column(String(16), nullable=True)
     global_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     region_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Which Brawlhalla ranked season this reading belongs to (ADR-088).
+    # Nullable because rows captured before seasons were tracked genuinely
+    # do not know; treat NULL as "some earlier season", never as current.
+    season: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (

@@ -92,6 +92,22 @@ class MatchRepository:
         )
         return list((await self._session.execute(stmt)).scalars().unique().all())
 
+    async def list_recent_confirmed_for_guild(
+        self, guild_id: int, *, limit: int = 10
+    ) -> list[Match]:
+        """Newest confirmed clan matches, for the public activity feed.
+
+        Confirmed only (ADR-033/034): pending, disputed and cancelled
+        matches stay internal and are never published as results.
+        """
+        stmt = (
+            select(Match)
+            .where(Match.guild_id == guild_id, Match.status == MatchStatus.CONFIRMED)
+            .order_by(Match.confirmed_at.desc().nullslast(), Match.updated_at.desc())
+            .limit(limit)
+        )
+        return list((await self._session.execute(stmt)).scalars().unique().all())
+
     async def participants_on_side(self, match_id: int, side: MatchSide) -> list[MatchParticipant]:
         stmt = select(MatchParticipant).where(
             MatchParticipant.match_id == match_id, MatchParticipant.side == side
