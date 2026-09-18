@@ -35,7 +35,10 @@ async def achievement_catalog(session: AsyncSession) -> dict[str, Achievement]:
     rows = {}
     for definition in CATALOG:
         row = Achievement(
-            key=definition.key, name=definition.name, description=definition.description
+            key=definition.key,
+            name=definition.name,
+            description=definition.description,
+            category=definition.category,
         )
         session.add(row)
         rows[definition.key] = row

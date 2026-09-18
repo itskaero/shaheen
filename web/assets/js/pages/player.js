@@ -26,11 +26,15 @@
     content.innerHTML = '<p class="state-msg">Loading player… (first load can take up to a minute)</p>';
 
     try {
-      const [profile, history, legends, matches] = await Promise.all([
+      const [profile, history, legends, matches, checklist] = await Promise.all([
         ShaheenAPI.getPlayer(brawlhallaId),
         ShaheenAPI.getPlayerHistory(brawlhallaId, 20),
         ShaheenAPI.getPlayerLegends(brawlhallaId),
         ShaheenAPI.getPlayerMatches(brawlhallaId),
+        // Added after the other four endpoints, so an API instance that
+        // predates it must not take the whole page down — fall back to the
+        // earned-only list carried on the profile itself.
+        ShaheenAPI.getPlayerAchievements(brawlhallaId).catch(() => null),
       ]);
 
       if (!profile) {
@@ -38,14 +42,9 @@
         return;
       }
 
-      const achievements = profile.achievements.length
-        ? `<ul class="badge-list">${profile.achievements
-            .map(
-              (a) =>
-                `<li><span class="badge-icon">🏅</span><span><strong>${escapeHtml(a.name)}</strong> — ${escapeHtml(a.description)}</span></li>`
-            )
-            .join("")}</ul>`
-        : '<p class="state-msg">No achievements yet.</p>';
+      const achievements = checklist
+        ? achievementChecklistHtml(checklist)
+        : earnedOnlyHtml(profile.achievements);
 
       content.innerHTML = `
         <div class="card">
@@ -102,6 +101,79 @@
     } catch (err) {
       content.innerHTML = `<p class="state-msg error">Couldn't load this player: ${err.message}</p>`;
     }
+  }
+
+
+  const CATEGORY_LABELS = {
+    onboarding: "Getting Started",
+    milestone: "Milestones",
+    ranked: "Ranked",
+    competition: "Competition",
+    community: "Community",
+    tenure: "Tenure",
+  };
+
+  function earnedOnlyHtml(earned) {
+    if (!earned || earned.length === 0) {
+      return '<p class="state-msg">No achievements yet.</p>';
+    }
+    return `<ul class="badge-list">${earned
+      .map(
+        (a) =>
+          `<li><span class="badge-icon">🏅</span><span><strong>${escapeHtml(a.name)}</strong> — ${escapeHtml(a.description)}</span></li>`
+      )
+      .join("")}</ul>`;
+  }
+
+  // The clan-wide gallery on achievements.html looks identical for every
+  // member by design. This is the per-member view: the same catalog, with
+  // what this player has and hasn't earned.
+  function achievementChecklistHtml(entries) {
+    if (!entries || entries.length === 0) {
+      return '<p class="state-msg">No achievements defined yet.</p>';
+    }
+
+    const earnedCount = entries.filter((entry) => entry.earned).length;
+    const pct = Math.round((earnedCount / entries.length) * 100);
+
+    const groups = new Map();
+    entries.forEach((entry) => {
+      const key = entry.category || "milestone";
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key).push(entry);
+    });
+
+    const sections = [...groups.entries()]
+      .map(([category, items]) => {
+        const rows = items
+          .map(
+            (entry) => `
+              <li class="${entry.earned ? "achievement-earned" : "achievement-locked"}">
+                <span class="badge-icon">${entry.earned ? "🏅" : "🔒"}</span>
+                <span>
+                  <strong>${escapeHtml(entry.name)}</strong> — ${escapeHtml(entry.description)}
+                  ${entry.earned && entry.awarded_at ? `<span class="legend-meta"> · ${formatDate(entry.awarded_at)}</span>` : ""}
+                </span>
+              </li>`
+          )
+          .join("");
+        return `
+          <div class="achievement-group">
+            <h4>${escapeHtml(CATEGORY_LABELS[category] || category)}</h4>
+            <ul class="badge-list">${rows}</ul>
+          </div>`;
+      })
+      .join("");
+
+    return `
+      <div class="achievement-progress">
+        <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${Math.max(pct, earnedCount > 0 ? 4 : 0)}%"></div></div>
+        <span class="legend-meta">${earnedCount} of ${entries.length} earned · ${pct}%</span>
+      </div>
+      ${sections}
+    `;
   }
 
   function legendMasteryHtml(legends) {

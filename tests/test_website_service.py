@@ -552,3 +552,64 @@ async def test_achievement_gallery_zero_members_has_zero_pct_not_a_crash(
     entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
     assert all(e.total_members == 0 for e in entries)
     assert all(e.completion_pct == 0.0 for e in entries)  # no division-by-zero
+
+
+# ---------- per-member achievement checklist (ADR-081) ----------
+
+
+async def test_checklist_returns_the_whole_catalog_flagged_per_member(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """The gallery is clan-wide and identical for everyone; this is the
+    per-member view, which is what makes two players' pages differ.
+    """
+    member, _player = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await MemberAchievementRepository(session).award(
+        shaheen_member_id=member.id, achievement_id=achievement_catalog["games_100"].id
+    )
+
+    entries = await WebsiteService(session).get_player_achievement_checklist(10)
+
+    assert entries is not None
+    assert {e.achievement.key for e in entries} == set(achievement_catalog.keys())
+    by_key = {e.achievement.key: e for e in entries}
+    assert by_key["games_100"].earned is True
+    assert by_key["games_100"].earned_at is not None
+    assert by_key["games_500"].earned is False
+    assert by_key["games_500"].earned_at is None
+
+
+async def test_checklist_for_an_unlinked_player_is_all_unearned(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    await BrawlhallaPlayerRepository(session).upsert(
+        brawlhalla_player_id=55, player_name="Drifter", region=None
+    )
+
+    entries = await WebsiteService(session).get_player_achievement_checklist(55)
+
+    assert entries is not None
+    assert all(not entry.earned for entry in entries)
+
+
+async def test_checklist_for_an_unknown_player_is_none(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    assert await WebsiteService(session).get_player_achievement_checklist(99999) is None
+
+
+async def test_gallery_entries_carry_a_rarity_band(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member, _player = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await MemberAchievementRepository(session).award(
+        shaheen_member_id=member.id, achievement_id=achievement_catalog["games_100"].id
+    )
+
+    entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
+    by_key = {e.achievement.key: e for e in entries}
+
+    assert by_key["games_100"].rarity == "Common"
+    # Nobody holding it says nothing about difficulty, only that it hasn't
+    # happened yet — so it reads "Unclaimed", not "Legendary".
+    assert by_key["games_500"].rarity == "Unclaimed"

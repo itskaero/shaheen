@@ -254,7 +254,16 @@ nav.site-nav a.active::after {
 /* live Discord widget badge — header/footer, best-effort (docs/DECISIONS.md
    ADR-066). Hidden by default; JS unhides it only once a real widget
    response comes back, so a disabled/unreachable widget never leaves a
-   broken-looking "0 online" badge on the page. */
+   broken-looking "0 online" badge on the page.
+
+   The [hidden] rule below is load-bearing, not decoration: `display:
+   inline-flex` is an author rule and so beats the UA stylesheet's
+   `[hidden] { display: none }`, which meant the hidden attribute was inert
+   and these spans were always laid out — just empty (ADR-082). */
+.discord-widget[hidden] {
+  display: none;
+}
+
 .discord-widget {
   display: inline-flex;
   align-items: center;
@@ -1581,6 +1590,53 @@ tbody tr:hover {
 .achievement-card.unearned h3,
 .achievement-card.unearned p {
   opacity: 0.6;
+}
+
+/* Rarity band from the API (services/achievements.py) — a label, not a
+   second progress read: the bar already shows the exact percentage. */
+.achievement-rarity {
+  align-self: flex-start;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+.achievement-rarity.rarity-legendary {
+  color: var(--gold);
+  border-color: rgba(255, 210, 63, 0.5);
+}
+
+.achievement-rarity.rarity-rare {
+  color: var(--green);
+  border-color: rgba(47, 232, 154, 0.5);
+}
+
+/* Per-member checklist on the player page: the same catalog the gallery
+   shows, split into what this member has and hasn't earned. */
+.achievement-group {
+  margin-top: 1.25rem;
+}
+
+.achievement-group h4 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+.badge-list li.achievement-locked {
+  opacity: 0.5;
+}
+
+.badge-list li.achievement-locked .badge-icon {
+  filter: grayscale(1);
 }
 
 /* ---------- player profile header ---------- */

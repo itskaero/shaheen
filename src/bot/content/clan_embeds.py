@@ -12,7 +12,7 @@ from bot.palette import EMERALD, FOREST_GREEN, GOLD
 from database.models.achievement import Achievement
 from database.models.ranking_snapshot import RankingSnapshot
 from services.achievements import AchievementDef
-from services.clan_service import LegendMetaEntry
+from services.clan_service import ClanStats, LegendMetaEntry
 
 
 def _legend_display_name(legend_name_key: str) -> str:
@@ -178,4 +178,53 @@ def build_legend_meta_embed(entries: list[LegendMetaEntry]) -> discord.Embed:
         for idx, e in enumerate(entries, start=1)
     ]
     embed.description = "\n".join(lines)
+    return embed
+
+
+def build_clan_stats_embed(stats: ClanStats) -> discord.Embed:
+    """Clan-wide aggregate for /clanstats.
+
+    Median sits next to the average deliberately: on a roster this size a
+    single high-rated member pulls the mean well away from where the clan
+    actually sits.
+    """
+    embed = discord.Embed(title="📈 Shaheen by the Numbers", colour=EMERALD)
+    if stats.members_ranked == 0:
+        embed.description = "No member has a snapshot yet. Once members run `/link`, this fills in."
+        return embed
+
+    embed.add_field(name="Ranked Members", value=f"{stats.members_ranked}", inline=True)
+    embed.add_field(name="Combined Games", value=f"{stats.total_games:,}", inline=True)
+    embed.add_field(
+        name="Combined Wins", value=f"{stats.total_wins:,} ({stats.win_rate:.0f}%)", inline=True
+    )
+
+    if stats.average_rating is not None:
+        embed.add_field(name="Average Rating", value=f"{stats.average_rating}", inline=True)
+    if stats.median_rating is not None:
+        embed.add_field(name="Median Rating", value=f"{stats.median_rating}", inline=True)
+    if stats.highest is not None:
+        name, rating = stats.highest
+        embed.add_field(name="Highest Rated", value=f"{name} — {rating}", inline=True)
+
+    if stats.tier_counts:
+        embed.add_field(
+            name="Tier Spread",
+            value="\n".join(f"**{tier}** — {count}" for tier, count in stats.tier_counts),
+            inline=False,
+        )
+    if stats.region_counts:
+        embed.add_field(
+            name="Regions",
+            value=" · ".join(f"{region} ({count})" for region, count in stats.region_counts),
+            inline=False,
+        )
+    if stats.top_legends:
+        embed.add_field(
+            name="Most-Played Legends",
+            value=" · ".join(
+                _legend_display_name(entry.legend_name_key) for entry in stats.top_legends
+            ),
+            inline=False,
+        )
     return embed

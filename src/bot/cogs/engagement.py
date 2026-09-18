@@ -34,8 +34,12 @@ from bot.content.engagement_embeds import (
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.chat_activity_repository import ChatActivityRepository
+from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
+from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from database.session import session_scope
+from services.achievement_service import AchievementService
+from services.achievements import evaluate_engagement_achievements
 from services.chat_gamification import (
     MESSAGE_XP_COOLDOWN_SECONDS,
     level_for_xp,
@@ -83,6 +87,26 @@ class EngagementCog(commands.Cog):
             if computed_level > old_level:
                 row.level = computed_level
                 new_level = computed_level
+                # Chat levels award achievements as of docs/DECISIONS.md
+                # ADR-081 — before that, engagement earned nothing at all.
+                # Only members who already exist are considered: a lurker
+                # who has never linked or played shouldn't get a row created
+                # just by talking.
+                discord_user = await DiscordUserRepository(session).get_by_discord_id(discord_id)
+                if discord_user is not None:
+                    member = await ShaheenMemberRepository(session).get(
+                        discord_user_id=discord_user.id, guild_id=guild_id
+                    )
+                    if member is not None:
+                        achievements = AchievementService(session)
+                        await achievements.award_many(
+                            shaheen_member_id=member.id,
+                            definitions=evaluate_engagement_achievements(
+                                already_earned=await achievements.earned_keys(member.id),
+                                chat_level=computed_level,
+                            ),
+                            extra={"chat_level": computed_level},
+                        )
 
         if new_level is not None and isinstance(message.author, discord.Member):
             await self._announce_level_up(message.guild, message.author, new_level)

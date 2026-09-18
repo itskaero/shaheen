@@ -171,3 +171,125 @@ async def test_legend_meta_empty_when_no_data(session: AsyncSession) -> None:
     await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
     entries = await ClanService(session).legend_meta(GUILD_ID)
     assert entries == []
+
+
+async def test_rank_context_places_a_rating_between_clan_members(session: AsyncSession) -> None:
+    """/lookup's clan comparison: a bare rating means nothing without neighbours."""
+    _member_a, player_a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _member_b, player_b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+
+    ranking = RankingSnapshotRepository(session)
+    for player, rating in ((player_a, 1800), (player_b, 1400)):
+        await ranking.add(
+            RankingSnapshot(
+                brawlhalla_player_id=player.id,
+                captured_at=datetime.now(UTC),
+                rating=rating,
+                peak_rating=rating,
+                tier="Gold",
+                wins=1,
+                games=2,
+            )
+        )
+
+    context = await ClanService(session).rank_context(GUILD_ID, 1600)
+    assert context.total_ranked == 2
+    assert context.would_be_rank == 2
+    assert context.above == ("P10", 1800)
+    assert context.below == ("P20", 1400)
+
+
+async def test_rank_context_at_the_top_has_nobody_above(session: AsyncSession) -> None:
+    _member, player = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=player.id,
+            captured_at=datetime.now(UTC),
+            rating=1400,
+            peak_rating=1400,
+            tier="Silver",
+            wins=1,
+            games=2,
+        )
+    )
+
+    context = await ClanService(session).rank_context(GUILD_ID, 2000)
+    assert context.would_be_rank == 1
+    assert context.above is None
+    assert context.below == ("P10", 1400)
+
+
+async def test_rank_context_below_everyone_lands_last(session: AsyncSession) -> None:
+    _member, player = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=player.id,
+            captured_at=datetime.now(UTC),
+            rating=1900,
+            peak_rating=1900,
+            tier="Diamond",
+            wins=1,
+            games=2,
+        )
+    )
+
+    context = await ClanService(session).rank_context(GUILD_ID, 900)
+    assert context.would_be_rank == 2
+    assert context.above == ("P10", 1900)
+    assert context.below is None
+
+
+async def test_rank_context_with_no_ranked_members_is_empty(session: AsyncSession) -> None:
+    context = await ClanService(session).rank_context(GUILD_ID, 1500)
+    assert context.total_ranked == 0
+    assert context.above is None and context.below is None
+
+
+async def test_clan_stats_aggregates_totals_and_spread(session: AsyncSession) -> None:
+    _member_a, player_a = await _make_linked_member(session, discord_id=1, brawlhalla_id=10)
+    _member_b, player_b = await _make_linked_member(session, discord_id=2, brawlhalla_id=20)
+
+    ranking = RankingSnapshotRepository(session)
+    await ranking.add(
+        RankingSnapshot(
+            brawlhalla_player_id=player_a.id,
+            captured_at=datetime.now(UTC),
+            rating=1800,
+            peak_rating=1900,
+            tier="Diamond",
+            wins=60,
+            games=100,
+            region="SEA",
+        )
+    )
+    await ranking.add(
+        RankingSnapshot(
+            brawlhalla_player_id=player_b.id,
+            captured_at=datetime.now(UTC),
+            rating=1200,
+            peak_rating=1250,
+            tier="Silver",
+            wins=40,
+            games=100,
+            region="SEA",
+        )
+    )
+
+    stats = await ClanService(session).clan_stats(GUILD_ID)
+    assert stats.members_ranked == 2
+    assert stats.total_games == 200
+    assert stats.total_wins == 100
+    assert stats.win_rate == 50.0
+    assert stats.average_rating == 1500
+    assert stats.median_rating == 1500
+    assert stats.highest == ("P10", 1800)
+    assert dict(stats.tier_counts) == {"Diamond": 1, "Silver": 1}
+    assert stats.region_counts == [("SEA", 2)]
+
+
+async def test_clan_stats_with_no_snapshots_is_empty(session: AsyncSession) -> None:
+    stats = await ClanService(session).clan_stats(GUILD_ID)
+    assert stats.members_ranked == 0
+    assert stats.average_rating is None
+    assert stats.median_rating is None
+    assert stats.highest is None

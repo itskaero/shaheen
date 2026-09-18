@@ -19,16 +19,42 @@ from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.shaheen_member import ShaheenMember
-from database.repositories.achievement_repository import AchievementRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
-from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError
+from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
 from integrations.brawlhalla.service import BrawlhallaService
-from services.achievements import AchievementDef, evaluate_snapshot_achievements, tier_index
+from services.achievement_service import AchievementService
+from services.achievements import (
+    AchievementDef,
+    evaluate_snapshot_achievements,
+    evaluate_tenure_achievements,
+    tier_index,
+)
 
 logger = logging.getLogger(__name__)
+
+# /refresh is a member-triggered snapshot, so it hits the Brawlhalla API
+# outside the scheduled loop. This floor keeps a member spamming the command
+# from turning into upstream request volume (docs/DECISIONS.md ADR-084);
+# it's enforced off the last stored snapshot, so it survives a bot restart
+# the way an in-process cooldown wouldn't.
+REFRESH_COOLDOWN_SECONDS = 15 * 60
+
+
+def _days_since(moment: datetime | None) -> int | None:
+    """Whole days between `moment` and now, or None if unknown.
+
+    ShaheenMember.joined_at is nullable (a member can exist before Discord
+    ever told us when they joined), so tenure simply doesn't evaluate in
+    that case rather than guessing.
+    """
+    if moment is None:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return max(0, (datetime.now(UTC) - moment).days)
 
 
 @dataclass
@@ -55,6 +81,19 @@ class SnapshotRunResult:
     announcements: list[Announcement] = field(default_factory=list)
 
 
+@dataclass
+class RefreshOutcome:
+    """Result of an on-demand /refresh.
+
+    `refreshed` is False when the cooldown blocked it, in which case
+    `retry_after_seconds` says how long is left and nothing was fetched.
+    """
+
+    refreshed: bool
+    retry_after_seconds: int = 0
+    result: SnapshotRunResult | None = None
+
+
 class SnapshotService:
     def __init__(self, session: AsyncSession, brawlhalla: BrawlhallaService) -> None:
         self._session = session
@@ -62,8 +101,7 @@ class SnapshotService:
         self._links = MemberPlayerLinkRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._legends = LegendSnapshotRepository(session)
-        self._achievements = AchievementRepository(session)
-        self._awards = MemberAchievementRepository(session)
+        self._achievement_service = AchievementService(session)
 
     async def run_for_guild(self, guild_id: int) -> SnapshotRunResult:
         result = SnapshotRunResult()
@@ -110,6 +148,9 @@ class SnapshotService:
                 games=ranked.games if ranked else 0,
                 region=(ranked.region if ranked else None) or player.region,
                 global_rank=ranked.global_rank if ranked else None,
+                # Fetched and shown in Discord since Phase 2 but never
+                # stored until ADR-081; backs the region_top_100 achievement.
+                region_rank=ranked.region_rank if ranked else None,
             )
         )
 
@@ -174,33 +215,74 @@ class SnapshotService:
                     )
                 )
 
-        await self._award_achievements(
-            member, player, discord_id, stats.games, ranked.tier if ranked else None, result
-        )
+        await self._award_achievements(member, player, discord_id, stats, ranked, result)
+
+    async def refresh_member(
+        self, member: ShaheenMember, player: BrawlhallaPlayer, discord_id: int
+    ) -> RefreshOutcome:
+        """Snapshot one member now, on their own request, subject to a cooldown.
+
+        The same work run_for_guild does for everyone, for one member —
+        including achievement awards, so a member who just crossed a
+        threshold doesn't wait for the next scheduled tick.
+        """
+        latest = await self._ranking.get_latest(player.id)
+        if latest is not None:
+            captured_at = latest.captured_at
+            if captured_at.tzinfo is None:
+                captured_at = captured_at.replace(tzinfo=UTC)
+            elapsed = (datetime.now(UTC) - captured_at).total_seconds()
+            if elapsed < REFRESH_COOLDOWN_SECONDS:
+                return RefreshOutcome(
+                    refreshed=False,
+                    retry_after_seconds=int(REFRESH_COOLDOWN_SECONDS - elapsed),
+                )
+
+        result = SnapshotRunResult()
+        await self.snapshot_member(member, player, discord_id, result)
+        result.members_processed = 1
+        return RefreshOutcome(refreshed=True, result=result)
 
     async def _award_achievements(
         self,
         member: ShaheenMember,
         player: BrawlhallaPlayer,
         discord_id: int,
-        games: int,
-        tier: str | None,
+        stats: PlayerStatsResponse,
+        ranked: PlayerRankedResponse | None,
         result: SnapshotRunResult,
     ) -> None:
-        already_earned = await self._awards.list_earned_keys(member.id)
+        already_earned = await self._achievement_service.earned_keys(member.id)
+        # ADR-081: peak rating, global/region standing and ranked win rate
+        # all come from data this snapshot already fetched — they used to be
+        # thrown away after the embed was built.
         newly_earned = evaluate_snapshot_achievements(
-            games=games, ranked_tier=tier, already_earned=already_earned
+            games=stats.games,
+            ranked_tier=ranked.tier if ranked else None,
+            already_earned=already_earned,
+            peak_rating=ranked.peak_rating if ranked else None,
+            global_rank=ranked.global_rank if ranked else None,
+            region_rank=ranked.region_rank if ranked else None,
+            ranked_wins=ranked.wins if ranked else None,
+            ranked_games=ranked.games if ranked else None,
         )
+        # Tenure rides along on the same loop: it's the one recurring pass
+        # over every linked member, so time-served milestones need no job of
+        # their own (ADR-081).
+        newly_earned += evaluate_tenure_achievements(
+            days_in_clan=_days_since(member.joined_at), already_earned=already_earned
+        )
+        extra: dict[str, object] = {"games": stats.games}
+        if ranked is not None:
+            extra.update(
+                tier=ranked.tier,
+                rating=ranked.rating,
+                peak_rating=ranked.peak_rating,
+                global_rank=ranked.global_rank,
+            )
         for achievement_def in newly_earned:
-            catalog_row = await self._achievements.get_by_key(achievement_def.key)
-            if catalog_row is None:
-                logger.warning(
-                    "Achievement %r earned but missing from catalog — run migrations?",
-                    achievement_def.key,
-                )
-                continue
-            awarded = await self._awards.award(
-                shaheen_member_id=member.id, achievement_id=catalog_row.id
+            awarded = await self._achievement_service.award(
+                shaheen_member_id=member.id, definition=achievement_def, extra=extra
             )
             if awarded is not None:
                 result.announcements.append(

@@ -309,23 +309,7 @@ async def test_achievement_gallery_reflects_seeded_catalog_and_awards(
 ) -> None:
     async with session_factory() as session:
         await _seed_linked_player(session)  # member with games_100
-        catalog: dict[str, Achievement] = {}
-        for definition in CATALOG:
-            row = Achievement(
-                key=definition.key, name=definition.name, description=definition.description
-            )
-            session.add(row)
-            catalog[definition.key] = row
-        await session.flush()
-
-        users = DiscordUserRepository(session)
-        members = ShaheenMemberRepository(session)
-        user = await users.get_or_create(1)
-        member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
-        await MemberAchievementRepository(session).award(
-            shaheen_member_id=member.id, achievement_id=catalog["games_100"].id
-        )
-        await session.commit()
+        await _seed_catalog_and_award(session, key="games_100")
 
     response = client.get("/achievements")
     assert response.status_code == 200
@@ -336,3 +320,57 @@ async def test_achievement_gallery_reflects_seeded_catalog_and_awards(
     assert by_key["games_100"]["total_members"] == 1
     assert by_key["games_100"]["completion_pct"] == 100.0
     assert by_key["games_500"]["holder_count"] == 0
+    # ADR-081: category and rarity band, so the gallery can group and label.
+    assert by_key["games_100"]["category"] == "milestone"
+    assert by_key["games_100"]["rarity"] == "Common"
+    assert by_key["games_500"]["rarity"] == "Unclaimed"
+
+
+async def _seed_catalog_and_award(session: AsyncSession, *, key: str) -> None:
+    """Seeds the full catalog and awards one achievement to discord_id=1."""
+    catalog: dict[str, Achievement] = {}
+    for definition in CATALOG:
+        row = Achievement(
+            key=definition.key,
+            name=definition.name,
+            description=definition.description,
+            category=definition.category,
+        )
+        session.add(row)
+        catalog[definition.key] = row
+    await session.flush()
+
+    users = DiscordUserRepository(session)
+    members = ShaheenMemberRepository(session)
+    user = await users.get_or_create(1)
+    member = await members.get_or_create(discord_user_id=user.id, guild_id=GUILD_ID)
+    await MemberAchievementRepository(session).award(
+        shaheen_member_id=member.id, achievement_id=catalog[key].id
+    )
+    await session.commit()
+
+
+async def test_player_achievement_checklist_marks_earned_and_unearned(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """The per-member view the clan-wide gallery can't give (ADR-081) — this
+    is why every member's achievements looked identical before.
+    """
+    async with session_factory() as session:
+        await _seed_linked_player(session)
+        await _seed_catalog_and_award(session, key="games_100")
+
+    response = client.get("/players/10/achievements")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == len(CATALOG)  # the whole catalog, not just what's earned
+    by_key = {entry["key"]: entry for entry in body}
+    assert by_key["games_100"]["earned"] is True
+    assert by_key["games_100"]["awarded_at"] is not None
+    assert by_key["games_500"]["earned"] is False
+    assert by_key["games_500"]["awarded_at"] is None
+    assert by_key["first_link"]["category"] == "onboarding"
+
+
+def test_player_achievement_checklist_not_found(client: TestClient) -> None:
+    assert client.get("/players/99999/achievements").status_code == 404

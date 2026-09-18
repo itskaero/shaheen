@@ -65,7 +65,27 @@ Show useful player statistics.
 ### /legends [user]
 Show per-Legend statistics: games, wins, KOs, damage dealt, and falls
 (ADR-067 — damage/falls already existed in the API response, just wasn't
-shown here before).
+shown here before). Each Legend the member has played in ranked is also
+annotated with its ranked rating, tier and W/L — data fetched on every
+snapshot since Phase 2 and discarded unread until ADR-084.
+
+### /compare <member_a> [member_b]
+Side-by-side ranked and lifetime stats for two linked members (ADR-084).
+`/rivalry` covers the head-to-head *match record*; this covers stats.
+Defaults `member_b` to you.
+
+### /refresh
+Pull your own Brawlhalla stats now instead of waiting for the scheduled
+snapshot loop (ADR-084). Rate-limited to one refresh per member every 15
+minutes, measured off the last stored snapshot so it survives a restart.
+Awards any achievements the fresh numbers earned.
+
+### /lookup <identifier>
+Check any Brawlhalla player's standing **without linking** — takes a
+Steam64 ID or a Brawlhalla player ID (Brawlhalla's API has no username
+search), and reports where that rating would slot into Shaheen's ladder:
+the rank it would hold and the nearest member above and below with deltas
+(ADR-083). Read-only — nothing is stored and no link is created.
 
 ## Phase 3 — Clan
 
@@ -82,6 +102,12 @@ Show stored rating/history snapshots.
 Clan-wide Legend popularity and win rate — every actively-linked member's
 latest per-legend stats aggregated together, filtered to Legends with
 enough combined games to be meaningful (docs/DECISIONS.md ADR-068).
+
+### /clanstats
+Clan-wide aggregate: combined games and wins, average and median rating,
+highest-rated member, tier spread, region split and most-played Legends
+(ADR-084). Median sits next to the mean because one high-rated member
+drags an average well away from the clan's typical standing.
 
 ### /spotlight <user> <note>
 Feature a member in `#announcements` (staff only, `require_staff_

@@ -7,11 +7,21 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from bot.content.profile_embeds import build_legends_embed, build_profile_embed
+from bot.content.profile_embeds import (
+    build_compare_embed,
+    build_legends_embed,
+    build_profile_embed,
+    build_refresh_embed,
+)
 from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.chat_activity import ChatActivity
-from integrations.brawlhalla.models import LegendStat, PlayerRankedResponse, PlayerStatsResponse
+from integrations.brawlhalla.models import (
+    LegendStat,
+    PlayerRankedResponse,
+    PlayerStatsResponse,
+    RankedLegendStat,
+)
 
 PLAYER = BrawlhallaPlayer(brawlhalla_player_id=12345, player_name="Reko Rex", region="us-e")
 STATS = PlayerStatsResponse(brawlhalla_id=12345, name="Reko Rex", level=42, games=100, wins=60)
@@ -177,3 +187,115 @@ def test_legends_embed_includes_damage_and_falls() -> None:
     assert embed.description is not None
     assert "15,000 DMG" in embed.description
     assert "8 falls" in embed.description
+
+
+# --- ADR-084: /compare, /refresh, ranked-legend annotation -------------------
+
+
+def test_compare_embed_names_who_leads_and_by_how_much() -> None:
+    def ranked(rating: int) -> PlayerRankedResponse:
+        return PlayerRankedResponse(
+            brawlhalla_id=1,
+            name="X",
+            tier="Diamond",
+            rating=rating,
+            peak_rating=rating + 20,
+            wins=50,
+            games=100,
+        )
+
+    embed = build_compare_embed(
+        left_name="Kaero",
+        left_stats=STATS,
+        left_ranked=ranked(1800),
+        right_name="Rival",
+        right_stats=STATS,
+        right_ranked=ranked(1650),
+    )
+
+    assert embed.description is not None
+    assert "Kaero" in embed.title and "Rival" in embed.title
+    assert "1800" in embed.description and "1650" in embed.description
+    assert embed.footer.text == "Kaero leads by 150 rating."
+
+
+def test_compare_embed_handles_an_unranked_side() -> None:
+    embed = build_compare_embed(
+        left_name="Kaero",
+        left_stats=STATS,
+        left_ranked=None,
+        right_name="Rival",
+        right_stats=STATS,
+        right_ranked=None,
+    )
+
+    assert embed.description is not None
+    assert "—" in embed.description  # no rating rather than a fabricated 0
+    assert embed.footer.text is None
+
+
+def test_refresh_embed_lists_newly_earned_achievements() -> None:
+    embed = build_refresh_embed(
+        display_name="Kaero",
+        player=PLAYER,
+        ranked=None,
+        new_achievements=["Century", "Ascendant"],
+    )
+    assert "Refreshed" in embed.title
+    assert _field(embed, "New Achievements") == "Century, Ascendant"
+
+
+def test_refresh_embed_omits_the_achievements_field_when_nothing_was_earned() -> None:
+    embed = build_refresh_embed(
+        display_name="Kaero", player=PLAYER, ranked=None, new_achievements=[]
+    )
+    assert _field(embed, "New Achievements") is None
+
+
+def test_legends_embed_annotates_ranked_legends() -> None:
+    """PlayerRankedResponse.legends was fetched every snapshot since Phase 2
+    and thrown away; /legends is the first thing that shows it.
+    """
+    stats = PlayerStatsResponse(
+        brawlhalla_id=12345,
+        name="Reko Rex",
+        legends=[LegendStat(legend_id=3, legend_name_key="bodvar", games=80, wins=50, kos=120)],
+    )
+    ranked = PlayerRankedResponse(
+        brawlhalla_id=12345,
+        name="Reko Rex",
+        tier="Diamond",
+        rating=1800,
+        peak_rating=1900,
+        wins=50,
+        games=80,
+        legends=[
+            RankedLegendStat(
+                legend_id=3,
+                legend_name_key="bodvar",
+                rating=1755,
+                peak_rating=1790,
+                tier="Diamond",
+                wins=30,
+                games=50,
+            )
+        ],
+    )
+
+    embed = build_legends_embed(display_name="Kaero", player=PLAYER, stats=stats, ranked=ranked)
+
+    assert embed.description is not None
+    assert "Ranked: 1755 (Diamond)" in embed.description
+    assert "30W-20L" in embed.description
+
+
+def test_legends_embed_without_ranked_data_is_unchanged() -> None:
+    stats = PlayerStatsResponse(
+        brawlhalla_id=12345,
+        name="Reko Rex",
+        legends=[LegendStat(legend_id=3, legend_name_key="bodvar", games=80, wins=50, kos=120)],
+    )
+    embed = build_legends_embed(display_name="Kaero", player=PLAYER, stats=stats, ranked=None)
+
+    assert embed.description is not None
+    assert "Ranked:" not in embed.description

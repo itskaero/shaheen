@@ -6,8 +6,12 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exceptions import NotFoundError, ShaheenError
+from database.models.achievement import Achievement
 from database.models.match import MatchKind, MatchSide
 from database.models.tournament import TournamentMatchStatus, TournamentStatus
+from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from services.achievement_service import AchievementService
 from services.match_service import MatchService
 from services.tournament_service import TournamentService
 
@@ -247,3 +251,54 @@ async def _side_discord_id(session: AsyncSession, match_id: int, side: MatchSide
 
     ids = await MatchRepository(session).discord_ids_on_side(match_id, side)
     return ids[0]
+
+
+# --- ADR-081: tournaments now award achievements ----------------------------
+
+
+async def _earned_keys(session: AsyncSession, discord_id: int) -> set[str]:
+    user = await DiscordUserRepository(session).get_by_discord_id(discord_id)
+    assert user is not None
+    member = await ShaheenMemberRepository(session).get(discord_user_id=user.id, guild_id=GUILD_ID)
+    assert member is not None
+    return await AchievementService(session).earned_keys(member.id)
+
+
+async def test_registering_awards_the_entrant_achievement(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    service = TournamentService(session)
+    await _create_and_register(service, kind=MatchKind.ONE_V_ONE, discord_ids=[10, 11])
+
+    assert "tournament_entrant" in await _earned_keys(session, 10)
+    assert "tournament_entrant" in await _earned_keys(session, 11)
+
+
+async def test_winning_the_final_awards_champion_and_finalist(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """The winner takes both; the runner-up takes finalist only."""
+    tournament_service = TournamentService(session)
+    match_service = MatchService(session)
+    tournament_id = await _create_and_register(
+        tournament_service, kind=MatchKind.ONE_V_ONE, discord_ids=[10, 11]
+    )
+    await tournament_service.start_tournament(tournament_id)
+
+    final = (await _bracket_matches(session, tournament_id))[0]
+    assert final.match_id is not None
+    await match_service.report_result(
+        match_id=final.match_id, guild_id=GUILD_ID, reporter_discord_id=10, reporter_won=True
+    )
+    match = await match_service.confirm_result(
+        match_id=final.match_id, guild_id=GUILD_ID, confirmer_discord_id=11
+    )
+    bracket_match = await tournament_service.get_bracket_match_for(final.match_id)
+    assert bracket_match is not None
+    await tournament_service.advance_from_match(bracket_match, winning_side=match.winning_side)
+
+    winner_keys = await _earned_keys(session, 10)
+    runner_up_keys = await _earned_keys(session, 11)
+    assert {"tournament_champion", "tournament_finalist"} <= winner_keys
+    assert "tournament_finalist" in runner_up_keys
+    assert "tournament_champion" not in runner_up_keys

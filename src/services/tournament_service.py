@@ -31,6 +31,8 @@ from database.repositories.tournament_repository import (
     TournamentMatchRepository,
     TournamentRepository,
 )
+from services.achievement_service import AchievementService
+from services.achievements import evaluate_competition_achievements
 from services.bracket import generate_bracket, next_slot
 
 _ENTRANT_SIZE: dict[MatchKind, int] = {MatchKind.ONE_V_ONE: 1, MatchKind.TWO_V_TWO: 2}
@@ -52,6 +54,7 @@ class TournamentService:
         self._entrants = TournamentEntrantRepository(session)
         self._bracket_matches = TournamentMatchRepository(session)
         self._matches = MatchRepository(session)
+        self._achievement_service = AchievementService(session)
 
     async def _member_id(
         self, *, guild_id: int, discord_id: int, joined_at: datetime | None = None
@@ -111,9 +114,14 @@ class TournamentService:
                 raise ShaheenError("One of these players is already registered.")
             member_ids.append(member_id)
 
-        return await self._entrants.register(
+        entrant = await self._entrants.register(
             tournament_id=tournament_id, shaheen_member_ids=member_ids
         )
+        for member_id in member_ids:
+            await self._award(
+                member_id, tournaments_entered=1, extra={"tournament_id": tournament_id}
+            )
+        return entrant
 
     async def start_tournament(self, tournament_id: int) -> Tournament:
         tournament = await self._tournaments.get(tournament_id)
@@ -235,6 +243,23 @@ class TournamentService:
         max_round = await self._bracket_matches.max_round(tournament.id)
         if bracket_match.round_number >= max_round:
             await self._tournaments.complete(tournament)
+            # The final: both entrants are finalists, the winner is also
+            # champion (docs/DECISIONS.md ADR-081). Awarded here rather than
+            # counted later because this is the only point that knows who
+            # reached the last round.
+            for member_id in await self._entrants.members_of(winner_id):
+                await self._award(
+                    member_id,
+                    tournament_finals=1,
+                    tournament_wins=1,
+                    extra={"tournament_id": tournament.id, "placement": 1},
+                )
+            for member_id in await self._entrants.members_of(loser_id):
+                await self._award(
+                    member_id,
+                    tournament_finals=1,
+                    extra={"tournament_id": tournament.id, "placement": 2},
+                )
             return AdvanceResult(bracket_match=bracket_match, tournament_completed=True)
 
         next_bracket_match = await self._place_winner(
@@ -244,6 +269,32 @@ class TournamentService:
             bracket_match=bracket_match,
             tournament_completed=False,
             next_bracket_match=next_bracket_match,
+        )
+
+    async def _award(
+        self,
+        shaheen_member_id: int,
+        *,
+        tournaments_entered: int | None = None,
+        tournament_finals: int | None = None,
+        tournament_wins: int | None = None,
+        extra: dict[str, object] | None = None,
+    ) -> None:
+        """Award tournament milestones (docs/DECISIONS.md ADR-081).
+
+        Event-driven rather than count-driven: entering, reaching a final
+        and winning are each known exactly once, at the moment they happen,
+        so there's nothing to re-count. The evaluator still de-duplicates
+        against what the member already holds.
+        """
+        newly_earned = evaluate_competition_achievements(
+            already_earned=await self._achievement_service.earned_keys(shaheen_member_id),
+            tournaments_entered=tournaments_entered,
+            tournament_finals=tournament_finals,
+            tournament_wins=tournament_wins,
+        )
+        await self._achievement_service.award_many(
+            shaheen_member_id=shaheen_member_id, definitions=newly_earned, extra=extra
         )
 
     async def _place_winner(

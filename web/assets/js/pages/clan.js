@@ -1,6 +1,40 @@
 (async function () {
   const el = document.getElementById("clan-content");
 
+  // The page skeleton is rendered up front, before any fetch, so the parts
+  // that need no API — the Discord invite and the live badge — appear
+  // immediately and survive an API failure (ADR-082). Previously all of
+  // this lived inside the getClan() try, so a cold Render instance (up to
+  // a 50s spin-up) or any API error took the whole "Join the Community"
+  // strip down with it, badge included.
+  const inviteLink =
+    typeof DISCORD_INVITE_URL !== "undefined" && DISCORD_INVITE_URL
+      ? `<a class="btn" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Join Discord</a>`
+      : "";
+
+  el.innerHTML = `
+    <div id="clan-info">
+      <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
+    </div>
+    <div class="divider"><span>Community Activity</span></div>
+    <div id="community-activity">
+      <p class="state-msg">Loading community activity…</p>
+    </div>
+    <div class="divider"><span>Join the Community</span></div>
+    <div class="community-cta">
+      ${inviteLink}
+      <span class="discord-widget" data-discord-widget hidden></span>
+    </div>
+  `;
+
+  // This third badge didn't exist when api.js's own DOMContentLoaded
+  // handler ran wireDiscordWidgets() — re-run it now that its target is in
+  // the DOM (harmless no-op if DISCORD_GUILD_ID isn't set).
+  if (typeof wireDiscordWidgets === "function") {
+    wireDiscordWidgets();
+  }
+
+  const infoEl = document.getElementById("clan-info");
   try {
     const clan = await ShaheenAPI.getClan();
 
@@ -23,52 +57,26 @@
       );
     }
 
-    const inviteLink =
-      typeof DISCORD_INVITE_URL !== "undefined" && DISCORD_INVITE_URL
-        ? `<a class="btn" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Join Discord</a>`
-        : "";
-
-    el.innerHTML = `
+    infoEl.innerHTML = `
       <div class="card clan-reveal">
         <p class="motto motto-centered">${clan.motto}</p>
         <p class="tagline tagline-centered">${clan.tagline}</p>
       </div>
       <div class="stat-grid">${statTiles.join("")}</div>
-      <div class="divider"><span>Community Activity</span></div>
-      <div id="community-activity">
-        <p class="state-msg">Loading community activity…</p>
-      </div>
-      <div class="divider"><span>Join the Community</span></div>
-      <div class="community-cta">
-        ${inviteLink}
-        <span class="discord-widget" data-discord-widget hidden></span>
-      </div>
     `;
 
     // The clan-reveal wipe (style.css's .clan-reveal.in-view) is normally
     // triggered by scroll.js's IntersectionObserver, but this card is
     // injected into the DOM well after DOMContentLoaded (once the fetch
-    // resolves) so that observer never sees it — and it's the very first
-    // thing on the page anyway, so a scroll trigger isn't the right fit
-    // here. Two rAFs so the browser paints the closed clip-path first,
-    // then the transition to .in-view actually animates instead of
-    // snapping straight to its end state in the same frame.
-    const revealCard = el.querySelector(".clan-reveal");
+    // resolves) so that observer never sees it. Two rAFs so the browser
+    // paints the closed clip-path first, then the transition to .in-view
+    // actually animates instead of snapping to its end state in one frame.
+    const revealCard = infoEl.querySelector(".clan-reveal");
     if (revealCard) {
       requestAnimationFrame(() => requestAnimationFrame(() => revealCard.classList.add("in-view")));
     }
-
-    // The content-area widget badge above didn't exist yet when api.js's
-    // own DOMContentLoaded handler first ran wireDiscordWidgets() (this
-    // card renders later, once the fetch resolves) — re-run it now so
-    // that badge gets the same best-effort fill as the header/footer ones
-    // (harmless no-op if DISCORD_GUILD_ID isn't set).
-    if (typeof wireDiscordWidgets === "function") {
-      wireDiscordWidgets();
-    }
   } catch (err) {
-    el.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
-    return;
+    infoEl.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
   }
 
   // A separate fetch/try so a community-activity failure can't take down

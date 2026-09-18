@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_session
 from api.schemas import (
+    AchievementChecklistEntryResponse,
     AchievementResponse,
     LegendMasteryResponse,
     MatchResultResponse,
@@ -108,4 +109,30 @@ async def get_player_matches(
             confirmed_at=match.confirmed_at,
         )
         for match in matches
+    ]
+
+
+@router.get("/{brawlhalla_id}/achievements", response_model=list[AchievementChecklistEntryResponse])
+async def get_player_achievements(
+    brawlhalla_id: int, session: AsyncSession = Depends(get_session)
+) -> list[AchievementChecklistEntryResponse]:
+    """The full catalog flagged earned/unearned for this player.
+
+    GET /players/{id} already returns what the player HOLDS; this returns
+    what they don't, which is what makes a checklist read differently from
+    member to member (docs/DECISIONS.md ADR-081).
+    """
+    entries = await WebsiteService(session).get_player_achievement_checklist(brawlhalla_id)
+    if entries is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return [
+        AchievementChecklistEntryResponse(
+            key=entry.achievement.key,
+            name=entry.achievement.name,
+            description=entry.achievement.description,
+            category=entry.achievement.category,
+            earned=entry.earned,
+            awarded_at=entry.earned_at,
+        )
+        for entry in entries
     ]

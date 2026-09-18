@@ -13,10 +13,13 @@ from discord.ext import commands
 
 from bot.client import ShaheenBot
 from bot.content.profile_embeds import (
+    build_compare_embed,
     build_legends_embed,
     build_not_linked_embed,
     build_profile_embed,
     build_rank_embed,
+    build_refresh_cooldown_embed,
+    build_refresh_embed,
     build_stats_embed,
 )
 from core.exceptions import ShaheenError
@@ -25,6 +28,7 @@ from database.models.shaheen_member import ShaheenMember
 from database.session import session_scope
 from services.link_service import LinkService
 from services.profile_service import ProfileService
+from services.snapshot_service import SnapshotService
 
 
 class ProfileCog(commands.Cog):
@@ -129,8 +133,110 @@ class ProfileCog(commands.Cog):
                 return
             _, player = linked
             stats = await service.get_stats(player.brawlhalla_player_id)
+            ranked = await service.get_ranked(player.brawlhalla_player_id)
 
-        embed = build_legends_embed(display_name=member.display_name, player=player, stats=stats)
+        embed = build_legends_embed(
+            display_name=member.display_name, player=player, stats=stats, ranked=ranked
+        )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(
+        name="compare", description="Compare two members' Brawlhalla stats side by side"
+    )
+    @app_commands.describe(member_a="First member", member_b="Second member (defaults to you)")
+    async def compare(
+        self,
+        interaction: discord.Interaction,
+        member_a: discord.Member,
+        member_b: discord.Member | None = None,
+    ) -> None:
+        if interaction.guild is None:
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        right = member_b or interaction.user
+        if not isinstance(right, discord.Member):
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        if member_a.id == right.id:
+            raise ShaheenError("Pick two different members to compare.")
+        await interaction.response.defer(ephemeral=True)
+
+        async with session_scope(self.bot.session_factory) as session:
+            service = ProfileService(
+                session, LinkService(session, self.bot.brawlhalla), self.bot.brawlhalla
+            )
+            left_link = await service.get_linked_player(
+                guild_id=interaction.guild.id, discord_id=member_a.id
+            )
+            right_link = await service.get_linked_player(
+                guild_id=interaction.guild.id, discord_id=right.id
+            )
+            if left_link is None or right_link is None:
+                unlinked = member_a if left_link is None else right
+                await interaction.followup.send(
+                    embed=build_not_linked_embed(target_is_self=unlinked.id == interaction.user.id),
+                    ephemeral=True,
+                )
+                return
+
+            left_stats = await service.get_stats(left_link[1].brawlhalla_player_id)
+            left_ranked = await service.get_ranked(left_link[1].brawlhalla_player_id)
+            right_stats = await service.get_stats(right_link[1].brawlhalla_player_id)
+            right_ranked = await service.get_ranked(right_link[1].brawlhalla_player_id)
+
+        embed = build_compare_embed(
+            left_name=member_a.display_name,
+            left_stats=left_stats,
+            left_ranked=left_ranked,
+            right_name=right.display_name,
+            right_stats=right_stats,
+            right_ranked=right_ranked,
+        )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="refresh", description="Pull your latest Brawlhalla stats now")
+    async def refresh(self, interaction: discord.Interaction) -> None:
+        member = await self._start(interaction, None)
+        if member is None:
+            return
+
+        async with session_scope(self.bot.session_factory) as session:
+            link_service = LinkService(session, self.bot.brawlhalla)
+            linked = await link_service.get_active_link(
+                guild_id=member.guild.id, discord_id=member.id
+            )
+            if linked is None:
+                await interaction.followup.send(
+                    embed=build_not_linked_embed(target_is_self=True), ephemeral=True
+                )
+                return
+
+            shaheen_member, player = linked
+            outcome = await SnapshotService(session, self.bot.brawlhalla).refresh_member(
+                shaheen_member, player, member.id
+            )
+            if not outcome.refreshed:
+                await interaction.followup.send(
+                    embed=build_refresh_cooldown_embed(outcome.retry_after_seconds),
+                    ephemeral=True,
+                )
+                return
+
+            # Served from BrawlhallaService's 60s cache — the snapshot above
+            # just fetched it, so this re-reads rather than re-requests.
+            ranked = await ProfileService(session, link_service, self.bot.brawlhalla).get_ranked(
+                player.brawlhalla_player_id
+            )
+            new_achievements = [
+                announcement.achievement.name
+                for announcement in (outcome.result.announcements if outcome.result else [])
+                if announcement.achievement is not None
+            ]
+
+        embed = build_refresh_embed(
+            display_name=member.display_name,
+            player=player,
+            ranked=ranked,
+            new_achievements=new_achievements,
+        )
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     async def _start(

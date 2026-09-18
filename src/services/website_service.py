@@ -32,6 +32,7 @@ from database.repositories.tournament_repository import (
     TournamentMatchRepository,
     TournamentRepository,
 )
+from services.achievements import rarity_label
 from services.chat_gamification import level_for_xp, rank_title_for_level
 
 
@@ -155,6 +156,30 @@ class AchievementGalleryEntry:
     def completion_pct(self) -> float:
         return (self.holder_count / self.total_members * 100) if self.total_members else 0.0
 
+    @property
+    def rarity(self) -> str:
+        """Common/Uncommon/Rare/Legendary/Unclaimed — the banding lives in
+        services/achievements.py so Discord and the website agree (ADR-081).
+        """
+        return rarity_label(self.completion_pct)
+
+
+@dataclass
+class AchievementChecklistEntry:
+    """One catalog achievement as it stands for ONE member.
+
+    The gallery (AchievementGalleryEntry) is clan-wide and looks identical
+    to everybody; this is the per-member view the site never had, which is
+    why every member's achievements page read the same (ADR-081).
+    """
+
+    achievement: Achievement
+    earned_at: datetime | None
+
+    @property
+    def earned(self) -> bool:
+        return self.earned_at is not None
+
 
 class WebsiteService:
     def __init__(self, session: AsyncSession) -> None:
@@ -269,6 +294,36 @@ class WebsiteService:
                 total_members=len(linked),
             )
             for achievement in catalog
+        ]
+
+    async def get_player_achievement_checklist(
+        self, brawlhalla_player_id: int
+    ) -> list[AchievementChecklistEntry] | None:
+        """The whole catalog, flagged with what this player has earned.
+
+        Returns None if the player isn't known. An unlinked player (no
+        active member link) still gets the catalog back, all unearned —
+        the checklist is about the catalog, not about membership.
+        """
+        player = await self._players.get_by_brawlhalla_id(brawlhalla_player_id)
+        if player is None:
+            return None
+
+        earned_at: dict[str, datetime] = {}
+        active_link = await self._links.get_active_by_player(player.id)
+        if active_link is not None:
+            earned_at = {
+                achievement.key: awarded_at
+                for achievement, awarded_at in await self._awards.list_with_details(
+                    active_link.shaheen_member_id
+                )
+            }
+
+        return [
+            AchievementChecklistEntry(
+                achievement=achievement, earned_at=earned_at.get(achievement.key)
+            )
+            for achievement in await self._achievement_catalog.list_all()
         ]
 
     async def get_player_profile(self, brawlhalla_player_id: int) -> PlayerProfile | None:

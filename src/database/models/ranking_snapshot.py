@@ -31,6 +31,7 @@ class RankingSnapshot(TimestampMixin, Base):
     games: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     region: Mapped[str | None] = mapped_column(String(16), nullable=True)
     global_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    region_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (

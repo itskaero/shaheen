@@ -33,6 +33,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.setup",
     "bot.cogs.link",
     "bot.cogs.profile",
+    "bot.cogs.lookup",
     "bot.cogs.clan",
     "bot.cogs.competition",
     "bot.cogs.moderation",

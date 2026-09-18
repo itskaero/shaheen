@@ -13,9 +13,14 @@
       .map((entry) => {
         const unearned = entry.holder_count === 0;
         const pct = Math.round(entry.completion_pct);
+        // Banded server-side (services/achievements.py) so Discord and the
+        // site can't disagree on what counts as rare.
+        const rarity = entry.rarity || "";
+        const rarityClass = rarity ? ` rarity-${rarity.toLowerCase()}` : "";
         return `
         <div class="card achievement-card${unearned ? " unearned" : ""}">
           <span class="badge-icon achievement-icon">🏅</span>
+          ${rarity ? `<span class="achievement-rarity${rarityClass}">${escapeHtml(rarity)}</span>` : ""}
           <h3>${escapeHtml(entry.name)}</h3>
           <p>${escapeHtml(entry.description)}</p>
           <div class="achievement-progress">

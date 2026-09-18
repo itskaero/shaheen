@@ -114,6 +114,17 @@ nav a{color:#d7e5dc;text-decoration:none;font-size:10.5px;letter-spacing:.26em;
 nav a:hover,nav a:focus-visible{color:var(--green)}
 nav a.join{color:var(--gold)}
 
+/* Live Discord online-count badge (ADR-082). This page has its own
+   self-contained design system — no style.css — so the badge is restyled
+   here to match, rather than importing the site chrome for one element.
+   Stays hidden unless assets/js/api.js gets a real widget response. */
+.discord-live{display:inline-flex;align-items:center;gap:7px;color:var(--muted);
+  font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+.discord-live[hidden]{display:none}
+.discord-live .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 7px var(--green);flex:none;animation:livePulse 2.4s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+
 .tagline{position:absolute;top:28px;right:34px;text-align:right;
   font-size:9px;letter-spacing:.34em;color:var(--muted);line-height:1.9;text-transform:uppercase}
 .tagline .enter{display:inline-block;margin-top:10px;border:1px solid var(--gold);color:var(--gold-hi);
@@ -504,6 +515,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offse
   <nav>
     <a href="index.html" data-leave>Home</a><a href="clan.html" data-leave>Clan</a><a href="roster.html" data-leave>Players</a>
     <a href="tournaments.html" data-leave>Tournaments</a><a href="leaderboard.html" data-leave>Leaderboard</a><a href="join.html" class="join" data-leave>Join</a>
+    <span class="discord-live" data-discord-widget hidden></span>
   </nav>
 
   <div class="tagline">More than a game<br>A journey<br><button class="enter" type="button" data-enter>Enter Shaheen →</button></div>
@@ -950,6 +962,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offse
   measureStep(); setLegend(0); applyRing(0); tick();
 })();
 </script>
+<!-- config.js + api.js only for the live Discord badge above (ADR-082).
+     This page deliberately does not load style.css or the rest of the site
+     JS; api.js's other DOMContentLoaded work (setYear, wireDiscordLink)
+     no-ops harmlessly because #year and #discord-link don't exist here. -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/audio.js"></script>
 </body>
 </html>
