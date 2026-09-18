@@ -1,8 +1,7 @@
-(async function () {
+(function () {
   const el = document.getElementById("roster-content");
 
-  try {
-    const entries = await ShaheenAPI.getRoster();
+  function render(entries, meta) {
 
     if (!entries || entries.length === 0) {
       el.innerHTML = '<p class="state-msg">No linked members yet — link a Brawlhalla account with /link in Discord.</p>';
@@ -47,7 +46,15 @@
         </table>
       </div>
     `;
-  } catch (err) {
-    el.innerHTML = `<p class="state-msg error">Couldn't load the roster: ${err.message}</p>`;
+    if (meta && !meta.live && meta.capturedAt) {
+      el.insertAdjacentHTML(
+        "beforeend",
+        `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
+      );
+    }
   }
+
+  ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), render).catch((err) => {
+    el.innerHTML = `<p class="state-msg error">Couldn't load the roster: ${err.message}</p>`;
+  });
 })();

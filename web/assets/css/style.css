@@ -1022,6 +1022,16 @@ nav.site-nav a.active::after {
   }
 }
 
+/* Snapshot notice (docs/DECISIONS.md ADR-087) — shown only while the page
+   is displaying the CI-committed copy in web/data/, i.e. during the seconds
+   before the live API answers (or permanently if it never does). */
+.snapshot-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  color: var(--grey);
+  font-style: italic;
+}
+
 /* ---------- scroll-triggered reveal ---------- */
 
 .reveal {

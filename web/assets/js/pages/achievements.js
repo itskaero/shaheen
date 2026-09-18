@@ -1,8 +1,7 @@
-(async function () {
+(function () {
   const el = document.getElementById("achievements-content");
 
-  try {
-    const entries = await ShaheenAPI.getAchievements();
+  function render(entries, meta) {
 
     if (!entries || entries.length === 0) {
       el.innerHTML = '<p class="state-msg">No achievements defined yet.</p>';
@@ -32,7 +31,15 @@
       .join("");
 
     el.innerHTML = `<div class="achievement-grid">${cards}</div>`;
-  } catch (err) {
-    el.innerHTML = `<p class="state-msg error">Couldn't load achievements: ${err.message}</p>`;
+    if (meta && !meta.live && meta.capturedAt) {
+      el.insertAdjacentHTML(
+        "beforeend",
+        `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
+      );
+    }
   }
+
+  ShaheenAPI.withSnapshot("achievements", () => ShaheenAPI.getAchievements(), render).catch((err) => {
+    el.innerHTML = `<p class="state-msg error">Couldn't load achievements: ${err.message}</p>`;
+  });
 })();

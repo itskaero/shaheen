@@ -36,7 +36,50 @@ const ShaheenAPI = (() => {
     return response.json();
   }
 
+  // Cold-start cover (docs/DECISIONS.md ADR-087). The API runs on Render's
+  // free tier, which sleeps after 15 minutes idle and can take 30-60s to
+  // wake — so a first visitor used to sit on "Loading…" for a minute on
+  // every data page. A scheduled GitHub Action writes the last known
+  // response for each of these into web/data/*.json, which ships with the
+  // site and therefore loads instantly from the same origin.
+  //
+  // withSnapshot renders that immediately, then refreshes from the live API
+  // and re-renders. If the live call fails but the snapshot rendered, the
+  // page keeps the snapshot and says how old it is rather than throwing
+  // away good data for an error message.
+  async function loadSnapshot(name) {
+    try {
+      const response = await fetch(`data/${encodeURIComponent(name)}.json`, {
+        cache: "no-cache",
+      });
+      if (!response.ok) {
+        return null;
+      }
+      const payload = await response.json();
+      return payload && payload.data !== undefined ? payload : null;
+    } catch {
+      // No snapshot committed yet, or the site is being opened from file://.
+      return null;
+    }
+  }
+
+  async function withSnapshot(name, liveFetch, render) {
+    const snapshot = await loadSnapshot(name);
+    if (snapshot) {
+      render(snapshot.data, { live: false, capturedAt: snapshot.captured_at });
+    }
+    try {
+      render(await liveFetch(), { live: true, capturedAt: null });
+    } catch (err) {
+      if (!snapshot) {
+        throw err;
+      }
+      console.warn(`[shaheen] live refresh of ${name} failed (${err.message}); showing snapshot.`);
+    }
+  }
+
   return {
+    withSnapshot,
     getClan: () => get("/clan"),
     getLeaderboard: (limit = 25) => get(`/leaderboard?limit=${limit}`),
     getRoster: () => get("/roster"),

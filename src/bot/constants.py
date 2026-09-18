@@ -134,6 +134,65 @@ ROLE_MVP = RoleSpec(
     hoist=True,
 )
 
+# --- Brawlhalla rank roles (system-assigned from snapshots) -----------------
+#
+# Mirrors each member's current Brawlhalla 1v1 tier, applied and removed
+# automatically by the snapshot loop (docs/DECISIONS.md ADR-087). The bot has
+# tracked every member's tier every six hours since Phase 3 and never did
+# anything with it; these make that visible and, more usefully, mentionable —
+# "@Diamond scrims at 9" is the point.
+#
+# Only Gold and above get a role. Below that the label says more about how
+# much ranked someone has played than how good they are, and a wall of
+# low-tier roles is discouraging rather than motivating.
+#
+# hoist=False on purpose: the member-list sidebar is already grouped by the
+# clan rank ladder (Elite/Shaheen/Trial/...), and adding four more hoisted
+# groups would bury it. These are colour/mention tags, not ladder positions.
+# Held by at most one at a time — the loop revokes the others.
+
+ROLE_RANK_GOLD = RoleSpec(
+    logical_key="role:rank_gold",
+    name="🥇 Gold",
+    color=GOLD,
+    hoist=False,
+    mentionable=True,
+)
+
+ROLE_RANK_PLATINUM = RoleSpec(
+    logical_key="role:rank_platinum",
+    name="💠 Platinum",
+    color=CREAM,
+    hoist=False,
+    mentionable=True,
+)
+
+ROLE_RANK_DIAMOND = RoleSpec(
+    logical_key="role:rank_diamond",
+    name="💎 Diamond",
+    color=EMERALD,
+    hoist=False,
+    mentionable=True,
+)
+
+ROLE_RANK_VALHALLAN = RoleSpec(
+    logical_key="role:rank_valhallan",
+    name="⚔️ Valhallan",
+    color=FOREST_GREEN,
+    hoist=False,
+    mentionable=True,
+)
+
+# Lowest tier first. services/rank_roles.py maps a Brawlhalla tier string to
+# one of these logical keys; nothing else should hardcode the order.
+RANK_ROLES: tuple[RoleSpec, ...] = (
+    ROLE_RANK_GOLD,
+    ROLE_RANK_PLATINUM,
+    ROLE_RANK_DIAMOND,
+    ROLE_RANK_VALHALLAN,
+)
+
+
 # --- Self-assignable roles (opt-in pings/tags, not clan rank) ---------------
 #
 # Deliberately separate from the rank ladder above: these carry no
@@ -208,6 +267,7 @@ ROLES: tuple[RoleSpec, ...] = (
     ROLE_ALLY,
     ROLE_GUEST,
     ROLE_MVP,
+    *RANK_ROLES,
     *SELF_ASSIGN_ROLES,
 )
 

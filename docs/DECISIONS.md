@@ -3081,3 +3081,88 @@ still loads with no broken images and no console errors, and all five legend til
 members" to a live "N online now". Triage unchanged — open
 `https://discord.com/api/guilds/1546568759530229961/widget.json`: 200 means it is on, 403 means flip
 it, 404 means the guild ID is wrong.
+
+## ADR-087 — cold-start snapshots, automatic rank roles, and /help
+
+Three changes chosen together because each one turns data or work the project already has into
+something a member actually sees.
+
+### Cold-start snapshots — the site stops looking broken on first load
+
+The API runs on Render's free tier, which sleeps after 15 minutes idle and can take 30–60s to wake.
+`api.js` has had a 50-second timeout since Phase 6 precisely because of this, but the honest effect
+was that the first visitor to the clan, leaderboard, roster or achievements page sat on
+*"Loading… (first load can take up to a minute)"* — the worst possible first impression for a page
+whose whole job is to look like a real esports clan.
+
+`.github/workflows/snapshot.yml` now runs every six hours (and on demand), fetches `/clan`,
+`/leaderboard?limit=25`, `/roster` and `/achievements`, and commits each response to
+`web/data/<name>.json` wrapped as `{captured_at, source, data}`. Those files ship with the site, so
+they load instantly from the same origin. `ShaheenAPI.withSnapshot(name, liveFetch, render)` renders
+the committed copy immediately, then re-renders from the live API.
+
+The failure modes are all deliberate:
+
+- **Live call fails, snapshot exists** → the page keeps the snapshot and says how old it is, rather
+  than throwing away good data for an error message.
+- **No snapshot committed yet** (or the site opened from `file://`) → exactly the previous
+  behaviour, including the old error text.
+- **An endpoint doesn't respond during the workflow** → a warning, and its previous snapshot is
+  left untouched. A sleeping API never overwrites good data with an error page.
+
+The workflow reads `API_BASE_URL` out of `web/assets/js/config.js` rather than repeating it, so it
+cannot drift from what visitors actually hit. Committing under `web/` also triggers `pages.yml`, so
+a fresh snapshot deploys itself; `pages.yml` never commits, so there is no loop.
+
+### Automatic rank roles — using tier data the bot has collected since Phase 3
+
+Every six hours the snapshot loop has recorded each member's Brawlhalla tier and done nothing with
+it. Four new roles (`🥇 Gold`, `💠 Platinum`, `💎 Diamond`, `⚔️ Valhallan`) are now applied and
+removed automatically from that same pass.
+
+- `SnapshotRunResult` gained `tiers: dict[int, str | None]`, so the service reports tiers and stays
+  Discord-agnostic; `ClanCog._sync_rank_roles` does the role edits, the way `_rotate_mvp_role`
+  already does.
+- `services/rank_roles.py` is pure: `plan_rank_roles(tier=…, current_keys=…)` returns a diff, so an
+  unchanged member costs **zero** API calls on every six-hourly run, a promotion and a demotion both
+  leave exactly one role, and roles outside the rank set are never touched.
+- Unrecognized tier strings fail closed — a Brawlhalla rename stops granting rather than granting
+  the wrong role.
+- **Only Gold and above get a role.** Below that the label says more about how much ranked someone
+  has played than how good they are, and a wall of low-tier roles discourages more than it
+  motivates.
+- `hoist=False` on purpose: the member-list sidebar is already grouped by the clan ladder, and four
+  more hoisted groups would bury it. These are colour and *mention* tags — "@Diamond scrims at 9" is
+  the point. They are `mentionable=True` for exactly that.
+
+### /help — 43 commands and no way to find them
+
+Discord's command picker shows names, no grouping, and no sense of which commands are staff-only.
+`/help` renders the catalog grouped the way a member thinks about it (Getting Started, Your Stats,
+The Clan, Playing, Tournaments, Community, Staff), with an optional `category` choice for one
+section. Ephemeral, no permission check, no database access — it is the one command that has to work
+for someone who has done nothing else yet.
+
+The catalog is hand-written rather than introspected: introspection gives names and descriptions for
+free but cannot group by intent, cannot mark staff-only (that lives in a decorator), and cannot add
+the "why you'd use this" copy that makes 43 names usable. The cost is drift, so
+`tests/test_help_embeds.py` walks the real command tree and demands an exact match — adding a
+command without listing it fails the suite. The full embed is also asserted against Discord's 6000
+character and 1024 per-field limits, since a rejected `/help` would be the worst one to lose.
+
+Files: `.github/workflows/snapshot.yml` (new), `web/assets/js/api.js`,
+`web/assets/js/pages/{clan,leaderboard,roster,achievements}.js`, `web/assets/css/style.css`,
+`src/services/rank_roles.py` (new), `src/services/snapshot_service.py`, `src/bot/constants.py`,
+`src/bot/cogs/clan.py`, `src/bot/cogs/help.py` (new), `src/bot/content/help_embeds.py` (new),
+`src/bot/client.py`, `tests/test_{rank_roles,help_embeds,snapshot_service}.py`, this entry.
+
+Verified: 17 new unit tests cover the tier mapping at every boundary (promotion, demotion,
+below-Gold strip, unranked, unrecognized tier, other roles untouched, unchanged = no-op) and the
+help catalog against the live command tree; `SnapshotRunResult.tiers` is asserted for both a ranked
+and an unranked member. Playwright covers the five snapshot cases: snapshot replaced by live data
+with the note cleared, live failure keeping the snapshot with its note, no-snapshot-and-dead-API
+still showing the old error, live-only unchanged, and the clan page rendering its snapshot with no
+console errors. Full suite: 342 passing, ruff and mypy clean.
+
+**Needs one action outside this repo:** run `/setup run` once so the four rank roles are actually
+provisioned — until then the sync logs "Rank roles not provisioned" and does nothing.
