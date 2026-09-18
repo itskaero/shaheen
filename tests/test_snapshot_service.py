@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +22,11 @@ from integrations.brawlhalla.models import (
     PlayerStatsResponse,
     RankedLegendStat,
 )
-from services.snapshot_service import SnapshotRunResult, SnapshotService
+from services.snapshot_service import (
+    REFRESH_COOLDOWN_SECONDS,
+    SnapshotRunResult,
+    SnapshotService,
+)
 
 GUILD_ID = 1
 
@@ -33,11 +39,13 @@ class _FakeBrawlhalla:
         tier: str | None = "Platinum II",
         rating: int = 1500,
         peak_rating: int = 1600,
+        region_rank: int | None = None,
     ) -> None:
         self.games = games
         self.tier = tier
         self.rating = rating
         self.peak_rating = peak_rating
+        self.region_rank = region_rank
 
     async def get_stats(self, brawlhalla_id: int) -> PlayerStatsResponse:
         return PlayerStatsResponse(
@@ -60,6 +68,7 @@ class _FakeBrawlhalla:
             wins=self.games // 2,
             games=self.games,
             region="us-e",
+            region_rank=self.region_rank,
             legends=[
                 RankedLegendStat(
                     legend_id=1,
@@ -246,3 +255,67 @@ async def test_snapshot_member_persists_a_single_snapshot(
     ranking_rows = (await session.execute(select(RankingSnapshot))).scalars().all()
     assert len(ranking_rows) == 1
     assert ranking_rows[0].tier == "Platinum II"
+
+
+# --- ADR-084: /refresh ------------------------------------------------------
+
+
+async def test_refresh_member_snapshots_immediately_when_there_is_no_prior_run(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+
+    outcome = await service.refresh_member(member, player, discord_id)
+
+    assert outcome.refreshed is True
+    assert outcome.result is not None and outcome.result.members_processed == 1
+    rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert len(rows) == 1
+
+
+async def test_refresh_member_is_blocked_by_the_cooldown(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+
+    await service.refresh_member(member, player, discord_id)
+    second = await service.refresh_member(member, player, discord_id)
+
+    assert second.refreshed is False
+    assert 0 < second.retry_after_seconds <= REFRESH_COOLDOWN_SECONDS
+    # Nothing was fetched or written on the blocked call.
+    rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert len(rows) == 1
+
+
+async def test_refresh_member_runs_again_once_the_cooldown_has_passed(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+
+    await service.refresh_member(member, player, discord_id)
+    stale = (await session.execute(select(RankingSnapshot))).scalars().one()
+    stale.captured_at = datetime.now(UTC) - timedelta(seconds=REFRESH_COOLDOWN_SECONDS + 60)
+    await session.flush()
+
+    outcome = await service.refresh_member(member, player, discord_id)
+
+    assert outcome.refreshed is True
+    rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert len(rows) == 2
+
+
+async def test_snapshot_persists_region_rank(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Fetched and shown in Discord since Phase 2, stored only as of ADR-081."""
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla(region_rank=7))  # type: ignore[arg-type]
+
+    await service.refresh_member(member, player, discord_id)
+
+    row = (await session.execute(select(RankingSnapshot))).scalars().one()
+    assert row.region_rank == 7

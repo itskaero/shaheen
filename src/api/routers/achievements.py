@@ -26,9 +26,11 @@ async def get_achievement_gallery(
             key=entry.achievement.key,
             name=entry.achievement.name,
             description=entry.achievement.description,
+            category=entry.achievement.category,
             holder_count=entry.holder_count,
             total_members=entry.total_members,
             completion_pct=entry.completion_pct,
+            rarity=entry.rarity,
         )
         for entry in entries
     ]

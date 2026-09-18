@@ -22,6 +22,8 @@ from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.match_repository import MatchRepository
 from database.repositories.scrim_repository import ScrimRepository, ScrimSignupRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from services.achievement_service import AchievementService
+from services.achievements import evaluate_competition_achievements
 
 _SIDE_CAPACITY: dict[MatchKind, int] = {MatchKind.ONE_V_ONE: 1, MatchKind.TWO_V_TWO: 2}
 
@@ -53,6 +55,7 @@ class MatchService:
         self._challenges = ChallengeRepository(session)
         self._scrims = ScrimRepository(session)
         self._scrim_signups = ScrimSignupRepository(session)
+        self._achievement_service = AchievementService(session)
 
     async def _member_id(
         self, *, guild_id: int, discord_id: int, joined_at: datetime | None = None
@@ -252,6 +255,7 @@ class MatchService:
             raise PermissionDeniedError("Only the other side can confirm this result.")
 
         await self._matches.confirm(match)
+        await self._award_competition_achievements(match)
         return match
 
     async def dispute_result(
@@ -285,7 +289,33 @@ class MatchService:
         await self._matches.resolve(
             match, winning_side=winning_side, resolved_by_member_id=resolver_member_id
         )
+        await self._award_competition_achievements(match)
         return match
+
+    async def _award_competition_achievements(self, match: Match) -> None:
+        """Award match/scrim milestones to everyone on the winning side.
+
+        Runs on both confirm and staff resolve — the two paths that settle a
+        match — so a force-resolved result counts the same as an agreed one
+        (docs/DECISIONS.md ADR-081). Awards are silent: they show up in
+        /achievements and on the website rather than being announced, which
+        keeps the cogs' return contracts unchanged.
+        """
+        if match.winning_side is None:
+            return
+        winners = await self._matches.participants_on_side(match.id, match.winning_side)
+        for participant in winners:
+            member_id = participant.shaheen_member_id
+            newly_earned = evaluate_competition_achievements(
+                already_earned=await self._achievement_service.earned_keys(member_id),
+                match_wins=await self._matches.count_wins_for_member(member_id),
+                scrims_joined=await self._scrim_signups.count_for_member(member_id),
+            )
+            await self._achievement_service.award_many(
+                shaheen_member_id=member_id,
+                definitions=newly_earned,
+                extra={"match_id": match.id},
+            )
 
     # --- History ------------------------------------------------------------
 

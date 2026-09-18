@@ -180,22 +180,145 @@ def build_stats_embed(
 
 
 def build_legends_embed(
-    *, display_name: str, player: BrawlhallaPlayer, stats: PlayerStatsResponse
+    *,
+    display_name: str,
+    player: BrawlhallaPlayer,
+    stats: PlayerStatsResponse,
+    ranked: PlayerRankedResponse | None = None,
 ) -> discord.Embed:
+    """Lifetime per-Legend stats, annotated with ranked standing where the
+    member has played that Legend in ranked.
+
+    The ranked-per-Legend breakdown has been fetched on every snapshot since
+    Phase 2 and thrown away unread; this is the first thing that shows it
+    (docs/DECISIONS.md ADR-084).
+    """
     embed = discord.Embed(title=f"🐺 {display_name} — Legends", colour=FOREST_GREEN)
     if not stats.legends:
         embed.description = f"**{player.player_name}** has no recorded Legend stats yet."
         return embed
 
+    ranked_by_legend = {
+        legend.legend_name_key: legend for legend in (ranked.legends if ranked else [])
+    }
+
     top = sorted(stats.legends, key=lambda legend: legend.games, reverse=True)[:_LEGENDS_SHOWN]
-    lines = [
-        f"**{_legend_display_name(legend.legend_name_key)}** — {legend.games} games, "
-        f"{legend.wins} wins, {legend.kos} KOs, {legend.damagedealt:,} DMG, {legend.falls} falls"
-        for legend in top
-    ]
+    lines = []
+    for legend in top:
+        line = (
+            f"**{_legend_display_name(legend.legend_name_key)}** — {legend.games} games, "
+            f"{legend.wins} wins, {legend.kos} KOs, {legend.damagedealt:,} DMG, "
+            f"{legend.falls} falls"
+        )
+        ranked_legend = ranked_by_legend.get(legend.legend_name_key)
+        if ranked_legend is not None and ranked_legend.rating is not None:
+            line += f"\n╰ Ranked: {ranked_legend.rating}"
+            if ranked_legend.tier:
+                line += f" ({ranked_legend.tier})"
+            line += f" · {ranked_legend.wins}W-{ranked_legend.games - ranked_legend.wins}L"
+        lines.append(line)
     embed.description = "\n".join(lines)
     if len(stats.legends) > _LEGENDS_SHOWN:
         embed.set_footer(
             text=f"Showing top {_LEGENDS_SHOWN} of {len(stats.legends)} Legends played."
         )
     return embed
+
+
+def build_compare_embed(
+    *,
+    left_name: str,
+    left_stats: PlayerStatsResponse,
+    left_ranked: PlayerRankedResponse | None,
+    right_name: str,
+    right_stats: PlayerStatsResponse,
+    right_ranked: PlayerRankedResponse | None,
+) -> discord.Embed:
+    """Side-by-side stats for two linked members.
+
+    /rivalry already covers the head-to-head *match* record between two
+    members; this is the stats comparison, which nothing covered before
+    (docs/DECISIONS.md ADR-084). Rendered as aligned rows rather than two
+    columns of embed fields so the numbers actually line up on mobile.
+    """
+    embed = discord.Embed(title=f"⚔️ {left_name} vs {right_name}", colour=GOLD)
+
+    def row(label: str, left: str, right: str) -> str:
+        return f"**{label}**\n{left}  ·  {right}"
+
+    def win_rate(stats: PlayerStatsResponse) -> str:
+        rate = (stats.wins / stats.games * 100) if stats.games else 0.0
+        return f"{stats.wins:,} ({rate:.0f}%)"
+
+    lines = [
+        row("Level", str(left_stats.level), str(right_stats.level)),
+        row("Career Games", f"{left_stats.games:,}", f"{right_stats.games:,}"),
+        row("Career Wins", win_rate(left_stats), win_rate(right_stats)),
+    ]
+
+    def ranked_value(ranked: PlayerRankedResponse | None, attribute: str) -> str:
+        if ranked is None or ranked.tier is None:
+            return "—"
+        value = getattr(ranked, attribute)
+        return str(value) if value is not None else "—"
+
+    lines.extend(
+        [
+            row(
+                "Tier",
+                ranked_value(left_ranked, "tier"),
+                ranked_value(right_ranked, "tier"),
+            ),
+            row(
+                "Rating",
+                ranked_value(left_ranked, "rating"),
+                ranked_value(right_ranked, "rating"),
+            ),
+            row(
+                "Peak Rating",
+                ranked_value(left_ranked, "peak_rating"),
+                ranked_value(right_ranked, "peak_rating"),
+            ),
+        ]
+    )
+
+    embed.description = "\n\n".join(lines)
+
+    if (
+        left_ranked is not None
+        and right_ranked is not None
+        and left_ranked.rating is not None
+        and right_ranked.rating is not None
+    ):
+        gap = abs(left_ranked.rating - right_ranked.rating)
+        ahead = left_name if left_ranked.rating >= right_ranked.rating else right_name
+        embed.set_footer(
+            text=(f"{ahead} leads by {gap} rating." if gap else "Dead level on rating.")
+        )
+    return embed
+
+
+def build_refresh_embed(
+    *,
+    display_name: str,
+    player: BrawlhallaPlayer,
+    ranked: PlayerRankedResponse | None,
+    new_achievements: list[str],
+) -> discord.Embed:
+    embed = build_rank_embed(display_name=display_name, player=player, ranked=ranked)
+    embed.title = f"🔄 {display_name} — Refreshed"
+    if new_achievements:
+        embed.add_field(name="New Achievements", value=", ".join(new_achievements), inline=False)
+    return embed
+
+
+def build_refresh_cooldown_embed(retry_after_seconds: int) -> discord.Embed:
+    minutes = max(1, round(retry_after_seconds / 60))
+    return discord.Embed(
+        title="Already up to date",
+        description=(
+            f"Your stats were refreshed recently. Try again in about {minutes} minute(s).\n"
+            "Snapshots also run automatically on a schedule."
+        ),
+        colour=GREY,
+    )

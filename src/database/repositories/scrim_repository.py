@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.match import MatchKind, MatchSide
@@ -50,6 +50,17 @@ class ScrimSignupRepository:
             ScrimSignup.scrim_id == scrim_id, ScrimSignup.shaheen_member_id == shaheen_member_id
         )
         return (await self._session.execute(stmt)).scalar_one_or_none()
+
+    async def count_for_member(self, shaheen_member_id: int) -> int:
+        """Scrims this member has signed up for — backs scrim_regular
+        (docs/DECISIONS.md ADR-081).
+        """
+        stmt = (
+            select(func.count())
+            .select_from(ScrimSignup)
+            .where(ScrimSignup.shaheen_member_id == shaheen_member_id)
+        )
+        return (await self._session.execute(stmt)).scalar_one()
 
     async def add(self, *, scrim_id: int, shaheen_member_id: int, side: MatchSide) -> ScrimSignup:
         signup = ScrimSignup(scrim_id=scrim_id, shaheen_member_id=shaheen_member_id, side=side)

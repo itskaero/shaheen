@@ -14,6 +14,7 @@ from datetime import UTC, datetime, time, timedelta
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
@@ -22,6 +23,7 @@ from bot.constants import ROLE_MVP
 from bot.content.clan_embeds import (
     build_achievement_announcement_embed,
     build_achievements_embed,
+    build_clan_stats_embed,
     build_history_embed,
     build_leaderboard_embed,
     build_legend_meta_embed,
@@ -34,8 +36,12 @@ from bot.content.clan_embeds import (
 from bot.content.profile_embeds import build_not_linked_embed
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
+from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
+from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from database.session import session_scope
+from services.achievement_service import AchievementService
+from services.achievements import evaluate_engagement_achievements
 from services.clan_service import ClanService
 from services.digest_service import WeeklyDigest, WeeklyDigestService
 from services.guild_snapshot_service import GuildSnapshotService
@@ -248,6 +254,10 @@ class ClanCog(commands.Cog):
                 resource_type=ResourceType.ROLE,
                 logical_key=ROLE_MVP.logical_key,
             )
+            # Being named MVP is itself an achievement (docs/DECISIONS.md
+            # ADR-081). Awarded from the rotation rather than the digest
+            # post, so it lands even if the announcement can't be sent.
+            await self._award_mvp_achievement(session, guild.id, mvp_discord_id)
         if resource is None:
             return
         role = guild.get_role(resource.discord_id)
@@ -263,6 +273,26 @@ class ClanCog(commands.Cog):
                 await new_mvp.add_roles(role, reason="Shaheen weekly digest")
         except discord.Forbidden:
             logger.warning("Missing permission to rotate MVP of the Week role")
+
+    async def _award_mvp_achievement(
+        self, session: AsyncSession, guild_id: int, mvp_discord_id: int
+    ) -> None:
+        discord_user = await DiscordUserRepository(session).get_by_discord_id(mvp_discord_id)
+        if discord_user is None:
+            return
+        member = await ShaheenMemberRepository(session).get(
+            discord_user_id=discord_user.id, guild_id=guild_id
+        )
+        if member is None:
+            return
+        achievements = AchievementService(session)
+        await achievements.award_many(
+            shaheen_member_id=member.id,
+            definitions=evaluate_engagement_achievements(
+                already_earned=await achievements.earned_keys(member.id), mvp_weeks=1
+            ),
+            extra={"awarded_for": "weekly_digest_mvp"},
+        )
 
     def _display_name(self, guild: discord.Guild, discord_id: int, fallback: str) -> str:
         member = guild.get_member(discord_id)
@@ -386,6 +416,19 @@ class ClanCog(commands.Cog):
             entries = await ClanService(session).legend_meta(interaction.guild.id)
 
         await interaction.followup.send(embed=build_legend_meta_embed(entries), ephemeral=True)
+
+    @app_commands.command(
+        name="clanstats", description="Show clan-wide totals, rating spread and tier split"
+    )
+    async def clanstats(self, interaction: discord.Interaction) -> None:
+        if interaction.guild is None:
+            raise ShaheenError("This command can only be used inside the Shaheen server.")
+        await interaction.response.defer(ephemeral=True)
+
+        async with session_scope(self.bot.session_factory) as session:
+            stats = await ClanService(session).clan_stats(interaction.guild.id)
+
+        await interaction.followup.send(embed=build_clan_stats_embed(stats), ephemeral=True)
 
     async def _resolve_member(
         self, interaction: discord.Interaction, user: discord.Member | None

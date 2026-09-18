@@ -5,13 +5,14 @@
 from __future__ import annotations
 
 from bot.content.clan_embeds import (
+    build_clan_stats_embed,
     build_legend_meta_embed,
     build_mvp_announcement_embed,
     build_spotlight_embed,
     build_tier_change_announcement_embed,
     build_weekly_digest_embed,
 )
-from services.clan_service import LegendMetaEntry
+from services.clan_service import ClanStats, LegendMetaEntry
 
 
 def test_tier_change_embed_promotion_is_upbeat() -> None:
@@ -87,3 +88,60 @@ def test_spotlight_embed_credits_staff_in_footer() -> None:
     assert embed.description == "Clutch scrim MVP!"
     assert embed.footer.text is not None
     assert "Kaero" in embed.footer.text
+
+
+def test_clan_stats_embed_reports_totals_and_spread() -> None:
+    stats = ClanStats(
+        members_ranked=3,
+        total_games=300,
+        total_wins=180,
+        average_rating=1600,
+        median_rating=1550,
+        highest=("Kaero", 1900),
+        tier_counts=[("Diamond", 2), ("Gold", 1)],
+        region_counts=[("SEA", 3)],
+        top_legends=[
+            LegendMetaEntry(
+                legend_name_key="bodvar", total_games=100, total_wins=60, player_count=3
+            )
+        ],
+    )
+
+    embed = build_clan_stats_embed(stats)
+
+    assert _embed_field(embed, "Ranked Members") == "3"
+    assert _embed_field(embed, "Combined Wins") == "180 (60%)"
+    assert _embed_field(embed, "Average Rating") == "1600"
+    # Median sits next to the mean on purpose: one high-rated member drags
+    # an average far more than the clan's typical standing moved.
+    assert _embed_field(embed, "Median Rating") == "1550"
+    assert _embed_field(embed, "Highest Rated") == "Kaero — 1900"
+    assert "Diamond" in (_embed_field(embed, "Tier Spread") or "")
+    assert "Bodvar" in (_embed_field(embed, "Most-Played Legends") or "")
+
+
+def test_clan_stats_embed_with_no_snapshots_explains_itself() -> None:
+    stats = ClanStats(
+        members_ranked=0,
+        total_games=0,
+        total_wins=0,
+        average_rating=None,
+        median_rating=None,
+        highest=None,
+        tier_counts=[],
+        region_counts=[],
+        top_legends=[],
+    )
+
+    embed = build_clan_stats_embed(stats)
+
+    assert embed.description is not None
+    assert "/link" in embed.description
+    assert embed.fields == []
+
+
+def _embed_field(embed, name: str) -> str | None:
+    for field in embed.fields:
+        if field.name == name:
+            return field.value
+    return None

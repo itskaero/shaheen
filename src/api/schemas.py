@@ -53,9 +53,24 @@ class AchievementGalleryEntryResponse(BaseModel):
     key: str
     name: str
     description: str
+    category: str
     holder_count: int
     total_members: int
     completion_pct: float
+    rarity: str
+
+
+class AchievementChecklistEntryResponse(BaseModel):
+    """One catalog achievement for one player — the per-member view the
+    clan-wide gallery can't give (docs/DECISIONS.md ADR-081).
+    """
+
+    key: str
+    name: str
+    description: str
+    category: str
+    earned: bool
+    awarded_at: datetime | None
 
 
 class PlayerProfileResponse(BaseModel):

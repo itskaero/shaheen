@@ -6,8 +6,12 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exceptions import NotFoundError, PermissionDeniedError, ShaheenError
+from database.models.achievement import Achievement
 from database.models.match import MatchKind, MatchSide, MatchStatus
 from database.models.scrim import ScrimStatus
+from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from services.achievement_service import AchievementService
 from services.match_service import MatchService, RivalryResult
 
 GUILD_ID = 1
@@ -265,3 +269,51 @@ async def test_head_to_head_only_counts_matches_against_each_other(session: Asyn
 
     result = await service.head_to_head(guild_id=GUILD_ID, discord_id_a=1, discord_id_b=2)
     assert result.total_matches == 1
+
+
+# --- ADR-081: competition now awards achievements ---------------------------
+
+
+async def _earned_keys(session: AsyncSession, discord_id: int) -> set[str]:
+    user = await DiscordUserRepository(session).get_by_discord_id(discord_id)
+    assert user is not None
+    member = await ShaheenMemberRepository(session).get(discord_user_id=user.id, guild_id=GUILD_ID)
+    assert member is not None
+    return await AchievementService(session).earned_keys(member.id)
+
+
+async def test_confirming_a_match_awards_the_winner(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Before ADR-081 the whole competition subsystem awarded nothing."""
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(1, None)], side_b=[(2, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=1, reporter_won=True
+    )
+    await service.confirm_result(match_id=match.id, guild_id=GUILD_ID, confirmer_discord_id=2)
+
+    assert "first_win" in await _earned_keys(session, 1)
+    assert "first_win" not in await _earned_keys(session, 2)
+
+
+async def test_staff_resolution_also_awards_the_winner(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """A disputed match settled by staff is still a win — both paths award."""
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(1, None)], side_b=[(2, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=1, reporter_won=True
+    )
+    await service.dispute_result(match_id=match.id, guild_id=GUILD_ID, disputer_discord_id=2)
+    await service.resolve_result(
+        match_id=match.id, guild_id=GUILD_ID, winning_side=MatchSide.B, resolver_discord_id=99
+    )
+
+    assert "first_win" in await _earned_keys(session, 2)
+    assert "first_win" not in await _earned_keys(session, 1)

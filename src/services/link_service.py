@@ -16,15 +16,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.exceptions import IntegrationError, NotFoundError
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.shaheen_member import ShaheenMember
-from database.repositories.achievement_repository import AchievementRepository
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
-from database.repositories.member_achievement_repository import MemberAchievementRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError, BrawlhallaNotFound
 from integrations.brawlhalla.models import SearchResult
 from integrations.brawlhalla.service import BrawlhallaService
+from services.achievement_service import AchievementService
 from services.achievements import FIRST_LINK
 
 
@@ -44,8 +43,7 @@ class LinkService:
         self._members = ShaheenMemberRepository(session)
         self._players = BrawlhallaPlayerRepository(session)
         self._links = MemberPlayerLinkRepository(session)
-        self._achievements = AchievementRepository(session)
-        self._awards = MemberAchievementRepository(session)
+        self._achievement_service = AchievementService(session)
 
     async def resolve_candidate(self, identifier: str) -> SearchResult:
         """Resolve a user-supplied identifier to a Brawlhalla player.
@@ -106,7 +104,7 @@ class LinkService:
         )
         await self._links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
 
-        first_link_awarded = await self._award_first_link(member)
+        first_link_awarded = await self._award_first_link(member, player)
 
         return LinkOutcome(
             member=member,
@@ -115,12 +113,11 @@ class LinkService:
             first_link_awarded=first_link_awarded,
         )
 
-    async def _award_first_link(self, member: ShaheenMember) -> bool:
-        catalog_row = await self._achievements.get_by_key(FIRST_LINK.key)
-        if catalog_row is None:
-            return False  # migrations not run yet; don't block linking over it
-        awarded = await self._awards.award(
-            shaheen_member_id=member.id, achievement_id=catalog_row.id
+    async def _award_first_link(self, member: ShaheenMember, player: BrawlhallaPlayer) -> bool:
+        awarded = await self._achievement_service.award(
+            shaheen_member_id=member.id,
+            definition=FIRST_LINK,
+            extra={"player_name": player.player_name},
         )
         return awarded is not None
 

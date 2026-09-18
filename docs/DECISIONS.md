@@ -2766,3 +2766,197 @@ Verified: no old-palette literals remain in `web/landing.html` (grep sweep of th
 rgba seeds); the inline `<style>` still has balanced braces (290/290); the toggle renders
 bottom-left with footline text cleared, and returns to the same size/position convention as the
 rest of the site. No Python changes — `ruff`/`mypy`/`pytest` untouched.
+
+## ADR-081 — achievements rebuilt: 30-entry catalog, four award sources, per-member website view
+
+Reported: "Achievements are same for all members — how is this possible?" Two independent causes,
+both real.
+
+**Cause 1 — the website page has no member dimension.** `web/achievements.html` is a clan-wide
+gallery by design (ADR-071): `WebsiteService.get_achievement_gallery` returns *the whole catalog
+once* with holder counts. Everyone saw the same cards because that page never varied by member.
+
+**Cause 2 — the catalog barely discriminated.** There were five achievements. `first_link` goes to
+every linked member by definition. `games_100`/`games_500` evaluate against **lifetime career
+games**, which any established Brawlhalla player clears on their very first snapshot. That left the
+two tier achievements as the only ones that could differ. Worse, only two systems awarded anything
+at all (`link_service.py`, `snapshot_service.py`) — tournaments, matches, scrims, chat XP, MVP weeks
+and tenure awarded nothing, and the `extra` JSON column on `member_achievements` was declared,
+accepted by the repository, and never written or read.
+
+**Catalog: 5 → 30**, across six categories (`onboarding`, `milestone`, `ranked`, `competition`,
+`community`, `tenure`) with a new `category` field on `AchievementDef` and an `achievements.category`
+column. `services/achievements.py` stays pure — no DB, no Discord — and grows threshold tables plus
+four evaluators, each taking plain numbers:
+
+| Source | Evaluator | Awards |
+|---|---|---|
+| Ranked snapshot | `evaluate_snapshot_achievements` (extended) | games 100→5000, tier gold→valhallan, peak 1500/1800/2000, `global_top_1000`, `region_top_100`, `win_rate_60` |
+| Clan competition | `evaluate_competition_achievements` | `first_win`, `wins_10`, `wins_50`, tournament entrant/finalist/champion, `scrim_regular` |
+| Engagement | `evaluate_engagement_achievements` | chat level 10/25/50, `mvp_of_week` |
+| Tenure | `evaluate_tenure_achievements` | 30/180/365 days from `ShaheenMember.joined_at` |
+
+`win_rate_60` is floored at `MIN_RANKED_GAMES_FOR_WIN_RATE = 50` ranked games — a 100% rate over
+three games is noise. Tenure fails closed when `joined_at` is NULL rather than guessing.
+
+**One award seam.** `services/achievement_service.py` is new and is the only place that turns an
+`AchievementDef` into a row. `link_service` and `snapshot_service` were refactored onto it; the four
+new sources use it too, instead of what would have become six copies of the same "look up catalog
+row → award → build an Announcement" dance. A catalog miss logs a warning and returns None (the
+deploy is mid-migration) rather than failing the caller's real work — a match result is not worth
+losing over a missing badge.
+
+**`extra` put to work.** Every award now records what earned it (`{"games": 1043}`,
+`{"tournament_id": 3, "placement": 1}`, `{"peak_rating": 1812}`), so two members holding the same
+badge still read differently.
+
+**New award call sites.** `match_service.confirm_result` *and* `resolve_result` (a staff-settled
+dispute is still a win); `tournament_service.register` (entrant) and final-round completion
+(champion + finalist to the winner, finalist to the runner-up) — event-driven rather than
+count-driven, because a tournament placement is not a running total; `cogs/engagement.py` on chat
+level-up, guarded so a lurker who has never linked doesn't get a member row created just by talking;
+`ClanCog._rotate_mvp_role` on the weekly MVP; and tenure on the snapshot loop, which is already the
+one recurring pass over every linked member, so time-served milestones need no job of their own.
+
+**`region_rank` is now persisted** (`ranking_snapshots.region_rank`). It has been fetched and shown
+in Discord since Phase 2 and thrown away every time; it backs `region_top_100`.
+
+**Website.** The gallery keeps its clan-wide checklist and gains `category` plus a rarity band
+(`rarity_label` in `services/achievements.py`, so Discord and the site can't drift on what "rare"
+means; 0% reads **Unclaimed**, not Legendary — nobody holding it says nothing about difficulty).
+The real fix for the reported symptom is new: `GET /players/{id}/achievements` returns the full
+catalog flagged earned/unearned with award dates, and `web/player.html` renders it grouped by
+category with an "N of 30 earned" bar. That per-member view did not exist anywhere before.
+
+**Migration `0008`** adds both columns, backfills categories for the five existing rows, and inserts
+the 25 new ones with seed data inlined (never imported from app code, following `0003`). The
+downgrade deletes dependent `member_achievements` rows first (FK), then the 25 keys, then both
+columns.
+
+Files: `src/services/{achievements,achievement_service,snapshot_service,link_service,match_service,
+tournament_service,website_service}.py`, `src/bot/cogs/{clan,engagement}.py`,
+`src/database/models/{achievement,ranking_snapshot}.py`,
+`src/database/repositories/{match,scrim}_repository.py`, `src/api/{schemas.py,routers/{achievements,
+players}.py}`, `alembic/versions/0008_achievement_expansion.py`, `web/assets/js/{api.js,pages/
+{player,achievements}.js}`, `web/assets/css/style.css`, tests, this entry.
+
+Verified: migration 0008 round-trips on a scratch SQLite DB (30 rows with the expected category
+split, both columns added and cleanly dropped, re-upgrade to head clean); evaluator boundary tests
+at each threshold and one below; integration tests that a match confirmation, a staff resolution, a
+tournament registration and a tournament win each actually award; API tests for the checklist
+endpoint and the gallery's new fields; Playwright confirms the player page renders the grouped
+checklist and falls back to the earned-only list if the new endpoint 404s (an API instance that
+predates it must not take the page down).
+
+## ADR-082 — why the live Discord widget was never visible, and how it fails now
+
+Reported: "I don't see the live widget." It was not the guild ID — `1546568759530229961` is set and
+valid. Four causes, ranked by how much they mattered:
+
+1. **The page being looked at had no badge on it.** `web/index.html` redirects a first-time visitor
+   to `landing.html` (ADR-079), and `landing.html` contained **zero** `[data-discord-widget]`
+   elements and loaded neither `config.js` nor `api.js`. In a fresh browser or incognito session the
+   badge could not exist. Fixed: the landing page now carries the badge and both scripts, styled in
+   its own inline token set rather than importing `style.css`.
+2. **Every failure was silent** — a bare `return` on `!response.ok` and a bare `catch {}`. "Widget
+   disabled" was indistinguishable from "wrong guild" from "network error" without opening the
+   Network tab. Each bail-out now logs a specific reason: 403 names the *Server Settings → Widget →
+   Enable Server Widget* toggle, 404 names the guild ID and where it's configured, any other status
+   reports itself, and a network failure reports its message.
+3. **`members.length` instead of `presence_count`.** Discord caps `members` at 100 and omits members
+   who opted out, so it under-reports on any real server — and an empty array rendered a literal
+   "0 online now". Now `presence_count` is preferred, `members.length` is a fallback, and a response
+   with neither is treated as no usable signal (hidden + warning) while a genuine `presence_count: 0`
+   still renders.
+4. **`[hidden]` was inert** — `.discord-widget { display: inline-flex }` beat the UA's
+   `[hidden] { display: none }`, so `el.hidden = false` was a no-op and the CSS comment claiming
+   "hidden by default" was false. `.discord-widget[hidden] { display: none }` makes the attribute
+   load-bearing.
+
+Also: `clan.js` rendered its "Join the Community" strip *inside* the `getClan()` try block, so a
+cold Render instance took the whole strip down; the skeleton now renders before the API call.
+`join.html` had the invite URL hardcoded twice and both copies had gone stale against `config.js`;
+any element marked `[data-discord-invite]` now reads from `DISCORD_INVITE_URL`.
+
+**Out of repo, and never once verified in this repo's history:** the *Enable Server Widget* toggle.
+With it off the endpoint returns `403 {"code": 50004}`. Fastest triage — open
+`https://discord.com/api/guilds/1546568759530229961/widget.json` in a browser tab: 200 means Discord
+is fine and it was the redirect; 403 means flip the toggle; 404 means the guild ID is wrong.
+
+Files: `web/assets/js/api.js`, `web/assets/css/style.css`, `web/landing.html`,
+`web/assets/js/pages/clan.js`, `web/join.html`, this entry.
+
+Verified: Playwright across three pages (`index.html`, `landing.html`, `clan.html`) × seven mocked
+widget responses (presence_count 57, a genuine 0, members-array fallback, empty/no-data, 403, 404,
+500) — the badge renders the right count when there is one, stays hidden rather than showing a
+misleading zero when there isn't, and logs the distinct warning for each failure. The live endpoint
+is unreachable from this sandbox (the egress proxy blocks `discord.com`), so real output stays
+unverifiable here — the browser-tab triage above is how that gets confirmed.
+
+## ADR-083 — /lookup: check any Brawlhalla player's rank without linking, in clan context
+
+Requested: let people check a Brawlhalla rating without linking an account, but make it relevant to
+the clan — "comparing to close members or their ranking."
+
+**Identifiers, not names.** Brawlhalla's API has no username search — only `/search?steamid=` and
+`/player/{id}/...`. So `/lookup` takes a Steam64 ID or a Brawlhalla player ID, reusing
+`BrawlhallaService.resolve_identifier`, which already handles both. Because a plain "player not
+found" would read as "that player doesn't exist" when the real problem is that a *name* was typed,
+a `NotFoundError` renders a dedicated help embed naming both accepted ID formats and where to find
+them, rather than the global handler's one-line warning.
+
+**The clan half is the point.** `ClanService.rank_context(guild_id, rating)` walks every actively
+linked member's latest snapshot and returns where that rating would slot in: the rank it would hold,
+and the nearest member above and below with rating deltas. "1720" means little; "would place #3 of
+11, 200 below Kaero, 140 above Ali" means something.
+
+**Read-only.** `/lookup` writes nothing — no `DiscordUser`, no `ShaheenMember`, no
+`BrawlhallaPlayer` row, no link, no snapshot — and the embed footer says so. It is ephemeral and
+needs no permission check, matching `/profile`'s any-member posture. `LookupService` composes the
+existing `LinkService.resolve_candidate` (for error translation) and `ProfileService` (for the
+cached fetches) rather than reaching for the integration client directly.
+
+Files: `src/services/{lookup_service,clan_service}.py`, `src/bot/{cogs/lookup.py,
+content/lookup_embeds.py,client.py}`, `tests/test_{lookup_service,lookup_embeds,clan_service}.py`,
+this entry.
+
+Verified: service tests cover placement mid-ladder, at both ends, with no ranked members, with an
+unranked target, and that a lookup leaves the database untouched; embed tests cover the ladder edges
+and the help copy. Commands can't be exercised against live Discord from here, so the service and
+embed layers beneath them carry the coverage, matching the existing cog-test approach.
+
+## ADR-084 — /compare, /refresh, /clanstats, and ranked-Legend data finally surfaced
+
+A command-gap pass over the bot alongside ADR-081/083. Four additions, each filling something
+nothing else covered:
+
+- **`/compare <member_a> [member_b]`** — side-by-side ranked and lifetime stats for two linked
+  members. `/rivalry` already covers the head-to-head *match record*; nothing covered stats.
+  Rendered as aligned rows rather than paired embed fields so the numbers line up on mobile.
+- **`/refresh`** — a member's own snapshot on demand. Before this, data only updated on `/link` or
+  the six-hour loop. Because this is member-triggered traffic to the Brawlhalla API,
+  `SnapshotService.refresh_member` enforces `REFRESH_COOLDOWN_SECONDS = 15 * 60`, measured off the
+  last stored snapshot rather than an in-process timer, so it survives a bot restart. It runs the
+  same work the scheduled loop does, achievement awards included, so a member who just crossed a
+  threshold doesn't wait for the next tick.
+- **`/clanstats`** — clan-wide aggregate: combined games/wins, average *and* median rating, highest
+  rated member, tier spread, region split and most-played Legends. Median sits next to the mean
+  deliberately: on a roster this size one high-rated member drags the average well away from where
+  the clan actually sits. `ClanService.clan_stats` reuses `leaderboard()` and `legend_meta()` and
+  keeps the established "loop the small set of linked members in Python" shape (ADR-068).
+- **Ranked per-Legend data surfaced.** `PlayerRankedResponse.legends` (per-Legend ranked rating,
+  peak, tier, W/L) has been parsed on every snapshot since Phase 2 and discarded unread. `/legends`
+  now annotates each Legend row with it when the member has played that Legend in ranked.
+
+Files: `src/services/{clan_service,snapshot_service}.py`, `src/bot/cogs/{profile,clan}.py`,
+`src/bot/content/{profile_embeds,clan_embeds}.py`, `tests/test_{clan_service,snapshot_service,
+profile_embeds,clan_embeds}.py`, this entry.
+
+Verified: cooldown tests for all three states (no prior snapshot, blocked with nothing fetched or
+written, and running again once the window passes); `clan_stats` aggregation including the
+empty-roster case; embed tests for the compare footer, an unranked side rendering "—" rather than a
+fabricated 0, and the ranked-Legend annotation appearing only when ranked data is present.
+
+**Note on ADR numbering:** `docs/DECISIONS.md` carries two entries numbered **ADR-079** (the clan
+page cleanup + guild stats round, and the first-visit landing gate). Both are referenced elsewhere,
+so the collision is left documented rather than renumbered; new ADRs continued from 081.

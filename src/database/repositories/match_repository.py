@@ -125,6 +125,24 @@ class MatchRepository:
         result = await self._session.execute(stmt)
         return [(match, side) for match, side in result]
 
+    async def count_wins_for_member(self, shaheen_member_id: int) -> int:
+        """Confirmed matches this member won — backs the first_win/wins_10/
+        wins_50 achievements (docs/DECISIONS.md ADR-081). A win is a
+        confirmed match whose winning_side equals the side they played on.
+        """
+        stmt = (
+            select(func.count())
+            .select_from(Match)
+            .join(MatchParticipant, MatchParticipant.match_id == Match.id)
+            .where(
+                Match.status == MatchStatus.CONFIRMED,
+                MatchParticipant.shaheen_member_id == shaheen_member_id,
+                Match.winning_side.is_not(None),
+                Match.winning_side == MatchParticipant.side,
+            )
+        )
+        return (await self._session.execute(stmt)).scalar_one()
+
     async def count_confirmed_since(self, guild_id: int, since: datetime) -> int:
         """docs/DECISIONS.md ADR-070 — the weekly digest's "matches played"
         count.
