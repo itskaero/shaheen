@@ -1,0 +1,306 @@
+{
+  "captured_at": "2026-09-18T20:51:57Z",
+  "source": "/achievements",
+  "data": [
+    {
+      "key": "first_link",
+      "name": "First Contact",
+      "description": "Linked a Brawlhalla account to Shaheen.",
+      "category": "onboarding",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "games_100",
+      "name": "Centurion",
+      "description": "Played 100 games.",
+      "category": "milestone",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "games_500",
+      "name": "Battle-Hardened",
+      "description": "Played 500 games.",
+      "category": "milestone",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "tier_platinum",
+      "name": "Platinum Shaheen",
+      "description": "Reached Platinum tier in ranked.",
+      "category": "ranked",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "tier_diamond_plus",
+      "name": "Diamond Shaheen",
+      "description": "Reached Diamond tier or higher in ranked.",
+      "category": "ranked",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "games_1000",
+      "name": "Veteran of a Thousand",
+      "description": "Played 1,000 games.",
+      "category": "milestone",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "games_2500",
+      "name": "Relentless",
+      "description": "Played 2,500 games.",
+      "category": "milestone",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "games_5000",
+      "name": "Unbroken",
+      "description": "Played 5,000 games.",
+      "category": "milestone",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "tier_gold",
+      "name": "Gold Shaheen",
+      "description": "Reached Gold tier in ranked.",
+      "category": "ranked",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "tier_valhallan",
+      "name": "Valhallan",
+      "description": "Reached Valhallan — the top of the ladder.",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "peak_1500",
+      "name": "Ascendant",
+      "description": "Hit a peak rating of 1500.",
+      "category": "ranked",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "peak_1800",
+      "name": "Skyborne",
+      "description": "Hit a peak rating of 1800.",
+      "category": "ranked",
+      "holder_count": 1,
+      "total_members": 1,
+      "completion_pct": 100.0,
+      "rarity": "Common"
+    },
+    {
+      "key": "peak_2000",
+      "name": "Above the Clouds",
+      "description": "Hit a peak rating of 2000.",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "global_top_1000",
+      "name": "Global Elite",
+      "description": "Ranked inside the global top 1,000.",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "region_top_100",
+      "name": "Regional Force",
+      "description": "Ranked inside the top 100 of your region.",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "win_rate_60",
+      "name": "Sharpened",
+      "description": "Held a 60% ranked win rate over 50+ ranked games.",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "first_win",
+      "name": "First Blood",
+      "description": "Won your first clan match.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "wins_10",
+      "name": "Contender",
+      "description": "Won 10 clan matches.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "wins_50",
+      "name": "Dominator",
+      "description": "Won 50 clan matches.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "tournament_entrant",
+      "name": "Bracket Debut",
+      "description": "Entered your first clan tournament.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "tournament_finalist",
+      "name": "Finalist",
+      "description": "Reached a clan tournament final.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "tournament_champion",
+      "name": "Champion",
+      "description": "Won a clan tournament.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "scrim_regular",
+      "name": "Sparring Partner",
+      "description": "Joined 10 clan scrims.",
+      "category": "competition",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "chat_level_10",
+      "name": "Voice of the Nest",
+      "description": "Reached chat level 10.",
+      "category": "community",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "chat_level_25",
+      "name": "Nest Elder",
+      "description": "Reached chat level 25.",
+      "category": "community",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "chat_level_50",
+      "name": "Keeper of the Nest",
+      "description": "Reached chat level 50.",
+      "category": "community",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "mvp_of_week",
+      "name": "MVP of the Week",
+      "description": "Named MVP in a weekly digest.",
+      "category": "community",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "veteran_30d",
+      "name": "One Moon",
+      "description": "30 days with Shaheen.",
+      "category": "tenure",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "veteran_180d",
+      "name": "Half a Year Higher",
+      "description": "180 days with Shaheen.",
+      "category": "tenure",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    },
+    {
+      "key": "veteran_365d",
+      "name": "Year of the Shaheen",
+      "description": "365 days with Shaheen.",
+      "category": "tenure",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed"
+    }
+  ]
+}
