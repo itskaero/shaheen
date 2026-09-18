@@ -38,6 +38,8 @@ async def get_player_profile(
         peak_rating=ranking.peak_rating if ranking else None,
         tier=ranking.tier if ranking else None,
         global_rank=profile.global_rank,
+        region_rank=profile.region_rank,
+        season=profile.season,
         achievements=[
             AchievementResponse(
                 key=achievement.key,
@@ -62,6 +64,7 @@ async def get_player_history(
     return [
         RankingHistoryEntryResponse(
             captured_at=snapshot.captured_at,
+            season=snapshot.season,
             rating=snapshot.rating,
             peak_rating=snapshot.peak_rating,
             tier=snapshot.tier,
@@ -133,6 +136,7 @@ async def get_player_achievements(
             category=entry.achievement.category,
             earned=entry.earned,
             awarded_at=entry.earned_at,
+            context=entry.context,
         )
         for entry in entries
     ]

@@ -94,7 +94,9 @@ class ClanCog(commands.Cog):
             return
 
         async with session_scope(self.bot.session_factory) as session:
-            service = SnapshotService(session, self.bot.brawlhalla)
+            service = SnapshotService(
+                session, self.bot.brawlhalla, season=self.bot.settings.brawlhalla_season
+            )
             result = await service.run_for_guild(guild.id)
 
             # Guild-wide Discord stats (member count, boost tier) for the
@@ -250,9 +252,7 @@ class ClanCog(commands.Cog):
             except discord.Forbidden:
                 logger.warning("Missing permission to post MVP announcement")
 
-    async def _sync_rank_roles(
-        self, guild: discord.Guild, tiers: dict[int, str | None]
-    ) -> None:
+    async def _sync_rank_roles(self, guild: discord.Guild, tiers: dict[int, str | None]) -> None:
         """Mirror each member's Brawlhalla tier onto a Discord rank role.
 
         The bot has recorded every member's tier every six hours since Phase
@@ -374,9 +374,7 @@ class ClanCog(commands.Cog):
             raise ShaheenError("This command can only be used inside the Shaheen server.")
         await interaction.response.defer(ephemeral=True)
 
-        channel = await resolve_provisioned_channel(
-            self.bot, interaction.guild, _ANNOUNCEMENTS_KEY
-        )
+        channel = await resolve_provisioned_channel(self.bot, interaction.guild, _ANNOUNCEMENTS_KEY)
         if channel is None:
             raise ShaheenError(
                 "The announcements channel isn't set up yet — ask staff to run /setup."
@@ -401,7 +399,9 @@ class ClanCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         async with session_scope(self.bot.session_factory) as session:
-            rows = await ClanService(session).leaderboard(interaction.guild.id)
+            service = ClanService(session)
+            rows = await service.leaderboard(interaction.guild.id)
+            season = await service.current_season()
 
         entries = []
         for _member, _player, discord_id, snapshot in rows:
@@ -409,7 +409,9 @@ class ClanCog(commands.Cog):
             name = discord_member.display_name if discord_member else _player.player_name
             entries.append((name, snapshot.tier, snapshot.rating))
 
-        await interaction.followup.send(embed=build_leaderboard_embed(entries), ephemeral=True)
+        await interaction.followup.send(
+            embed=build_leaderboard_embed(entries, season), ephemeral=True
+        )
 
     @app_commands.command(
         name="achievements", description="Show a Shaheen member's earned achievements"

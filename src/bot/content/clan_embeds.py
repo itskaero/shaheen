@@ -26,11 +26,21 @@ def _legend_display_name(legend_name_key: str) -> str:
 
 def build_leaderboard_embed(
     entries: list[tuple[str, str | None, int | None]],
+    season: int | None = None,
 ) -> discord.Embed:
-    """entries: (display_name, tier, rating), already sorted best-first."""
+    """entries: (display_name, tier, rating), already sorted best-first.
+
+    The board is scoped to one Brawlhalla season (docs/DECISIONS.md
+    ADR-088), so it says which — right after a reset a short board means
+    "most people haven't re-placed", not "the bot is broken".
+    """
     embed = discord.Embed(title="🏆 Shaheen Leaderboard", colour=GOLD)
     if not entries:
-        embed.description = "No ranked snapshots yet — link a Brawlhalla account with `/link`."
+        embed.description = (
+            "No ranked snapshots this season yet — play a ranked game, then `/refresh`."
+            if season is not None
+            else "No ranked snapshots yet — link a Brawlhalla account with `/link`."
+        )
         return embed
 
     lines = [
@@ -39,6 +49,8 @@ def build_leaderboard_embed(
         for idx, (name, tier, rating) in enumerate(entries, start=1)
     ]
     embed.description = "\n".join(lines)
+    if season is not None:
+        embed.set_footer(text=f"Season {season} · {len(entries)} member(s) placed")
     return embed
 
 
@@ -131,8 +143,7 @@ def build_weekly_digest_embed(
     embed = discord.Embed(title="📅 Weekly Shaheen Recap", colour=GOLD)
     if rating_gains:
         lines = [
-            f"**{i}.** {name} (+{gain})"
-            for i, (name, gain) in enumerate(rating_gains, start=1)
+            f"**{i}.** {name} (+{gain})" for i, (name, gain) in enumerate(rating_gains, start=1)
         ]
         embed.add_field(name="📈 Top Rating Gains", value="\n".join(lines), inline=False)
     if top_chatters:

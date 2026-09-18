@@ -101,9 +101,22 @@ class RefreshOutcome:
 
 
 class SnapshotService:
-    def __init__(self, session: AsyncSession, brawlhalla: BrawlhallaService) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        brawlhalla: BrawlhallaService,
+        *,
+        season: int | None = None,
+    ) -> None:
+        """`season` is the Brawlhalla ranked season every row written by this
+        service is stamped with (docs/DECISIONS.md ADR-088). Callers pass
+        `Settings.brawlhalla_season`; None leaves the stamp empty, which
+        keeps the row off every current-season leaderboard rather than
+        letting an unlabelled rating rank against labelled ones.
+        """
         self._session = session
         self._brawlhalla = brawlhalla
+        self._season = season
         self._links = MemberPlayerLinkRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._legends = LegendSnapshotRepository(session)
@@ -159,6 +172,7 @@ class SnapshotService:
                 # Fetched and shown in Discord since Phase 2 but never
                 # stored until ADR-081; backs the region_top_100 achievement.
                 region_rank=ranked.region_rank if ranked else None,
+                season=self._season,
             )
         )
 

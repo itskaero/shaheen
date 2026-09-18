@@ -53,7 +53,7 @@
             <div>
               <h2>${escapeHtml(profile.player_name)}</h2>
               <p class="page-subtitle" style="margin: 0.25rem 0 0;">
-                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}
+                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}${profile.season ? ` · Season ${profile.season}` : ""}
               </p>
             </div>
           </div>
@@ -69,6 +69,11 @@
           ${
             profile.global_rank
               ? `<div class="stat"><span class="value">#${formatNumber(profile.global_rank)}</span><span class="label">Global Rank</span></div>`
+              : ""
+          }
+          ${
+            profile.region_rank
+              ? `<div class="stat"><span class="value">#${formatNumber(profile.region_rank)}</span><span class="label">Region Rank</span></div>`
               : ""
           }
         </div>
@@ -113,6 +118,40 @@
     tenure: "Tenure",
   };
 
+
+  // The `extra` JSON recorded when an award was granted. Written by every
+  // award source since ADR-081 and displayed for the first time in ADR-088 —
+  // it's what makes two members holding the same badge read differently.
+  const CONTEXT_LABELS = {
+    games: "career games",
+    rating: "rating",
+    peak_rating: "peak rating",
+    global_rank: "global rank",
+    chat_level: "chat level",
+    player_name: "linked as",
+    tournament_id: "tournament #",
+    placement: "placed",
+    match_id: "match #",
+    tier: "tier",
+  };
+
+  function achievementContextHtml(context) {
+    if (!context || typeof context !== "object") {
+      return "";
+    }
+    const parts = Object.entries(context)
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => {
+        const label = CONTEXT_LABELS[k] || k.replace(/_/g, " ");
+        const value = typeof v === "number" ? formatNumber(v) : String(v);
+        return `${escapeHtml(label)} ${escapeHtml(value)}`;
+      });
+    if (!parts.length) {
+      return "";
+    }
+    return `<span class="achievement-context">${parts.join(" &middot; ")}</span>`;
+  }
+
   function earnedOnlyHtml(earned) {
     if (!earned || earned.length === 0) {
       return '<p class="state-msg">No achievements yet.</p>';
@@ -155,6 +194,7 @@
                 <span>
                   <strong>${escapeHtml(entry.name)}</strong> — ${escapeHtml(entry.description)}
                   ${entry.earned && entry.awarded_at ? `<span class="legend-meta"> · ${formatDate(entry.awarded_at)}</span>` : ""}
+                  ${entry.earned ? achievementContextHtml(entry.context) : ""}
                 </span>
               </li>`
           )

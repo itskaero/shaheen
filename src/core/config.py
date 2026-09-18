@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     brawlhalla_api_key: SecretStr
     snapshot_interval_hours: float = Field(default=6.0, gt=0)
+    # Brawlhalla wipes ranked ratings at the start of each season, and its
+    # API does not say which season a response belongs to. Every snapshot is
+    # stamped with this number so a pre-reset 1900 can never outrank a
+    # freshly-placed 1500 on any leaderboard (docs/DECISIONS.md ADR-088).
+    # Bump BRAWLHALLA_SEASON on the deploy when a new season starts.
+    brawlhalla_season: int = Field(default=1, ge=1)
 
     @field_validator("database_url")
     @classmethod

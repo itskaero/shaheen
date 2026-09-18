@@ -28,6 +28,7 @@ from database.repositories.tournament_repository import (
     TournamentMatchRepository,
     TournamentRepository,
 )
+from services.match_service import MatchService
 from services.website_service import WebsiteService
 
 GUILD_ID = 1
@@ -613,3 +614,151 @@ async def test_gallery_entries_carry_a_rarity_band(
     # Nobody holding it says nothing about difficulty, only that it hasn't
     # happened yet — so it reads "Unclaimed", not "Legendary".
     assert by_key["games_500"].rarity == "Unclaimed"
+
+
+# ---------- ADR-088: season scoping, award context, clan match feed ----------
+
+
+async def test_public_leaderboard_is_season_scoped(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    _m_a, stale = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    _m_b, fresh = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    ranking = RankingSnapshotRepository(session)
+    await ranking.add(
+        RankingSnapshot(
+            brawlhalla_player_id=stale.id,
+            captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+            rating=1900,
+            peak_rating=1900,
+            tier="Diamond",
+            wins=1,
+            games=2,
+            season=1,
+        )
+    )
+    await ranking.add(
+        RankingSnapshot(
+            brawlhalla_player_id=fresh.id,
+            captured_at=datetime(2026, 9, 1, tzinfo=UTC),
+            rating=1500,
+            peak_rating=1500,
+            tier="Gold",
+            wins=1,
+            games=2,
+            season=2,
+        )
+    )
+
+    entries = await WebsiteService(session).get_leaderboard(GUILD_ID)
+
+    assert [e.player.brawlhalla_player_id for e in entries] == [20]
+
+
+async def test_roster_keeps_unplaced_members_with_a_blank_rating(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Unlike the leaderboard, the roster lists everyone — someone who hasn't
+    re-placed shows with no rating rather than vanishing.
+    """
+    _m_a, placed = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    _m_b, _unplaced = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=placed.id,
+            captured_at=datetime(2026, 9, 1, tzinfo=UTC),
+            rating=1500,
+            peak_rating=1500,
+            tier="Gold",
+            wins=1,
+            games=2,
+            season=2,
+        )
+    )
+
+    entries = await WebsiteService(session).get_roster(GUILD_ID)
+    by_id = {e.player.brawlhalla_player_id: e for e in entries}
+
+    assert len(entries) == 2
+    assert by_id[10].snapshot is not None
+    assert by_id[20].snapshot is None
+
+
+async def test_checklist_carries_the_award_context(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """The `extra` JSON was written by every award source since ADR-081 and
+    read by nothing until ADR-088.
+    """
+    member, _player = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await MemberAchievementRepository(session).award(
+        shaheen_member_id=member.id,
+        achievement_id=achievement_catalog["games_100"].id,
+        extra={"games": 1043},
+    )
+
+    entries = await WebsiteService(session).get_player_achievement_checklist(10)
+
+    assert entries is not None
+    by_key = {e.achievement.key: e for e in entries}
+    assert by_key["games_100"].context == {"games": 1043}
+    assert by_key["games_500"].context is None
+
+
+async def test_clan_match_feed_names_both_sides(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    # Both sides need a Brawlhalla link: the feed names players, never
+    # Discord accounts (ADR-040).
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(1, None)], side_b=[(2, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=1, reporter_won=True
+    )
+    await service.confirm_result(match_id=match.id, guild_id=GUILD_ID, confirmer_discord_id=2)
+
+    entries = await WebsiteService(session).get_clan_matches(GUILD_ID)
+
+    assert len(entries) == 1
+    assert entries[0].kind == "1v1"
+    assert len(entries[0].winners) == 1 and len(entries[0].losers) == 1
+    assert entries[0].winners != entries[0].losers
+
+
+async def test_clan_match_feed_excludes_unconfirmed_matches(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Pending and disputed matches stay internal — never published as results."""
+    await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(1, None)], side_b=[(2, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=1, reporter_won=True
+    )
+
+    assert await WebsiteService(session).get_clan_matches(GUILD_ID) == []
+
+
+async def test_clan_match_feed_skips_matches_nobody_can_be_named_in(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """Neither side linked -> "Unknown beat Unknown", which is noise. The
+    match is left out rather than published.
+    """
+    service = MatchService(session)
+    match = await service.create_match(
+        guild_id=GUILD_ID, kind=MatchKind.ONE_V_ONE, side_a=[(99, None)], side_b=[(98, None)]
+    )
+    await service.report_result(
+        match_id=match.id, guild_id=GUILD_ID, reporter_discord_id=99, reporter_won=True
+    )
+    await service.confirm_result(match_id=match.id, guild_id=GUILD_ID, confirmer_discord_id=98)
+
+    assert await WebsiteService(session).get_clan_matches(GUILD_ID) == []

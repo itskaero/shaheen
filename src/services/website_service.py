@@ -42,6 +42,7 @@ class ClanInfo:
     motto: str
     tagline: str
     member_count: int
+    season: int | None = None
     discord_member_count: int | None = None
     discord_boost_tier: int | None = None
     discord_boost_count: int | None = None
@@ -78,6 +79,18 @@ class PlayerProfile:
         field, just exposing what's already stored.
         """
         return self.latest_ranking.global_rank if self.latest_ranking else None
+
+    @property
+    def region_rank(self) -> int | None:
+        """Stored on every snapshot since ADR-081; exposed publicly in
+        ADR-088. Same story as global_rank above — no new field, just
+        surfacing what was already being written.
+        """
+        return self.latest_ranking.region_rank if self.latest_ranking else None
+
+    @property
+    def season(self) -> int | None:
+        return self.latest_ranking.season if self.latest_ranking else None
 
 
 @dataclass
@@ -134,6 +147,21 @@ class TournamentBracket:
 
 
 @dataclass
+class ClanMatchEntry:
+    """One confirmed clan match, from nobody's perspective in particular.
+
+    MatchResult above is written from one player's point of view (`won`,
+    `opponents`); the clan feed needs both sides named, so it is its own
+    shape rather than a flag on that one (docs/DECISIONS.md ADR-088).
+    """
+
+    kind: str
+    winners: list[str]
+    losers: list[str]
+    confirmed_at: datetime
+
+
+@dataclass
 class CommunityActivityEntry:
     player_name: str
     level: int
@@ -175,6 +203,10 @@ class AchievementChecklistEntry:
 
     achievement: Achievement
     earned_at: datetime | None
+    # The `extra` JSON recorded when the award was granted (ADR-081) —
+    # {"games": 1043}, {"tournament_id": 3, "placement": 1}. Written by
+    # every award source and read by nothing until ADR-088.
+    context: dict[str, object] | None = None
 
     @property
     def earned(self) -> bool:
@@ -205,15 +237,20 @@ class WebsiteService:
             motto=MOTTO,
             tagline=TAGLINE,
             member_count=member_count,
+            season=await self._ranking.current_season(),
             discord_member_count=guild_snapshot.member_count if guild_snapshot else None,
             discord_boost_tier=guild_snapshot.boost_tier if guild_snapshot else None,
             discord_boost_count=guild_snapshot.boost_count if guild_snapshot else None,
         )
 
     async def get_leaderboard(self, guild_id: int, *, limit: int = 10) -> list[LeaderboardEntry]:
+        """Current-season only (docs/DECISIONS.md ADR-088) — see
+        ClanService.leaderboard for why a stale rating must not rank.
+        """
+        season = await self._ranking.current_season()
         entries: list[LeaderboardEntry] = []
         for _member, player, _discord_id in await self._links.list_active_for_guild(guild_id):
-            latest = await self._ranking.get_latest(player.id)
+            latest = await self._ranking.get_latest(player.id, season=season)
             if latest is not None:
                 entries.append(LeaderboardEntry(player=player, snapshot=latest))
         entries.sort(
@@ -226,10 +263,14 @@ class WebsiteService:
         """Every actively-linked member, unlimited (docs/DECISIONS.md
         ADR-071) — the full-clan companion to get_leaderboard's top-N view.
         """
+        # The roster lists every member whether or not they have re-placed,
+        # so an unplaced member shows with a blank rating rather than
+        # vanishing the way they do from the leaderboard (ADR-088).
+        season = await self._ranking.current_season()
         entries = [
             RosterEntry(
                 player=player,
-                snapshot=await self._ranking.get_latest(player.id),
+                snapshot=await self._ranking.get_latest(player.id, season=season),
                 joined_at=member.joined_at,
             )
             for member, player, _discord_id in await self._links.list_active_for_guild(guild_id)
@@ -309,22 +350,27 @@ class WebsiteService:
         if player is None:
             return None
 
-        earned_at: dict[str, datetime] = {}
+        awards: dict[str, tuple[datetime, dict[str, object] | None]] = {}
         active_link = await self._links.get_active_by_player(player.id)
         if active_link is not None:
-            earned_at = {
-                achievement.key: awarded_at
-                for achievement, awarded_at in await self._awards.list_with_details(
+            awards = {
+                achievement.key: (awarded_at, extra)
+                for achievement, awarded_at, extra in await self._awards.list_awards(
                     active_link.shaheen_member_id
                 )
             }
 
-        return [
-            AchievementChecklistEntry(
-                achievement=achievement, earned_at=earned_at.get(achievement.key)
+        entries = []
+        for achievement in await self._achievement_catalog.list_all():
+            award = awards.get(achievement.key)
+            entries.append(
+                AchievementChecklistEntry(
+                    achievement=achievement,
+                    earned_at=award[0] if award else None,
+                    context=award[1] if award else None,
+                )
             )
-            for achievement in await self._achievement_catalog.list_all()
-        ]
+        return entries
 
     async def get_player_profile(self, brawlhalla_player_id: int) -> PlayerProfile | None:
         player = await self._players.get_by_brawlhalla_id(brawlhalla_player_id)
@@ -406,6 +452,46 @@ class WebsiteService:
             if len(results) >= limit:
                 break
         return results
+
+    async def get_clan_matches(self, guild_id: int, *, limit: int = 10) -> list[ClanMatchEntry]:
+        """Recent confirmed clan matches, clan-wide.
+
+        The competition subsystem — challenges, scrims, matches — has run
+        since Phase 4 with no public surface at all: members could only see
+        clan activity from inside Discord (ADR-088).
+        """
+        entries: list[ClanMatchEntry] = []
+        for match in await self._matches.list_recent_confirmed_for_guild(guild_id, limit=limit):
+            if match.winning_side is None:
+                continue
+            losing_side = MatchSide.B if match.winning_side == MatchSide.A else MatchSide.A
+            winners = await self._resolve_member_names(
+                [
+                    p.shaheen_member_id
+                    for p in await self._matches.participants_on_side(match.id, match.winning_side)
+                ]
+            )
+            losers = await self._resolve_member_names(
+                [
+                    p.shaheen_member_id
+                    for p in await self._matches.participants_on_side(match.id, losing_side)
+                ]
+            )
+            # _resolve_member_names skips members with no Brawlhalla link to
+            # keep Discord identity off the site (ADR-040). A match where
+            # neither side resolves would render "Unknown beat Unknown", so
+            # it is left out entirely rather than published as noise.
+            if not winners and not losers:
+                continue
+            entries.append(
+                ClanMatchEntry(
+                    kind=match.kind.value,
+                    winners=winners,
+                    losers=losers,
+                    confirmed_at=match.confirmed_at or match.updated_at,
+                )
+            )
+        return entries
 
     async def list_tournaments(self, guild_id: int, *, limit: int = 20) -> list[TournamentSummary]:
         tournaments = await self._tournaments.list_for_guild(guild_id, limit=limit)

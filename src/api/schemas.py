@@ -18,6 +18,8 @@ class ClanInfoResponse(BaseModel):
     motto: str
     tagline: str
     member_count: int
+    # The Brawlhalla season every ranking view is scoped to (ADR-088).
+    season: int | None
     discord_member_count: int | None
     discord_boost_tier: int | None
     discord_boost_count: int | None
@@ -71,6 +73,9 @@ class AchievementChecklistEntryResponse(BaseModel):
     category: str
     earned: bool
     awarded_at: datetime | None
+    # What earned it — {"games": 1043}, {"tournament_id": 3, "placement": 1}.
+    # Recorded on every award since ADR-081 and read by nothing until now.
+    context: dict[str, object] | None
 
 
 class PlayerProfileResponse(BaseModel):
@@ -81,11 +86,17 @@ class PlayerProfileResponse(BaseModel):
     peak_rating: int | None
     tier: str | None
     global_rank: int | None
+    # Stored since ADR-081, exposed here as of ADR-088.
+    region_rank: int | None
+    season: int | None
     achievements: list[AchievementResponse]
 
 
 class RankingHistoryEntryResponse(BaseModel):
     captured_at: datetime
+    # Brawlhalla wipes ratings between seasons (docs/DECISIONS.md ADR-088),
+    # so the chart marks where one ended rather than drawing a cliff.
+    season: int | None
     rating: int | None
     peak_rating: int | None
     tier: str | None
@@ -136,6 +147,15 @@ class TournamentBracketResponse(BaseModel):
     tournament: TournamentSummaryResponse
     entrants: list[BracketEntrantResponse]
     matches: list[BracketMatchResponse]
+
+
+class ClanMatchEntryResponse(BaseModel):
+    """A confirmed clan match for the public activity feed (ADR-088)."""
+
+    kind: str
+    winners: list[str]
+    losers: list[str]
+    confirmed_at: datetime
 
 
 class CommunityActivityEntryResponse(BaseModel):

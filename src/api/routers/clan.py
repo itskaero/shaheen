@@ -24,6 +24,7 @@ async def get_clan(
         motto=info.motto,
         tagline=info.tagline,
         member_count=info.member_count,
+        season=info.season,
         discord_member_count=info.discord_member_count,
         discord_boost_tier=info.discord_boost_tier,
         discord_boost_count=info.discord_boost_count,
