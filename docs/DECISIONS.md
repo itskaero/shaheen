@@ -3029,3 +3029,55 @@ repo also sheds the 3.5 MB root prototype. No Python changes — `ruff`/`mypy`/`
 bottom-left of the viewport site-wide, so it sits over whatever content is in that corner at the
 current scroll position — on a phone that can include this page's first call to action. Changing it
 affects every page and belongs in its own pass.
+
+## ADR-086 — the badge stops depending on a toggle nobody can verify; real legend art
+
+Two reports: the live Discord badge still isn't visible, and the legend images should be cut from
+the official legend line-up sheet.
+
+**The badge had a single point of failure outside this repository.** Every version since ADR-066
+read one source: `discord.com/api/guilds/{id}/widget.json`, which only answers when *Enable Server
+Widget* is switched on in Discord's Server Settings → Widget. With it off the endpoint returns
+`403 {"code": 50004}` and the badge hid itself — correct behaviour, invisible outcome. ADR-082 made
+the failure loud in the console; it did not make the badge work. That toggle has never been
+confirmed on, and it cannot be checked from this sandbox (the egress proxy blocks `discord.com`;
+the deployed site is unreachable from here too).
+
+So the badge now has **two sources**, in order:
+
+1. Discord's widget endpoint → `"N online now"` (a real *online* count, when the toggle is on).
+2. **Shaheen's own API** (`GET /clan`) → `"N members"`. The bot already writes a guild snapshot —
+   member count, boost tier, boost count — into the database on every scheduled tick (ADR-079), so
+   the site can show a real member count with no Discord involvement at all.
+
+That inverts the dependency: Discord's widget is now an *enhancement*, and the badge only stays
+hidden when both the widget and our own API have nothing to say. Total failure is still safe — the
+badge hides and never renders a misleading number.
+
+**Visible diagnostics.** Appending `?widget-debug=1` to any page renders the failure reason *in the
+badge* instead of hiding it (`widget: the server widget is disabled. Enable it in Discord under
+Server Settings -> Widget -> Enable Server Widget.`). Console warnings only help someone who already
+knows to open devtools; this makes "I don't see the badge" answerable in one click.
+
+**Legend art.** The five `story/legend_*.png` files were crops of the design mockup: a landscape
+background, a sliver of the neighbouring legend at the left edge, and the legend's name burned into
+the bottom of the image (the page then printed the same name underneath in HTML). They are replaced
+by square portraits cut from the official legend line-up sheet — `web/assets/img/legends/{brynn,
+jaeyun,mordex,nix,tezca}.png`, 304×304 each. Because the new tiles are clean, `.clan-legend-frame`
+drops to `aspect-ratio: 1/1` with `object-position: center` and no defensive crop, and the name
+under each tile is now the only one on screen. A hover scale replaces the old transform hack.
+
+Files: `web/assets/js/api.js` (badge rewritten as source-1/source-2 with `?widget-debug=1`),
+`web/assets/img/legends/*.png` (new), `web/assets/img/story/legend_*.png` (deleted),
+`web/clan.html`, `web/assets/css/style.css`, this entry.
+
+Verified with Playwright: badge renders `57 online now` from a healthy widget response; falls back
+to `137 members` from a mocked `GET /clan` on both 403 and 404; stays hidden when the widget fails
+*and* the API carries no snapshot; and `?widget-debug=1` renders the reason visibly. The clan page
+still loads with no broken images and no console errors, and all five legend tiles now resolve to
+`assets/img/legends/`.
+
+**Still outside this repo:** turning the widget toggle on is what upgrades the badge from "N
+members" to a live "N online now". Triage unchanged — open
+`https://discord.com/api/guilds/1546568759530229961/widget.json`: 200 means it is on, 403 means flip
+it, 404 means the guild ID is wrong.

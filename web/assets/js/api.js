@@ -106,73 +106,134 @@ function wireDiscordLink() {
   });
 }
 
-// Live member/online-count badge, fed by Discord's own public widget
-// endpoint (docs/DECISIONS.md ADR-066, diagnostics added in ADR-082) — no
-// bot/API involvement at all. Best-effort: the badge stays hidden if
-// DISCORD_GUILD_ID isn't set, the widget isn't enabled on the server, or
-// the request fails. Fills every element carrying [data-discord-widget]
-// on the page (header, footer, and clan.html's injected third one).
+// The live community badge. Two sources, in order of preference
+// (docs/DECISIONS.md ADR-066 -> ADR-082 -> ADR-086):
 //
-// Failures are no longer silent. Every bail-out logs a specific reason,
-// because the previous version's bare `return`/`catch {}` made "widget
-// disabled" indistinguishable from "wrong guild ID" from "network error"
-// without opening the Network tab — which is exactly the state that left
-// this badge dark and undiagnosed for three rounds.
+//   1. Discord's own public widget endpoint — real *online* count, but it
+//      only answers if "Enable Server Widget" is switched on in Discord's
+//      Server Settings -> Widget. That is a portal toggle outside this
+//      repo, and for three rounds it was the single point of failure: with
+//      it off the badge simply never appeared.
+//   2. Shaheen's own API (`GET /clan`) — the bot writes a guild snapshot
+//      (member count, boost tier) into the database on every scheduled
+//      tick (ADR-079), so the site can show a real *member* count with no
+//      Discord involvement at all. This is the fallback, so the badge is
+//      no longer hostage to a setting nobody can verify from here.
+//
+// Nothing here can break a page: on total failure the badge stays hidden.
+// Append ?widget-debug=1 to any URL to render the failure reason in the
+// badge itself instead of hiding it — for diagnosing this without opening
+// devtools.
+function discordWidgetDebugEnabled() {
+  try {
+    return new URLSearchParams(window.location.search).has("widget-debug");
+  } catch {
+    return false;
+  }
+}
+
+function renderDiscordBadge(targets, label) {
+  targets.forEach((el) => {
+    el.innerHTML = `<span class="dot" aria-hidden="true"></span>${label}`;
+    el.hidden = false;
+  });
+}
+
+function failDiscordBadge(targets, reason, debug) {
+  console.warn(`[shaheen] Discord widget: ${reason}`);
+  if (debug) {
+    targets.forEach((el) => {
+      el.textContent = `widget: ${reason}`;
+      el.hidden = false;
+    });
+  }
+}
+
+// Returns an online count, or null with the reason logged.
+async function fetchDiscordOnlineCount(targets, debug) {
+  if (typeof DISCORD_GUILD_ID === "undefined" || !DISCORD_GUILD_ID) {
+    failDiscordBadge(targets, "DISCORD_GUILD_ID is not set in assets/js/config.js.", debug);
+    return null;
+  }
+  let response;
+  try {
+    response = await fetch(
+      `https://discord.com/api/guilds/${encodeURIComponent(DISCORD_GUILD_ID)}/widget.json`
+    );
+  } catch (err) {
+    failDiscordBadge(targets, `request failed (${err.message}).`, debug);
+    return null;
+  }
+  if (!response.ok) {
+    if (response.status === 403) {
+      failDiscordBadge(
+        targets,
+        "the server widget is disabled. Enable it in Discord under Server Settings -> " +
+          "Widget -> Enable Server Widget.",
+        debug
+      );
+    } else if (response.status === 404) {
+      failDiscordBadge(
+        targets,
+        `no guild found for ID ${DISCORD_GUILD_ID}. Check DISCORD_GUILD_ID in ` +
+          "assets/js/config.js.",
+        debug
+      );
+    } else {
+      failDiscordBadge(targets, `Discord returned HTTP ${response.status}.`, debug);
+    }
+    return null;
+  }
+
+  const widget = await response.json();
+  // presence_count is the real online total, and a genuine 0 from it is
+  // real data worth showing. widget.members is capped at 100 by Discord and
+  // omits members who opted out, so it is only a fallback — and an empty one
+  // counts as "no usable signal" rather than zero, since Discord always
+  // sends presence_count on a healthy response. That keeps a malformed reply
+  // from rendering a misleading "0 online now".
+  if (typeof widget.presence_count === "number") {
+    return widget.presence_count;
+  }
+  if (Array.isArray(widget.members) && widget.members.length > 0) {
+    return widget.members.length;
+  }
+  failDiscordBadge(
+    targets,
+    "response carried no usable online count (no presence_count, no members).",
+    debug
+  );
+  return null;
+}
+
 async function wireDiscordWidgets() {
   const targets = document.querySelectorAll("[data-discord-widget]");
   if (!targets.length) {
     return;
   }
-  if (typeof DISCORD_GUILD_ID === "undefined" || !DISCORD_GUILD_ID) {
-    console.warn("[shaheen] Discord widget: DISCORD_GUILD_ID is not set in assets/js/config.js.");
+  const debug = discordWidgetDebugEnabled();
+
+  const online = await fetchDiscordOnlineCount(targets, debug);
+  if (online !== null) {
+    renderDiscordBadge(targets, `${online.toLocaleString()} online now`);
     return;
   }
+
+  // Discord said no. Fall back to the member count the bot recorded.
   try {
-    const response = await fetch(
-      `https://discord.com/api/guilds/${encodeURIComponent(DISCORD_GUILD_ID)}/widget.json`
+    const clan = await ShaheenAPI.getClan();
+    if (clan && typeof clan.discord_member_count === "number") {
+      renderDiscordBadge(targets, `${clan.discord_member_count.toLocaleString()} members`);
+      return;
+    }
+    failDiscordBadge(
+      targets,
+      "fallback: Shaheen's API has no guild snapshot yet (the bot writes one on its " +
+        "scheduled tick).",
+      debug
     );
-    if (!response.ok) {
-      if (response.status === 403) {
-        console.warn(
-          "[shaheen] Discord widget: the server widget is disabled. Enable it in Discord under " +
-            "Server Settings -> Widget -> Enable Server Widget."
-        );
-      } else if (response.status === 404) {
-        console.warn(
-          `[shaheen] Discord widget: no guild found for ID ${DISCORD_GUILD_ID}. Check ` +
-            "DISCORD_GUILD_ID in assets/js/config.js."
-        );
-      } else {
-        console.warn(`[shaheen] Discord widget: Discord returned HTTP ${response.status}.`);
-      }
-      return;
-    }
-    const widget = await response.json();
-    // presence_count is the real online total, and a genuine 0 from it is
-    // real data worth showing. widget.members is capped at 100 by Discord
-    // and omits members who opted out, so it's only a fallback — and an
-    // empty one is treated as "no usable signal" rather than zero, since
-    // Discord always sends presence_count on a healthy response. That
-    // keeps a malformed reply from rendering a misleading "0 online now".
-    let online = null;
-    if (typeof widget.presence_count === "number") {
-      online = widget.presence_count;
-    } else if (Array.isArray(widget.members) && widget.members.length > 0) {
-      online = widget.members.length;
-    }
-    if (online === null) {
-      console.warn(
-        "[shaheen] Discord widget: response carried no usable online count " +
-          "(no presence_count, no members)."
-      );
-      return;
-    }
-    targets.forEach((el) => {
-      el.innerHTML = `<span class="dot" aria-hidden="true"></span>${online.toLocaleString()} online now`;
-      el.hidden = false;
-    });
   } catch (err) {
-    console.warn(`[shaheen] Discord widget: request failed (${err.message}).`);
+    failDiscordBadge(targets, `fallback to Shaheen's API also failed (${err.message}).`, debug);
   }
 }
 
