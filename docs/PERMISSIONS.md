@@ -48,12 +48,29 @@ and VOICE. SHAHEEN HQ (`#welcome`/`#rules`/`#roles`/`#clan-info`/
 `#announcements`) is deliberately **not** gated — a brand-new Guest needs
 somewhere to read the rules before they can be verified.
 
-A staff member runs `/verify <member>` (`bot/cogs/moderation.py`) to promote
-a Guest to Ally, which is what actually grants access to the gated
-categories — mirrors the existing Guest→Trial Shaheen promotion `/link`
-already does (`LinkCog._maybe_promote`), just staff-triggered instead of
-Brawlhalla-link-triggered. Idempotent: running it on an already-ranked
-member is a no-op, not an error.
+A staff member runs `/verify <member>` (`bot/cogs/moderation.py`), or
+approves a `/apply` application (docs/DECISIONS.md ADR-089), to promote a
+Guest to Ally — `bot/membership.py`'s `grant_member_access`, the one path
+both routes share. Idempotent: running it on an already-ranked member is a
+no-op, not an error.
+
+### Ally is read-only; Trial Shaheen and up can participate
+
+Being promoted to Ally only grants **view** access to the gated categories
+(docs/DECISIONS.md ADR-090) — `FULL_MEMBER_ROLES` (`bot/constants.py`:
+Trial Shaheen and every rank above it) is the set that can actually type in
+a gated text channel or speak in a gated voice channel; Ally gets
+`send_messages=False` / `speak=False` there instead. An approved applicant
+can read THE NEST and BRAWLHALLA and listen in VOICE from day one, but
+can't post or talk until staff (or `/link`, for an Ally who's already been
+approved) promotes them to Trial Shaheen — mirrors the existing
+Ally→Trial Shaheen promotion `/link` performs (`LinkCog._maybe_promote`).
+Before ADR-090, `/link` promoted straight from **Guest**, which let anyone
+skip `/apply` entirely by linking their account first; it now requires
+already holding Ally.
+
+SHAHEEN HQ, MODERATION, and DEVELOPMENT are unaffected — this tiering only
+applies inside `gated` categories.
 
 `/setup run` now always reconciles every channel/category's overwrites —
 including clearing them back to "none" — instead of only touching the ones
@@ -101,8 +118,10 @@ MODERATION category (`#mod-log`): restricted the same way as DEVELOPMENT —
 hidden from everyone but `ROLES_WITH_STAFF_ACCESS` (docs/DECISIONS.md
 ADR-065).
 
-`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`, `/timeout`,
-`/purge`, `/verify` (`bot/cogs/moderation.py`), and `/spotlight`
+`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`, `/unban`,
+`/timeout`, `/untimeout`, `/purge`, `/lock`, `/unlock`, `/slowmode`,
+`/nickname`, `/verify` (`bot/cogs/moderation.py`), `/emoji sync`
+(`bot/cogs/emoji.py`, docs/DECISIONS.md ADR-090), and `/spotlight`
 (`bot/cogs/clan.py`, docs/DECISIONS.md ADR-070) all require
 `require_staff_authorized()` — the same check `/setup` uses: a server
 administrator, or a member holding Leader or Moderator. This gates who can

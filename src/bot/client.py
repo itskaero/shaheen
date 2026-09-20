@@ -41,6 +41,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.competition",
     "bot.cogs.moderation",
     "bot.cogs.engagement",
+    "bot.cogs.emoji",
 )
 
 

@@ -207,9 +207,34 @@ Ban a member after confirmation.
 ### /timeout <user> <minutes> [reason]
 Timeout a member for the given duration.
 
+### /untimeout <user> [reason]
+Remove an active timeout early. Not destructive, no confirmation step.
+
+### /unban <user> [reason]
+Remove a ban. Not destructive, no confirmation step; a no-op error if the
+user wasn't banned.
+
 ### /purge <amount> [user]
 Bulk-delete up to `amount` recent messages in the current channel,
 optionally filtered to one user's messages.
+
+### /lock [channel] [reason]
+Set `send_messages=False` for `@everyone` on a channel (defaults to the
+current one). A stopgap for raids/incidents, not a `/setup`-managed state —
+the next `/setup run` reconciles the channel's overwrites back to its
+normal spec and clears the lock (docs/PERMISSIONS.md), so staff should
+`/unlock` when done rather than relying on that.
+
+### /unlock [channel]
+Undo a `/lock` — clears the `send_messages` overwrite for `@everyone`
+rather than forcing it back to `True`, so it doesn't accidentally grant
+send access to a channel that's normally staff-only-send.
+
+### /slowmode <seconds> [channel]
+Set a channel's slowmode delay (0–21600s; 0 disables it).
+
+### /nickname <user> [nickname] [reason]
+Set or reset (omit `nickname`) a member's server nickname.
 
 ## Phase 8 — Chat gamification
 
@@ -229,6 +254,18 @@ privacy-filtered to actively-linked members only, see ADR-065).
 Anonymously post a clan suggestion to `#suggestions`, with 👍/👎 reactions
 added automatically for voting (docs/DECISIONS.md ADR-070). No permission
 check, same "any member" posture as `/level`.
+
+## Phase 9 — Emoji pack
+
+Requires `require_staff_authorized()`. See docs/DECISIONS.md ADR-090.
+
+### /emoji sync
+Uploads Shaheen's curated legend-expression emoji pack (`src/assets/emoji/`)
+to the server. Never overwrites an existing emoji by name — a collision is
+reported and skipped, not clobbered. Safe to re-run any time (after adding
+files to the pack, or on a guild whose emoji were reset); stops cleanly and
+reports which files didn't fit once the server is out of static emoji
+slots.
 
 ## Weekly digest (standing job, not a command)
 

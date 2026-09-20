@@ -29,9 +29,15 @@ from bot.constants import ROLE_ALLY
 from bot.content.moderation_embeds import (
     build_already_verified_embed,
     build_clearwarnings_log_embed,
+    build_lock_log_embed,
     build_mod_confirm_embed,
     build_mod_log_embed,
+    build_nickname_log_embed,
     build_purge_log_embed,
+    build_slowmode_log_embed,
+    build_unban_log_embed,
+    build_unlock_log_embed,
+    build_untimeout_log_embed,
     build_verify_dm_embed,
     build_verify_success_embed,
     build_warn_confirmation_embed,
@@ -387,6 +393,211 @@ class ModerationCog(commands.Cog):
         )
         await self._log(moderator.guild, purge_embed)
         await interaction.followup.send(f"Deleted {len(deleted)} message(s).", ephemeral=True)
+
+    # --- /unban / /untimeout ------------------------------------------------
+
+    @app_commands.command(name="unban", description="Remove a ban (staff only)")
+    @app_commands.describe(user="Who to unban", reason="Why they're being unbanned")
+    @require_staff_authorized()
+    async def unban(
+        self, interaction: discord.Interaction, user: discord.User, reason: str | None = None
+    ) -> None:
+        moderator = _require_member(interaction)
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            await moderator.guild.unban(user, reason=reason)
+        except discord.NotFound:
+            await interaction.followup.send(f"{user.mention} isn't banned.", ephemeral=True)
+            return
+        except discord.Forbidden:
+            await interaction.followup.send("⚠️ I don't have permission to unban.", ephemeral=True)
+            return
+
+        await self._log(
+            moderator.guild,
+            build_unban_log_embed(target=user, moderator=moderator, reason=reason),
+        )
+        await interaction.followup.send(f"{user.mention} was unbanned.", ephemeral=True)
+
+    @app_commands.command(name="untimeout", description="Remove an active timeout (staff only)")
+    @app_commands.describe(user="Who to remove the timeout from", reason="Why")
+    @require_staff_authorized()
+    async def untimeout(
+        self, interaction: discord.Interaction, user: discord.Member, reason: str | None = None
+    ) -> None:
+        moderator = _require_member(interaction)
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            await user.timeout(None, reason=reason)
+        except discord.Forbidden:
+            await interaction.followup.send(
+                "⚠️ I don't have permission to untimeout that member.", ephemeral=True
+            )
+            return
+
+        await self._log(
+            moderator.guild,
+            build_untimeout_log_embed(target=user, moderator=moderator, reason=reason),
+        )
+        await interaction.followup.send(f"Timeout removed for {user.mention}.", ephemeral=True)
+
+    # --- /lock / /unlock / /slowmode ----------------------------------------
+
+    @staticmethod
+    def _resolve_text_channel(
+        interaction: discord.Interaction, channel: discord.TextChannel | None
+    ) -> discord.TextChannel:
+        target = channel or interaction.channel
+        if not isinstance(target, discord.TextChannel):
+            raise ShaheenError("This command can only target a text channel.")
+        return target
+
+    @app_commands.command(
+        name="lock", description="Stop @everyone from sending in a channel (staff only)"
+    )
+    @app_commands.describe(
+        channel="Channel to lock (defaults to this one)", reason="Why it's being locked"
+    )
+    @require_staff_authorized()
+    async def lock(
+        self,
+        interaction: discord.Interaction,
+        channel: discord.TextChannel | None = None,
+        reason: str | None = None,
+    ) -> None:
+        moderator = _require_member(interaction)
+        target_channel = self._resolve_text_channel(interaction, channel)
+        await interaction.response.defer(ephemeral=True)
+
+        overwrite = target_channel.overwrites_for(moderator.guild.default_role)
+        overwrite.update(send_messages=False)
+        try:
+            await target_channel.set_permissions(
+                moderator.guild.default_role, overwrite=overwrite, reason=reason
+            )
+        except discord.Forbidden:
+            await interaction.followup.send(
+                "⚠️ I don't have permission to edit that channel.", ephemeral=True
+            )
+            return
+
+        await self._log(
+            moderator.guild,
+            build_lock_log_embed(channel=target_channel, moderator=moderator, reason=reason),
+        )
+        await interaction.followup.send(f"🔒 {target_channel.mention} locked.", ephemeral=True)
+
+    @app_commands.command(name="unlock", description="Undo a /lock on a channel (staff only)")
+    @app_commands.describe(channel="Channel to unlock (defaults to this one)")
+    @require_staff_authorized()
+    async def unlock(
+        self, interaction: discord.Interaction, channel: discord.TextChannel | None = None
+    ) -> None:
+        moderator = _require_member(interaction)
+        target_channel = self._resolve_text_channel(interaction, channel)
+        await interaction.response.defer(ephemeral=True)
+
+        default_role = moderator.guild.default_role
+        overwrite = target_channel.overwrites_for(default_role)
+        overwrite.update(send_messages=None)
+        try:
+            if overwrite.is_empty():
+                await target_channel.set_permissions(
+                    default_role, overwrite=None, reason="Shaheen /unlock"
+                )
+            else:
+                await target_channel.set_permissions(
+                    default_role, overwrite=overwrite, reason="Shaheen /unlock"
+                )
+        except discord.Forbidden:
+            await interaction.followup.send(
+                "⚠️ I don't have permission to edit that channel.", ephemeral=True
+            )
+            return
+
+        await self._log(
+            moderator.guild, build_unlock_log_embed(channel=target_channel, moderator=moderator)
+        )
+        await interaction.followup.send(f"🔓 {target_channel.mention} unlocked.", ephemeral=True)
+
+    @app_commands.command(
+        name="slowmode", description="Set this channel's slowmode delay (staff only)"
+    )
+    @app_commands.describe(
+        seconds="Delay between messages, in seconds (0 disables it)",
+        channel="Channel to update (defaults to this one)",
+    )
+    @require_staff_authorized()
+    async def slowmode(
+        self,
+        interaction: discord.Interaction,
+        seconds: app_commands.Range[int, 0, 21600],
+        channel: discord.TextChannel | None = None,
+    ) -> None:
+        moderator = _require_member(interaction)
+        target_channel = self._resolve_text_channel(interaction, channel)
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            await target_channel.edit(slowmode_delay=seconds, reason="Shaheen /slowmode")
+        except discord.Forbidden:
+            await interaction.followup.send(
+                "⚠️ I don't have permission to edit that channel.", ephemeral=True
+            )
+            return
+
+        await self._log(
+            moderator.guild,
+            build_slowmode_log_embed(channel=target_channel, moderator=moderator, seconds=seconds),
+        )
+        detail = "disabled" if seconds == 0 else f"set to {seconds}s"
+        await interaction.followup.send(
+            f"🐢 Slowmode {detail} in {target_channel.mention}.", ephemeral=True
+        )
+
+    # --- /nickname -----------------------------------------------------------
+
+    @app_commands.command(
+        name="nickname", description="Set or reset a member's nickname (staff only)"
+    )
+    @app_commands.describe(
+        user="Whose nickname to change",
+        nickname="New nickname (omit to reset to their username)",
+        reason="Why",
+    )
+    @require_staff_authorized()
+    async def nickname(
+        self,
+        interaction: discord.Interaction,
+        user: discord.Member,
+        nickname: str | None = None,
+        reason: str | None = None,
+    ) -> None:
+        moderator = _require_member(interaction)
+        await interaction.response.defer(ephemeral=True)
+        old_nick = user.display_name
+
+        try:
+            await user.edit(nick=nickname, reason=reason)
+        except discord.Forbidden:
+            await interaction.followup.send(
+                "⚠️ I don't have permission to rename that member.", ephemeral=True
+            )
+            return
+
+        await self._log(
+            moderator.guild,
+            build_nickname_log_embed(
+                target=user,
+                moderator=moderator,
+                old_nick=old_nick,
+                new_nick=nickname,
+                reason=reason,
+            ),
+        )
+        await interaction.followup.send(f"Nickname updated for {user.mention}.", ephemeral=True)
 
 
 async def setup(bot: ShaheenBot) -> None:

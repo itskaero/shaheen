@@ -3246,3 +3246,106 @@ existing `test_setup_launch_messages` suite caught that `#📥-applications` had
 now it has one. ruff and mypy clean across 123 source files.
 
 **Needs `/setup run`** to create the two new channels and post the apply panel.
+
+## ADR-090 — Ally is read-only, the rest of the moderator toolkit, and the legend emoji pack
+
+Asked: is a real permission tier in place now that anyone can apply — new members should see the
+basic channels, an approved applicant should get into the member channels but read-only, and an
+actual Shaheen member should be able to type — plus whatever moderator commands are still missing,
+and a curated set of custom emoji cropped from the clan's own Brawlhalla legend art, picked by a
+bot command rather than uploaded by hand one at a time.
+
+### Ally becomes a real middle tier
+
+Before this round `gated` categories (THE NEST, BRAWLHALLA, VOICE) drew one line: Guest is hidden
+out, every other rank role in fully, with identical read/write access. That collapsed the entire
+point of Ally — "approved, but not yet a playing member" — into "same as everyone else." Two new
+tuples in `bot/constants.py` split it properly: `VERIFIED_ROLES` still governs *view*, and the new
+`FULL_MEMBER_ROLES` (Trial Shaheen and everything above it — Ally deliberately excluded) governs
+*participation*. `SetupService._apply_membership_tier` layers this on top of the existing gated
+overwrite: Ally gets `send_messages=False` on a gated text channel and `speak=False` on a gated
+voice channel (they can still connect and listen — "read-only" has no literal meaning for audio, so
+listen-only is the closest equivalent); Trial Shaheen and up get the matching `True`. SHAHEEN HQ,
+MODERATION, and DEVELOPMENT are untouched — this only applies inside `gated` categories, and only to
+channels, not the category shell itself (a category isn't textual or vocal, so the participation
+split lives in `_channel_overwrites`, not `_category_overwrites`).
+
+**This closed a real hole, not just a gap.** `LinkCog._maybe_promote` (ADR-026) promoted straight
+from **Guest** to Trial Shaheen — meaning anyone could skip `/apply` and staff review entirely by
+running `/link` before ever applying. That's a bigger problem than an unfinished permission tier: it
+made the approval system built in ADR-089 optional. `_maybe_promote` now requires already holding
+Ally; a bare Guest who links stays Guest. ADR-026 is superseded, not deleted from history — the
+promotion trigger (linking a Brawlhalla account) is unchanged, only the starting rank required to
+trigger it.
+
+### The rest of the moderator toolkit
+
+The existing set (`/warn`, `/kick`, `/ban`, `/timeout`, `/purge`) had no way to undo two of its own
+actions and no channel-level tools at all. Six additions, all following the same "do it, log it, no
+confirmation needed" shape as `/timeout` and `/purge` already used — these are either reversible
+(`/unban`, `/untimeout`, `/unlock`) or low-stakes config changes (`/lock`, `/slowmode`, `/nickname`),
+so unlike `/kick`/`/ban` they skip `ConfirmView`:
+
+- **`/unban`** / **`/untimeout`** — undo the two actions that had no undo.
+- **`/lock`** / **`/unlock`** — toggle `send_messages=False` for `@everyone` on a channel. Explicitly
+  *not* a `/setup`-managed state: `/setup run` reconciles every channel's overwrites on every pass
+  (ADR-060/069), so a `/lock` left in place gets silently cleared on the next run. That's a feature,
+  not a bug to work around — a stale lockdown nobody remembers to lift is worse than one that expires
+  — but it means `/unlock` clears the overwrite key back to `None` rather than forcing it to `True`,
+  so unlocking a channel that's normally `staff_only_send` doesn't accidentally grant it send access.
+- **`/slowmode`** — direct wrapper over `TextChannel.edit(slowmode_delay=...)`.
+- **`/nickname`** — set or reset (omit the argument) a member's nickname; the one identity-management
+  tool that was missing entirely.
+
+### Visual pass on every moderation embed
+
+`/mod-log` was a wall of identical grey embeds — same colour, same shape, no way to tell entries
+apart at a glance. Every embed in `moderation_embeds.py` now carries the target's avatar as a
+thumbnail and, on log/confirm embeds, a footer naming the acting moderator with their avatar plus a
+timestamp (`_with_target_thumbnail`/`_with_moderator_footer`, two small helpers rather than
+duplicating `set_thumbnail`/`set_footer` calls across a dozen builders). Purely additive — every
+existing embed's title/colour/description is unchanged, so this cost nothing in `/help` or command
+behaviour, just made `#mod-log` skimmable.
+
+### The legend emoji pack
+
+Two sprite sheets of Brawlhalla-legend reaction art (16 legends, ~13 expressions each) became 24
+cropped 128×128 PNGs at `src/assets/emoji/*.png` — one per file, filename is the emoji name. The
+selection deliberately avoids the trap of "take GG from every legend": each of the 24 covers a
+*different* expression (gg, wp, nt, heart, question, cry, laugh, cool, zzz, fire, money, wolf, rip,
+ninja, mask, buddha, yinyang, cheers, thumbsup, sparkle, facepalm, angry, dizzy, wink), and the
+legend supplying each one was picked to spread across as many of the 16 as possible — nobody's
+personal favourite legend dominates the pack, and no two emoji are redundant. Cropping was the
+tedious part: the sheets' row/column grid is 13 columns, not the 12 an eyeballed guess suggested, and
+each two-row legend block's label caption doesn't end where the next row starts (row 0's caption
+bleeds several pixels past the nominal boundary) — both found by pixel-sampling actual crop
+boundaries and overlaying a numbered grid, not by trusting the visible thumbnail labels, several of
+which are themselves duplicated/mislabeled in the source art.
+
+`services/emoji_service.py` — `available_emoji_files()` (pure) plus `EmojiService.sync()` — uploads
+whichever packaged file the guild's emoji list doesn't already have **by name**. It never overwrites
+an existing emoji: a name collision is skipped and reported, not clobbered, so a staff member's own
+hand-picked emoji for that name survives a resync. It also respects `guild.emoji_limit` (50/100/150/
+250 by boost tier) and only counts *static* emoji against it — an animated emoji already on the guild
+doesn't eat into the pack's room. `/emoji sync` (staff only, `bot/cogs/emoji.py`) is the one command;
+re-running it after adding files to the folder, or after a guild's emoji were wiped, is exactly the
+intended use.
+
+Files: `src/bot/constants.py` (`FULL_MEMBER_ROLES`), `src/services/setup_service.py`
+(`_apply_membership_tier`), `src/bot/cogs/link.py` (`_maybe_promote`), `src/bot/cogs/moderation.py`
+(6 new commands), `src/bot/content/moderation_embeds.py` (visual pass + new builders),
+`src/services/emoji_service.py`, `src/bot/content/emoji_embeds.py`, `src/bot/cogs/emoji.py` (all
+new), `src/assets/emoji/*.png` (24 new), `src/bot/client.py`, `src/bot/content/help_embeds.py`,
+`docs/{PERMISSIONS,COMMANDS}.md`, `tests/{test_setup_service,test_link_promotion,
+test_moderation_embeds,test_emoji_service}.py`, this entry.
+
+Verified: 24 new tests (398 total, was 374) — six on the gated-channel membership tier (text/voice ×
+Ally-denied/full-member-granted, plus ungated/restricted channels staying untouched), four on
+`_maybe_promote` (bare Guest refused, approved Ally promoted with the correct role swap, Trial/Elite
+left alone), six on `EmojiService` (empty-guild upload, existing-name skip, slot-limit stop, static-
+only counting, a `Forbidden` recorded not raised, the packaged pack non-empty), eight on the new/
+polished moderation embeds. ruff and mypy clean across 126 source files. No migration — this round
+touches no database schema.
+
+**Needs `/setup run`** to reconcile the new Ally read-only overwrites onto THE NEST/BRAWLHALLA/VOICE,
+and `/emoji sync` to actually upload the pack once the bot is in the server.

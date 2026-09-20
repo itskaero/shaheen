@@ -289,6 +289,20 @@ VERIFIED_ROLES: tuple[RoleSpec, ...] = (
     ROLE_ALLY,
 )
 
+# Verified roles that can actually *type* in gated channels — every rank
+# role above Ally (docs/DECISIONS.md ADR-090). An approved applicant lands
+# on Ally and can read THE NEST/BRAWLHALLA/VOICE but not post there; once
+# staff (or /link, for an already-approved member) promotes them to Trial
+# Shaheen they can. Ally is deliberately excluded even though it's a
+# VERIFIED_ROLE: it's the "in, but not yet a playing member" state.
+FULL_MEMBER_ROLES: tuple[RoleSpec, ...] = (
+    ROLE_LEADER,
+    ROLE_MODERATOR,
+    ROLE_ELITE,
+    ROLE_SHAHEEN,
+    ROLE_TRIAL,
+)
+
 
 # --- Categories & channels (docs/DISCORD_SPEC.md) ---------------------------
 
