@@ -117,3 +117,56 @@ def test_repair_role_diff_matches_real_discord_permissions_semantics() -> None:
     known = {(ResourceType.ROLE, role.logical_key): 1}
     plan = build_plan((role,), (), known, GuildSnapshot(roles=(live,)))
     assert plan.role_actions[0].type is ActionType.REPAIR
+
+
+def test_channel_repaired_when_its_category_moved() -> None:
+    """docs/DECISIONS.md ADR-091: a channel whose CategorySpec now points
+    it at a different category (e.g. leaderboard/hall-of-fame moving out of
+    SHAHEEN ARENA) must be detected as needing a repair, not silently left
+    parented under the old category forever.
+    """
+    live_category = LiveCategory(id=1, name=CATEGORY.name)
+    other_category = LiveCategory(id=9, name="🧪 OLD HOME")
+    # The channel actually lives under category id 9 (its old home), while
+    # its CategorySpec now says it belongs under CATEGORY (live id 1).
+    live_channel = LiveChannel(id=2, name="🧪-test", kind="text", category_id=9, topic="testing")
+    known = {
+        (ResourceType.CATEGORY, CATEGORY.logical_key): 1,
+        (ResourceType.CHANNEL, "channel:test"): 2,
+    }
+    plan = build_plan(
+        (),
+        (CATEGORY,),
+        known,
+        GuildSnapshot(categories=(live_category, other_category), channels=(live_channel,)),
+    )
+    assert plan.channel_actions[0].type is ActionType.REPAIR
+    assert any("category" in d for d in plan.channel_actions[0].diffs)
+
+
+def test_channel_not_repaired_when_already_in_its_configured_category() -> None:
+    live_category = LiveCategory(id=1, name=CATEGORY.name)
+    live_channel = LiveChannel(id=2, name="🧪-test", kind="text", category_id=1, topic="testing")
+    known = {
+        (ResourceType.CATEGORY, CATEGORY.logical_key): 1,
+        (ResourceType.CHANNEL, "channel:test"): 2,
+    }
+    plan = build_plan(
+        (), (CATEGORY,), known, GuildSnapshot(categories=(live_category,), channels=(live_channel,))
+    )
+    assert plan.channel_actions[0].type is ActionType.VERIFY
+
+
+def test_channel_reparenting_not_flagged_when_its_category_is_also_new() -> None:
+    """A channel adopted by name inside a category that's itself being
+    CREATEd this run has nothing to compare its live category_id against
+    yet — it'll be correctly parented by the CREATE path, not flagged here.
+    """
+    # The channel already exists (adopted by name) but under some
+    # unrelated, unknown category — CATEGORY itself has no known mapping,
+    # so it's a fresh CREATE this run.
+    live_channel = LiveChannel(id=2, name="🧪-test", kind="text", category_id=999, topic="testing")
+    plan = build_plan((), (CATEGORY,), {}, GuildSnapshot(channels=(live_channel,)))
+    assert plan.category_actions[0].type is ActionType.CREATE
+    assert plan.channel_actions[0].type is ActionType.ADOPT
+    assert not any("category" in d for d in plan.channel_actions[0].diffs)

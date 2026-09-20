@@ -11,14 +11,20 @@ import io
 from PIL import Image, ImageFont
 
 from services.image_service import (
+    _GOODBYE_TEMPLATE_PATH,
     _SUBTITLE_FONT_PATH,
     _TEMPLATE_PATH,
     _TITLE_FONT_PATH,
+    _WELCOME_TEMPLATE_PATH,
     CARD_HEIGHT,
     CARD_WIDTH,
+    WELCOME_CARD_HEIGHT,
+    WELCOME_CARD_WIDTH,
     _fit_font,
     _make_masks,
+    render_goodbye_card,
     render_milestone_card,
+    render_welcome_card,
 )
 
 
@@ -110,3 +116,42 @@ def test_make_masks_outer_stroke_mask_covers_more_pixels_than_inner() -> None:
     inner_opaque = sum(1 for a in inner.getdata() if a > 0)
     outer_opaque = sum(1 for a in outer.getdata() if a > 0)
     assert outer_opaque > inner_opaque
+
+
+# --- welcome/goodbye cards (docs/DECISIONS.md ADR-065, redesigned ADR-091) --
+
+
+def test_render_welcome_card_returns_a_valid_png_at_the_new_size() -> None:
+    png_bytes = render_welcome_card(member_name="ShaheenPlayer")
+    image = Image.open(io.BytesIO(png_bytes))
+    assert image.format == "PNG"
+    assert image.size == (WELCOME_CARD_WIDTH, WELCOME_CARD_HEIGHT)
+
+
+def test_render_goodbye_card_returns_a_valid_png_at_the_new_size() -> None:
+    png_bytes = render_goodbye_card(member_name="ShaheenPlayer")
+    image = Image.open(io.BytesIO(png_bytes))
+    assert image.format == "PNG"
+    assert image.size == (WELCOME_CARD_WIDTH, WELCOME_CARD_HEIGHT)
+
+
+def test_render_welcome_card_handles_a_very_long_name_without_raising() -> None:
+    png_bytes = render_welcome_card(member_name="xXx_TheLegendaryBrawlhallaChampion2024_xXx")
+    image = Image.open(io.BytesIO(png_bytes))
+    assert image.size == (WELCOME_CARD_WIDTH, WELCOME_CARD_HEIGHT)
+
+
+def test_render_goodbye_card_handles_an_empty_name_without_raising() -> None:
+    png_bytes = render_goodbye_card(member_name="")
+    image = Image.open(io.BytesIO(png_bytes))
+    assert image.size == (WELCOME_CARD_WIDTH, WELCOME_CARD_HEIGHT)
+
+
+def test_welcome_and_goodbye_templates_ship_inside_src() -> None:
+    """Same rationale as test_template_asset_ships_inside_src — these must
+    survive the Dockerfile's `COPY src/ ./src/`, not live under web/.
+    """
+    for template_path in (_WELCOME_TEMPLATE_PATH, _GOODBYE_TEMPLATE_PATH):
+        assert template_path.exists()
+        assert "src" in template_path.parts
+        assert "web" not in template_path.parts

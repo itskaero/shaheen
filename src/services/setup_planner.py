@@ -162,6 +162,7 @@ def _plan_channel(
     category_logical_key: str,
     known: KnownResources,
     snapshot: GuildSnapshot,
+    expected_category_id: int | None,
 ) -> ChannelAction:
     known_id = known.get((ResourceType.CHANNEL, spec.logical_key))
     live_by_id = {c.id: c for c in snapshot.channels}
@@ -180,7 +181,7 @@ def _plan_channel(
             type=ActionType.CREATE, spec=spec, category_logical_key=category_logical_key
         )
 
-    diffs = _channel_diffs(spec, live)
+    diffs = _channel_diffs(spec, live, category_logical_key, expected_category_id)
     final_type = ActionType.REPAIR if diffs else base_type
     return ChannelAction(
         type=final_type,
@@ -191,7 +192,12 @@ def _plan_channel(
     )
 
 
-def _channel_diffs(spec: ChannelSpec, live: LiveChannel) -> tuple[str, ...]:
+def _channel_diffs(
+    spec: ChannelSpec,
+    live: LiveChannel,
+    category_logical_key: str,
+    expected_category_id: int | None,
+) -> tuple[str, ...]:
     diffs = []
     if live.name != spec.name:
         diffs.append(f"name: {live.name!r} -> {spec.name!r}")
@@ -199,6 +205,11 @@ def _channel_diffs(spec: ChannelSpec, live: LiveChannel) -> tuple[str, ...]:
         diffs.append(f"kind: {live.kind} -> {spec.kind} (cannot be repaired automatically)")
     if spec.kind == "text" and (live.topic or None) != (spec.topic or None):
         diffs.append(f"topic: {live.topic!r} -> {spec.topic!r}")
+    # expected_category_id is None when that category is itself still being
+    # created this run (nothing to compare against yet) — the channel gets
+    # correctly parented on its own CREATE path in that case, not here.
+    if expected_category_id is not None and live.category_id != expected_category_id:
+        diffs.append(f"category: -> {category_logical_key!r}")
     return tuple(diffs)
 
 
@@ -211,8 +222,21 @@ def build_plan(
     """Diff the desired guild structure against `snapshot`/`known` mappings."""
     role_actions = tuple(_plan_role(spec, known, snapshot) for spec in roles)
     category_actions = tuple(_plan_category(spec, known, snapshot) for spec in categories)
+    # None for a category that's itself being created this run (CREATE) —
+    # there's nothing yet to compare a channel's live category against.
+    category_id_by_key = {
+        action.spec.logical_key: action.existing_id
+        for action in category_actions
+        if action.type is not ActionType.CREATE
+    }
     channel_actions = tuple(
-        _plan_channel(channel_spec, category.logical_key, known, snapshot)
+        _plan_channel(
+            channel_spec,
+            category.logical_key,
+            known,
+            snapshot,
+            category_id_by_key.get(category.logical_key),
+        )
         for category in categories
         for channel_spec in category.channels
     )

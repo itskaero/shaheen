@@ -15,12 +15,21 @@ skipped.
 
 ## Categories and channels
 
+### 🦅 START HERE
+Urdu: یہاں سے شروع کریں
+
+The only ungated category (docs/DECISIONS.md ADR-091) — a brand-new,
+unverified Guest sees this and nothing else until staff `/verify`s them or
+approves their `/apply` application.
+
+- 📝 apply — the application panel; `staff_only_send`, nobody chats here
+
 ### 🏯 SHAHEEN HQ
 Urdu: شاہین مرکز
 
-Deliberately ungated (docs/DECISIONS.md ADR-069) — a brand-new, unverified
-Guest still needs somewhere to read the rules and find `#roles` before staff
-can `/verify` them.
+Gated (docs/DECISIONS.md ADR-069/ADR-091) — hidden from `@everyone` and
+Guest until a staff member runs `/verify` or approves an application; full
+read+write for every `VERIFIED_ROLE` once they are.
 
 - 📢 announcements
 - 👋 welcome
@@ -60,6 +69,14 @@ Initially hidden/disabled from public users until there is a need.
 
 - ⚔️ scrims
 - 🏆 tournaments
+
+### 🏆 HALL OF RECORDS
+Urdu: ریکارڈز کا ہال
+
+Gated (docs/DECISIONS.md ADR-069) and `readonly` (ADR-091) — every
+`VERIFIED_ROLE` can read, none of them (staff included) can send; these are
+bot-broadcast channels, split out of SHAHEEN ARENA.
+
 - 📊 leaderboard
 - 🥇 hall-of-fame
 
@@ -89,9 +106,9 @@ Admin-only initially.
 Restricted the same way as DEVELOPMENT — hidden from everyone but
 `ROLES_WITH_STAFF_ACCESS`.
 
-- 🛡️-mod-log — every `/warn`, `/clearwarnings`, `/kick`, `/ban`,
-  `/timeout`, `/purge` action, posted automatically by
-  `bot/cogs/moderation.py`.
+- 🛡️-mod-log — every `/warn`, `/clearwarnings`, `/kick`, `/ban`, `/unban`,
+  `/timeout`, `/untimeout`, `/purge`, `/lock`, `/unlock`, `/slowmode`,
+  `/nickname` action, posted automatically by `bot/cogs/moderation.py`.
 
 ## Initial launch behavior
 
@@ -137,9 +154,11 @@ this stays true if a new channel is ever added.
 `bot/cogs/engagement.py` listens for `on_member_join`/`on_member_remove`
 and posts a branded card to 👋 welcome for each — reusing the owner-
 supplied `welcome_template.png`/`goodbye_template.png` art the same way
-`render_milestone_card` uses `achievement_template.png` (ADR-062). Both
-renders run off-thread (`asyncio.to_thread`) and are wrapped in
-try/except so a render or permission failure never crashes the listener.
+`render_milestone_card` uses `achievement_template.png` (ADR-062;
+redesigned ADR-091 — the member's name renders in Rajdhani SemiBold, not
+Orbitron). Both renders run off-thread (`asyncio.to_thread`) and are
+wrapped in try/except so a render or permission failure never crashes the
+listener.
 
 - **Join**: assigns the Guest role automatically
   (`bot.constants.ROLE_GUEST`, resolved via `ProvisionedResourceRepository`

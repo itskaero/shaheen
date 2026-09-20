@@ -55,6 +55,11 @@ class CategorySpec:
     # docs/DECISIONS.md ADR-069, docs/PERMISSIONS.md. Mutually exclusive with
     # `restricted`: a category is either staff-only or verified-only, never both.
     gated: bool = False
+    # Only meaningful combined with gated=True: nobody in VERIFIED_ROLES gets
+    # send_messages/speak, not even Trial Shaheen and up — a broadcast-only
+    # category (bot-posted milestones/rankings) that every verified member can
+    # read but nobody types in (docs/DECISIONS.md ADR-091).
+    readonly: bool = False
 
 
 # --- Roles, highest to lowest (docs/PERMISSIONS.md) -------------------------
@@ -280,6 +285,11 @@ ROLES_WITH_STAFF_ACCESS: tuple[RoleSpec, ...] = (ROLE_LEADER, ROLE_MODERATOR)
 # i.e. everyone who has been manually verified (docs/DECISIONS.md ADR-069).
 # Guest is deliberately excluded even though it's a rank role: it's the
 # auto-assigned, not-yet-verified state a new member starts in.
+#
+# Full read+write from the moment of approval — an Ally is not read-only
+# (docs/DECISIONS.md ADR-091, superseding ADR-090's Ally-read-only channel
+# design). The one exception is `readonly` categories above, which apply to
+# every VERIFIED_ROLE equally rather than singling Ally out.
 VERIFIED_ROLES: tuple[RoleSpec, ...] = (
     ROLE_LEADER,
     ROLE_MODERATOR,
@@ -289,12 +299,11 @@ VERIFIED_ROLES: tuple[RoleSpec, ...] = (
     ROLE_ALLY,
 )
 
-# Verified roles that can actually *type* in gated channels — every rank
-# role above Ally (docs/DECISIONS.md ADR-090). An approved applicant lands
-# on Ally and can read THE NEST/BRAWLHALLA/VOICE but not post there; once
-# staff (or /link, for an already-approved member) promotes them to Trial
-# Shaheen they can. Ally is deliberately excluded even though it's a
-# VERIFIED_ROLE: it's the "in, but not yet a playing member" state.
+# Every rank role above Ally — a real roster member, not just an approved
+# friend of the clan. No longer a channel-permission distinction (ADR-091:
+# Ally already gets full read+write on VERIFIED_ROLES' channels); this is
+# purely about rank, used by LinkCog._maybe_promote to tell "already Trial
+# or above, leave alone" from "still Ally, eligible to be promoted".
 FULL_MEMBER_ROLES: tuple[RoleSpec, ...] = (
     ROLE_LEADER,
     ROLE_MODERATOR,
@@ -308,8 +317,28 @@ FULL_MEMBER_ROLES: tuple[RoleSpec, ...] = (
 
 CATEGORIES: tuple[CategorySpec, ...] = (
     CategorySpec(
+        # Deliberately the only ungated category left (docs/DECISIONS.md
+        # ADR-091) — a brand-new Guest sees this and nothing else in the
+        # server until a moderator approves their application or runs
+        # /verify. Ungated by omission (gated defaults to False).
+        logical_key="category:start_here",
+        name="🦅 START HERE",
+        channels=(
+            ChannelSpec(
+                "channel:apply",
+                "📝-apply",
+                "text",
+                topic="Apply to join Shaheen — staff review every application. | "
+                "شاہین میں شامل ہونے کے لیے درخواست دیں — اسٹاف ہر درخواست کا جائزہ لیتا ہے۔",
+                # Only the application panel lives here; nobody chats in it.
+                staff_only_send=True,
+            ),
+        ),
+    ),
+    CategorySpec(
         logical_key="category:shaheen_hq",
         name="🏯 SHAHEEN HQ",
+        gated=True,  # docs/DECISIONS.md ADR-091 — was public; #apply moved out instead
         channels=(
             ChannelSpec(
                 "channel:announcements",
@@ -330,15 +359,6 @@ CATEGORIES: tuple[CategorySpec, ...] = (
                 "📜-rules",
                 "text",
                 topic="Server rules. | سرور کے قوانین۔",
-            ),
-            ChannelSpec(
-                "channel:apply",
-                "📝-apply",
-                "text",
-                topic="Apply to join Shaheen — staff review every application. | "
-                "شاہین میں شامل ہونے کے لیے درخواست دیں — اسٹاف ہر درخواست کا جائزہ لیتا ہے۔",
-                # Only the application panel lives here; nobody chats in it.
-                staff_only_send=True,
             ),
             ChannelSpec(
                 "channel:roles",
@@ -452,6 +472,17 @@ CATEGORIES: tuple[CategorySpec, ...] = (
                 "text",
                 topic="Tournament brackets. | ٹورنامنٹ بریکٹس۔",
             ),
+        ),
+    ),
+    CategorySpec(
+        # Bot-broadcast channels every verified member can read but nobody
+        # (staff included) types in — docs/DECISIONS.md ADR-091. Split out
+        # of SHAHEEN ARENA, which otherwise stays staff-only.
+        logical_key="category:hall_of_records",
+        name="🏆 HALL OF RECORDS",
+        gated=True,
+        readonly=True,
+        channels=(
             ChannelSpec(
                 "channel:leaderboard",
                 "📊-leaderboard",

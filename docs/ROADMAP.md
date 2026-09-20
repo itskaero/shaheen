@@ -69,12 +69,14 @@
 - [x] cold-start data snapshots for the website
 - [x] join applications: `/apply`, `/application`, `/applications`, review
       queue with Approve/Decline
-- [x] Ally is read-only in member channels; only Trial Shaheen+ can type/speak
 - [x] moderator toolkit: `/unban`, `/untimeout`, `/lock`, `/unlock`,
       `/slowmode`, `/nickname`
 - [x] visual pass on every moderation embed (thumbnails, timestamps,
       moderator footer)
 - [x] curated legend emoji pack + `/emoji sync`
+- [x] Guest limited to one entrance channel (`#apply`); approval grants
+      full read+write; `#leaderboard`/`#hall-of-fame` read-only for all
+- [x] redesigned welcome/goodbye cards; username in Rajdhani SemiBold
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

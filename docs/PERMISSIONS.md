@@ -38,15 +38,23 @@ hidden from everyone but staff), individual channels can restrict who can
 everything else here is (docs/DECISIONS.md ADR-060). Currently only
 `#announcements`: everyone can read it, only Leader/Moderator can post.
 
+## The entrance: Guest sees exactly one channel
+
+`🦅 START HERE` (`category:start_here`) is the only ungated category in the
+server (docs/DECISIONS.md ADR-091) — it holds nothing but `#apply`. A
+brand-new Guest sees that one channel and nothing else until a moderator
+approves their application or runs `/verify`. Before ADR-091, SHAHEEN HQ
+(`#welcome`/`#rules`/`#roles`/`#clan-info`/`#announcements`) was public
+too; it's now gated like everything else, on the owner's explicit call to
+shrink the pre-approval surface to a single channel.
+
 ## Manual verification gate
 
 `CategorySpec.gated` (`bot/constants.py`, docs/DECISIONS.md ADR-069) — the
 same shape as `restricted`, inverted: hidden from `@everyone` **and** Guest
 (the role auto-assigned on join, ADR-065), visible to every other rank role
-(`VERIFIED_ROLES` = everything except Guest). Currently THE NEST, BRAWLHALLA,
-and VOICE. SHAHEEN HQ (`#welcome`/`#rules`/`#roles`/`#clan-info`/
-`#announcements`) is deliberately **not** gated — a brand-new Guest needs
-somewhere to read the rules before they can be verified.
+(`VERIFIED_ROLES` = everything except Guest). Currently SHAHEEN HQ, THE
+NEST, BRAWLHALLA, VOICE, and HALL OF RECORDS.
 
 A staff member runs `/verify <member>` (`bot/cogs/moderation.py`), or
 approves a `/apply` application (docs/DECISIONS.md ADR-089), to promote a
@@ -54,23 +62,24 @@ Guest to Ally — `bot/membership.py`'s `grant_member_access`, the one path
 both routes share. Idempotent: running it on an already-ranked member is a
 no-op, not an error.
 
-### Ally is read-only; Trial Shaheen and up can participate
+### Approval grants full read+write; only broadcast channels are read-only
 
-Being promoted to Ally only grants **view** access to the gated categories
-(docs/DECISIONS.md ADR-090) — `FULL_MEMBER_ROLES` (`bot/constants.py`:
-Trial Shaheen and every rank above it) is the set that can actually type in
-a gated text channel or speak in a gated voice channel; Ally gets
-`send_messages=False` / `speak=False` there instead. An approved applicant
-can read THE NEST and BRAWLHALLA and listen in VOICE from day one, but
-can't post or talk until staff (or `/link`, for an Ally who's already been
-approved) promotes them to Trial Shaheen — mirrors the existing
-Ally→Trial Shaheen promotion `/link` performs (`LinkCog._maybe_promote`).
-Before ADR-090, `/link` promoted straight from **Guest**, which let anyone
-skip `/apply` entirely by linking their account first; it now requires
-already holding Ally.
+An approved Ally gets **full** read+write in every gated category from the
+moment they're verified — no separate read-only limbo state
+(docs/DECISIONS.md ADR-091, superseding ADR-090's Ally-read-only design).
+The one exception is `CategorySpec.readonly` (only meaningful combined with
+`gated=True`): every `VERIFIED_ROLE`, staff included, gets
+`send_messages=False` / `speak=False` there — for bot-broadcast channels
+where a human typing was never the point. Currently `🏆 HALL OF RECORDS`
+(`#leaderboard`, `#hall-of-fame`), split out of SHAHEEN ARENA (which stays
+`restricted`, staff-only, for `#scrims`/`#tournaments`).
 
-SHAHEEN HQ, MODERATION, and DEVELOPMENT are unaffected — this tiering only
-applies inside `gated` categories.
+`/link` still requires already holding Ally before it promotes to Trial
+Shaheen (`LinkCog._maybe_promote`) — that part of ADR-090 stands. Before
+ADR-090, `/link` promoted straight from **Guest**, which let anyone skip
+`/apply` entirely by linking their account first.
+
+MODERATION and DEVELOPMENT are unaffected — both stay `restricted`.
 
 `/setup run` now always reconciles every channel/category's overwrites —
 including clearing them back to "none" — instead of only touching the ones
