@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-09-20T11:17:55Z",
+  "captured_at": "2026-09-20T16:01:22Z",
   "source": "/achievements",
   "data": [
     {
@@ -267,10 +267,10 @@
       "name": "MVP of the Week",
       "description": "Named MVP in a weekly digest.",
       "category": "community",
-      "holder_count": 0,
+      "holder_count": 1,
       "total_members": 1,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "completion_pct": 100.0,
+      "rarity": "Common"
     },
     {
       "key": "veteran_30d",
