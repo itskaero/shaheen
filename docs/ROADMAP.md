@@ -62,6 +62,16 @@
 - [x] Community Activity leaderboard on the website
 - [x] branded welcome + goodbye cards, auto-assigned Guest role on join
 
+## Phase 9 — Membership & Season Integrity
+- [x] Brawlhalla season stamped on ranking snapshots; leaderboards scoped to it
+- [x] automatic rank roles (Gold/Platinum/Diamond/Valhallan) from snapshots
+- [x] `/help` command catalog
+- [x] cold-start data snapshots for the website
+- [x] join applications: `/apply`, `/application`, `/applications`, review
+      queue with Approve/Decline
+- [ ] scheduling + reminders (timezone-aware scrims)
+- [ ] voice activity in engagement
+
 ## Rule
 
 Do not implement a later phase merely because it is documented. Finish the

@@ -21,8 +21,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_setup_authorized
 from bot.client import ShaheenBot
+from bot.content.application_embeds import build_application_panel_embed
 from bot.content.channel_intros import (
     build_announcements_intro_embed,
+    build_applications_intro_embed,
     build_bot_testing_intro_embed,
     build_brawlhalla_intro_embed,
     build_bug_reports_intro_embed,
@@ -58,6 +60,7 @@ from bot.content.embeds import (
     build_verify_embed,
     build_welcome_embed,
 )
+from bot.views.application import ApplicationPanelView
 from bot.views.confirm import ConfirmView
 from bot.views.roles import SelfAssignRolesView
 from bot.views.spar import SparKioskView
@@ -86,6 +89,7 @@ _LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
     "channel:announcements",
     "channel:welcome",
     "channel:rules",
+    "channel:apply",
     "channel:roles",
     "channel:clan_info",
     "channel:suggestions",
@@ -109,6 +113,7 @@ _LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
     "channel:bug_reports",
     "channel:development_log",
     "channel:mod_log",
+    "channel:applications",
 )
 
 
@@ -283,6 +288,9 @@ def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | 
         "channel:announcements": [(build_announcements_intro_embed(), None)],
         "channel:welcome": [(build_welcome_embed(), None)],
         "channel:rules": [(build_rules_embed(), None)],
+        # The permanent apply panel (docs/DECISIONS.md ADR-089), posted the
+        # same idempotent way as the self-assign role panel below.
+        "channel:apply": [(build_application_panel_embed(), ApplicationPanelView())],
         "channel:roles": [
             (build_roles_embed(), None),
             (build_self_assign_roles_embed(), SelfAssignRolesView()),
@@ -309,6 +317,7 @@ def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | 
         "channel:bug_reports": [(build_bug_reports_intro_embed(), None)],
         "channel:development_log": [(build_development_log_intro_embed(), None)],
         "channel:mod_log": [(build_mod_log_intro_embed(), None)],
+        "channel:applications": [(build_applications_intro_embed(), None)],
     }
 
 

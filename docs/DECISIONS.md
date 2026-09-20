@@ -3166,3 +3166,83 @@ console errors. Full suite: 342 passing, ruff and mypy clean.
 
 **Needs one action outside this repo:** run `/setup run` once so the four rank roles are actually
 provisioned — until then the sync logs "Rank roles not provisioned" and does nothing.
+
+## ADR-089 — a real join-approval system
+
+Asked: "is an approval system in place?" It was not. `/verify` existed — a staff member manually
+promotes someone from Guest to Ally — but there was no way to *apply*, no record of who asked, no
+queue, and no trace of who decided what or why. Joining Shaheen was: land in the server, receive the
+auto-assigned Guest role, and hope somebody noticed you.
+
+### The flow
+
+1. **Apply** — a permanent "Apply to Shaheen" button in a new public `#📝-apply` channel, or
+   `/apply` for anyone who has scrolled past it. Both open the same five-field modal: Brawlhalla or
+   Steam64 ID, region/timezone, current ranked tier, why Shaheen, and an optional referrer. Five is
+   not a design preference, it is Discord's hard cap on modal inputs — so the five questions had to
+   be the ones that actually decide an application.
+2. **Review** — the submission posts a card to a new staff-only `#📥-applications` with **Approve**
+   and **Decline** buttons. Decline opens a second modal for a short reason.
+3. **Decide** — approving grants member access and DMs the applicant; declining DMs them the reason.
+   Either way the card is edited in place to show the outcome and **its buttons are removed**.
+4. **Track** — `/application` shows an applicant their own status and any staff note;
+   `/applications` gives staff the pending queue, oldest first.
+
+### Decisions worth recording
+
+**Buttons find their application through the message, not the custom_id.** The obvious design bakes
+the application id into each button's `custom_id`, which in discord.py means `DynamicItem` and a
+regex template. Instead the card's message id is stored on the row (`review_message_id`) and the
+buttons look themselves up by `interaction.message.id`. The custom_ids stay static, so **one**
+registered view serves every card ever posted, forever, across restarts — and it reuses a column
+that had to exist anyway to edit the card.
+
+**A decision can only be made once, and the service enforces it — not the UI.** Removing the buttons
+after a decision is cosmetic: the card stays in the channel, and two staff can click at the same
+moment. `ApplicationService.decide` raises unless the application is still pending, so a double
+click or a stale card cannot re-decide a settled application, re-DM the applicant, or re-grant a
+role. Nobody can review their own application either.
+
+**One open application, and a 14-day cooldown after a denial.** Long enough that reapplying instantly
+isn't a way to wear staff down, short enough that someone who fixed the reason they were declined
+isn't locked out for a season. A denial with no timestamp is treated as expired rather than locking
+someone out forever. Withdrawing frees the applicant to apply again immediately — they chose to
+stop, staff didn't decide anything.
+
+**Applicants are not members.** `Application.discord_id` is a raw Discord id, deliberately **not** a
+`ShaheenMember` foreign key. Forcing a member row at submit time would put people in the roster
+before anyone approved them, and the roster is supposed to mean something.
+
+**Answers are JSON.** The questions are presentation and will change; the decision is the data. The
+form can be reworded without a migration.
+
+**One promotion path.** `bot/membership.py` now owns "remove Guest, add Ally", and both `/verify` and
+an approved application call it. Two code paths doing that separately would drift, and a member let
+in through one door but not the other is the kind of bug nobody finds until someone can't see a
+channel.
+
+**Everything an applicant writes is untrusted input.** The review embed clips every free-text field
+to 1000 characters — Discord rejects a field over 1024, and a rejected embed would lose the card the
+buttons hang off. The decision DM tells the applicant the outcome and any staff note but never who
+decided; that stays in `#📥-applications`.
+
+**Nothing is lost if a channel is missing.** If `#📥-applications` isn't provisioned or the bot can't
+post there, the application row is still written and `/applications` still lists it — a `/setup`
+that hasn't been run yet must not silently swallow someone's application.
+
+Files: `src/database/models/application.py`, `src/database/repositories/application_repository.py`,
+`src/services/application_service.py`, `src/bot/{membership.py,views/application.py,
+cogs/application.py,content/application_embeds.py}` (all new),
+`alembic/versions/0010_applications.py`, `src/bot/{constants.py,client.py,cogs/setup.py,
+cogs/moderation.py,content/{channel_intros,help_embeds}.py}`, `docs/{COMMANDS,ROADMAP}.md`,
+`tests/test_application_service.py`, this entry.
+
+Verified: 16 new tests (374 total, was 358) covering one-open-application, the decide-once guard,
+self-review rejection, the cooldown and its expiry, an approved member reapplying, withdraw-then-
+reapply, per-guild scoping, queue ordering excluding decided rows, review-card lookup, plus embeds
+for a 4000-character answer being clipped under Discord's limit, an applicant who left the server,
+and the decision DM not naming the reviewer. Migration 0010 round-trips on a scratch SQLite DB. The
+existing `test_setup_launch_messages` suite caught that `#📥-applications` had no intro message —
+now it has one. ruff and mypy clean across 123 source files.
+
+**Needs `/setup run`** to create the two new channels and post the apply panel.

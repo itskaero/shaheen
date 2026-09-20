@@ -1,6 +1,7 @@
 """ORM models. Import this module to register all models on Base.metadata."""
 
 from database.models.achievement import Achievement
+from database.models.application import Application, ApplicationStatus
 from database.models.base import Base
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
@@ -28,6 +29,8 @@ from database.models.warning import Warning
 
 __all__ = [
     "Achievement",
+    "Application",
+    "ApplicationStatus",
     "Base",
     "BrawlhallaPlayer",
     "Challenge",
