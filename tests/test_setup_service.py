@@ -23,6 +23,7 @@ from bot.constants import (
     ROLE_GUEST,
     ROLE_LEADER,
     ROLE_MODERATOR,
+    ROLE_TRIAL,
     CategorySpec,
     ChannelSpec,
 )
@@ -34,12 +35,14 @@ _GUEST = object()
 _LEADER = object()
 _MODERATOR = object()
 _ALLY = object()
+_TRIAL = object()
 
 _ROLE_BY_KEY = {
     ROLE_GUEST.logical_key: _GUEST,
     ROLE_LEADER.logical_key: _LEADER,
     ROLE_MODERATOR.logical_key: _MODERATOR,
     ROLE_ALLY.logical_key: _ALLY,
+    ROLE_TRIAL.logical_key: _TRIAL,
 }
 
 
@@ -210,3 +213,66 @@ async def test_apply_channels_applies_parent_gate_to_a_real_gated_channel() -> N
     assert applied[_EVERYONE].view_channel is False
     assert applied[_GUEST].view_channel is False
     assert applied[_ALLY].view_channel is True
+
+
+# --- ADR-090: Ally is read-only in gated channels, Trial+ can participate --
+
+
+def test_gated_text_channel_lets_ally_view_but_not_send() -> None:
+    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
+
+    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
+
+    assert overwrites[_ALLY].view_channel is True
+    assert overwrites[_ALLY].send_messages is False
+
+
+def test_gated_text_channel_lets_full_members_type() -> None:
+    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
+
+    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
+
+    assert overwrites[_TRIAL].view_channel is True
+    assert overwrites[_TRIAL].send_messages is True
+
+
+def test_gated_voice_channel_lets_ally_connect_but_not_speak() -> None:
+    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="voice")
+
+    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
+
+    assert overwrites[_ALLY].view_channel is True
+    assert overwrites[_ALLY].speak is False
+    # send_messages is a text-only permission — untouched for a voice channel.
+    assert overwrites[_ALLY].send_messages is None
+
+
+def test_gated_voice_channel_lets_full_members_speak() -> None:
+    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="voice")
+
+    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
+
+    assert overwrites[_TRIAL].speak is True
+
+
+def test_ungated_channel_has_no_membership_tier_overwrites() -> None:
+    """The tiering is specific to gated categories — HQ's plain channels
+    must not suddenly gain an Ally send_messages=False overwrite.
+    """
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
+    overwrites = _service()._channel_overwrites(spec, None, _ROLE_BY_KEY)
+    assert _ALLY not in overwrites
+
+
+def test_restricted_channel_has_no_membership_tier_overwrites() -> None:
+    """restricted (staff-only) categories are a different concept from
+    gated — Ally shouldn't gain a send_messages overwrite there either.
+    """
+    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), restricted=True)
+    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
+    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
+    assert _ALLY not in overwrites

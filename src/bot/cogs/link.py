@@ -14,7 +14,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot.client import ShaheenBot
-from bot.constants import ROLE_GUEST, ROLE_TRIAL, ROLES
+from bot.constants import FULL_MEMBER_ROLES, ROLE_ALLY, ROLE_TRIAL
 from bot.content.profile_embeds import (
     build_link_preview_embed,
     build_link_success_embed,
@@ -134,27 +134,33 @@ class LinkCog(commands.Cog):
         await message.edit(content=None, embed=build_unlink_success_embed(player_name), view=None)
 
     async def _maybe_promote(self, member: discord.Member) -> bool:
-        """Promote GUEST -> TRIAL SHAHEEN on link (docs/DECISIONS.md ADR-026).
+        """Promote ALLY -> TRIAL SHAHEEN on link (docs/DECISIONS.md ADR-090,
+        superseding ADR-026).
 
-        Members who already hold Trial or any higher rank role are left
-        unchanged — promotion beyond Trial stays a manual staff decision.
+        ADR-026 promoted straight from Guest, which let anyone skip the
+        approval flow (docs/DECISIONS.md ADR-089) entirely by simply
+        running /link before ever applying. Only an already-approved Ally
+        gets promoted here now; a Guest who links stays Guest until they
+        apply and staff approves them. Members who already hold Trial or
+        any higher rank role are left unchanged — promotion beyond Trial
+        stays a manual staff decision.
         """
-        rank_role_names = {
-            role.name for role in ROLES if role.logical_key != ROLE_GUEST.logical_key
-        }
         member_role_names = {role.name for role in member.roles}
-        if member_role_names & rank_role_names:
-            return False
+        full_member_role_names = {role.name for role in FULL_MEMBER_ROLES}
+        if member_role_names & full_member_role_names:
+            return False  # already Trial or above — nothing to do
+        if ROLE_ALLY.name not in member_role_names:
+            return False  # not yet approved — /link alone doesn't grant access
 
         guild = member.guild
-        guest_role = discord.utils.get(guild.roles, name=ROLE_GUEST.name)
+        ally_role = discord.utils.get(guild.roles, name=ROLE_ALLY.name)
         trial_role = discord.utils.get(guild.roles, name=ROLE_TRIAL.name)
         if trial_role is None:
             return False  # /setup hasn't run yet; nothing to assign.
 
         try:
-            if guest_role is not None and guest_role in member.roles:
-                await member.remove_roles(guest_role, reason="Shaheen /link")
+            if ally_role is not None and ally_role in member.roles:
+                await member.remove_roles(ally_role, reason="Shaheen /link")
             await member.add_roles(trial_role, reason="Shaheen /link")
         except discord.Forbidden:
             logger.warning("Missing permission to promote %s after /link", member.id)

@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.constants import (
     CATEGORIES,
+    FULL_MEMBER_ROLES,
+    ROLE_ALLY,
     ROLE_GUEST,
     ROLES,
     ROLES_WITH_STAFF_ACCESS,
@@ -519,4 +521,37 @@ class SetupService:
                     staff_overwrite = overwrites.setdefault(role, discord.PermissionOverwrite())
                     staff_overwrite.update(send_messages=True)
 
+        if parent is not None and parent.gated:
+            self._apply_membership_tier(overwrites, spec.kind, role_by_key)
+
         return overwrites
+
+    def _apply_membership_tier(
+        self,
+        overwrites: dict[OverwriteTarget, discord.PermissionOverwrite],
+        kind: str,
+        role_by_key: dict[str, discord.Role],
+    ) -> None:
+        """Ally can view a gated channel but not participate; Trial Shaheen
+        and up can (docs/DECISIONS.md ADR-090). Text channels gate
+        send_messages, voice channels gate speak (Ally can listen in, not
+        talk) — connect stays granted to both by the plain view_channel=True
+        every VERIFIED_ROLE already gets from `_category_overwrites`.
+        """
+        ally_role = role_by_key.get(ROLE_ALLY.logical_key)
+        if ally_role is not None:
+            ally_overwrite = overwrites.setdefault(ally_role, discord.PermissionOverwrite())
+            if kind == "text":
+                ally_overwrite.update(send_messages=False)
+            else:
+                ally_overwrite.update(speak=False)
+
+        for full_spec in FULL_MEMBER_ROLES:
+            role = role_by_key.get(full_spec.logical_key)
+            if role is None:
+                continue
+            full_overwrite = overwrites.setdefault(role, discord.PermissionOverwrite())
+            if kind == "text":
+                full_overwrite.update(send_messages=True)
+            else:
+                full_overwrite.update(speak=True)
