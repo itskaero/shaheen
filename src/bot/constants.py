@@ -318,6 +318,15 @@ CATEGORIES: tuple[CategorySpec, ...] = (
                 topic="Server rules. | سرور کے قوانین۔",
             ),
             ChannelSpec(
+                "channel:apply",
+                "📝-apply",
+                "text",
+                topic="Apply to join Shaheen — staff review every application. | "
+                "شاہین میں شامل ہونے کے لیے درخواست دیں — اسٹاف ہر درخواست کا جائزہ لیتا ہے۔",
+                # Only the application panel lives here; nobody chats in it.
+                staff_only_send=True,
+            ),
+            ChannelSpec(
                 "channel:roles",
                 "🎭-roles",
                 "text",
@@ -464,6 +473,13 @@ CATEGORIES: tuple[CategorySpec, ...] = (
                 "🛡️-mod-log",
                 "text",
                 topic="Moderation action log — staff only. | نگرانی کا ریکارڈ — صرف اسٹاف کے لیے۔",
+            ),
+            ChannelSpec(
+                "channel:applications",
+                "📥-applications",
+                "text",
+                topic="Join applications awaiting review — staff only. | "
+                "زیرِ جائزہ درخواستیں — صرف اسٹاف کے لیے۔",
             ),
         ),
     ),

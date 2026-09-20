@@ -29,6 +29,16 @@ a warning screen, then a modal requiring the exact text `DELETE`.
 
 ## Phase 2 — Identity and Brawlhalla
 
+### /apply
+Apply to join Shaheen. Opens a five-field form (Brawlhalla/Steam ID, region,
+current rank, why Shaheen, optional referrer) and files it for staff review
+(docs/DECISIONS.md ADR-089). The same form opens from the button in
+#📝-apply. One open application at a time; declined applicants can reapply
+after 14 days.
+
+### /application
+Check the status of your own application, including any staff note.
+
 ### /link
 Associate a Discord user with a Brawlhalla player ID.
 Flow:
@@ -108,6 +118,12 @@ Clan-wide aggregate: combined games and wins, average and median rating,
 highest-rated member, tier spread, region split and most-played Legends
 (ADR-084). Median sits next to the mean because one high-rated member
 drags an average well away from the clan's typical standing.
+
+### /applications
+List applications awaiting review (staff only). Each one is also posted to
+#📥-applications with Approve / Decline buttons; approving grants member
+access and DMs the applicant, declining asks for a reason that is sent with
+the decision. An application can only be decided once.
 
 ### /spotlight <user> <note>
 Feature a member in `#announcements` (staff only, `require_staff_

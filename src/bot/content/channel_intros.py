@@ -204,6 +204,19 @@ def build_development_log_intro_embed() -> discord.Embed:
 # --- MODERATION ----------------------------------------------------------
 
 
+def build_applications_intro_embed() -> discord.Embed:
+    return discord.Embed(
+        title="📥 Applications",
+        description=(
+            "Every submitted application lands here with **Approve** and **Decline** "
+            "buttons. Approving grants member access and DMs the applicant; declining "
+            "asks for a short reason, which is also sent to them. Each application can "
+            "only be decided once — `/applications` lists whatever is still waiting."
+        ),
+        colour=GREY,
+    )
+
+
 def build_mod_log_intro_embed() -> discord.Embed:
     return discord.Embed(
         title="🛡️ Mod Log",

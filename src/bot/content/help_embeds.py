@@ -43,6 +43,8 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="start",
         title="🦅 Getting Started",
         commands=(
+            CommandHelp("/apply", "Apply to join the clan — staff review every application."),
+            CommandHelp("/application", "Check the status of your application."),
             CommandHelp("/link", "Link your Brawlhalla account (Steam64 or Brawlhalla ID)."),
             CommandHelp("/unlink", "Remove your active link."),
             CommandHelp("/profile", "Your one-look card: rank, stats, chat level, badges."),
@@ -109,6 +111,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="staff",
         title="🛡️ Staff",
         commands=(
+            CommandHelp("/applications", "The queue of applications awaiting review.", True),
             CommandHelp("/verify", "Verify a new member into the member channels.", True),
             CommandHelp("/spotlight", "Feature a member in #announcements.", True),
             CommandHelp("/warn", "Issue a warning.", True),

@@ -15,6 +15,7 @@ from discord import app_commands
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from bot.views.application import ApplicationPanelView, ApplicationReviewView
 from bot.views.roles import SelfAssignRolesView
 from bot.views.spar import SparKioskView
 from core.config import Settings
@@ -31,6 +32,7 @@ INTENTS = discord.Intents.all()
 
 STARTUP_EXTENSIONS = (
     "bot.cogs.help",
+    "bot.cogs.application",
     "bot.cogs.setup",
     "bot.cogs.link",
     "bot.cogs.profile",
@@ -64,6 +66,12 @@ class ShaheenBot(commands.Bot):
         # these aren't tied to any specific message and survive restarts.
         self.add_view(SelfAssignRolesView())
         self.add_view(SparKioskView())
+        # The apply panel and every application card ever posted route
+        # through these two (docs/DECISIONS.md ADR-089); the review view
+        # finds its application from the message it is attached to, so a
+        # single registration serves all cards.
+        self.add_view(ApplicationPanelView())
+        self.add_view(ApplicationReviewView())
 
         for extension in STARTUP_EXTENSIONS:
             await self.load_extension(extension)
