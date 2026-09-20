@@ -3349,3 +3349,82 @@ touches no database schema.
 
 **Needs `/setup run`** to reconcile the new Ally read-only overwrites onto THE NEST/BRAWLHALLA/VOICE,
 and `/emoji sync` to actually upload the pack once the bot is in the server.
+
+## ADR-091 — Guest gets one channel, approval grants full access, and the redesigned arrival cards
+
+Follow-up to ADR-090, same session. Two corrections plus a template swap:
+
+1. **Guest's visible surface shrinks to one channel.** Before this round, SHAHEEN HQ (announcements/
+   welcome/rules/apply/roles/clan-info/suggestions) was deliberately ungated — ADR-069's own
+   rationale was "a brand-new Guest needs somewhere to read the rules before they can be verified."
+   The owner overrode that explicitly: a new member should see `#apply` and nothing else until
+   they're actually let in. `#apply` moves into a new, minimal, still-ungated category (`🦅 START
+   HERE`); SHAHEEN HQ gains `gated=True` and keeps everything else. ADR-069's rationale is
+   superseded, not the mechanism — `CategorySpec.gated` still does exactly what it did.
+
+2. **Approval grants full read+write, not read-only.** ADR-090 built a three-tier model — Guest sees
+   HQ, Ally can view the gated categories but not type, Trial Shaheen+ can type — based on a literal
+   reading of "read only" in the request that started that round. The very next message contradicted
+   it ("he/she will be able to see message history of most channels, send message" right after a
+   moderator verifies them), so this went back to the owner via `AskUserQuestion` rather than
+   guessing: **full participation from the moment of approval**, confirmed. "Read-only" was never
+   about Ally at all — it's specifically about `#hall-of-fame`/`#leaderboard`, which should stay
+   read-only for *everyone*, staff included, because they're bot-broadcast channels where a human
+   typing was never the point.
+
+   This reverts `FULL_MEMBER_ROLES`' channel-permission role (it's kept, narrowed to what it's
+   actually still used for — `LinkCog._maybe_promote`'s "already Trial or above" check, unrelated to
+   channel access) and `_apply_membership_tier` in favor of a new `CategorySpec.readonly` flag,
+   meaningful only combined with `gated=True`: every `VERIFIED_ROLE`, not just Ally, gets
+   `send_messages=False`/`speak=False`. A new `🏆 HALL OF RECORDS` category (`gated=True,
+   readonly=True`) holds `#leaderboard` and `#hall-of-fame`, split out of SHAHEEN ARENA, which keeps
+   `restricted=True` for `#scrims`/`#tournaments` — that half of ADR-090's read-only concept was
+   right, it was just scoped to the wrong role. ADR-090's *other* fix — `/link` requiring Ally before
+   promoting to Trial Shaheen, which closed the real hole where anyone could skip `/apply` by linking
+   first — is untouched; it was never about read-only, it was about who gets let in at all.
+
+3. **A planner gap this surfaced.** Moving `#leaderboard`/`#hall-of-fame` to a new category exposed
+   that `setup_planner.py` never compared a channel's *live* category against its *configured* one —
+   `_channel_diffs` checked name/kind/topic, never category membership. On an already-provisioned
+   guild, `/setup run` would have found these two channels by their stored IDs, seen no diff, and
+   left them parented under the old SHAHEEN ARENA forever — silently defeating the whole point of
+   this category split. `_plan_channel` now takes the target category's resolved live ID (`None`
+   when that category is itself being created this run — nothing to compare against yet, and the
+   channel gets correctly parented via its own CREATE path) and flags a diff when the channel's
+   `live.category_id` doesn't match; `_apply_channels`' repair path now passes `category=category` on
+   every edit, so a detected mismatch actually reparents the channel instead of just being reported.
+
+4. **Redesigned welcome/goodbye cards.** The owner supplied a finished composite (Brawlhalla legend
+   art, an empty username pill, an Urdu tagline, four labeled icon columns) to replace the existing
+   templates — split into two 768×1024 PNGs the same way the previous templates were ("owner-
+   supplied, split from one side-by-side composite," per `image_service.py`'s own docstring; nothing
+   new about the pattern, just new art). The username — the one thing this module renders
+   dynamically here — moves from Orbitron Bold to Rajdhani SemiBold (already bundled, matching the
+   owner's spec), while `render_milestone_card`'s achievement headline stays on Orbitron; different
+   function, different template. The small-label typography (Montserrat/Inter) and the Urdu tagline
+   the owner also specified are already baked into the supplied artwork as static pixels, the same
+   way the achievement template's own corner Urdu already was (ADR-062's docstring: "No Urdu is
+   rendered dynamically... baked into the template's own corner artwork") — no font-loading code
+   needed for those, and none was added.
+
+Files: `src/bot/constants.py` (`CategorySpec.readonly`, new `category:start_here`/
+`category:hall_of_records`, `category:shaheen_hq` gated, `FULL_MEMBER_ROLES` narrowed to its rank-
+only purpose), `src/services/setup_service.py` (`_apply_readonly_gate` replacing
+`_apply_membership_tier`), `src/services/setup_planner.py` (category-reparenting diff),
+`src/services/image_service.py` (new template dimensions/cutout box, Rajdhani for the username),
+`src/assets/img/{welcome,goodbye}_template.png` (replaced), `docs/{PERMISSIONS,DISCORD_SPEC,
+ROADMAP}.md`, `tests/{test_setup_service,test_setup_planner,test_image_service}.py`, this entry.
+
+Verified: `test_setup_service.py`'s ADR-090 read-only tests replaced with tests for the reverted
+default (plain gated grants no participation overwrite at all) and the new `readonly` gate (denies
+every VERIFIED_ROLE, staff included, on both text and voice); three new `test_setup_planner.py`
+tests cover the reparenting diff (flagged when a channel's live category disagrees, not flagged when
+it already matches or when its category is itself brand new this run); five new
+`test_image_service.py` tests render both cards at the new 768×1024 size, including a very long and
+an empty member name, plus confirm the new templates ship inside `src/`. A local render smoke test
+(both cards, a long and a short username) confirmed the recalibrated cutout box centers text
+correctly before committing the coordinates. 407 passing (was 402), ruff and mypy clean across 126
+source files. No migration — this round touches no database schema.
+
+**Needs `/setup run`** to gate SHAHEEN HQ, create `🦅 START HERE`/`🏆 HALL OF RECORDS`, and reparent
+`#leaderboard`/`#hall-of-fame` off of SHAHEEN ARENA.

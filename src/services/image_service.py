@@ -59,12 +59,12 @@ _CUTOUT_BOX = (330, 355, 1345, 745)
 _CUTOUT_TEXT_MARGIN = 60  # keeps long strings clear of the gold frame edges
 
 # welcome_template.png / goodbye_template.png (owner-supplied, split from one
-# side-by-side composite — docs/DECISIONS.md ADR-065) share this same empty-
-# rectangle geometry; both are 971x809.
-WELCOME_CARD_WIDTH = 971
-WELCOME_CARD_HEIGHT = 809
-_WELCOME_CUTOUT_BOX = (265, 442, 705, 553)
-_WELCOME_CUTOUT_TEXT_MARGIN = 30
+# side-by-side composite — docs/DECISIONS.md ADR-065, redesigned in ADR-091)
+# share this same empty-rectangle geometry; both are 768x1024.
+WELCOME_CARD_WIDTH = 768
+WELCOME_CARD_HEIGHT = 1024
+_WELCOME_CUTOUT_BOX = (205, 688, 562, 742)
+_WELCOME_CUTOUT_TEXT_MARGIN = 20
 
 # --- Brand colors -----------------------------------------------------------
 
@@ -80,9 +80,7 @@ _GRADIENT_STOPS: list[tuple[float, tuple[int, int, int]]] = [
 ]
 
 
-def _lerp_rgb(
-    a: tuple[int, int, int], b: tuple[int, int, int], t: float
-) -> tuple[int, int, int]:
+def _lerp_rgb(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
     return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))  # type: ignore[return-value]
 
 
@@ -128,6 +126,7 @@ def _fit_font(
     ever missing/unreadable — a card with the wrong font is fine, a
     crash losing the whole announcement is not.
     """
+
     def load(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont | None:
         try:
             font = ImageFont.truetype(str(font_path), size)
@@ -238,9 +237,7 @@ def _bevel_highlight(
     """
     width, height = mask.size
     band_height = max(1, int(height * band_fraction))
-    column = [
-        int(255 * (1 - y / band_height)) if y < band_height else 0 for y in range(height)
-    ]
+    column = [int(255 * (1 - y / band_height)) if y < band_height else 0 for y in range(height)]
     band = Image.new("L", (1, height))
     band.putdata(column)
     band = band.resize((width, height))
@@ -316,12 +313,20 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
     max_text_width = (x1 - x0) - _CUTOUT_TEXT_MARGIN * 2
 
     title_font = _fit_font(
-        title, _TITLE_FONT_PATH, variation="Bold", max_width=max_text_width,
-        initial_size=88, min_size=36,
+        title,
+        _TITLE_FONT_PATH,
+        variation="Bold",
+        max_width=max_text_width,
+        initial_size=88,
+        min_size=36,
     )
     subtitle_font = _fit_font(
-        subtitle, _SUBTITLE_FONT_PATH, variation=None, max_width=max_text_width,
-        initial_size=40, min_size=20,
+        subtitle,
+        _SUBTITLE_FONT_PATH,
+        variation=None,
+        max_width=max_text_width,
+        initial_size=40,
+        min_size=20,
     )
 
     title_layer = _trim(_render_styled_text(title, title_font))
@@ -347,11 +352,17 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
 
 def _render_arrival_card(template_path: Path, *, member_name: str) -> bytes:
     """Shared renderer for the welcome/goodbye cards (docs/DECISIONS.md
-    ADR-065) — same "bevel & highlight" text treatment as
-    render_milestone_card, but a single centered line (the member's name)
-    set into the template's own empty cutout rectangle, since these
+    ADR-065, redesigned ADR-091) — same "bevel & highlight" text treatment
+    as render_milestone_card, but a single centered line (the member's
+    name) set into the template's own empty cutout rectangle, since these
     templates carry their own "WELCOME"/"GOODBYE" headline baked into the
     artwork already.
+
+    Rajdhani SemiBold, not Orbitron — the owner's spec for the dynamically-
+    rendered username (docs/DECISIONS.md ADR-091). Orbitron stays reserved
+    for render_milestone_card's headline; the small-label typography and
+    the Urdu tagline visible on the template are already baked into the
+    artwork itself, not rendered here.
     """
     template = Image.open(template_path).convert("RGBA")
     image = template.copy()
@@ -362,10 +373,14 @@ def _render_arrival_card(template_path: Path, *, member_name: str) -> bytes:
     max_text_width = (x1 - x0) - _WELCOME_CUTOUT_TEXT_MARGIN * 2
 
     name_font = _fit_font(
-        member_name, _TITLE_FONT_PATH, variation="Bold", max_width=max_text_width,
-        initial_size=48, min_size=20,
+        member_name,
+        _SUBTITLE_FONT_PATH,
+        variation=None,
+        max_width=max_text_width,
+        initial_size=40,
+        min_size=16,
     )
-    name_layer = _trim(_render_styled_text(member_name, name_font, padding=24))
+    name_layer = _trim(_render_styled_text(member_name, name_font, padding=20))
 
     dest = (center_x - name_layer.width // 2, center_y - name_layer.height // 2)
     image.alpha_composite(name_layer, dest=dest)
