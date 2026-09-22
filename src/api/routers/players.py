@@ -40,6 +40,7 @@ async def get_player_profile(
         global_rank=profile.global_rank,
         region_rank=profile.region_rank,
         season=profile.season,
+        playstyle_tags=profile.playstyle_tags,
         achievements=[
             AchievementResponse(
                 key=achievement.key,

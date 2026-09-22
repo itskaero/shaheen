@@ -202,6 +202,7 @@ async def test_player_profile_and_leaderboard_reflect_seeded_data(
     assert profile["player_name"] == "Foo"
     assert profile["tier"] == "Platinum I"
     assert "discord_id" not in profile  # ADR-040: never expose Discord identity
+    assert profile["playstyle_tags"] == ["Well-Rounded"]  # no legend snapshots seeded
 
     leaderboard_response = client.get("/leaderboard")
     assert leaderboard_response.status_code == 200

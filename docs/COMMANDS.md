@@ -63,12 +63,16 @@ Remove the active player association after confirmation.
 
 ### /profile [user]
 One-look profile card: Brawlhalla name/level, games/wins/win-rate, tier/
-rating/peak, global + region rank, region, clan "member since" date, chat
-rank/level (docs/DECISIONS.md ADR-065), an achievement count with the
-latest earned, and a link to the full website profile for what an embed
-can't show — rating history and match record (ADR-059, extended in
-ADR-067). `/rank`, `/stats`, `/legends` below still exist as focused
-single-stat views.
+rating/peak, global + region rank, region, favourite Legend, a derived
+playstyle (docs/DECISIONS.md ADR-096 — a heuristic label, not a
+Brawlhalla-reported stat), clan "member since" date, chat rank/level
+(docs/DECISIONS.md ADR-065), an `earned/total` achievement count with the
+latest earned, clan role, Discord account age and this-server join date
+(ADR-096 — the only place these show, since nothing in the database
+persists per-member Discord timestamps), and a link to the full website
+profile for what an embed can't show — rating history and match record
+(ADR-059, extended in ADR-067). `/rank`, `/stats`, `/legends` below still
+exist as focused single-stat views.
 
 ### /rank [user]
 Show current ranked information.
@@ -282,6 +286,15 @@ queue the one on screen (renaming it first via a modal), **✅ Done** to
 upload everything queued through the same `EmojiService` sync path as
 `/emoji sync`. Session-only view, 5-minute idle timeout, usable only by
 whoever ran the command.
+
+### /emoji clear
+**DESTRUCTIVE, admin only** (docs/DECISIONS.md ADR-094 — a tighter gate
+than `sync`/`browse`'s staff check). Deletes every custom emoji in the
+server, regardless of origin — not just the Shaheen pack, anything staff
+ever added by hand too. Two-step confirmation matching `/setup reset`: a
+warning screen, then a modal requiring the exact text `DELETE ALL EMOJI`.
+Cannot be undone; the pack itself can be restored afterward with
+`/emoji sync`, nothing else can.
 
 ## Weekly digest (standing job, not a command)
 

@@ -80,6 +80,14 @@
 - [x] `/apply` and `/verify` separated — approved applications grant Trial
       Shaheen (roster), `/verify` grants Ally (community access) only
 - [x] interactive `/emoji browse` picker over a ~260-crop candidate pool
+- [x] `/emoji clear` — admin-gated, two-step-confirmed deletion of every
+      custom emoji in the server
+- [x] website Music Library page (`music.html`) with an audio-reactive
+      visualizer over two full-length clan anthem tracks
+- [x] `/profile` gains favourite Legend, a derived playstyle, an
+      earned/total achievement count, clan role, and Discord account/join
+      dates; `player.html` reskinned to match, plus a shared
+      `playstyle_tags` heuristic on the API
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

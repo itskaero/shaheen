@@ -135,6 +135,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/slowmode", "Set a channel's slowmode delay.", True),
             CommandHelp("/emoji sync", "Upload Shaheen's legend emoji pack.", True),
             CommandHelp("/emoji browse", "Pick which candidate emoji to upload.", True),
+            CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
             CommandHelp("/setup run", "Provision the server structure.", True),
             CommandHelp("/setup status", "Show whether expected resources exist.", True),
             CommandHelp("/setup verify", "Non-destructive validation report.", True),

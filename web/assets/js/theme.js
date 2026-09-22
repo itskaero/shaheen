@@ -43,6 +43,19 @@ function avatarHtml(name, size = 44) {
   return `<span class="avatar" style="${style}">${escapeHtml(initial)}</span>`;
 }
 
+// Only these Legends have real cutout art in assets/img/legends/ (from the
+// "Legends scene" work, ADR-078) — everything else falls back to the same
+// initial-avatar treatment as a player, so a Favourite Legend chip never
+// assumes full roster coverage it doesn't have (docs/DECISIONS.md ADR-096).
+const LEGEND_ICONS = new Set(["brynn", "jaeyun", "mordex", "nix", "tezca"]);
+
+function legendAvatarHtml(legendNameKey, size = 32) {
+  if (LEGEND_ICONS.has(legendNameKey)) {
+    return `<img src="assets/img/legends/${legendNameKey}.png" alt="" width="${size}" height="${size}" />`;
+  }
+  return avatarHtml(legendDisplayName(legendNameKey), size);
+}
+
 const RANK_MEDALS = ["gold", "silver", "bronze"];
 
 function rankHtml(position) {

@@ -90,6 +90,9 @@ class PlayerProfileResponse(BaseModel):
     region_rank: int | None
     season: int | None
     achievements: list[AchievementResponse]
+    # A derived label, not a Brawlhalla-reported stat — see
+    # services/playstyle.py (docs/DECISIONS.md ADR-096).
+    playstyle_tags: list[str]
 
 
 class RankingHistoryEntryResponse(BaseModel):

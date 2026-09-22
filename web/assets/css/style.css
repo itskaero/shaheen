@@ -1807,6 +1807,78 @@ tbody tr:hover {
   font-size: 1.4rem;
 }
 
+/* ---------- player card premium accent (docs/DECISIONS.md ADR-096) ----------
+   One page's own display-font accent, same precedent as landing.html's
+   Cormorant Garamond (ADR-066/078) — not a break from the shared
+   stylesheet, just this card's own register. */
+
+h2.player-card-name {
+  font-family: "Cinzel", var(--font-heading);
+  font-weight: 700;
+}
+
+.playstyle-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.playstyle-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  clip-path: var(--cut-sm);
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+
+.favourite-legends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.favourite-legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.favourite-legend-chip img,
+.favourite-legend-chip .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+}
+
+.favourite-legend-chip .favourite-legend-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--cream);
+  display: block;
+}
+
+.favourite-legend-chip .favourite-legend-games {
+  font-size: 0.72rem;
+  color: var(--grey);
+  display: block;
+}
+
 /* ---------- states ---------- */
 
 .state-msg {
@@ -2258,7 +2330,203 @@ canvas#history-chart {
   flex: none;
 }
 
+/* ---------- music library (docs/DECISIONS.md ADR-095) ----------
+   The "Now Playing" panel's canvas is a live Web Audio frequency
+   visualizer (assets/js/pages/music.js), not a decorative loop — it only
+   moves while a track is actually playing, and freezes into a static bar
+   pattern under prefers-reduced-motion (see that override below). */
+
+.music-now-playing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 1.75rem;
+}
+
+.music-disc {
+  position: relative;
+  flex: none;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--card-border);
+  box-shadow: 0 0 24px -8px rgba(47, 232, 154, 0.45);
+  animation: musicDiscSpin 14s linear infinite;
+  animation-play-state: paused;
+}
+
+.music-disc.is-playing {
+  animation-play-state: running;
+  border-color: var(--green);
+}
+
+.music-disc img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes musicDiscSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.music-visualizer {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.music-visualizer canvas {
+  display: block;
+  width: 100%;
+  height: 72px;
+  border-radius: var(--radius);
+  background: rgba(3, 6, 4, 0.5);
+  border: 1px solid var(--card-border);
+}
+
+.music-track-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--cream);
+  margin: 0.75rem 0 0.15rem;
+}
+
+.music-track-subtitle {
+  font-size: 0.85rem;
+  color: var(--grey);
+  margin: 0 0 0.75rem;
+}
+
+.music-transport {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.music-playpause {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 1px solid var(--green);
+  color: var(--green);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.music-playpause:hover,
+.music-playpause:focus-visible {
+  box-shadow: 0 0 18px -4px rgba(47, 232, 154, 0.7);
+  transform: translateY(-1px);
+}
+
+.music-progress {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.music-progress-track {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(47, 232, 154, 0.08);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.music-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--green-soft), var(--green));
+  width: 0%;
+}
+
+.music-time {
+  font-size: 0.75rem;
+  color: var(--grey);
+  flex: none;
+  min-width: 4.5rem;
+  text-align: right;
+}
+
+.music-volume {
+  flex: none;
+  width: 90px;
+  accent-color: var(--green);
+}
+
+.music-tracks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.1rem;
+  margin: 1.75rem 0;
+}
+
+.music-track-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.music-track-card.is-active {
+  border-color: var(--green);
+  box-shadow: 0 0 22px -10px rgba(47, 232, 154, 0.5);
+}
+
+.music-track-cover {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.music-track-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.music-track-card-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.music-track-card-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.music-track-card-meta {
+  font-size: 0.78rem;
+  color: var(--grey);
+}
+
 @media (max-width: 640px) {
+  .music-now-playing {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .music-disc {
+    margin: 0 auto;
+  }
+
   nav.site-nav {
     gap: 0.85rem;
     font-size: 0.85rem;
@@ -2321,4 +2589,8 @@ canvas#history-chart {
 
   /* The clan story is a static stacked layout (no JS, no scroll
      motion) - already reduced-motion safe, nothing to override. */
+
+  .music-disc {
+    animation: none;
+  }
 }

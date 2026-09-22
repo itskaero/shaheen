@@ -3564,3 +3564,166 @@ as the original bulk-crop pass: a one-time data-generation tool, not application
 
 Verified: full `pytest` still 431 passing (the candidate-pool tests assert file counts and directory
 shape, not pixel content, so they were unaffected), ruff and mypy clean. No migration.
+
+## ADR-094 — `/emoji clear`: delete every custom emoji, admin-gated
+
+"Clean all emojis" — confirmed via `AskUserQuestion` to mean literally every custom emoji in the
+guild, not just the Shaheen pack, since that's what "clean all" says. That's more destructive than
+anything `/emoji` has done before: it can remove something a staff member hand-added that the bot
+never uploaded and has no way to restore. Two consequences follow directly from that:
+
+1. **Gated by `require_setup_authorized()`** (Leader/admin only, same as `/setup reset`) — not
+   `require_staff_authorized()` (Leader or Moderator) that `/emoji sync`/`browse` use. Deliberate
+   deviation: "upload from a curated pack" and "delete everything, including things you didn't
+   upload" don't belong at the same permission tier.
+2. **Two-step confirm, not a single `ConfirmView` round-trip.** Reuses `/setup reset`'s exact
+   pattern (`_ResetWarningView` → a modal requiring a typed phrase, docs/DECISIONS.md ADR-060) rather
+   than the lighter single-click confirm `/kick`/`/ban` use — `_EmojiClearWarningView` →
+   `_EmojiClearConfirmModal` (type `"DELETE ALL EMOJI"`), in `bot/cogs/emoji.py`.
+
+`services/emoji_service.py` gains `EmojiClearReport` (`deleted`, `errors`, `.total` — same shape as
+`EmojiSyncReport`) and `EmojiService.clear()`, the one method on this class that's an explicit
+exception to its own "never deletes or replaces an existing emoji" rule. Iterates `guild.emojis`,
+`await emoji.delete(...)` per item, catching `Forbidden`/`HTTPException` per-emoji into `errors`
+rather than aborting the batch — same resilience posture `sync()` already has for uploads.
+`bot/content/emoji_embeds.py` gains `build_emoji_clear_warning_embed()` (explicit "this deletes
+everything, not just the pack" copy, danger-colored) and `build_emoji_clear_report_embed(report)`.
+
+Files: `src/services/emoji_service.py`, `src/bot/cogs/emoji.py`, `src/bot/content/emoji_embeds.py`,
+`src/bot/content/help_embeds.py` (new catalog entry — required by the existing command-tree parity
+test), `docs/{COMMANDS,ROADMAP}.md`, `tests/{test_emoji_service,test_emoji_embeds}.py`.
+
+Verified: `clear()` deletes every emoji regardless of name/origin and reports names; collects
+`Forbidden` per-item without aborting the batch; no-ops on an empty guild. New embed tests for the
+warning/report pair. No cog-level test (matches this repo's existing posture). Full suite green, no
+migration.
+
+## ADR-095 — Music Library page: two new anthem tracks, an audio-reactive visualizer
+
+Owner uploaded two full-length Suno-generated anthem tracks (`anthem_1.mp3` — "anthem", 4:48; and a
+track titled "بلندیوں کی جانب" — the site's own tagline, 4:37), distinct from the short clip already
+autoplaying sitewide (`assets/audio/anthem.mp3`, "آسمان ہمارا", ADR-073) — three versions now exist.
+Confirmed via `AskUserQuestion`: **sitewide background audio is untouched** — the short anthem keeps
+autoplaying everywhere; the two new tracks live only on a new `web/music.html` page where a visitor
+explicitly presses play. No changes to `assets/js/audio.js` or ADR-073's behavior.
+
+New assets, checked in as plain files matching the existing `assets/audio/anthem.mp3` convention:
+`assets/audio/anthem-full.mp3`, `assets/audio/bulandiyon-ki-janab.mp3`, and their embedded cover art
+(small Suno-generated stock photos) at `assets/img/music/*.jpg`, used as track-card thumbnails — the
+page's primary visual stays on-brand using the site's own logo/eagle imagery, not these.
+
+**The animation is a live audio-reactive visualizer**, not a decorative scroll effect — Web Audio
+API `AnalyserNode` fed by `createMediaElementSource` on the one `<audio>` element, drawn as frequency
+bars on a `<canvas>` inside a "Now Playing" panel (green→gold gradient, matching `--green`/`--gold`).
+The track's cover art sits in a circular disc that rotates via CSS animation only while playing
+(`.is-playing` toggles `animation-play-state`). Under `prefers-reduced-motion`: the disc doesn't spin
+(new rule in the existing global override block) and the JS draw loop never starts — a single static
+bar pattern renders once instead, same guard pattern `spotlight.js`/`pillar-scroll.js` already use.
+
+Playback is **user-initiated** (press play on a track card), so none of ADR-073's autoplay-block
+workaround applies here. One courtesy taken from it anyway: starting a library track pauses the
+sitewide `#site-audio` element if it's playing, so two anthems never overlap — implemented by
+watching `#site-audio`'s own `play` event (not just a one-time pause-on-click), because
+`assets/js/audio.js` can still be waiting on its own DOMContentLoaded-deferred init when this script
+runs (both are plain `<script>` tags near the end of `<body>`) and can independently start playback
+via its own document-level interaction fallback right after this page's own click handler runs.
+
+New `web/assets/js/pages/music.js` (self-contained IIFE, matches `pages/achievements.js`'s shape):
+owns the one `<audio>` element (appended to `<body>`, same as `audio.js`'s own element), the
+`AudioContext`/`AnalyserNode`, play/pause/seek/volume wiring, the rAF draw loop, and active-track-card
+state. New CSS section in `style.css` (`.music-now-playing`, `.music-disc`, `.music-visualizer`,
+`.music-tracks`, `.music-track-card`, progress/volume controls) reusing existing tokens
+(`--card-bg`/`--card-border`/`--cut`/`--green`/`--gold`) — no new stylesheet.
+
+Nav: `<a href="music.html">Music</a>` added between Roster and Achievements across all 12 HTML pages
+(the same manual, mechanical edit ADR-073 already describes for its own `<script>` tag).
+
+Files: `web/music.html` (new), `web/assets/js/pages/music.js` (new), `web/assets/audio/*.mp3` (new),
+`web/assets/img/music/*.jpg` (new), `web/assets/css/style.css`, all 12 `web/*.html` (nav link),
+`docs/ROADMAP.md`.
+
+Verified: no build step or JS test runner exists for `web/` (confirmed). A Playwright smoke pass
+against a local static server: pressing play actually plays the `<audio>` element and draws non-blank
+canvas frames; clicking pause stops it; switching tracks swaps the `src`; the sitewide `#site-audio`
+correctly pauses the moment a library track starts, including the race where its own interaction
+fallback fires after this page's click handler; `prefers-reduced-motion` freezes the disc and skips
+the draw loop while still showing static bars; no horizontal overflow at a 375px viewport; no console
+errors. No migration — purely static.
+
+## ADR-096 — A richer /profile: favourite Legend, derived playstyle, and a redesigned player page
+
+Owner uploaded `SHAHEEN_PROFILE_CARD_IMPLEMENTATION_KIT.zip` — a design reference (a polished mockup
+PNG plus a bare HTML/CSS/JS skeleton showing the intended field list, not production code) for a
+dark-navy/gold profile card: username/handle/avatar, country, server level/XP, messages, matches,
+events, day streak, favourite Legends, Brawlhalla rank/ELO, playstyle tags, achievements, clan role,
+joined date, and Discord account age.
+
+Confirmed via `AskUserQuestion`:
+- **Target: the website now; a Discord-native image is scoped for later, not built.** The kit is
+  literal HTML/CSS/JS — the same tech as `web/`, not something Discord can render natively (no
+  headless-browser pipeline exists; `services/image_service.py`'s Pillow renderer only composites 1-2
+  short strings into an owner-drawn template today, nowhere near a 10+ field multi-panel card). A
+  true Discord-native version needs new background art plus a real layout engine — real, separate
+  work for a future round, not attempted here.
+- **Country flag and day streak: dropped.** Neither exists in Shaheen's data — only a Brawlhalla API
+  *region*, not a country; no streak concept anywhere in the schema (confirmed via full-repo grep).
+- **Events-attended: also dropped** — currently only a one-shot flag passed at achievement-award
+  time, not a running counter; left alone rather than reverse-engineering one.
+- **Playstyle tags: derived from real per-Legend stats** — not stored today, and not literal
+  Brawlhalla data either (their API reports no such field).
+
+**`services/playstyle.py`** (new): `derive_playstyle_tags(legends) -> list[str]`, a pure function
+shared by both surfaces below. Aggregates KOs/damage/falls across every played Legend into per-game
+rates and returns 1-3 tags crossing fixed, hand-picked thresholds (`Aggressive`, `Heavy Hitter`,
+`Survivor`; `Well-Rounded` fallback). Documented in its own docstring as a labeled heuristic, not a
+Brawlhalla-reported stat — both call sites repeat that framing rather than presenting it as fact.
+
+**`/profile` embed** (`bot/content/profile_embeds.py`/`bot/cogs/profile.py`) gains: Favourite Legend
+(top of `stats.legends` by games — same sort `/legends` already uses), Playstyle (the derived tags),
+an `Achievements (N/{total})` fraction (imports `CATALOG` from `services/achievements.py` instead of
+a bare count), Clan Role (`member.top_role`, excluding `@everyone`), and a combined Discord field
+(`member.created_at` account age + `member.joined_at` this-guild date) — the two Discord-native dates
+from the kit's list that the database doesn't and structurally can't store (nothing else here
+persists per-member Discord timestamps; `GuildSnapshot` is deliberately guild-aggregate-only,
+ADR-040), so they're read live from the cog's already-held `discord.Member` instead.
+
+**`web/player.html`** is reskinned in the kit's visual language, not rebuilt — same Brawlhalla-ID-
+keyed URL, same API calls, restructured markup in `web/assets/js/pages/player.js`: a Cinzel-accented
+name heading (one page's own display-font register, precedented by `landing.html`'s own Cormorant
+Garamond pairing, ADR-066/078), a Playstyle tag row, and a Favourite Legends strip (top 5, reusing the
+already-fetched `/legends` payload — no new request) that degrades to an initial-avatar chip for any
+Legend without real cutout art (`theme.js`'s `LEGEND_ICONS` set covers only 5 of the roster today).
+`PlayerProfileResponse` (`src/api/schemas.py`) gains `playstyle_tags: list[str]`; `WebsiteService`'s
+`PlayerProfile` gains a `legends` field (unsliced, unlike the separate `/legends` endpoint's top-N
+view) and a `playstyle_tags` property calling the same `derive_playstyle_tags` — one heuristic,
+computed once, shared by Discord and the website rather than reimplemented in JS.
+
+**Deliberately not added to the public website**: Discord username/handle/avatar, message count, chat
+level/XP, clan role. `services/website_service.py`'s existing boundary (ADR-040: "public identity is
+Brawlhalla identity, never Discord identity") stays intact — the site has no Discord API access at
+request time regardless, and a public, unauthenticated Discord-identity-to-stats mapping was a
+deliberate earlier decision, not a gap this round should quietly reverse.
+
+Files: `src/services/playstyle.py` (new), `src/bot/content/profile_embeds.py`, `src/bot/cogs/
+profile.py`, `src/services/website_service.py`, `src/api/schemas.py`, `src/api/routers/players.py`,
+`web/player.html`, `web/assets/js/pages/player.js`, `web/assets/js/theme.js`,
+`web/assets/css/style.css`, `docs/{COMMANDS,ROADMAP}.md`, `tests/{test_playstyle,
+test_profile_embeds,test_website_service,test_api}.py`.
+
+Verified: new `tests/test_playstyle.py` covers every tag's threshold plus the zero-games/empty-list
+fallback. `tests/test_profile_embeds.py` extended for all five new embed fields (favourite Legend,
+playstyle, the achievement fraction, clan role present/absent, Discord dates present/absent).
+`tests/test_website_service.py`/`test_api.py` extended for `playstyle_tags` (both a real derived tag
+from seeded Legend snapshots, and the no-snapshots fallback through the live API). A Playwright smoke
+pass against a local static server with the live API mocked: the Cinzel heading actually wins the CSS
+cascade (an earlier `.player-card-name`-alone rule lost to `.profile-head h2`'s higher specificity —
+fixed by matching it with `h2.player-card-name`), playstyle tags and favourite-Legend chips render
+correctly, a Legend with real art uses it, no console errors, no mobile overflow. Full suite (453
+tests) green, ruff and mypy clean. No migration — `PlayerProfile.legends` is an in-memory dataclass
+field, not a new column.
+
+**Scoped for a future round, not built now**: a Discord-native image version of this card — needs new
+background artwork (the kit's `reference.png` is a mockup for direction only, its Legend SVGs
+explicit swap-out stubs) and a real multi-panel layout engine in `image_service.py` (avatar
+compositing, a stat grid, icon tiles — none of which the current single-template-string renderer
+does). Would reuse `derive_playstyle_tags` and the same field set assembled for the embed above.

@@ -92,6 +92,32 @@ async def test_get_player_profile_includes_ranking_and_achievements(
     assert [a.key for a, _ in profile.achievements] == ["games_100"]
 
 
+async def test_get_player_profile_includes_playstyle_tags(session: AsyncSession) -> None:
+    """The website exposes the same derived heuristic the Discord embed
+    does (docs/DECISIONS.md ADR-094) — not a Brawlhalla-reported stat.
+    """
+    _, player = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    await LegendSnapshotRepository(session).add_all(
+        [
+            LegendSnapshot(
+                brawlhalla_player_id=player.id,
+                captured_at=datetime.now(UTC),
+                legend_id=1,
+                legend_name_key="bodvar",
+                games=10,
+                wins=6,
+                kos=15,
+                damagedealt=5000,
+                falls=3,
+            )
+        ]
+    )
+
+    profile = await WebsiteService(session).get_player_profile(20)
+    assert profile is not None
+    assert "Aggressive" in profile.playstyle_tags
+
+
 async def test_get_player_profile_has_no_achievements_when_unlinked(session: AsyncSession) -> None:
     players = BrawlhallaPlayerRepository(session)
     await players.upsert(brawlhalla_player_id=30, player_name="Solo", region=None)

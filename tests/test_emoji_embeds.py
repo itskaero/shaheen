@@ -1,5 +1,5 @@
-"""bot/content/emoji_embeds.py — /emoji sync and /emoji browse
-(docs/DECISIONS.md ADR-090/ADR-092).
+"""bot/content/emoji_embeds.py — /emoji sync, /emoji browse, and
+/emoji clear (docs/DECISIONS.md ADR-090/ADR-092/ADR-093).
 """
 
 from __future__ import annotations
@@ -7,9 +7,11 @@ from __future__ import annotations
 from bot.content.emoji_embeds import (
     build_emoji_browse_intro_embed,
     build_emoji_candidate_preview_embed,
+    build_emoji_clear_report_embed,
+    build_emoji_clear_warning_embed,
     build_emoji_sync_embed,
 )
-from services.emoji_service import EmojiSyncReport
+from services.emoji_service import EmojiClearReport, EmojiSyncReport
 
 
 def test_sync_embed_reports_created_and_skipped() -> None:
@@ -54,3 +56,33 @@ def test_candidate_preview_embed_shows_position_and_queue() -> None:
 def test_candidate_preview_embed_notes_an_empty_queue() -> None:
     embed = build_emoji_candidate_preview_embed(legend="koji", index=0, total=26, queue_count=0)
     assert "nothing yet" in (embed.footer.text or "").lower()
+
+
+def test_clear_warning_embed_warns_about_non_pack_emoji() -> None:
+    embed = build_emoji_clear_warning_embed()
+    assert embed.description is not None
+    assert "every custom emoji" in embed.description.lower()
+    assert "not just the shaheen pack" in embed.description.lower()
+
+
+def test_clear_report_embed_lists_deleted_emoji() -> None:
+    report = EmojiClearReport(deleted=["koji_gg", "random_staff_upload"])
+    embed = build_emoji_clear_report_embed(report)
+
+    fields = {f.name: f.value for f in embed.fields}
+    assert fields["🗑️ Deleted"] == "2"
+    assert "koji_gg" in (fields.get("Removed") or "")
+    assert "random_staff_upload" in (fields.get("Removed") or "")
+
+
+def test_clear_report_embed_flags_errors() -> None:
+    report = EmojiClearReport(errors=["Missing permission to delete emoji 'koji_gg'."])
+    embed = build_emoji_clear_report_embed(report)
+
+    fields = {f.name: f.value for f in embed.fields}
+    assert "koji_gg" in (fields.get("❌ Errors") or "")
+
+
+def test_clear_report_embed_says_none_found_when_empty() -> None:
+    embed = build_emoji_clear_report_embed(EmojiClearReport())
+    assert any("no custom emoji" in (f.value or "").lower() for f in embed.fields)

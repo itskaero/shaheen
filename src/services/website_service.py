@@ -34,6 +34,7 @@ from database.repositories.tournament_repository import (
 )
 from services.achievements import rarity_label
 from services.chat_gamification import level_for_xp, rank_title_for_level
+from services.playstyle import derive_playstyle_tags
 
 
 @dataclass
@@ -71,6 +72,14 @@ class PlayerProfile:
     player: BrawlhallaPlayer
     latest_ranking: RankingSnapshot | None
     achievements: list[tuple[Achievement, datetime]]
+    legends: list[LegendMastery]
+
+    @property
+    def playstyle_tags(self) -> list[str]:
+        """A derived label, not a Brawlhalla-reported stat — same heuristic
+        the /profile Discord embed uses (docs/DECISIONS.md ADR-096).
+        """
+        return derive_playstyle_tags(self.legends)
 
     @property
     def global_rank(self) -> int | None:
@@ -384,7 +393,25 @@ class WebsiteService:
         if active_link is not None:
             achievements = await self._awards.list_with_details(active_link.shaheen_member_id)
 
-        return PlayerProfile(player=player, latest_ranking=latest, achievements=achievements)
+        # Unsliced (unlike get_player_legends' top-N view below) — the
+        # playstyle heuristic aggregates across every played Legend, same
+        # as the Discord /profile embed's live Brawlhalla fetch.
+        snapshots = await self._legends.list_latest_per_legend(player.id)
+        legends = [
+            LegendMastery(
+                legend_name_key=s.legend_name_key,
+                games=s.games,
+                wins=s.wins,
+                kos=s.kos,
+                damagedealt=s.damagedealt,
+                falls=s.falls,
+            )
+            for s in snapshots
+        ]
+
+        return PlayerProfile(
+            player=player, latest_ranking=latest, achievements=achievements, legends=legends
+        )
 
     async def get_player_history(
         self, brawlhalla_player_id: int, *, limit: int = 10
