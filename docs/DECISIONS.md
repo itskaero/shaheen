@@ -3514,3 +3514,53 @@ guards, ignores the curated pack entirely when `files` is passed, no-ops on an e
 entry. 431 passing (was 407), ruff and mypy clean. No migration — no database schema touched.
 
 **No `/setup run` needed** — this round touches no channel/category structure.
+
+## ADR-093 — recropping the emoji candidate pool: connected components, not a fixed grid
+
+Follow-up to ADR-092, same session, reported directly by the owner: several of the ~260 candidate
+crops showed **two character faces in one image** — most visibly `nix`'s first candidate, which
+included a claw-shaped tendril from the neighboring legend portrait alongside the actual face.
+
+Root cause: the original bulk crop used a purely geometric grid (a fixed `LEFT`/column-width/
+row-height per sprite sheet, carried over from the 24-emoji curated pack's manually-verified
+coordinates) and simply sliced pixels at those coordinates. That geometry was accurate for *where a
+cell's label sits*, but the character art itself doesn't respect cell boundaries — wide hair, hoods,
+and held weapons routinely spill into a neighboring cell's rectangle, and the four two-row legends
+(`koji`/`hattori`/`wu_shang`/`nix`) each sit directly right of a full character **portrait** whose
+own hair/tendril art can bleed into column 0's crop window. `nix`'s hood tendril was the worst case,
+but not unique — inspection turned up bleed at multiple points across all four two-row legends.
+
+Fix: rebuilt the entire pool from the same two source sheets using **alpha-channel connected-
+component segmentation** instead of fixed-pixel slicing:
+
+1. For each nominal cell (legend, row, column), label connected components (`scipy.ndimage.label`,
+   8-connectivity) *within a horizontal band strictly bounding that row* — never across the whole
+   sheet. This was necessary in its own right: an early version that labeled the full image (or too
+   generous a row band) let faces merge **vertically across unrelated rows** where two legends'
+   hair happened to touch with no transparent gap between them (`sheet2`'s column 0 was one single
+   component spanning three legends' rows before this fix), and separately let a row's own label-
+   text pill get pulled into the same component as the face above it when the row band was too
+   tall.
+2. Within that band, pick the largest component whose centroid falls near the cell's nominal x
+   position — this is what actually excludes a neighbor's disconnected bleed (like the portrait
+   tendril): unrelated art has its own separate component and simply isn't the biggest thing near
+   this cell's center.
+3. When the closest match is implausibly wide (still merged with a neighbor — two touching faces'
+   hair, no true gap between them) or nothing matches at all, fall back to the largest component
+   found strictly *within* the nominal cell's rectangle — never the raw union bounding box of
+   everything in that rectangle, which first attempt showed still stitches together a sliver of one
+   neighbor with the real content into a single distorted crop.
+
+`src/assets/emoji_candidates/` (all 260 files) was regenerated with this method and re-verified via
+full per-legend contact sheets (all 16 legends, every candidate, eyeballed at 90×90 in a grid) before
+replacing the shipped pool — the `nix` tendril is gone, no crop merges two characters, and the small
+number of genuinely awkward source frames left (e.g. `wu_shang`'s duplicated "spirit transformation"
+slot, which is a stylised aura shape even in the original sheet) are exactly what the picker's
+"browse and choose" design was already built to tolerate, per ADR-092's plan. No code changed —
+`services/emoji_service.py`'s `candidate_legends()`/`candidate_files()` and
+`bot/views/emoji_picker.py` are indifferent to how the files were produced. The one-off segmentation
+script itself lives outside `src/` (in this session's scratch space, not committed) — same posture
+as the original bulk-crop pass: a one-time data-generation tool, not application code.
+
+Verified: full `pytest` still 431 passing (the candidate-pool tests assert file counts and directory
+shape, not pixel content, so they were unaffected), ruff and mypy clean. No migration.
