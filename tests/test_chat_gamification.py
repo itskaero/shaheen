@@ -6,7 +6,9 @@ No DB, no Discord — just the math and the ladder.
 from __future__ import annotations
 
 from services.chat_gamification import (
+    CORE_MEMBER_MIN_LEVEL,
     RANK_TITLES,
+    earns_core_member_role,
     level_for_xp,
     rank_title_for_level,
     roll_message_xp,
@@ -83,3 +85,13 @@ def test_roll_message_xp_stays_in_documented_range() -> None:
     assert rolls <= set(range(5, 16))
     assert min(rolls) >= 5
     assert max(rolls) <= 15
+
+
+def test_earns_core_member_role_at_and_above_threshold() -> None:
+    assert earns_core_member_role(CORE_MEMBER_MIN_LEVEL) is True
+    assert earns_core_member_role(CORE_MEMBER_MIN_LEVEL + 10) is True
+
+
+def test_earns_core_member_role_below_threshold_is_false() -> None:
+    assert earns_core_member_role(CORE_MEMBER_MIN_LEVEL - 1) is False
+    assert earns_core_member_role(1) is False

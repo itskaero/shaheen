@@ -88,6 +88,8 @@ Gated (docs/DECISIONS.md ADR-069) — same as THE NEST.
 - 🔊 The Nest
 - 🎮 Gaming
 - ⚔️ Ranked
+- 🗣️ Meetings & AMAs (clan meetings/AMAs/tournament casting — a plain voice
+  channel, not a true Discord Stage channel, docs/DECISIONS.md ADR-097)
 - 💤 AFK
 
 ### 🛠️ DEVELOPMENT

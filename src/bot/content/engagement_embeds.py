@@ -56,3 +56,18 @@ def build_suggestion_confirmation_embed(*, channel_mention: str) -> discord.Embe
         "see it came from you.",
         colour=GOLD,
     )
+
+
+def build_anthem_embed(*, website_url: str) -> discord.Embed:
+    """docs/DECISIONS.md ADR-097 — the one Discord-to-website pointer for
+    the Music Library page (ADR-095).
+    """
+    embed = discord.Embed(
+        title="🎵 Shaheen Music Library",
+        description="Full-length anthems, played on the website. | "
+        "کلان کے ترانے — ویب سائٹ پر مکمل ورژن سنیں۔",
+        colour=GOLD,
+        url=website_url,
+    )
+    embed.add_field(name="Listen", value=f"[Open the Music page]({website_url})", inline=False)
+    return embed

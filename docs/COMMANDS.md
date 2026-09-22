@@ -265,6 +265,10 @@ Anonymously post a clan suggestion to `#suggestions`, with 👍/👎 reactions
 added automatically for voting (docs/DECISIONS.md ADR-070). No permission
 check, same "any member" posture as `/level`.
 
+### /anthem
+Link to Shaheen's Music Library page on the website (docs/DECISIONS.md
+ADR-097). No permission check, ephemeral reply.
+
 ## Phase 9 — Emoji pack
 
 Requires `require_staff_authorized()`. See docs/DECISIONS.md ADR-090.

@@ -3727,3 +3727,75 @@ background artwork (the kit's `reference.png` is a mockup for direction only, it
 explicit swap-out stubs) and a real multi-panel layout engine in `image_service.py` (avatar
 compositing, a stat grid, icon tiles — none of which the current single-template-string renderer
 does). Would reuse `derive_playstyle_tags` and the same field set assembled for the embed above.
+
+## ADR-097 — Rising Shaheen, Core Member, a meetings voice channel, and /anthem
+
+Four of the five prior round's advisory suggestions, built this round (the fifth — timezone-aware
+scrim scheduling/reminders and voice-activity XP tracking — is real, separate scope: a new data model
+plus a background job for the former, extending `services/chat_gamification.py` and
+`bot/cogs/engagement.py`'s message-only XP system to also listen for voice-state events for the
+latter. Left for a future round rather than folded in here alongside four smaller, well-scoped items).
+
+**Rising Shaheen — a role for sub-Gold ranked members.** `services/rank_roles.py`'s rank-role mapping
+only ever covered Gold and up (ADR-087, deliberate — a wall of low-tier roles is discouraging). That
+left a real gap: a brand-new ranked player earns no rank tag at all until they climb to Gold, which
+can be a while. Rather than adding a role per tier (four more roles) or leaving the gap, Tin/Bronze/
+Silver now collapse into one combined `🌱 Rising Shaheen` role — the one rank tag a new member can
+actually earn on day one. `bot/constants.py` gains `ROLE_RANK_RISING`, prepended to `RANK_ROLES`
+(lowest tier first); `services/rank_roles.py`'s `_TIER_INDEX_TO_ROLE_KEY` maps tier indices 0-2 to it.
+No other code changes — `bot/cogs/clan.py`'s `_sync_rank_roles` and `plan_rank_roles`'s revoke/grant
+diffing already iterate `RANK_ROLES` generically.
+
+**Core Member — a role for high chat-level members.** Brawlhalla rank has cosmetic recognition (the
+roles above); chat leveling (`/level`) had none beyond `/chatboard` and the weekly MVP rotation.
+`services/chat_gamification.py` gains `CORE_MEMBER_MIN_LEVEL = 15` and a pure
+`earns_core_member_role(level) -> bool` — level 15 ("Veteran") is `RANK_TITLES`' 4th of 7 tiers, the
+same relative position Brawlhalla rank roles start rewarding from (Gold is the 4th of 8 Brawlhalla
+tiers). `bot/constants.py` gains `ROLE_CORE_MEMBER` (`🔥 Core Member`), not part of the rank ladder or
+`VERIFIED_ROLES` — same posture as `ROLE_MVP`. `bot/cogs/engagement.py`'s `on_message` level-up path
+calls a new `_maybe_assign_core_member_role` (mirrors `_assign_guest_role`'s shape: best-effort,
+missing role/permission logged and skipped) whenever a level-up crosses the threshold. Granted once,
+never revoked — chat XP is strictly cumulative, so there is nothing to demote from. Like rank-role
+sync, this only fires on the events that already touch a member (here, a level-up message) — there is
+no periodic backfill loop, so a member who was already past level 15 before the role existed only
+picks it up on their next level-up. Acceptable and disclosed rather than building a sweep job for it.
+
+**A voice channel for clan meetings, AMAs, and tournament casting.** The 4 channels in `category:voice`
+were all general/gaming-purpose — nowhere set aside for that kind of event. `bot/constants.py` adds
+`channel:voice_meetings` (`🗣️-meetings-and-amas`) to `category:voice`. **Deliberately a plain voice
+channel, not a true Discord Stage channel** — a Stage channel is a distinct type discord.py exposes
+separately from `VoiceChannel` (`discord.StageChannel`), and `ChannelKind`/`services/setup_planner.py`/
+`services/setup_service.py` assume exactly two channel kinds throughout (`_create_channel`'s branch,
+`build_snapshot`'s `isinstance(chan, discord.TextChannel)` check, several `discord.TextChannel |
+discord.VoiceChannel` type unions). Plumbing a third kind through all of that is real, separate scope
+of its own, not a "low-cost addition" once actually attempted — a plain voice channel gets the same
+practical outcome (a dedicated space to talk) without it.
+
+**`/anthem` — the one concrete Discord-to-website link from the Music Library round (ADR-095).**
+`bot/content/engagement_embeds.py` gains `build_anthem_embed`, linking to `music.html`; `bot/cogs/
+engagement.py` gains a new `/anthem` command (no permission check, ephemeral — same "any read-only
+command" posture as `/help`/`/level`/`/chatboard`). Reuses the same GitHub Pages base-URL constant
+pattern `bot/content/profile_embeds.py` already established (`_WEBSITE_BASE_URL`, duplicated rather
+than extracted to a shared setting — same reasoning as there: no `WEBSITE_URL` setting exists yet,
+worth promoting to one if a third use turns up).
+
+Files: `src/bot/constants.py`, `src/services/rank_roles.py`, `src/services/chat_gamification.py`,
+`src/bot/cogs/engagement.py`, `src/bot/content/engagement_embeds.py`, `src/bot/content/
+help_embeds.py`, `tests/{test_rank_roles,test_chat_gamification,test_engagement_embeds}.py`, `docs/
+{COMMANDS,PERMISSIONS,DISCORD_SPEC,ROADMAP}.md`.
+
+Verified: `tests/test_rank_roles.py` updated for the Tin/Bronze/Silver → Rising Shaheen mapping (was
+"earns nothing"), plus `ALL_RANK_ROLE_KEYS` coverage. `tests/test_chat_gamification.py` extended for
+`earns_core_member_role` at/above/below the threshold. `tests/test_engagement_embeds.py` extended for
+the anthem embed's link. No cog-level test for the role-assignment wiring itself — matches this
+repo's existing posture (`_assign_guest_role` isn't cog-tested either; only the pure logic and embeds
+underneath are). Full suite (456 tests) green, ruff and mypy clean. No migration — no new database
+columns, only new `ProvisionedResource` rows created the normal way by `/setup run`.
+
+**Not deployed by this round.** `/setup run` is a live Discord command gated by
+`require_setup_authorized()`; provisioning the two new roles and the new voice channel against the
+real Shaheen guild, and deploying the updated bot code to the Fly.io app this repo already documents
+(`fly.toml`, README "Deploying to production"), both require the owner's own Discord/Fly.io
+credentials — outside what a coding session against this repository can trigger. Both steps are
+exactly what the existing `flyctl deploy` + `/setup run` workflow already covers once this round's
+code is merged; nothing new is required beyond running them.

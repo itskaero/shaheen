@@ -9,6 +9,7 @@ from bot.constants import (
     ROLE_RANK_DIAMOND,
     ROLE_RANK_GOLD,
     ROLE_RANK_PLATINUM,
+    ROLE_RANK_RISING,
     ROLE_RANK_VALHALLAN,
 )
 from services.rank_roles import (
@@ -17,6 +18,7 @@ from services.rank_roles import (
     rank_role_key_for_tier,
 )
 
+RISING = ROLE_RANK_RISING.logical_key
 GOLD = ROLE_RANK_GOLD.logical_key
 PLATINUM = ROLE_RANK_PLATINUM.logical_key
 DIAMOND = ROLE_RANK_DIAMOND.logical_key
@@ -30,12 +32,12 @@ def test_tier_families_map_to_their_role() -> None:
     assert rank_role_key_for_tier("Valhallan") == VALHALLAN
 
 
-def test_below_gold_earns_nothing() -> None:
-    """A Tin/Bronze/Silver label says more about how much ranked someone has
-    played than how good they are, so those deliberately get no role.
+def test_below_gold_earns_rising_shaheen() -> None:
+    """Tin/Bronze/Silver collapse into one combined role (ADR-097) rather
+    than a role per tier or nothing at all.
     """
     for tier in ("Tin 1", "Bronze 3", "Silver II"):
-        assert rank_role_key_for_tier(tier) is None
+        assert rank_role_key_for_tier(tier) == RISING
 
 
 def test_unranked_and_unrecognized_tiers_fail_closed() -> None:
@@ -63,9 +65,9 @@ def test_unchanged_tier_is_a_noop() -> None:
     assert plan.grant is None and plan.revoke == ()
 
 
-def test_dropping_below_gold_strips_the_role() -> None:
+def test_dropping_below_gold_demotes_to_rising_shaheen() -> None:
     plan = plan_rank_roles(tier="Silver 1", current_keys={GOLD})
-    assert plan.grant is None
+    assert plan.grant == RISING
     assert plan.revoke == (GOLD,)
 
 
@@ -83,5 +85,7 @@ def test_other_roles_are_never_touched() -> None:
 
 
 def test_all_rank_role_keys_matches_the_mapping() -> None:
-    mapped = {rank_role_key_for_tier(t) for t in ("Gold", "Platinum", "Diamond", "Valhallan")}
+    mapped = {
+        rank_role_key_for_tier(t) for t in ("Tin", "Gold", "Platinum", "Diamond", "Valhallan")
+    }
     assert mapped == set(ALL_RANK_ROLE_KEYS)

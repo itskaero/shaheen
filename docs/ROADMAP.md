@@ -88,6 +88,10 @@
       earned/total achievement count, clan role, and Discord account/join
       dates; `player.html` reskinned to match, plus a shared
       `playstyle_tags` heuristic on the API
+- [x] 🌱 Rising Shaheen rank role for sub-Gold ranked members
+- [x] 🔥 Core Member role for members past a chat-level threshold
+- [x] `🗣️ Meetings & AMAs` voice channel for clan meetings/AMAs/casting
+- [x] `/anthem` command linking to the website Music Library
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 
