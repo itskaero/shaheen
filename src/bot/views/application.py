@@ -31,7 +31,7 @@ from bot.content.application_embeds import (
     build_application_review_embed,
     build_application_submitted_embed,
 )
-from bot.membership import grant_member_access, is_already_verified
+from bot.membership import grant_clan_membership, is_already_a_clan_member
 from bot.views.base import PersistentView
 from core.exceptions import PermissionDeniedError, ShaheenError
 from database.models.application import Application
@@ -102,8 +102,8 @@ class ApplicationModal(discord.ui.Modal, title="Apply to Shaheen"):
         member = interaction.user
         if not isinstance(member, discord.Member) or interaction.guild is None:
             raise ShaheenError("Applications can only be submitted inside the Shaheen server.")
-        if is_already_verified(member):
-            raise ShaheenError("You're already a member here — no application needed.")
+        if is_already_a_clan_member(member):
+            raise ShaheenError("You're already on the roster — no application needed.")
 
         await interaction.response.defer(ephemeral=True)
         bot = cast("ShaheenBot", interaction.client)
@@ -210,7 +210,7 @@ async def _decide(interaction: discord.Interaction, *, approved: bool, note: str
         dm_embed = build_application_decision_dm_embed(application, guild_name=guild.name)
 
     if approved and applicant is not None:
-        await grant_member_access(
+        await grant_clan_membership(
             applicant, reason=f"Shaheen application #{application.id} approved by {reviewer}"
         )
 

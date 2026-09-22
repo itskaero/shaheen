@@ -12,7 +12,12 @@ from unittest.mock import AsyncMock, Mock
 
 import discord
 
-from services.emoji_service import EmojiService, available_emoji_files
+from services.emoji_service import (
+    EmojiService,
+    available_emoji_files,
+    candidate_files,
+    candidate_legends,
+)
 
 
 def _guild(*, existing_names: set[str] = frozenset(), limit: int = 50) -> Mock:
@@ -90,3 +95,71 @@ async def test_forbidden_upload_is_recorded_not_raised() -> None:
 
     assert not report.created
     assert len(report.errors) == len(available_emoji_files())
+
+
+# --- candidate pool (docs/DECISIONS.md ADR-092) -----------------------------
+
+
+def test_candidate_legends_is_not_empty() -> None:
+    """The candidate pool actually shipped with the repo."""
+    legends = candidate_legends()
+    assert len(legends) >= 10
+    assert legends == tuple(sorted(legends))
+
+
+def test_candidate_files_returns_crops_for_a_real_legend() -> None:
+    legend = candidate_legends()[0]
+    files = candidate_files(legend)
+    assert len(files) > 0
+    assert files == tuple(sorted(files))
+
+
+def test_candidate_files_is_empty_for_an_unknown_legend() -> None:
+    """A stale/renamed folder shouldn't crash the picker mid-browse."""
+    assert candidate_files("not_a_real_legend") == ()
+
+
+# --- sync(files=...) — the picker's explicit-upload path --------------------
+
+
+async def test_sync_with_explicit_files_ignores_the_curated_pack() -> None:
+    legend = candidate_legends()[0]
+    path = candidate_files(legend)[0]
+    guild = _guild()
+
+    report = await EmojiService(guild).sync(files=[("my_custom_name", path)])
+
+    assert report.created == ["my_custom_name"]
+    guild.create_custom_emoji.assert_awaited_once()
+    assert guild.create_custom_emoji.await_args.kwargs["name"] == "my_custom_name"
+
+
+async def test_sync_with_explicit_files_still_skips_existing_names() -> None:
+    legend = candidate_legends()[0]
+    path = candidate_files(legend)[0]
+    guild = _guild(existing_names={"taken"})
+
+    report = await EmojiService(guild).sync(files=[("taken", path)])
+
+    assert report.skipped_existing == ["taken"]
+    guild.create_custom_emoji.assert_not_awaited()
+
+
+async def test_sync_with_explicit_files_still_respects_the_slot_limit() -> None:
+    legend = candidate_legends()[0]
+    path = candidate_files(legend)[0]
+    guild = _guild(limit=0)
+
+    report = await EmojiService(guild).sync(files=[("anything", path)])
+
+    assert report.skipped_no_room == ["anything"]
+    guild.create_custom_emoji.assert_not_awaited()
+
+
+async def test_sync_with_an_empty_explicit_list_uploads_nothing() -> None:
+    guild = _guild()
+
+    report = await EmojiService(guild).sync(files=[])
+
+    assert report.total == 0
+    guild.create_custom_emoji.assert_not_awaited()

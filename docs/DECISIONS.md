@@ -3428,3 +3428,89 @@ source files. No migration — this round touches no database schema.
 
 **Needs `/setup run`** to gate SHAHEEN HQ, create `🦅 START HERE`/`🏆 HALL OF RECORDS`, and reparent
 `#leaderboard`/`#hall-of-fame` off of SHAHEEN ARENA.
+
+## ADR-092 — /apply and /verify stop doing the same thing; an interactive emoji picker
+
+Two independent asks, same round.
+
+1. **`/apply` and `/verify` produced the same outcome.** Both ended in `grant_member_access` — Guest
+   → Ally — so filling out the five-field application form (Brawlhalla ID, region, rank, "why
+   Shaheen", referrer) got a member exactly as far as a moderator just running `/verify` on them with
+   no form at all. The owner wanted these genuinely separated: `/apply` is applying **to the clan
+   roster**, not asking to hang out, and an approved application should promote straight to **Trial
+   Shaheen**, skipping Ally entirely — the applicant already went through real screening. `/verify`
+   is unchanged: the lightweight staff action that grants general community access (Ally) with no
+   form, for people who want to be part of the server without trying out for the roster. Confirmed
+   via `AskUserQuestion` against the alternative of redefining `/verify` itself — the owner picked
+   "Trial Shaheen directly," leaving `/verify` exactly as it was.
+
+   `bot/membership.py` gains `is_already_a_clan_member` (True for `FULL_MEMBER_ROLES` — Trial
+   Shaheen and up) as the new gate on `/apply`, replacing the old `is_already_verified` check there;
+   an Ally let in via `/verify` can still apply for the roster, since Ally isn't clan membership.
+   `is_already_verified` itself is untouched and still gates nothing but its own callers. A new
+   `grant_clan_membership` mirrors `grant_member_access`'s shape — removes Guest and/or Ally,
+   whichever is held, adds Trial Shaheen — and raises the same `ShaheenError` if Trial Shaheen isn't
+   provisioned yet. `bot/views/application.py` and `bot/cogs/application.py` call the new gate/grant
+   pair; the decline branch is untouched, it never touched roles. Copy in
+   `bot/content/application_embeds.py` (`/apply`'s panel and the approval DM) and
+   `bot/content/moderation_embeds.py`/`bot/cogs/moderation.py` (`/verify`'s description and its own
+   DM/success embeds) now says which outcome each path leads to, so the distinction is visible in
+   `/help` and in what a member actually receives, not just in the role that lands.
+
+2. **A new zip of legend art plus a request for an in-bot picker.** The owner uploaded
+   `shaheen_emoji_transparent_pack.zip` — 20 per-legend PNGs, transparent background — and asked for
+   a UI to pick which crops to upload instead of the fixed 24-emoji pack ADR-090 shipped. Inspected
+   the zip first: it's low-resolution (~380×180px) packed thumbnail exports, not a clean grid — faces
+   overlap tightly with decoration fragments between them, not separate cells. Column-gap
+   segmentation and alpha-based connected-component blob detection (with dilation to merge a face
+   with its nearby decoration) were both tried and both failed to reliably isolate individual icons —
+   blobs either fragmented one face into pieces or merged two or three faces into one box, confirmed
+   visually. This material isn't suitable for automated per-icon cropping, so it isn't the picker's
+   source. Instead, the picker draws from the **original two high-resolution sprite sheets** already
+   in the repo's history (the same source ADR-090's curated 24 came from) — the crop geometry for
+   both was already validated, so a full bulk export was safe: every cell, not just the curated 24,
+   ~260 crops across the 16 legends the sheets actually contain, checked into
+   `src/assets/emoji_candidates/<legend>/expr_NN.png` as plain files, same pattern as the existing
+   pack. Three block/row combinations (nix's two rows, wu_shang's second row) needed their own crop
+   window rather than the shared default — caught by spot-checking contact sheets of the bulk output,
+   not flagged by the owner, and re-cropped individually before committing. The zip's 12 legends that
+   aren't in those two sheets (artemis, lucien, mordex, orion, petra, rayman, scarlet, sentinel,
+   tezca, thatch, val, vector) are **not** in the candidate pool — stated here rather than silently
+   dropped; cleaner individual source art for them would slot into the same pool later with no design
+   change.
+
+   `services/emoji_service.py` gains `candidate_legends()`/`candidate_files(legend)` (pure listing
+   functions, same shape as the existing `available_emoji_files()`) and `sync()` grows an optional
+   `files: Sequence[tuple[str, Path]] | None` parameter — explicit `(emoji_name, path)` pairs to
+   upload instead of the default curated pack. `/emoji sync` (`files=None`) is unchanged.
+   `bot/views/emoji_picker.py` is new: `EmojiBrowseView` opens on a `discord.ui.Select` of the 16
+   legends (well under Discord's 25-option cap), then an icon browser (◀ Prev / ▶ Next / ➕ Add /
+   🔁 Legends / ✅ Done) once one's picked, rendering the current crop as the embed's image via
+   `discord.File` + `attachment://`. ➕ Add opens a one-field modal pre-filled with a proposed
+   `legend_NN` name so a staff member can rename before it's queued; ✅ Done calls
+   `EmojiService(guild).sync(files=view.queue)` and shows the existing sync-report embed. Unlike
+   `bot/views/application.py`'s `PersistentView` pieces, this is session-lived — bounded timeout, no
+   custom_id routing, never re-registered across restarts, matching `ConfirmView`'s existing pattern
+   rather than the persistent one. `bot/cogs/emoji.py` gets a new `/emoji browse` (staff-only)
+   opening it; `/emoji sync` is unchanged.
+
+Files: `src/bot/membership.py`, `src/bot/views/application.py`, `src/bot/cogs/application.py`,
+`src/bot/content/application_embeds.py`, `src/bot/cogs/moderation.py`,
+`src/bot/content/moderation_embeds.py`, `src/services/emoji_service.py`,
+`src/bot/views/emoji_picker.py` (new), `src/bot/content/emoji_embeds.py`, `src/bot/cogs/emoji.py`,
+`src/bot/content/help_embeds.py`, `src/assets/emoji_candidates/` (new, ~260 files),
+`docs/{PERMISSIONS,COMMANDS,ROADMAP}.md`, `tests/test_membership.py` (new),
+`tests/test_emoji_service.py`, `tests/test_emoji_embeds.py` (new), this entry.
+
+Verified: new `tests/test_membership.py` covers `is_already_a_clan_member` (false for Guest/Ally,
+true for Trial/Elite) and `grant_clan_membership` (Guest→Trial, Ally→Trial removing only Ally, raises
+when Trial Shaheen isn't provisioned, wraps `Forbidden`), plus regression coverage that
+`grant_member_access` still only ever grants Ally. `tests/test_emoji_service.py` extended with
+`candidate_legends()`/`candidate_files()` against the real checked-in pool and `sync(files=...)`
+coverage (uploads exactly the given pairs, still respects the existing-name skip and slot-limit
+guards, ignores the curated pack entirely when `files` is passed, no-ops on an empty list).
+`tests/test_emoji_embeds.py` is new, covering the browse-intro and per-candidate preview embeds.
+`tests/test_help_embeds.py`'s catalog/command-tree parity test required adding `/emoji browse`'s
+entry. 431 passing (was 407), ruff and mypy clean. No migration — no database schema touched.
+
+**No `/setup run` needed** — this round touches no channel/category structure.

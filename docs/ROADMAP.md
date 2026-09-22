@@ -77,6 +77,9 @@
 - [x] Guest limited to one entrance channel (`#apply`); approval grants
       full read+write; `#leaderboard`/`#hall-of-fame` read-only for all
 - [x] redesigned welcome/goodbye cards; username in Rajdhani SemiBold
+- [x] `/apply` and `/verify` separated — approved applications grant Trial
+      Shaheen (roster), `/verify` grants Ally (community access) only
+- [x] interactive `/emoji browse` picker over a ~260-crop candidate pool
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

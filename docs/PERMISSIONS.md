@@ -56,11 +56,29 @@ same shape as `restricted`, inverted: hidden from `@everyone` **and** Guest
 (`VERIFIED_ROLES` = everything except Guest). Currently SHAHEEN HQ, THE
 NEST, BRAWLHALLA, VOICE, and HALL OF RECORDS.
 
-A staff member runs `/verify <member>` (`bot/cogs/moderation.py`), or
-approves a `/apply` application (docs/DECISIONS.md ADR-089), to promote a
-Guest to Ally — `bot/membership.py`'s `grant_member_access`, the one path
-both routes share. Idempotent: running it on an already-ranked member is a
-no-op, not an error.
+### Two distinct promotion paths, not one (ADR-092)
+
+`/verify <member>` (`bot/cogs/moderation.py`) and an approved `/apply`
+application (docs/DECISIONS.md ADR-089) used to land in the same place —
+Guest → Ally — making the application form's screening pointless. They now
+diverge:
+
+- **`/verify`** grants general **community access**: Guest → Ally via
+  `bot/membership.py`'s `grant_member_access`. No form, staff-run, for
+  someone who wants to be part of the server without trying out for the
+  roster. Idempotent: a no-op on a member who already holds any rank role
+  above Guest (`is_already_verified`).
+- **An approved `/apply`** grants **clan roster membership**: Guest and/or
+  Ally → Trial Shaheen directly via `grant_clan_membership`, skipping Ally
+  entirely — the applicant already went through the application's real
+  screening (Brawlhalla ID, rank, "why Shaheen"). Gated by
+  `is_already_a_clan_member` (true only for `FULL_MEMBER_ROLES`, Trial
+  Shaheen and up), not `is_already_verified` — an Ally let in via `/verify`
+  can still apply for the roster, since Ally isn't clan membership.
+
+Both paths still only ever add roles a member doesn't already hold, and
+both raise `ShaheenError` rather than silently no-op if the target role
+(Ally or Trial Shaheen) hasn't been provisioned by `/setup run` yet.
 
 ### Approval grants full read+write; only broadcast channels are read-only
 

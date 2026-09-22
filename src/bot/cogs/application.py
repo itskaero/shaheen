@@ -18,7 +18,7 @@ from bot.content.application_embeds import (
     build_application_status_embed,
     build_pending_queue_embed,
 )
-from bot.membership import is_already_verified
+from bot.membership import is_already_a_clan_member
 from bot.views.application import ApplicationModal
 from core.exceptions import ShaheenError
 from database.session import session_scope
@@ -29,19 +29,21 @@ class ApplicationCog(commands.Cog):
     def __init__(self, bot: ShaheenBot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="apply", description="Apply to join Shaheen")
+    @app_commands.command(name="apply", description="Apply to join the Shaheen clan roster")
     async def apply(self, interaction: discord.Interaction) -> None:
         """The same form the #📝-apply panel opens.
 
         Both exist because a panel is discoverable and a command is
         findable: someone who has scrolled past the channel can still type
-        /apply.
+        /apply. Distinct from /verify (bot/cogs/moderation.py): this is a
+        roster application, not general server access — docs/DECISIONS.md
+        ADR-092.
         """
         member = interaction.user
         if not isinstance(member, discord.Member) or interaction.guild is None:
             raise ShaheenError("This command can only be used inside the Shaheen server.")
-        if is_already_verified(member):
-            raise ShaheenError("You're already a member here — no application needed.")
+        if is_already_a_clan_member(member):
+            raise ShaheenError("You're already on the roster — no application needed.")
         await interaction.response.send_modal(ApplicationModal())
 
     @app_commands.command(
