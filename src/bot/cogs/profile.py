@@ -59,6 +59,7 @@ class ProfileCog(commands.Cog):
             )
             achievements = await service.get_achievements(shaheen_member.id)
 
+        top_role = member.top_role if member.top_role.name != "@everyone" else None
         embed = build_profile_embed(
             display_name=member.display_name,
             avatar_url=member.display_avatar.url,
@@ -68,6 +69,9 @@ class ProfileCog(commands.Cog):
             joined_at=shaheen_member.joined_at,
             chat_activity=chat_activity,
             achievements=achievements,
+            clan_role=top_role.name if top_role else None,
+            discord_created_at=member.created_at,
+            discord_joined_at=member.joined_at,
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
 

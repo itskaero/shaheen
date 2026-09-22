@@ -1,5 +1,5 @@
-"""Branded embeds for /emoji sync and /emoji browse (docs/DECISIONS.md
-ADR-090/ADR-092).
+"""Branded embeds for /emoji sync, /emoji browse, and /emoji clear
+(docs/DECISIONS.md ADR-090/ADR-092/ADR-094).
 """
 
 from __future__ import annotations
@@ -7,7 +7,9 @@ from __future__ import annotations
 import discord
 
 from bot.palette import EMERALD, GOLD
-from services.emoji_service import EmojiSyncReport
+from services.emoji_service import EmojiClearReport, EmojiSyncReport
+
+_DANGER = 0xB00020
 
 
 def build_emoji_browse_intro_embed() -> discord.Embed:
@@ -68,4 +70,39 @@ def build_emoji_sync_embed(report: EmojiSyncReport) -> discord.Embed:
         embed.add_field(
             name="Status", value="Every packaged emoji is already on this server.", inline=False
         )
+    return embed
+
+
+def build_emoji_clear_warning_embed() -> discord.Embed:
+    return discord.Embed(
+        title="⚠️ Confirm: Delete ALL Custom Emoji",
+        description=(
+            "This deletes **every custom emoji in this server** — including anything staff "
+            "added by hand, not just the Shaheen pack. This cannot be undone; anything removed "
+            "would need to be re-uploaded (the pack can be restored with `/emoji sync`, but "
+            "anything else is gone for good)."
+        ),
+        colour=_DANGER,
+    )
+
+
+def build_emoji_clear_report_embed(report: EmojiClearReport) -> discord.Embed:
+    embed = discord.Embed(
+        title="🗑️ Shaheen Emoji Pack — Cleared",
+        description=f"Checked **{report.total}** emoji on this server.",
+        colour=GOLD if not report.errors else _DANGER,
+    )
+    embed.add_field(name="🗑️ Deleted", value=str(len(report.deleted)), inline=True)
+    if report.deleted:
+        embed.add_field(
+            name="Removed",
+            value=" ".join(f"`:{name}:`" for name in report.deleted[:25]),
+            inline=False,
+        )
+    if report.errors:
+        embed.add_field(
+            name="❌ Errors", value="\n".join(f"- {e}" for e in report.errors[:10]), inline=False
+        )
+    if not report.deleted and not report.errors:
+        embed.add_field(name="Status", value="No custom emoji found on this server.", inline=False)
     return embed

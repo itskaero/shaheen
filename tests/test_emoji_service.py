@@ -25,6 +25,7 @@ def _guild(*, existing_names: set[str] = frozenset(), limit: int = 50) -> Mock:
     guild.emojis = [Mock(name=n, animated=False) for n in existing_names]
     for emoji, n in zip(guild.emojis, existing_names, strict=True):
         emoji.name = n
+        emoji.delete = AsyncMock()
     guild.emoji_limit = limit
     guild.create_custom_emoji = AsyncMock()
     return guild
@@ -163,3 +164,39 @@ async def test_sync_with_an_empty_explicit_list_uploads_nothing() -> None:
 
     assert report.total == 0
     guild.create_custom_emoji.assert_not_awaited()
+
+
+# --- clear() — /emoji clear (docs/DECISIONS.md ADR-093) ---------------------
+
+
+async def test_clear_deletes_every_emoji_regardless_of_origin() -> None:
+    guild = _guild(existing_names={"random_staff_upload", "koji_gg"})
+
+    report = await EmojiService(guild).clear()
+
+    assert set(report.deleted) == {"random_staff_upload", "koji_gg"}
+    assert not report.errors
+    for emoji in guild.emojis:
+        emoji.delete.assert_awaited_once_with(reason="Shaheen /emoji clear")
+
+
+async def test_clear_collects_forbidden_without_aborting_the_batch() -> None:
+    guild = _guild(existing_names={"a", "b"})
+    forbidden_emoji = next(e for e in guild.emojis if e.name == "a")
+    forbidden_emoji.delete.side_effect = discord.Forbidden(Mock(status=403), "no perms")
+
+    report = await EmojiService(guild).clear()
+
+    assert report.deleted == ["b"]
+    assert len(report.errors) == 1
+    assert "'a'" in report.errors[0]
+
+
+async def test_clear_no_ops_on_an_empty_guild() -> None:
+    guild = _guild()
+
+    report = await EmojiService(guild).clear()
+
+    assert report.total == 0
+    assert report.deleted == []
+    assert report.errors == []

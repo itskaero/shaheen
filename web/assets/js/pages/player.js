@@ -51,12 +51,14 @@
           <div class="profile-head">
             ${avatarHtml(profile.player_name, 64)}
             <div>
-              <h2>${escapeHtml(profile.player_name)}</h2>
+              <h2 class="player-card-name">${escapeHtml(profile.player_name)}</h2>
               <p class="page-subtitle" style="margin: 0.25rem 0 0;">
                 ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}${profile.season ? ` · Season ${profile.season}` : ""}
               </p>
             </div>
           </div>
+          ${playstyleTagsHtml(profile.playstyle_tags)}
+          ${favouriteLegendsHtml(legends)}
         </div>
 
         <div class="stat-grid">
@@ -108,6 +110,36 @@
     }
   }
 
+
+  // A derived label, not a Brawlhalla-reported stat — same heuristic the
+  // /profile Discord embed uses (docs/DECISIONS.md ADR-096).
+  function playstyleTagsHtml(tags) {
+    if (!tags || tags.length === 0) {
+      return "";
+    }
+    return `<div class="playstyle-tags">${tags
+      .map((tag) => `<span class="playstyle-tag">${escapeHtml(tag)}</span>`)
+      .join("")}</div>`;
+  }
+
+  function favouriteLegendsHtml(legends) {
+    if (!legends || legends.length === 0) {
+      return "";
+    }
+    return `<div class="favourite-legends">${legends
+      .slice(0, 5)
+      .map(
+        (legend) => `
+          <div class="favourite-legend-chip">
+            ${legendAvatarHtml(legend.legend_name_key, 32)}
+            <span>
+              <span class="favourite-legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
+              <span class="favourite-legend-games">${legend.games} games</span>
+            </span>
+          </div>`
+      )
+      .join("")}</div>`;
+  }
 
   const CATEGORY_LABELS = {
     onboarding: "Getting Started",

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tournaments — Shaheen</title>
-  <meta name="description" content="Shaheen clan Brawlhalla tournaments and brackets." />
+  <title>Music — Shaheen</title>
+  <meta name="description" content="Shaheen's clan anthems — listen to the full-length tracks." />
   <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,10 +28,10 @@
         <a href="clan.html">Clan</a>
         <a href="leaderboard.html">Leaderboard</a>
         <a href="roster.html">Roster</a>
-        <a href="music.html">Music</a>
+        <a href="music.html" class="active">Music</a>
         <a href="achievements.html">Achievements</a>
         <a href="player.html">Players</a>
-        <a href="tournaments.html" class="active">Tournaments</a>
+        <a href="tournaments.html">Tournaments</a>
         <a href="join.html">Join</a>
         <span class="discord-widget" data-discord-widget hidden></span>
         <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
@@ -48,15 +48,16 @@
 
   <div class="page-banner">
     <div class="wrap">
-      <h1 class="page-title">Tournaments</h1>
-      <p class="page-subtitle">Brackets don't lie. Show up or get run over. Click one for the live bracket.</p>
+      <h1 class="page-title">Music</h1>
+      <p class="page-subtitle">The clan anthems, full length. Press play — <span lang="ur">بلندیوں کی جانب</span>.</p>
     </div>
   </div>
 
   <main class="wrap" style="padding-top: 0">
-    <div id="tournaments-content">
-      <p class="state-msg">Loading tournaments… (first load can take up to a minute)</p>
-    </div>
+    <div class="card music-now-playing" id="music-now-playing"></div>
+
+    <div class="divider"><span>Tracks</span></div>
+    <div class="music-tracks" id="music-tracks"></div>
   </main>
 
   <footer class="site-footer">
@@ -75,6 +76,6 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/spotlight.js"></script>
-  <script src="assets/js/pages/tournaments.js"></script>
+  <script src="assets/js/pages/music.js"></script>
 </body>
 </html>

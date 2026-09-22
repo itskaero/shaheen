@@ -65,6 +65,16 @@ class EmojiSyncReport:
         return len(self.created) + len(self.skipped_existing) + len(self.skipped_no_room)
 
 
+@dataclass
+class EmojiClearReport:
+    deleted: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+    @property
+    def total(self) -> int:
+        return len(self.deleted) + len(self.errors)
+
+
 class EmojiService:
     """Uploads the packaged pack to a guild.
 
@@ -117,5 +127,29 @@ class EmojiService:
                 continue
             report.created.append(name)
             static_count += 1
+
+        return report
+
+    async def clear(self) -> EmojiClearReport:
+        """Deletes every custom emoji in the guild, regardless of origin —
+        not just the Shaheen pack. `/emoji clear` (docs/DECISIONS.md
+        ADR-094) is the only caller; unlike `sync`, this is explicitly the
+        exception to this class's own "never deletes or replaces" rule
+        above, gated behind a much stronger confirmation than sync/browse.
+        A failure on one emoji (missing permission, already gone, a rate
+        limit) is recorded and skipped rather than aborting the batch —
+        same resilience posture as `sync`.
+        """
+        report = EmojiClearReport()
+        for emoji in list(self._guild.emojis):
+            try:
+                await emoji.delete(reason="Shaheen /emoji clear")
+            except discord.Forbidden:
+                report.errors.append(f"Missing permission to delete emoji {emoji.name!r}.")
+                continue
+            except discord.HTTPException as exc:
+                report.errors.append(f"Discord error for emoji {emoji.name!r}: {exc}")
+                continue
+            report.deleted.append(emoji.name)
 
         return report

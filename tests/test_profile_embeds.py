@@ -131,7 +131,7 @@ def test_profile_embed_shows_achievement_count_and_names() -> None:
         chat_activity=None,
         achievements=achievements,
     )
-    value = _field(embed, "Achievements (2)")
+    value = _field(embed, "Achievements (2/30)")
     assert value is not None
     assert "First Contact" in value
     assert "Centurion" in value
@@ -165,6 +165,113 @@ def test_profile_embed_links_to_website_profile() -> None:
     value = _field(embed, "Full Profile")
     assert value is not None
     assert "player.html?id=12345" in value
+
+
+# --- ADR-094: favourite Legend, playstyle, clan role, Discord dates ---------
+
+
+def test_profile_embed_shows_favourite_legend_and_playstyle() -> None:
+    stats = PlayerStatsResponse(
+        brawlhalla_id=12345,
+        name="Reko Rex",
+        legends=[
+            LegendStat(
+                legend_id=1, legend_name_key="bodvar", games=10, kos=5, damagedealt=1000, falls=30
+            ),
+            LegendStat(
+                legend_id=2, legend_name_key="orion", games=40, kos=60, damagedealt=1000, falls=30
+            ),
+        ],
+    )
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=stats,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+    )
+    assert _field(embed, "Favourite Legend") == "Orion (40 games)"
+    assert _field(embed, "Playstyle") == "Aggressive"
+
+
+def test_profile_embed_omits_favourite_legend_with_no_legends_played() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+    )
+    assert _field(embed, "Favourite Legend") is None
+    assert _field(embed, "Playstyle") is None
+
+
+def test_profile_embed_shows_clan_role_when_given() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+        clan_role="Moderator",
+    )
+    assert _field(embed, "Clan Role") == "Moderator"
+
+
+def test_profile_embed_omits_clan_role_when_absent() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+    )
+    assert _field(embed, "Clan Role") is None
+
+
+def test_profile_embed_shows_discord_account_and_guild_dates() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+        discord_created_at=datetime(2020, 3, 1, tzinfo=UTC),
+        discord_joined_at=datetime(2023, 7, 1, tzinfo=UTC),
+    )
+    value = _field(embed, "Discord")
+    assert value is not None
+    assert "Mar 2020" in value
+    assert "Jul 2023" in value
+
+
+def test_profile_embed_omits_discord_field_when_no_dates_given() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+    )
+    assert _field(embed, "Discord") is None
 
 
 def test_legends_embed_includes_damage_and_falls() -> None:

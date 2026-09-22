@@ -12,7 +12,9 @@ from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.chat_activity import ChatActivity
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
+from services.achievements import CATALOG
 from services.chat_gamification import level_for_xp, rank_title_for_level
+from services.playstyle import derive_playstyle_tags
 
 _LEGENDS_SHOWN = 10
 
@@ -82,14 +84,21 @@ def build_profile_embed(
     joined_at: datetime | None,
     chat_activity: ChatActivity | None,
     achievements: list[tuple[Achievement, datetime]],
+    clan_role: str | None = None,
+    discord_created_at: datetime | None = None,
+    discord_joined_at: datetime | None = None,
 ) -> discord.Embed:
     """The one-look profile card — folds in what /rank, /stats, and /legends
     each show separately (win rate, tier/rating/peak, global/region rank)
     plus clan join date, chat-gamification standing, and earned
     achievements (docs/DECISIONS.md ADR-059, extended in ADR-067 — those
     last three already existed elsewhere in the system but never made it
-    onto this card). /rank/-stats/-legends stay as-is for a quick
-    single-stat check.
+    onto this card). Favourite Legend, a derived playstyle, an
+    earned/total achievement count, clan role, and Discord account/guild
+    dates were added in ADR-096 — the last two exist only here, since
+    nothing in the database persists per-member Discord timestamps
+    (docs/DECISIONS.md ADR-040). /rank/-stats/-legends stay as-is for a
+    quick single-stat check.
     """
     embed = discord.Embed(title=f"🦅 {display_name}", colour=FOREST_GREEN)
     if avatar_url:
@@ -103,6 +112,19 @@ def build_profile_embed(
     )
     if joined_at is not None:
         embed.add_field(name="Member Since", value=joined_at.strftime("%b %d, %Y"), inline=True)
+
+    if stats.legends:
+        favourite = max(stats.legends, key=lambda legend: legend.games)
+        embed.add_field(
+            name="Favourite Legend",
+            value=f"{_legend_display_name(favourite.legend_name_key)} ({favourite.games} games)",
+            inline=True,
+        )
+        # A derived label, not a Brawlhalla-reported stat — the API has no
+        # such field (docs/DECISIONS.md ADR-096).
+        embed.add_field(
+            name="Playstyle", value=", ".join(derive_playstyle_tags(stats.legends)), inline=True
+        )
 
     if ranked is not None and ranked.tier:
         embed.add_field(
@@ -129,10 +151,23 @@ def build_profile_embed(
             inline=False,
         )
 
+    if clan_role:
+        embed.add_field(name="Clan Role", value=clan_role, inline=True)
+
+    if discord_created_at is not None or discord_joined_at is not None:
+        parts = []
+        if discord_created_at is not None:
+            parts.append(f"Account: {discord_created_at.strftime('%b %Y')}")
+        if discord_joined_at is not None:
+            parts.append(f"This server: {discord_joined_at.strftime('%b %Y')}")
+        embed.add_field(name="Discord", value=" · ".join(parts), inline=True)
+
     if achievements:
         latest_names = ", ".join(a.name for a, _ in achievements[-3:])
         embed.add_field(
-            name=f"Achievements ({len(achievements)})", value=latest_names, inline=False
+            name=f"Achievements ({len(achievements)}/{len(CATALOG)})",
+            value=latest_names,
+            inline=False,
         )
 
     # Embed footers are plain text (no clickable links) — a field value
