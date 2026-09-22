@@ -1,11 +1,37 @@
-"""Branded embed for /emoji sync (docs/DECISIONS.md ADR-090)."""
+"""Branded embeds for /emoji sync and /emoji browse (docs/DECISIONS.md
+ADR-090/ADR-092).
+"""
 
 from __future__ import annotations
 
 import discord
 
-from bot.palette import GOLD
+from bot.palette import EMERALD, GOLD
 from services.emoji_service import EmojiSyncReport
+
+
+def build_emoji_browse_intro_embed() -> discord.Embed:
+    return discord.Embed(
+        title="🦅 Shaheen Emoji Pack — Browse",
+        description=(
+            "Pick a legend below to see its available expressions one at a time. "
+            "**➕ Add** queues the one on screen (you'll get to name it); "
+            "**✅ Done** uploads everything you've queued."
+        ),
+        colour=EMERALD,
+    )
+
+
+def build_emoji_candidate_preview_embed(
+    *, legend: str, index: int, total: int, queue_count: int
+) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"🦅 {legend.replace('_', ' ').title()} — {index + 1}/{total}",
+        colour=EMERALD,
+    )
+    embed.set_image(url="attachment://preview.png")
+    embed.set_footer(text=f"Queued: {queue_count}" + (" — nothing yet" if queue_count == 0 else ""))
+    return embed
 
 
 def build_emoji_sync_embed(report: EmojiSyncReport) -> discord.Embed:

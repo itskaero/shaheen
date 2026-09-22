@@ -1,22 +1,29 @@
-"""Uploading Shaheen's curated legend-expression emoji pack.
+"""Uploading Shaheen's legend-expression emoji.
 
-docs/DECISIONS.md ADR-090. The pack lives at src/assets/emoji/*.png — 128x128
-crops taken from the clan's Brawlhalla legend art, one distinct expression
-per legend, deliberately picked so no two emoji repeat the same reaction
-(a "GG" from two different legends would just be a wasted slot). `/emoji
-sync` uploads whichever ones the guild doesn't already have by name; it's
-safe to run again — after adding files to the folder, or on a guild whose
-emoji were wiped — since anything already present by name is left alone.
+docs/DECISIONS.md ADR-090/ADR-092. Two sources:
+
+- src/assets/emoji/*.png — the curated 24-emoji pack, one distinct
+  expression per legend, deliberately picked so no two emoji repeat the
+  same reaction (a "GG" from two different legends would just be a wasted
+  slot). `/emoji sync` uploads whichever ones the guild doesn't already
+  have by name; safe to re-run any time.
+- src/assets/emoji_candidates/<legend>/*.png — every cell from the
+  original sprite sheets, ~260 across 16 legends, unfiltered and
+  unnamed. This is raw material for `/emoji browse` (bot/views/
+  emoji_picker.py) to pick from and name interactively — nothing here
+  uploads automatically.
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import discord
 
 _EMOJI_DIR = Path(__file__).resolve().parents[1] / "assets" / "emoji"
+_CANDIDATES_DIR = Path(__file__).resolve().parents[1] / "assets" / "emoji_candidates"
 
 
 def available_emoji_files() -> tuple[Path, ...]:
@@ -24,6 +31,26 @@ def available_emoji_files() -> tuple[Path, ...]:
     if not _EMOJI_DIR.is_dir():
         return ()
     return tuple(sorted(_EMOJI_DIR.glob("*.png")))
+
+
+def candidate_legends() -> tuple[str, ...]:
+    """Every legend with a candidate folder, sorted — the `/emoji browse`
+    picker's legend list.
+    """
+    if not _CANDIDATES_DIR.is_dir():
+        return ()
+    return tuple(sorted(p.name for p in _CANDIDATES_DIR.iterdir() if p.is_dir()))
+
+
+def candidate_files(legend: str) -> tuple[Path, ...]:
+    """Every candidate crop for one legend, sorted. Empty for an unknown
+    legend rather than raising — a stale/renamed folder shouldn't crash the
+    picker mid-browse.
+    """
+    legend_dir = _CANDIDATES_DIR / legend
+    if not legend_dir.is_dir():
+        return ()
+    return tuple(sorted(legend_dir.glob("*.png")))
 
 
 @dataclass
@@ -50,10 +77,17 @@ class EmojiService:
     def __init__(self, guild: discord.Guild) -> None:
         self._guild = guild
 
-    async def sync(self) -> EmojiSyncReport:
+    async def sync(self, files: Sequence[tuple[str, Path]] | None = None) -> EmojiSyncReport:
+        """Uploads `files` (name, image_path) pairs, or the curated pack by
+        default. The picker (`/emoji browse`) is the only caller that ever
+        passes `files` explicitly — a staff-chosen name for a staff-chosen
+        candidate crop.
+        """
         report = EmojiSyncReport()
-        files = available_emoji_files()
-        if not files:
+        pairs = (
+            files if files is not None else [(path.stem, path) for path in available_emoji_files()]
+        )
+        if not pairs:
             return report
 
         existing_names = {emoji.name for emoji in self._guild.emojis}
@@ -63,8 +97,7 @@ class EmojiService:
         static_count = sum(1 for emoji in self._guild.emojis if not emoji.animated)
         limit = self._guild.emoji_limit
 
-        for path in files:
-            name = path.stem
+        for name, path in pairs:
             if name in existing_names:
                 report.skipped_existing.append(name)
                 continue

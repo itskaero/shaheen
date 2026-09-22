@@ -127,7 +127,10 @@ def build_clearwarnings_log_embed(
 def build_verify_success_embed(*, target: discord.abc.User) -> discord.Embed:
     embed = discord.Embed(
         title="✅ Member Verified",
-        description=f"{target.mention} can now see the rest of the server.",
+        description=(
+            f"{target.mention} now has community access. This is general access, not clan "
+            f"roster membership — that comes from an approved `/apply`."
+        ),
         colour=GOLD,
     )
     return _with_target_thumbnail(embed, target)
@@ -145,8 +148,10 @@ def build_already_verified_embed(*, target: discord.abc.User) -> discord.Embed:
 def build_verify_dm_embed(*, guild_name: str) -> discord.Embed:
     embed = discord.Embed(
         title=f"✅ You're verified in {guild_name}!",
-        description="A staff member manually verified you — you now have full access to the "
-        "rest of the server. Welcome in!",
+        description=(
+            "A staff member gave you community access — welcome in! This isn't clan roster "
+            "membership; run `/apply` if you want to try out for the roster."
+        ),
         colour=GOLD,
     )
     embed.set_footer(text=guild_name)

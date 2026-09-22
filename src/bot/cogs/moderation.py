@@ -80,7 +80,7 @@ class ModerationCog(commands.Cog):
 
     @app_commands.command(
         name="verify",
-        description="Manually verify a new member, granting access to member channels (staff only)",
+        description="Grant general community access (Ally) — not clan membership (staff only)",
     )
     @app_commands.describe(user="Who to verify")
     @require_staff_authorized()
@@ -88,8 +88,9 @@ class ModerationCog(commands.Cog):
         moderator = _require_member(interaction)
         await interaction.response.defer(ephemeral=True)
 
-        # Promotion itself lives in bot/membership.py so /verify and an
-        # approved application (ADR-089) let people in identically.
+        # Community access only — distinct from an approved /apply, which
+        # grants clan roster membership (Trial Shaheen) directly, not Ally
+        # (docs/DECISIONS.md ADR-092).
         if is_already_verified(user):
             await interaction.followup.send(
                 embed=build_already_verified_embed(target=user), ephemeral=True

@@ -43,7 +43,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="start",
         title="🦅 Getting Started",
         commands=(
-            CommandHelp("/apply", "Apply to join the clan — staff review every application."),
+            CommandHelp("/apply", "Apply for the clan roster — approval makes you Trial Shaheen."),
             CommandHelp("/application", "Check the status of your application."),
             CommandHelp("/link", "Link your Brawlhalla account (Steam64 or Brawlhalla ID)."),
             CommandHelp("/unlink", "Remove your active link."),
@@ -112,7 +112,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="🛡️ Staff — Moderation",
         commands=(
             CommandHelp("/applications", "The queue of applications awaiting review.", True),
-            CommandHelp("/verify", "Verify a new member into the member channels.", True),
+            CommandHelp("/verify", "Grant general community access — not roster status.", True),
             CommandHelp("/warn", "Issue a warning.", True),
             CommandHelp("/warnings", "List a member's active warnings.", True),
             CommandHelp("/clearwarnings", "Clear a member's active warnings.", True),
@@ -134,6 +134,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/unlock", "Undo a /lock on a channel.", True),
             CommandHelp("/slowmode", "Set a channel's slowmode delay.", True),
             CommandHelp("/emoji sync", "Upload Shaheen's legend emoji pack.", True),
+            CommandHelp("/emoji browse", "Pick which candidate emoji to upload.", True),
             CommandHelp("/setup run", "Provision the server structure.", True),
             CommandHelp("/setup status", "Show whether expected resources exist.", True),
             CommandHelp("/setup verify", "Non-destructive validation report.", True),

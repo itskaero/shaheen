@@ -30,11 +30,15 @@ a warning screen, then a modal requiring the exact text `DELETE`.
 ## Phase 2 — Identity and Brawlhalla
 
 ### /apply
-Apply to join Shaheen. Opens a five-field form (Brawlhalla/Steam ID, region,
-current rank, why Shaheen, optional referrer) and files it for staff review
-(docs/DECISIONS.md ADR-089). The same form opens from the button in
-#📝-apply. One open application at a time; declined applicants can reapply
-after 14 days.
+Apply to join the **clan roster**. Opens a five-field form (Brawlhalla/Steam
+ID, region, current rank, why Shaheen, optional referrer) and files it for
+staff review (docs/DECISIONS.md ADR-089). The same form opens from the
+button in #📝-apply. One open application at a time; declined applicants can
+reapply after 14 days. An approved application promotes straight to **Trial
+Shaheen**, skipping Ally entirely — this is a different, stricter outcome
+than `/verify` below (docs/DECISIONS.md ADR-092). Blocked for anyone who
+already holds Trial Shaheen or above; an Ally (let in via `/verify`, not
+clan membership) can still apply.
 
 ### /application
 Check the status of your own application, including any staff note.
@@ -177,12 +181,14 @@ and log to `#mod-log` (docs/DECISIONS.md ADR-065). Destructive actions
 (`/clearwarnings`, `/kick`, `/ban`) go through `ConfirmView` first.
 
 ### /verify <user>
-Manually verify a new member — promotes Guest to Ally, granting access to
-the gated categories (THE NEST, BRAWLHALLA, VOICE) hidden from everyone
-until then (docs/DECISIONS.md ADR-069). Not destructive, no confirmation
-step. Idempotent: a no-op on a member who already holds any rank role above
-Guest. Best-effort DM to the member; logs to `#mod-log` like every other
-command in this section.
+Manually grant general **community access** — promotes Guest to Ally,
+granting access to the gated categories (THE NEST, BRAWLHALLA, VOICE) hidden
+from everyone until then (docs/DECISIONS.md ADR-069). Not clan roster
+membership — that's what an approved `/apply` grants instead, promoting
+straight to Trial Shaheen (docs/DECISIONS.md ADR-092). Not destructive, no
+confirmation step. Idempotent: a no-op on a member who already holds any
+rank role above Guest. Best-effort DM to the member; logs to `#mod-log` like
+every other command in this section.
 
 ### /warn <user> <reason>
 Record a warning against a member — best-effort DMs them, posts to
@@ -266,6 +272,16 @@ reported and skipped, not clobbered. Safe to re-run any time (after adding
 files to the pack, or on a guild whose emoji were reset); stops cleanly and
 reports which files didn't fit once the server is out of static emoji
 slots.
+
+### /emoji browse
+Interactive picker (docs/DECISIONS.md ADR-092) over the ~260-crop candidate
+pool at `src/assets/emoji_candidates/` — a superset of `/emoji sync`'s fixed
+24, covering 16 legends' full sprite sheets, each expression browsable one
+at a time. Pick a legend, step through its crops with ◀/▶, **➕ Add** to
+queue the one on screen (renaming it first via a modal), **✅ Done** to
+upload everything queued through the same `EmojiService` sync path as
+`/emoji sync`. Session-only view, 5-minute idle timeout, usable only by
+whoever ran the command.
 
 ## Weekly digest (standing job, not a command)
 

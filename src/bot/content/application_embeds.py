@@ -37,8 +37,9 @@ def build_application_panel_embed() -> discord.Embed:
     embed = discord.Embed(
         title="🦅 Apply to Shaheen",
         description=(
-            "Shaheen is Pakistan's competitive Brawlhalla clan. Every application "
-            "is read by staff — tell us who you are and why you want in.\n\n"
+            "Shaheen is Pakistan's competitive Brawlhalla clan. This is an application for the "
+            "**clan roster**, not just server access — every application is read by staff and "
+            "an approved one makes you **Trial Shaheen** immediately.\n\n"
             "You'll need your **Brawlhalla ID or Steam64 ID** ready. "
             "Applying takes about a minute, and you'll hear back by DM."
         ),
@@ -51,6 +52,11 @@ def build_application_panel_embed() -> discord.Embed:
             "• You show up for scrims and tournaments\n"
             "• No toxicity, no smurfing, no excuses"
         ),
+        inline=False,
+    )
+    embed.add_field(
+        name="Just here to chat?",
+        value="You don't need to apply — ask a staff member to `/verify` you instead.",
         inline=False,
     )
     embed.set_footer(text="One application at a time. Declined? You can reapply in 14 days.")
@@ -142,8 +148,9 @@ def build_application_decision_dm_embed(
         embed = discord.Embed(
             title=f"🦅 Welcome to {guild_name}",
             description=(
-                "Your application was approved. Head back to the server, run `/link` "
-                "to connect your Brawlhalla account, and say hello in the chat."
+                "Your application was approved — you're **Trial Shaheen** now, not just a "
+                "verified guest. Head back to the server, run `/link` to connect your "
+                "Brawlhalla account, and say hello in the chat."
             ),
             colour=FOREST_GREEN,
         )
