@@ -29,6 +29,19 @@ hierarchy — purely cosmetic, no permissions, held by at most one member at
 a time, and rotated automatically by `ClanCog`'s weekly digest job rather
 than self-assigned or staff-assigned (docs/DECISIONS.md ADR-070).
 
+Two more system-assigned, cosmetic, permission-free roles sit outside this
+hierarchy alongside MVP (docs/DECISIONS.md ADR-097):
+
+- **🌱 Rising Shaheen** (`ROLE_RANK_RISING`) and the four named Brawlhalla
+  rank roles (🥇/💠/💎/⚔️, Gold and up, ADR-087) — mirrors a member's current
+  ranked tier, applied/removed automatically by the snapshot loop
+  (`bot/cogs/clan.py`'s `_sync_rank_roles`). Held by at most one rank role
+  at a time. Tin/Bronze/Silver all earn Rising Shaheen rather than nothing.
+- **🔥 Core Member** (`ROLE_CORE_MEMBER`) — the chat-activity equivalent,
+  granted once a member's chat level reaches
+  `services/chat_gamification.py`'s `CORE_MEMBER_MIN_LEVEL`. Earned once,
+  never revoked (chat XP only goes up).
+
 ## Per-channel send permissions
 
 Beyond the category-level visibility overwrites (restricted categories

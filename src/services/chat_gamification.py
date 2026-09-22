@@ -1,4 +1,4 @@
-"""Chat-message XP/leveling — pure logic (docs/DECISIONS.md ADR-065).
+"""Chat-message XP/leveling — pure logic (docs/DECISIONS.md ADR-065, ADR-097).
 
 Discord/DB-free, same shape as services/achievements.py (ADR-030): the XP
 curve, rank-title ladder, and per-message XP roll are all pure functions
@@ -28,6 +28,16 @@ _MAX_MESSAGE_XP = 15
 # Cooldown between XP-earning messages, in seconds — prevents spamming
 # short messages to farm levels.
 MESSAGE_XP_COOLDOWN_SECONDS = 60
+
+# Chat leveling had no matching Discord role at the high end — unlike
+# Brawlhalla rank (services/rank_roles.py), which cosmetically tags Gold and
+# up, a top chatter got nothing beyond /chatboard and the weekly MVP
+# rotation. "Core Member" (docs/DECISIONS.md ADR-097) closes that gap at the
+# same relative position rank roles start rewarding: RANK_TITLES has 7
+# tiers, and rank roles begin at the 4th (Gold, index 3 of 8 Brawlhalla
+# tiers) — "Veteran" is RANK_TITLES' 4th tier. Earned once, never revoked:
+# chat XP only ever goes up, so there is nothing to demote.
+CORE_MEMBER_MIN_LEVEL = 15
 
 
 @dataclass(frozen=True)
@@ -83,3 +93,8 @@ def rank_title_for_level(level: int) -> str:
 def roll_message_xp() -> int:
     """A random per-message XP award in [_MIN_MESSAGE_XP, _MAX_MESSAGE_XP]."""
     return random.randint(_MIN_MESSAGE_XP, _MAX_MESSAGE_XP)  # noqa: S311 - gameplay flavor, not security
+
+
+def earns_core_member_role(level: int) -> bool:
+    """True once a member's chat level reaches CORE_MEMBER_MIN_LEVEL."""
+    return level >= CORE_MEMBER_MIN_LEVEL

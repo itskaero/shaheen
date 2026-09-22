@@ -139,6 +139,20 @@ ROLE_MVP = RoleSpec(
     hoist=True,
 )
 
+# System-assigned by EngagementCog once a member's chat level reaches
+# services/chat_gamification.py's CORE_MEMBER_MIN_LEVEL (docs/DECISIONS.md
+# ADR-097) — the chat-activity equivalent of the Brawlhalla rank roles
+# below: cosmetic recognition for sustained engagement, earned once and
+# never revoked (XP only goes up). Not part of the rank ladder or
+# VERIFIED_ROLES, same posture as ROLE_MVP above.
+ROLE_CORE_MEMBER = RoleSpec(
+    logical_key="role:core_member",
+    name="🔥 Core Member",
+    color=GOLD,
+    hoist=False,
+    mentionable=True,
+)
+
 # --- Brawlhalla rank roles (system-assigned from snapshots) -----------------
 #
 # Mirrors each member's current Brawlhalla 1v1 tier, applied and removed
@@ -147,14 +161,24 @@ ROLE_MVP = RoleSpec(
 # anything with it; these make that visible and, more usefully, mentionable —
 # "@Diamond scrims at 9" is the point.
 #
-# Only Gold and above get a role. Below that the label says more about how
-# much ranked someone has played than how good they are, and a wall of
-# low-tier roles is discouraging rather than motivating.
+# Gold and above each get their own named tier. Below that, Tin/Bronze/Silver
+# collapse into one combined "Rising Shaheen" role rather than a role per
+# tier (docs/DECISIONS.md ADR-097) — a wall of low-tier roles is
+# discouraging, but leaving new ranked players with nothing was a real gap:
+# it's the one rank tag a brand-new member can actually earn on day one.
 #
 # hoist=False on purpose: the member-list sidebar is already grouped by the
-# clan rank ladder (Elite/Shaheen/Trial/...), and adding four more hoisted
-# groups would bury it. These are colour/mention tags, not ladder positions.
+# clan rank ladder (Elite/Shaheen/Trial/...), and adding more hoisted groups
+# would bury it. These are colour/mention tags, not ladder positions.
 # Held by at most one at a time — the loop revokes the others.
+
+ROLE_RANK_RISING = RoleSpec(
+    logical_key="role:rank_rising_shaheen",
+    name="🌱 Rising Shaheen",
+    color=GREY,
+    hoist=False,
+    mentionable=True,
+)
 
 ROLE_RANK_GOLD = RoleSpec(
     logical_key="role:rank_gold",
@@ -191,6 +215,7 @@ ROLE_RANK_VALHALLAN = RoleSpec(
 # Lowest tier first. services/rank_roles.py maps a Brawlhalla tier string to
 # one of these logical keys; nothing else should hardcode the order.
 RANK_ROLES: tuple[RoleSpec, ...] = (
+    ROLE_RANK_RISING,
     ROLE_RANK_GOLD,
     ROLE_RANK_PLATINUM,
     ROLE_RANK_DIAMOND,
@@ -272,6 +297,7 @@ ROLES: tuple[RoleSpec, ...] = (
     ROLE_ALLY,
     ROLE_GUEST,
     ROLE_MVP,
+    ROLE_CORE_MEMBER,
     *RANK_ROLES,
     *SELF_ASSIGN_ROLES,
 )
@@ -505,6 +531,13 @@ CATEGORIES: tuple[CategorySpec, ...] = (
             ChannelSpec("channel:voice_the_nest", "🔊-the-nest", "voice"),
             ChannelSpec("channel:voice_gaming", "🎮-gaming", "voice"),
             ChannelSpec("channel:voice_ranked", "⚔️-ranked", "voice"),
+            # A plain voice channel, not a true Discord Stage channel — a
+            # Stage channel is a distinct API type discord.py exposes
+            # separately from VoiceChannel, and ChannelKind/setup_planner/
+            # setup_service assume exactly two kinds throughout; plumbing a
+            # third would be real, disclosed scope of its own (docs/
+            # DECISIONS.md ADR-097), not attempted this round.
+            ChannelSpec("channel:voice_meetings", "🗣️-meetings-and-amas", "voice"),
             ChannelSpec("channel:voice_afk", "💤-afk", "voice"),
         ),
     ),

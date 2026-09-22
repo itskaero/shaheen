@@ -1,4 +1,5 @@
-"""Chat XP/leveling + welcome/leave messages (docs/DECISIONS.md ADR-065).
+"""Chat XP/leveling + welcome/leave messages (docs/DECISIONS.md ADR-065,
+ADR-097).
 
 Stays thin (docs/ARCHITECTURE.md): the XP curve/rank titles live in
 services/chat_gamification.py (pure logic), persistence in database/
@@ -6,7 +7,10 @@ repositories/chat_activity_repository.py, and Discord-facing card
 rendering reuses services/image_service.py's welcome/goodbye/milestone
 renderers exactly the way bot/cogs/clan.py's _announce reuses
 render_milestone_card. No permission check on /level or /chatboard —
-same "any member" posture as /profile.
+same "any member" posture as /profile. Role assignment (Guest on join, Core
+Member on crossing the chat-level threshold) is best-effort, same posture as
+bot/cogs/clan.py's rank-role sync — a missing role or permission is logged
+and skipped, never raised.
 """
 
 from __future__ import annotations
@@ -23,8 +27,9 @@ from discord.ext import commands
 
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import ROLE_GUEST
+from bot.constants import ROLE_CORE_MEMBER, ROLE_GUEST
 from bot.content.engagement_embeds import (
+    build_anthem_embed,
     build_chatboard_embed,
     build_level_embed,
     build_level_up_embed,
@@ -42,6 +47,7 @@ from services.achievement_service import AchievementService
 from services.achievements import evaluate_engagement_achievements
 from services.chat_gamification import (
     MESSAGE_XP_COOLDOWN_SECONDS,
+    earns_core_member_role,
     level_for_xp,
     roll_message_xp,
 )
@@ -53,6 +59,14 @@ _WELCOME_KEY = "channel:welcome"
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
 _SUGGESTIONS_KEY = "channel:suggestions"
 _SUGGESTION_VOTES = ("👍", "👎")
+
+# GitHub Pages' default project-site URL for this repo (docs/DECISIONS.md
+# ADR-047/054) — same constant as bot/content/profile_embeds.py's, kept
+# local rather than extracted to a shared setting for the same reason: no
+# WEBSITE_URL setting exists in core/config.py, and there's no custom
+# domain configured. Worth promoting to a shared constant if a third use
+# turns up.
+_WEBSITE_BASE_URL = "https://itskaero.github.io/shaheen"
 
 
 class EngagementCog(commands.Cog):
@@ -110,6 +124,8 @@ class EngagementCog(commands.Cog):
 
         if new_level is not None and isinstance(message.author, discord.Member):
             await self._announce_level_up(message.guild, message.author, new_level)
+            if earns_core_member_role(new_level):
+                await self._maybe_assign_core_member_role(message.author, new_level)
 
     async def _announce_level_up(
         self, guild: discord.Guild, member: discord.Member, level: int
@@ -177,11 +193,17 @@ class EngagementCog(commands.Cog):
 
         await interaction.followup.send(embed=build_chatboard_embed(entries), ephemeral=True)
 
+    @app_commands.command(name="anthem", description="Link to Shaheen's Music Library")
+    async def anthem(self, interaction: discord.Interaction) -> None:
+        # Ephemeral like every other read-only command here (see /help).
+        await interaction.response.send_message(
+            embed=build_anthem_embed(website_url=f"{_WEBSITE_BASE_URL}/music.html"),
+            ephemeral=True,
+        )
+
     # --- /suggest --------------------------------------------------------------
 
-    @app_commands.command(
-        name="suggest", description="Anonymously suggest something for the clan"
-    )
+    @app_commands.command(name="suggest", description="Anonymously suggest something for the clan")
     @app_commands.describe(text="Your suggestion")
     async def suggest(self, interaction: discord.Interaction, text: str) -> None:
         if interaction.guild is None:
@@ -233,6 +255,27 @@ class EngagementCog(commands.Cog):
             await member.add_roles(role, reason="Auto-assigned on join (docs/DECISIONS.md ADR-065)")
         except discord.Forbidden:
             logger.warning("Missing permission to assign Guest role to %s", member.id)
+
+    async def _maybe_assign_core_member_role(self, member: discord.Member, level: int) -> None:
+        """Grants Core Member the first time a level-up crosses the
+        threshold (docs/DECISIONS.md ADR-097). Never revoked — chat XP only
+        ever goes up, so there's nothing to demote from.
+        """
+        async with session_scope(self.bot.session_factory) as session:
+            resource = await ProvisionedResourceRepository(session).get(
+                guild_id=member.guild.id,
+                resource_type=ResourceType.ROLE,
+                logical_key=ROLE_CORE_MEMBER.logical_key,
+            )
+        if resource is None:
+            return
+        role = member.guild.get_role(resource.discord_id)
+        if role is None or role in member.roles:
+            return
+        try:
+            await member.add_roles(role, reason=f"Reached chat level {level} (Core Member)")
+        except discord.Forbidden:
+            logger.warning("Missing permission to assign Core Member role to %s", member.id)
 
     async def _post_arrival_card(
         self, guild: discord.Guild, *, member: discord.Member | discord.User, joining: bool

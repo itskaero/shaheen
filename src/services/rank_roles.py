@@ -1,12 +1,14 @@
-"""Which Discord rank role a Brawlhalla tier earns (docs/DECISIONS.md ADR-087).
+"""Which Discord rank role a Brawlhalla tier earns (docs/DECISIONS.md ADR-087,
+ADR-097).
 
 Pure: plain strings in, plain strings out, no Discord and no database — the
 snapshot loop already knows every member's tier, and bot/cogs/clan.py turns
 the plan below into actual role edits. Keeping it here means the mapping is
 unit-testable and stays usable by the future website/API.
 
-Only Gold and above map to a role. Below that a tier label says more about
-how much ranked someone has played than how good they are.
+Gold and above each earn their own named tier. Tin/Bronze/Silver collapse
+into one combined "Rising Shaheen" role (ADR-097) rather than a role per
+tier or nothing at all.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from bot.constants import (
     ROLE_RANK_DIAMOND,
     ROLE_RANK_GOLD,
     ROLE_RANK_PLATINUM,
+    ROLE_RANK_RISING,
     ROLE_RANK_VALHALLAN,
 )
 from services.achievements import tier_index
@@ -24,9 +27,12 @@ from services.achievements import tier_index
 # Index into services/achievements.py's _TIER_ORDER
 # ("tin", "bronze", "silver", "gold", "platinum", "diamond", "diamond+",
 # "valhallan") -> the logical key of the role that tier earns. tin/bronze/
-# silver are deliberately absent, and "diamond+" collapses into Diamond
-# rather than getting a role of its own.
+# silver all collapse into Rising Shaheen, and "diamond+" collapses into
+# Diamond rather than getting a role of its own.
 _TIER_INDEX_TO_ROLE_KEY: dict[int, str] = {
+    0: ROLE_RANK_RISING.logical_key,
+    1: ROLE_RANK_RISING.logical_key,
+    2: ROLE_RANK_RISING.logical_key,
     3: ROLE_RANK_GOLD.logical_key,
     4: ROLE_RANK_PLATINUM.logical_key,
     5: ROLE_RANK_DIAMOND.logical_key,
@@ -36,6 +42,7 @@ _TIER_INDEX_TO_ROLE_KEY: dict[int, str] = {
 
 ALL_RANK_ROLE_KEYS: frozenset[str] = frozenset(
     (
+        ROLE_RANK_RISING.logical_key,
         ROLE_RANK_GOLD.logical_key,
         ROLE_RANK_PLATINUM.logical_key,
         ROLE_RANK_DIAMOND.logical_key,
@@ -62,7 +69,7 @@ class RankRolePlan:
 
 
 def rank_role_key_for_tier(tier: str | None) -> str | None:
-    """The rank role a tier earns, or None for unranked/below Gold.
+    """The rank role a tier earns, or None if unranked/never played ranked.
 
     Fails closed on an unrecognized tier string (`tier_index` returns None),
     which means a Brawlhalla rename can never hand out a wrong role — it just

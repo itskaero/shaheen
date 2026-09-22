@@ -104,6 +104,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="💬 Community",
         commands=(
             CommandHelp("/suggest", "Anonymously suggest something for the clan."),
+            CommandHelp("/anthem", "Link to Shaheen's Music Library on the website."),
             CommandHelp("/help", "This list."),
         ),
     ),
