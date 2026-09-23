@@ -5,7 +5,7 @@ Regression guard for ADR-040: nothing here should expose Discord identity.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -571,6 +571,24 @@ async def test_achievement_gallery_counts_holders_and_completion_pct(
     assert entry_by_key["games_100"].total_members == 2
     assert entry_by_key["games_100"].completion_pct == 100.0
     assert entry_by_key["games_500"].holder_count == 0
+
+
+async def test_achievement_gallery_lists_who_earned_it_earliest_first(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member_a, _player_a = await _linked_player(session, discord_id=1, brawlhalla_id=10)
+    member_b, _player_b = await _linked_player(session, discord_id=2, brawlhalla_id=20)
+    awards = MemberAchievementRepository(session)
+    games_100 = achievement_catalog["games_100"].id
+    earlier = await awards.award(shaheen_member_id=member_b.id, achievement_id=games_100)
+    await awards.award(shaheen_member_id=member_a.id, achievement_id=games_100)
+    assert earlier is not None
+    earlier.awarded_at = datetime.now(UTC) - timedelta(days=3)
+    await session.flush()
+
+    entries = await WebsiteService(session).get_achievement_gallery(GUILD_ID)
+    entry = next(e for e in entries if e.achievement.key == "games_100")
+    assert [h.player.brawlhalla_player_id for h in entry.holders] == [20, 10]
 
 
 async def test_achievement_gallery_zero_members_has_zero_pct_not_a_crash(

@@ -97,6 +97,11 @@
 - [x] Pakistan leaderboard (`/pakistan join|leave|add|remove|leaderboard`),
       separate from the clan board; website Leaderboard + Roster merged into
       one Rankings page with Clan / Pakistan tabs
+- [x] Pakistan board as server promotion: claimed/unclaimed spots on the
+      site, 🇵🇰 Pakistan Top 10 role for claimed players, weekly standings
+      post in #pakistan-chat
+- [x] Website achievements gallery shows who earned each one, grouped by
+      category
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

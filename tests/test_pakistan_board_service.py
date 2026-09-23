@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,13 +26,19 @@ def _candidate(brawlhalla_id: int, name: str | None = None) -> SearchResult:
     return SearchResult(brawlhalla_id=brawlhalla_id, name=name or f"P{brawlhalla_id}")
 
 
-async def _rate(session: AsyncSession, brawlhalla_id: int, rating: int, season: int = 5) -> None:
+async def _rate(
+    session: AsyncSession,
+    brawlhalla_id: int,
+    rating: int,
+    season: int = 5,
+    captured_at: datetime | None = None,
+) -> None:
     player = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(brawlhalla_id)
     assert player is not None
     await RankingSnapshotRepository(session).add(
         RankingSnapshot(
             brawlhalla_player_id=player.id,
-            captured_at=datetime.now(UTC),
+            captured_at=captured_at or datetime.now(UTC),
             rating=rating,
             peak_rating=rating,
             tier="Gold",
@@ -129,3 +135,54 @@ async def test_leaderboard_is_season_scoped_sorted_and_flags_clan_members(
         (20, True),
         (10, False),
     ]
+
+
+# ---------- claimed spots, the Top 10 role and weekly climbers (ADR-100) ----------
+
+
+async def test_rows_report_whether_the_spot_is_claimed(session: AsyncSession) -> None:
+    service = PakistanBoardService(session)
+    await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(10))
+    await service.add(guild_id=GUILD_ID, added_by_discord_id=1, candidate=_candidate(20))
+    await _rate(session, 10, 1400)
+    await _rate(session, 20, 1900)
+
+    rows = await service.leaderboard(GUILD_ID)
+    assert [(r.player.brawlhalla_player_id, r.is_claimed) for r in rows] == [
+        (20, False),
+        (10, True),
+    ]
+
+
+async def test_top_role_goes_only_to_claimed_players_inside_the_top_places(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(pakistan_board_service, "PAKISTAN_TOP_ROLE_SIZE", 2)
+    service = PakistanBoardService(session)
+    await service.add(guild_id=GUILD_ID, added_by_discord_id=1, candidate=_candidate(10))
+    await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(20))
+    await service.join(guild_id=GUILD_ID, discord_id=8, candidate=_candidate(30))
+    await _rate(session, 10, 2200)  # 1st but unclaimed: keeps the place, no role
+    await _rate(session, 20, 2000)  # 2nd, claimed: gets it
+    await _rate(session, 30, 1500)  # 3rd: outside the top 2
+
+    assert await service.top_role_earners(GUILD_ID) == {7}
+
+
+async def test_climbers_rank_rating_gains_inside_the_window(session: AsyncSession) -> None:
+    service = PakistanBoardService(session)
+    await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(10))
+    await service.add(guild_id=GUILD_ID, added_by_discord_id=1, candidate=_candidate(20))
+    await service.add(guild_id=GUILD_ID, added_by_discord_id=1, candidate=_candidate(30))
+    now = datetime.now(UTC)
+    since = now - timedelta(days=7)
+    for brawlhalla_id, before, after in ((10, 1400, 1450), (20, 1500, 1620), (30, 1800, 1700)):
+        await _rate(session, brawlhalla_id, before, captured_at=now - timedelta(days=5))
+        await _rate(session, brawlhalla_id, after, captured_at=now - timedelta(days=1))
+    # a gain from before the window doesn't count
+    await _rate(session, 10, 900, captured_at=now - timedelta(days=10))
+
+    climbers = await service.climbers(GUILD_ID, since=since)
+    assert [
+        (c.player.brawlhalla_player_id, c.rating_gain, c.owner_discord_id) for c in climbers
+    ] == [(20, 120, None), (10, 50, 7)]

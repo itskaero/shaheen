@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import RANK_ROLES, ROLE_MVP
+from bot.constants import RANK_ROLES, ROLE_MVP, ROLE_PAKISTAN_TOP
 from bot.content.clan_embeds import (
     build_achievement_announcement_embed,
     build_achievements_embed,
@@ -29,6 +29,7 @@ from bot.content.clan_embeds import (
     build_legend_meta_embed,
     build_milestone_announcement_embed,
     build_mvp_announcement_embed,
+    build_pakistan_weekly_embed,
     build_spotlight_embed,
     build_tier_change_announcement_embed,
     build_weekly_digest_embed,
@@ -48,6 +49,7 @@ from services.digest_service import WeeklyDigest, WeeklyDigestService
 from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import render_milestone_card
 from services.link_service import LinkService
+from services.pakistan_board_service import PakistanBoardService
 from services.rank_roles import plan_rank_roles
 from services.snapshot_service import Announcement, SnapshotService
 
@@ -55,6 +57,7 @@ logger = logging.getLogger(__name__)
 
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
 _ANNOUNCEMENTS_KEY = "channel:announcements"
+_PAKISTAN_CHAT_KEY = "channel:pakistan_chat"
 _DIGEST_WEEKDAY = 6  # Sunday (Monday=0 .. Sunday=6)
 
 
@@ -124,6 +127,7 @@ class ClanCog(commands.Cog):
             len(result.announcements),
         )
         await self._sync_rank_roles(guild, result.tiers)
+        await self._sync_pakistan_top_role(guild)
 
         for announcement in result.announcements:
             await self._announce(guild, announcement)
@@ -218,6 +222,70 @@ class ClanCog(commands.Cog):
         await self._post_weekly_digest(guild, digest)
         if digest.mvp_discord_id is not None:
             await self._rotate_mvp_role(guild, digest.mvp_discord_id)
+        await self._post_pakistan_weekly(guild, since)
+
+    async def _post_pakistan_weekly(self, guild: discord.Guild, since: datetime) -> None:
+        """Pakistan standings to #pakistan-chat (docs/DECISIONS.md ADR-100).
+
+        Claimed climbers get a ping in the message text (embed mentions don't
+        notify); unclaimed ones are named with a nudge to join and claim.
+        """
+        channel = await resolve_provisioned_channel(self.bot, guild, _PAKISTAN_CHAT_KEY)
+        if channel is None:
+            return
+        async with session_scope(self.bot.session_factory) as session:
+            service = PakistanBoardService(session)
+            rows = await service.leaderboard(guild.id)
+            climbers = await service.climbers(guild.id, since=since)
+            season = await service.current_season()
+        if not rows:
+            return
+
+        embed = build_pakistan_weekly_embed(
+            standings=[
+                (row.player.player_name, row.snapshot.tier, row.snapshot.rating, row.is_claimed)
+                for row in rows
+            ],
+            climbers=[
+                (c.player.player_name, c.rating_gain, c.owner_discord_id is not None)
+                for c in climbers
+            ],
+            season=season,
+        )
+        pings = [f"<@{c.owner_discord_id}>" for c in climbers if c.owner_discord_id is not None]
+        content = f"🇵🇰 Climbing this week: {' '.join(pings)}" if pings else None
+        try:
+            await channel.send(content=content, embed=embed)
+        except discord.Forbidden:
+            logger.warning("Missing permission to post in pakistan-chat")
+
+    async def _sync_pakistan_top_role(self, guild: discord.Guild) -> None:
+        """Claimed top-10 Pakistan players hold ROLE_PAKISTAN_TOP; nobody else
+        does. Best-effort like every other role edit here (ADR-100).
+        """
+        async with session_scope(self.bot.session_factory) as session:
+            resource = await ProvisionedResourceRepository(session).get(
+                guild_id=guild.id,
+                resource_type=ResourceType.ROLE,
+                logical_key=ROLE_PAKISTAN_TOP.logical_key,
+            )
+            earners = await PakistanBoardService(session).top_role_earners(guild.id)
+        if resource is None:
+            return
+        role = guild.get_role(resource.discord_id)
+        if role is None:
+            return
+        reason = "Shaheen Pakistan leaderboard top 10"
+        try:
+            for holder in list(role.members):
+                if holder.id not in earners:
+                    await holder.remove_roles(role, reason=reason)
+            for discord_id in earners:
+                member = guild.get_member(discord_id)
+                if member is not None and role not in member.roles:
+                    await member.add_roles(role, reason=reason)
+        except discord.Forbidden:
+            logger.warning("Missing permission to sync the Pakistan Top 10 role")
 
     async def _post_weekly_digest(self, guild: discord.Guild, digest: WeeklyDigest) -> None:
         channel = await resolve_provisioned_channel(self.bot, guild, _ANNOUNCEMENTS_KEY)

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_session, get_settings
-from api.schemas import AchievementGalleryEntryResponse
+from api.schemas import AchievementGalleryEntryResponse, AchievementHolderResponse
 from core.config import Settings
 from services.website_service import WebsiteService
 
@@ -31,6 +31,14 @@ async def get_achievement_gallery(
             total_members=entry.total_members,
             completion_pct=entry.completion_pct,
             rarity=entry.rarity,
+            holders=[
+                AchievementHolderResponse(
+                    brawlhalla_id=holder.player.brawlhalla_player_id,
+                    player_name=holder.player.player_name,
+                    earned_at=holder.earned_at,
+                )
+                for holder in entry.holders
+            ],
         )
         for entry in entries
     ]

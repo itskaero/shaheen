@@ -325,6 +325,11 @@ async def test_achievement_gallery_reflects_seeded_catalog_and_awards(
     assert by_key["games_100"]["category"] == "milestone"
     assert by_key["games_100"]["rarity"] == "Common"
     assert by_key["games_500"]["rarity"] == "Unclaimed"
+    # ADR-100: who earned it — Brawlhalla identity only, no Discord ids.
+    holders = by_key["games_100"]["holders"]
+    assert [(h["brawlhalla_id"], h["player_name"]) for h in holders] == [(10, "Foo")]
+    assert set(holders[0]) == {"brawlhalla_id", "player_name", "earned_at"}
+    assert by_key["games_500"]["holders"] == []
 
 
 async def _seed_catalog_and_award(session: AsyncSession, *, key: str) -> None:
@@ -464,9 +469,12 @@ async def test_pakistan_leaderboard_endpoint(
             brawlhalla_player_id=77, player_name="Outsider", region=None
         )
         assert member_player is not None
-        for player in (member_player, outsider):
+        for player, owner in ((member_player, 5), (outsider, None)):
             await board.add(
-                guild_id=GUILD_ID, player_id=player.id, added_by_discord_id=1, owner_discord_id=None
+                guild_id=GUILD_ID,
+                player_id=player.id,
+                added_by_discord_id=1,
+                owner_discord_id=owner,
             )
         await RankingSnapshotRepository(session).add(
             RankingSnapshot(
@@ -490,4 +498,7 @@ async def test_pakistan_leaderboard_endpoint(
         ("Foo", True),
     ]
     assert body[0]["region"] == "SEA"
+    # claim status is a boolean only — never the owner's Discord id (ADR-040/ADR-100)
+    assert [e["is_claimed"] for e in body] == [False, True]
     assert "discord_id" not in body[0]
+    assert "owner_discord_id" not in body[0]
