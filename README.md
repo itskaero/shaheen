@@ -175,9 +175,15 @@ flyctl secrets set \
   DISCORD_TOKEN=... \
   GUILD_ID=... \
   DATABASE_URL=<the Render External Database URL from step 1> \
-  BRAWLHALLA_API_KEY=...
+  BRAWLHALLA_API_KEY=... \
+  BRAWLHALLA_SEASON=42
 flyctl deploy
 ```
+
+`BRAWLHALLA_SEASON` stamps every snapshot with the current Brawlhalla
+ranked season. Bump it (`flyctl secrets set BRAWLHALLA_SEASON=<n>`, which
+restarts the bot) when a new season starts, so the boards and history
+split cleanly at the reset (docs/DECISIONS.md ADR-088/ADR-101).
 
 `flyctl deploy` again any time you push changes. `flyctl logs` tails the
 running bot.

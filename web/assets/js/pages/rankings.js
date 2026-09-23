@@ -152,7 +152,7 @@
   function renderPakistan(entries, meta) {
     const el = document.getElementById("pakistan-content");
     if (!entries || entries.length === 0) {
-      el.innerHTML = '<p class="state-msg">Nobody on the Pakistan ladder yet — be the first with /pakistan join in our Discord.</p>';
+      el.innerHTML = '<p class="state-msg">Nobody has placed in ranked this season yet — add yourself with /pakistan join in our Discord.</p>';
       return;
     }
     el.innerHTML = `${podiumHtml(entries)}${tableHtml(entries, { memberSince: false })}${snapshotNote(meta)}`;
