@@ -14,6 +14,7 @@ from database.models.ranking_snapshot import RankingSnapshot
 from services.achievements import AchievementDef
 from services.clan_service import ClanStats, LegendMetaEntry
 from services.legend_art import legend_display_name
+from services.seasons import season_label
 
 
 def build_leaderboard_embed(
@@ -47,7 +48,7 @@ def build_leaderboard_embed(
     ]
     embed.description = "\n".join(lines)
     if season is not None:
-        embed.set_footer(text=f"Season {season} · {len(entries)} {noun}(s) placed")
+        embed.set_footer(text=f"{season_label(season)} · {len(entries)} {noun}(s) placed")
     return embed
 
 
@@ -87,8 +88,9 @@ def build_pakistan_weekly_embed(
             "only claimed players in the top 10 get the 🇵🇰 Pakistan Top 10 role.",
             inline=False,
         )
-    if season is not None:
-        embed.set_footer(text=f"Season {season}")
+    label = season_label(season)
+    if label is not None:
+        embed.set_footer(text=label)
     return embed
 
 

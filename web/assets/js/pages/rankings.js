@@ -158,6 +158,16 @@
     el.innerHTML = `${podiumHtml(entries)}${tableHtml(entries, { memberSince: false })}${snapshotNote(meta)}`;
   }
 
+  // The current Pakistan Season (ADR-102). Decorative: if /clan fails the
+  // boards still render, just without the banner.
+  function renderSeason(clan) {
+    const el = document.getElementById("season-banner");
+    const html = seasonBannerHtml(clan && clan.pakistan_season);
+    el.innerHTML = html;
+    el.hidden = !html;
+  }
+  ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), renderSeason).catch(() => {});
+
   ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), renderClan).catch((err) => {
     document.getElementById("clan-content").innerHTML =
       `<p class="state-msg error">Couldn't load the clan ladder: ${escapeHtml(err.message)}</p>`;

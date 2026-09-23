@@ -13,6 +13,7 @@ from api.schemas import (
     AchievementResponse,
     LegendMasteryResponse,
     MatchResultResponse,
+    PakistanSeasonResponse,
     PlayerProfileResponse,
     RankingHistoryEntryResponse,
 )
@@ -40,6 +41,7 @@ async def get_player_profile(
         global_rank=profile.global_rank,
         region_rank=profile.region_rank,
         season=profile.season,
+        pakistan_season=PakistanSeasonResponse.for_brawlhalla_season(profile.season),
         playstyle_tags=profile.playstyle_tags,
         achievements=[
             AchievementResponse(

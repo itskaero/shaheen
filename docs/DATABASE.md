@@ -49,6 +49,9 @@ RankingSnapshot
 - wins
 - losses
 - rank/region where available
+- season: the Brawlhalla season the reading belongs to (ADR-088). Derived from
+  the date since ADR-102; migration 0015 restamped the rows production had
+  stamped with the default "1" as S41 or S42
 
 LegendSnapshot
 - player
@@ -66,6 +69,12 @@ MemberAchievement
 - achievement
 - awarded_at
 - metadata if needed
+
+GuildSettings
+- guild_id
+- setup_mode, last_setup_at
+- announced_season: the last Brawlhalla season whose Pakistan Season start
+  the bot posted (ADR-102, migration 0014)
 
 Later:
 Match

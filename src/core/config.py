@@ -54,11 +54,13 @@ class Settings(BaseSettings):
     brawlhalla_api_key: SecretStr
     snapshot_interval_hours: float = Field(default=6.0, gt=0)
     # Brawlhalla wipes ranked ratings at the start of each season, and its
-    # API does not say which season a response belongs to. Every snapshot is
-    # stamped with this number so a pre-reset 1900 can never outrank a
-    # freshly-placed 1500 on any leaderboard (docs/DECISIONS.md ADR-088).
-    # Bump BRAWLHALLA_SEASON on the deploy when a new season starts.
-    brawlhalla_season: int = Field(default=1, ge=1)
+    # API does not say which season a response belongs to, so every snapshot
+    # is stamped with a season (docs/DECISIONS.md ADR-088). The season is
+    # derived from the date (services/seasons.py, ADR-102); set
+    # BRAWLHALLA_SEASON only to override that when Brawlhalla's real reset
+    # dates drift from the 13-week rhythm — and unset it again afterwards,
+    # or the season stops advancing.
+    brawlhalla_season: int | None = Field(default=None, ge=1)
 
     @field_validator("database_url")
     @classmethod

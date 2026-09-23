@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_session, get_settings
-from api.schemas import ClanInfoResponse
+from api.schemas import ClanInfoResponse, PakistanSeasonResponse
 from core.config import Settings
 from services.website_service import WebsiteService
 
@@ -25,6 +25,7 @@ async def get_clan(
         tagline=info.tagline,
         member_count=info.member_count,
         season=info.season,
+        pakistan_season=PakistanSeasonResponse.for_brawlhalla_season(info.season),
         discord_member_count=info.discord_member_count,
         discord_boost_tier=info.discord_boost_tier,
         discord_boost_count=info.discord_boost_count,

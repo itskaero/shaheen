@@ -133,3 +133,27 @@ function chatRankBadge(rankTitle) {
 function xpForLevel(level) {
   return level <= 1 ? 0 : 100 * (level - 1) ** 2;
 }
+
+// Pakistan Season banner (docs/DECISIONS.md ADR-102). `season` is the API's
+// pakistan_season object; names and badge keys come from the server so the
+// site never keeps its own copy of the season list.
+function seasonBannerHtml(season) {
+  if (!season) return "";
+  const until = new Date(season.ends_at).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const badge = `assets/img/seasons/${encodeURIComponent(season.badge)}`;
+  return `
+    <picture>
+      <source srcset="${badge}.webp" type="image/webp" />
+      <img class="season-badge" src="${badge}.png" alt="Season of ${escapeHtml(season.name)} badge" width="152" height="136" />
+    </picture>
+    <div class="season-copy">
+      <span class="season-kicker">Pakistan Season ${season.number}</span>
+      <h2 class="season-name">Season of <span class="season-name-word">${escapeHtml(season.name)}</span></h2>
+      <span class="season-urdu" lang="ur">${escapeHtml(season.name_urdu)}</span>
+      <span class="season-meta">Brawlhalla Season ${season.brawlhalla_season} &middot; until about ${until} &middot; a new season every 13 weeks</span>
+    </div>`;
+}

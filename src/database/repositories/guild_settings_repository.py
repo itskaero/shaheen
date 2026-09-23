@@ -1,4 +1,4 @@
-"""Persistence for GuildSettings — currently just the active setup mode."""
+"""Persistence for GuildSettings — setup mode and the last announced season."""
 
 from __future__ import annotations
 
@@ -28,3 +28,16 @@ class GuildSettingsRepository:
         self._session.add(settings)
         await self._session.flush()
         return settings
+
+    async def mark_season_announced(self, guild_id: int, brawlhalla_season: int) -> None:
+        """Remember the season-start post (docs/DECISIONS.md ADR-102).
+
+        A guild that has never run /setup has no row yet; it gets one in
+        development mode, the same default /setup itself starts from.
+        """
+        settings = await self.get(guild_id)
+        if settings is None:
+            settings = GuildSettings(guild_id=guild_id, setup_mode="development")
+            self._session.add(settings)
+        settings.announced_season = brawlhalla_season
+        await self._session.flush()

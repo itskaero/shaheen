@@ -9,6 +9,7 @@ needs via dependency attributes on the bot instance rather than a framework.
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 
 import discord
 from discord import app_commands
@@ -22,6 +23,7 @@ from core.config import Settings
 from core.exceptions import ShaheenError
 from integrations.brawlhalla.client import BrawlhallaClient
 from integrations.brawlhalla.service import BrawlhallaService
+from services.seasons import brawlhalla_season_at
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,10 @@ class ShaheenBot(commands.Bot):
         )
         # discord.py's documented way to override the tree's default error handler.
         self.tree.on_error = self._on_app_command_error  # type: ignore[method-assign]
+
+    def current_brawlhalla_season(self) -> int:
+        """The season every new snapshot is stamped with (ADR-088/ADR-102)."""
+        return brawlhalla_season_at(datetime.now(UTC), override=self.settings.brawlhalla_season)
 
     async def setup_hook(self) -> None:
         # Persistent views (docs/DECISIONS.md ADR-058) must be re-registered

@@ -4012,3 +4012,85 @@ Files: `src/integrations/brawlhalla/models.py`, `src/services/pakistan_board_ser
 `tests/test_brawlhalla_models.py`, `tests/test_pakistan_board_service.py`. Verified: model tests for the
 post-reset payload (player and per-Legend) and for a real peak surviving an unplaced rating; a service
 test that an unplaced entry is off the board and earns no role; full suite and Alembic round-trip pass.
+
+## ADR-102 — Pakistan Seasons: named, badged, rotating every 13 weeks
+
+The owner supplied a sheet of 13 season badges, each "Season of …" with an English and an Urdu name.
+They asked for Shaheen's own seasons numbered 1, 2, 3… alongside Brawlhalla's. Their answers:
+- Brawlhalla S42, which began on 23 September 2026, is **Pakistan Season 1**.
+- Seasons rotate every 13 weeks, Brawlhalla's usual length; the details were left to us.
+- The season shows on the website, in bot embeds, and as a season-start announcement.
+
+**One pure module.** `services/seasons.py` holds the anchor (S42 at 2026-09-23 00:00 UTC), the 13-week
+length and the 13 `(name, urdu)` pairs in badge order. Everything else asks it:
+- `brawlhalla_season_at(now, override=)`: the season in progress;
+- `pakistan_season(n)`: number, names, badge key and the 13-week window;
+- `season_label(n)`: the single wording every Discord footer uses;
+- `season_to_announce(current, last)`: whether to announce.
+
+The API returns the names, so the website keeps no copy of the list.
+
+**The season comes from the date, not a hand-set env var.** ADR-088 made `BRAWLHALLA_SEASON` a required
+manual bump at each reset. Production never set it, so every rating row said "season 1". The bot now
+stamps snapshots with `ShaheenBot.current_brawlhalla_season()`, derived from the calendar.
+`BRAWLHALLA_SEASON` becomes an optional override for when Brawlhalla's real reset drifts from the
+rhythm. It has to be unset again afterwards, or the season stops advancing, and README says so. The
+13-week window is documented as approximate for the same reason. Brawlhalla's API never reports the
+season, so the date plus an override is the most we can know.
+
+**Numbering.**
+- Pakistan numbers keep counting.
+- Names and badges cycle after 13 (Season 14 is Zarb-e-Shaheen again, about 3¼ years out); a longer
+  sheet extends the tuple.
+- Seasons before S42 have no Pakistan season. They read "Brawlhalla Season 41" on Discord, and
+  `pakistan_season` is null in the API.
+
+**Restamping stored data (migration 0015).** Only `ranking_snapshots.season` is season-scoped. Legend
+snapshots, achievements, matches, tournaments and Pakistan-board membership are all-time on purpose.
+- Rows stamped with the default 1 become 41 if captured before the S42 anchor and 42 at or after it.
+  Shaheen went live on about 7 September, inside S41.
+- NULL-season rows are untouched.
+- There's no downgrade: once new S42 rows exist they can't be told apart from restamped ones.
+
+**Badges.** Cut from the uploaded sheet (1500×1000, transparent) by alpha connected components, each
+assigned to its nearest badge. The number diamonds touch the badge above them tip to tip along one row,
+so that row is split only for labelling; the output keeps every pixel.
+- `web/assets/img/seasons/NN.{webp,png}` are 256px tall.
+- `src/assets/img/seasons/NN.png` are the full crops for Discord, shipped by `COPY src/` (ADR-060).
+- The full sheet is kept as `web/assets/img/seasons/sheet.webp` for re-cuts.
+- Both sides look badges up by the `badge` key ("01"…"13").
+
+**Surfaces.**
+- `/clan` and `/players/{id}` gain `pakistan_season`.
+- The Rankings page opens with a season banner: the badge, "Pakistan Season 1", "Season of
+  Zarb-e-Shaheen", the Nastaliq Urdu name, and the Brawlhalla season with its approximate end date.
+- The clan page's season tile and the player page's season line use the Pakistan season.
+- `/leaderboard`, `/pakistan leaderboard` and the weekly Pakistan post name the season in the footer,
+  with the badge as the thumbnail.
+- **Season-start announcement:**
+  - The snapshot tick posts the new season's badge and names to #announcements once.
+  - `guild_settings.announced_season` (migration 0014) records it only after a successful post, so a
+    missing channel or permission retries next tick.
+  - The first deploy announces Season 1.
+
+Files: `src/services/seasons.py`, `src/bot/content/season_embeds.py`,
+`alembic/versions/0014_announced_season.py`, `alembic/versions/0015_restamp_default_season.py`,
+`web/assets/img/seasons/*`, `src/assets/img/seasons/*` (new); `src/core/config.py`, `src/bot/client.py`,
+`src/bot/cogs/{clan,link,pakistan,profile}.py`, `src/bot/content/clan_embeds.py`,
+`src/services/snapshot_service.py`, `src/database/models/guild_settings.py`,
+`src/database/repositories/guild_settings_repository.py`, `src/api/{schemas,routers/clan,routers/players}.py`,
+`web/rankings.html`, `web/assets/js/{theme,pages/rankings,pages/clan,pages/player}.js`,
+`web/assets/css/style.css`, `.env.example`, `README.md`, `docs/{COMMANDS,DATABASE,ROADMAP}.md`, tests.
+
+Verified:
+- Season tests: S42 on the anchor, the last second before 13 weeks, S43 at 13 weeks, S41 before the
+  anchor, the override, the names cycling at Season 14, no Pakistan season before S42, labels,
+  and announcement decisions.
+- Embed tests: every season has a badge file, the thumbnail attaches from S42 only, the season-start
+  embed, and footers.
+- API tests: `pakistan_season` on `/clan` for S42 and null before it.
+- Repository test for `announced_season`.
+- A migration test that season-1 rows either side of the anchor become 41 and 42, including the exact
+  boundary second, with NULL left alone; Alembic round-trip.
+- Playwright at 1440px and 390px: the banner with a loaded badge and Urdu name, the clan tile, the
+  player season line, no overflow, no console errors.

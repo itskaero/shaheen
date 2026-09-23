@@ -3,6 +3,15 @@
   const form = document.getElementById("search-form");
   const input = document.getElementById("player-id-input");
 
+  // "Pakistan Season 1 (Zarb-e-Shaheen)" from S42 on, else the plain
+  // Brawlhalla number (docs/DECISIONS.md ADR-102).
+  function seasonText(profile) {
+    if (profile.pakistan_season) {
+      return ` · Pakistan Season ${profile.pakistan_season.number} (${escapeHtml(profile.pakistan_season.name)})`;
+    }
+    return profile.season ? ` · Season ${profile.season}` : "";
+  }
+
   const params = new URLSearchParams(window.location.search);
   const initialId = params.get("id");
   if (initialId) {
@@ -53,7 +62,7 @@
             <div>
               <h2 class="player-card-name">${escapeHtml(profile.player_name)}</h2>
               <p class="page-subtitle" style="margin: 0.25rem 0 0;">
-                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}${profile.season ? ` · Season ${profile.season}` : ""}
+                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}${seasonText(profile)}
               </p>
             </div>
           </div>

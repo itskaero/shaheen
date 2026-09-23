@@ -395,6 +395,43 @@ async def test_clan_endpoint_reports_the_current_season(
     # _seed_linked_player writes an unstamped snapshot, so there is no
     # current season until a stamped one exists.
     assert body["season"] is None
+    assert body["pakistan_season"] is None
+
+
+async def test_clan_endpoint_names_the_pakistan_season(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """ADR-102: S42 is Pakistan Season 1, with its badge key and window."""
+    async with session_factory() as session:
+        player = await BrawlhallaPlayerRepository(session).upsert(
+            brawlhalla_player_id=10, player_name="Foo", region=None
+        )
+        await RankingSnapshotRepository(session).add(
+            RankingSnapshot(
+                brawlhalla_player_id=player.id,
+                captured_at=datetime.now(UTC),
+                rating=1500,
+                peak_rating=1500,
+                tier="Gold",
+                wins=1,
+                games=2,
+                season=42,
+            )
+        )
+        await session.commit()
+
+    body = client.get("/clan").json()
+    assert body["season"] == 42
+    season = body["pakistan_season"]
+    assert {k: season[k] for k in ("number", "brawlhalla_season", "name", "badge")} == {
+        "number": 1,
+        "brawlhalla_season": 42,
+        "name": "Zarb-e-Shaheen",
+        "badge": "01",
+    }
+    assert season["name_urdu"] == "ضربِ شاہین"
+    assert season["starts_at"].startswith("2026-09-23")
+    assert season["ends_at"].startswith("2026-12-23")
 
 
 async def test_player_profile_exposes_region_rank_and_season(
@@ -427,6 +464,7 @@ async def test_player_profile_exposes_region_rank_and_season(
     body = client.get("/players/10").json()
     assert body["region_rank"] == 12
     assert body["season"] == 3
+    assert body["pakistan_season"] is None  # before S42 (ADR-102)
 
     (entry,) = client.get("/players/10/history").json()
     assert entry["season"] == 3
