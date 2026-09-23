@@ -1,14 +1,14 @@
 {
-  "captured_at": "2026-09-23T16:53:41Z",
+  "captured_at": "2026-09-23T21:28:06Z",
   "source": "/roster",
   "data": [
     {
       "brawlhalla_id": 5734378,
       "player_name": "kaero.",
       "region": "ME",
-      "rating": 0,
-      "peak_rating": 0,
-      "tier": "none",
+      "rating": null,
+      "peak_rating": null,
+      "tier": null,
       "member_since": "2026-09-07T17:12:06.145000Z"
     }
   ]
