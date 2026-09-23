@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-09-23T11:29:44Z",
+  "captured_at": "2026-09-23T16:53:41Z",
   "source": "/achievements",
   "data": [
     {
@@ -10,7 +10,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-10T14:59:28.816536Z"
+        }
+      ]
     },
     {
       "key": "games_100",
@@ -20,7 +27,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-10T18:52:55.474899Z"
+        }
+      ]
     },
     {
       "key": "games_500",
@@ -30,7 +44,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-10T18:52:55.971890Z"
+        }
+      ]
     },
     {
       "key": "tier_platinum",
@@ -40,7 +61,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-10T18:52:56.466434Z"
+        }
+      ]
     },
     {
       "key": "tier_diamond_plus",
@@ -50,7 +78,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-10T18:52:56.964634Z"
+        }
+      ]
     },
     {
       "key": "games_1000",
@@ -60,7 +95,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:28.788778Z"
+        }
+      ]
     },
     {
       "key": "games_2500",
@@ -70,7 +112,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:29.498731Z"
+        }
+      ]
     },
     {
       "key": "games_5000",
@@ -80,7 +129,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:30.017094Z"
+        }
+      ]
     },
     {
       "key": "tier_gold",
@@ -90,7 +146,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:31.571399Z"
+        }
+      ]
     },
     {
       "key": "tier_valhallan",
@@ -100,7 +163,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "peak_1500",
@@ -110,7 +174,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:30.534183Z"
+        }
+      ]
     },
     {
       "key": "peak_1800",
@@ -120,7 +191,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-18T12:27:31.051541Z"
+        }
+      ]
     },
     {
       "key": "peak_2000",
@@ -130,7 +208,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "global_top_1000",
@@ -140,17 +219,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
-    },
-    {
-      "key": "region_top_100",
-      "name": "Regional Force",
-      "description": "Ranked inside the top 100 of your region.",
-      "category": "ranked",
-      "holder_count": 0,
-      "total_members": 1,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "win_rate_60",
@@ -160,7 +230,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "first_win",
@@ -170,7 +241,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "wins_10",
@@ -180,7 +252,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "wins_50",
@@ -190,7 +263,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "tournament_entrant",
@@ -200,7 +274,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "tournament_finalist",
@@ -210,7 +285,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "tournament_champion",
@@ -220,7 +296,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "scrim_regular",
@@ -230,7 +307,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "chat_level_10",
@@ -240,7 +318,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "chat_level_25",
@@ -250,7 +329,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "chat_level_50",
@@ -260,7 +340,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "mvp_of_week",
@@ -270,7 +351,14 @@
       "holder_count": 1,
       "total_members": 1,
       "completion_pct": 100.0,
-      "rarity": "Common"
+      "rarity": "Common",
+      "holders": [
+        {
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-09-20T12:00:07.789770Z"
+        }
+      ]
     },
     {
       "key": "veteran_30d",
@@ -280,7 +368,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "veteran_180d",
@@ -290,7 +379,8 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "veteran_365d",
@@ -300,7 +390,19 @@
       "holder_count": 0,
       "total_members": 1,
       "completion_pct": 0.0,
-      "rarity": "Unclaimed"
+      "rarity": "Unclaimed",
+      "holders": []
+    },
+    {
+      "key": "region_top_100",
+      "name": "Regional Force",
+      "description": "Ranked inside the top 100 of your Brawlhalla server region's 1v1 ladder (e.g. SEA).",
+      "category": "ranked",
+      "holder_count": 0,
+      "total_members": 1,
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed",
+      "holders": []
     }
   ]
 }
