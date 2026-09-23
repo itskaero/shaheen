@@ -102,6 +102,8 @@
       post in #pakistan-chat
 - [x] Website achievements gallery shows who earned each one, grouped by
       category
+- [x] Pakistan Seasons: named, badged seasons over Brawlhalla's (S42 =
+      Season 1), rotating every 13 weeks, with a season-start announcement
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

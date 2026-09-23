@@ -175,15 +175,16 @@ flyctl secrets set \
   DISCORD_TOKEN=... \
   GUILD_ID=... \
   DATABASE_URL=<the Render External Database URL from step 1> \
-  BRAWLHALLA_API_KEY=... \
-  BRAWLHALLA_SEASON=42
+  BRAWLHALLA_API_KEY=...
 flyctl deploy
 ```
 
-`BRAWLHALLA_SEASON` stamps every snapshot with the current Brawlhalla
-ranked season. Bump it (`flyctl secrets set BRAWLHALLA_SEASON=<n>`, which
-restarts the bot) when a new season starts, so the boards and history
-split cleanly at the reset (docs/DECISIONS.md ADR-088/ADR-101).
+The Brawlhalla season every snapshot is stamped with is worked out from the
+date: S42 began 2026-09-23 and a new one starts every 13 weeks
+(docs/DECISIONS.md ADR-102), each shown as a named Pakistan Season. If
+Brawlhalla's real reset lands on a different day, `flyctl secrets set
+BRAWLHALLA_SEASON=<n>` pins it until the calendar catches up; then `flyctl
+secrets unset BRAWLHALLA_SEASON`, or the season stops advancing.
 
 `flyctl deploy` again any time you push changes. `flyctl logs` tails the
 running bot.

@@ -112,6 +112,12 @@ the rank it would hold and the nearest member above and below with deltas
 ### /leaderboard
 Shaheen internal leaderboard — linked clan members only (`/link`).
 
+**Pakistan Seasons (ADR-102).** Both boards cover the current season, named
+in the footer ("Pakistan Season 1 · Zarb-e-Shaheen · Brawlhalla S42"), with
+that season's badge in the corner. Brawlhalla S42 is Pakistan Season 1, and
+a new one starts every 13 weeks. The bot announces each new season once in
+#announcements with its badge.
+
 ### /pakistan leaderboard
 The Pakistan leaderboard (docs/DECISIONS.md ADR-099): Pakistan's ranked
 players, clan or not, current season only. 🦅 marks Shaheen members.

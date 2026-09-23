@@ -12,6 +12,38 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from services.seasons import pakistan_season
+
+
+class PakistanSeasonResponse(BaseModel):
+    """Shaheen's named season over a Brawlhalla one (docs/DECISIONS.md ADR-102).
+
+    `badge` is the image stem — web/assets/img/seasons/<badge>.webp.
+    """
+
+    number: int
+    brawlhalla_season: int
+    name: str
+    name_urdu: str
+    badge: str
+    starts_at: datetime
+    ends_at: datetime
+
+    @classmethod
+    def for_brawlhalla_season(cls, season: int | None) -> PakistanSeasonResponse | None:
+        found = pakistan_season(season)
+        if found is None:
+            return None
+        return cls(
+            number=found.number,
+            brawlhalla_season=found.brawlhalla_season,
+            name=found.name,
+            name_urdu=found.name_urdu,
+            badge=found.badge,
+            starts_at=found.starts_at,
+            ends_at=found.ends_at,
+        )
+
 
 class ClanInfoResponse(BaseModel):
     name: str
@@ -20,6 +52,8 @@ class ClanInfoResponse(BaseModel):
     member_count: int
     # The Brawlhalla season every ranking view is scoped to (ADR-088).
     season: int | None
+    # Its Pakistan season, None before S42 (ADR-102).
+    pakistan_season: PakistanSeasonResponse | None
     discord_member_count: int | None
     discord_boost_tier: int | None
     discord_boost_count: int | None
@@ -104,6 +138,7 @@ class PlayerProfileResponse(BaseModel):
     # Stored since ADR-081, exposed here as of ADR-088.
     region_rank: int | None
     season: int | None
+    pakistan_season: PakistanSeasonResponse | None
     achievements: list[AchievementResponse]
     # A derived label, not a Brawlhalla-reported stat — see
     # services/playstyle.py (docs/DECISIONS.md ADR-096).

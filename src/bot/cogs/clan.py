@@ -35,10 +35,12 @@ from bot.content.clan_embeds import (
     build_weekly_digest_embed,
 )
 from bot.content.profile_embeds import build_not_linked_embed
+from bot.content.season_embeds import attach_season_badge, build_season_start_embed
 from bot.legend_art import attach_legend_strip
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.discord_user_repository import DiscordUserRepository
+from database.repositories.guild_settings_repository import GuildSettingsRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from database.session import session_scope
@@ -51,6 +53,7 @@ from services.image_service import render_milestone_card
 from services.link_service import LinkService
 from services.pakistan_board_service import PakistanBoardService
 from services.rank_roles import plan_rank_roles
+from services.seasons import season_to_announce
 from services.snapshot_service import Announcement, SnapshotService
 
 logger = logging.getLogger(__name__)
@@ -99,7 +102,7 @@ class ClanCog(commands.Cog):
 
         async with session_scope(self.bot.session_factory) as session:
             service = SnapshotService(
-                session, self.bot.brawlhalla, season=self.bot.settings.brawlhalla_season
+                session, self.bot.brawlhalla, season=self.bot.current_brawlhalla_season()
             )
             result = await service.run_for_guild(guild.id)
 
@@ -128,6 +131,7 @@ class ClanCog(commands.Cog):
         )
         await self._sync_rank_roles(guild, result.tiers)
         await self._sync_pakistan_top_role(guild)
+        await self._announce_season_start(guild)
 
         for announcement in result.announcements:
             await self._announce(guild, announcement)
@@ -255,9 +259,36 @@ class ClanCog(commands.Cog):
         pings = [f"<@{c.owner_discord_id}>" for c in climbers if c.owner_discord_id is not None]
         content = f"🇵🇰 Climbing this week: {' '.join(pings)}" if pings else None
         try:
-            await channel.send(content=content, embed=embed)
+            await channel.send(
+                content=content, embed=embed, files=attach_season_badge(embed, season)
+            )
         except discord.Forbidden:
             logger.warning("Missing permission to post in pakistan-chat")
+
+    async def _announce_season_start(self, guild: discord.Guild) -> None:
+        """Post each new Pakistan season's badge once (docs/DECISIONS.md ADR-102).
+
+        Recorded only after a successful post, so a missing channel or
+        permission retries next tick instead of silently skipping a season.
+        """
+        current = self.bot.current_brawlhalla_season()
+        async with session_scope(self.bot.session_factory) as session:
+            settings = await GuildSettingsRepository(session).get(guild.id)
+        season = season_to_announce(current, settings.announced_season if settings else None)
+        if season is None:
+            return
+        channel = await resolve_provisioned_channel(self.bot, guild, _ANNOUNCEMENTS_KEY)
+        if channel is None:
+            return
+        embed, files = build_season_start_embed(season)
+        try:
+            await channel.send(embed=embed, files=files)
+        except discord.Forbidden:
+            logger.warning("Missing permission to announce Pakistan Season %d", season.number)
+            return
+        async with session_scope(self.bot.session_factory) as session:
+            await GuildSettingsRepository(session).mark_season_announced(guild.id, current)
+        logger.info("Announced Pakistan Season %d (%s)", season.number, season.name)
 
     async def _sync_pakistan_top_role(self, guild: discord.Guild) -> None:
         """Claimed top-10 Pakistan players hold ROLE_PAKISTAN_TOP; nobody else
@@ -480,8 +511,9 @@ class ClanCog(commands.Cog):
             name = discord_member.display_name if discord_member else _player.player_name
             entries.append((name, snapshot.tier, snapshot.rating))
 
+        embed = build_leaderboard_embed(entries, season)
         await interaction.followup.send(
-            embed=build_leaderboard_embed(entries, season), ephemeral=True
+            embed=embed, files=attach_season_badge(embed, season), ephemeral=True
         )
 
     @app_commands.command(

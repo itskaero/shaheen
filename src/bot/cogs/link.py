@@ -88,7 +88,7 @@ class LinkCog(commands.Cog):
                 await SnapshotService(
                     session,
                     self.bot.brawlhalla,
-                    season=self.bot.settings.brawlhalla_season,
+                    season=self.bot.current_brawlhalla_season(),
                 ).snapshot_member(outcome.member, outcome.player, member.id, SnapshotRunResult())
         except BrawlhallaAPIError as exc:
             logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)

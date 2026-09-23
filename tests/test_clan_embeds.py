@@ -152,7 +152,15 @@ def _embed_field(embed, name: str) -> str | None:
 def test_leaderboard_embed_defaults_to_the_clan_board() -> None:
     embed = build_leaderboard_embed([("Foo", "Gold", 1500)], season=5)
     assert embed.title == "🏆 Shaheen Leaderboard"
-    assert embed.footer.text == "Season 5 · 1 member(s) placed"
+    # Before S42 there's no Pakistan season, so the plain Brawlhalla number (ADR-102).
+    assert embed.footer.text == "Brawlhalla Season 5 · 1 member(s) placed"
+
+
+def test_leaderboard_embed_names_the_pakistan_season() -> None:
+    embed = build_leaderboard_embed([("Foo", "Gold", 1500)], season=42)
+    assert embed.footer.text == (
+        "Pakistan Season 1 · Zarb-e-Shaheen · Brawlhalla S42 · 1 member(s) placed"
+    )
 
 
 def test_leaderboard_embed_can_be_the_pakistan_board() -> None:
@@ -173,7 +181,7 @@ def test_pakistan_weekly_embed_marks_unclaimed_spots_and_nudges_them() -> None:
     assert (embed.description or "").endswith("**2.** Foo — 1500 (Gold)")
     assert _embed_field(embed, "📈 Biggest climbers") == "Foo +80"
     assert "/pakistan join" in (_embed_field(embed, "Unclaimed spot?") or "")
-    assert embed.footer.text == "Season 5"
+    assert embed.footer.text == "Brawlhalla Season 5"
 
 
 def test_pakistan_weekly_embed_skips_the_nudge_when_every_spot_is_claimed() -> None:

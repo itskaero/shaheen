@@ -224,7 +224,7 @@ class ProfileCog(commands.Cog):
 
             shaheen_member, player = linked
             outcome = await SnapshotService(
-                session, self.bot.brawlhalla, season=self.bot.settings.brawlhalla_season
+                session, self.bot.brawlhalla, season=self.bot.current_brawlhalla_season()
             ).refresh_member(shaheen_member, player, member.id)
             if not outcome.refreshed:
                 await interaction.followup.send(

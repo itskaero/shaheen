@@ -1989,6 +1989,86 @@ h2.player-card-name {
 }
 
 /* ---------- rankings: clan + Pakistan tabs (docs/DECISIONS.md ADR-099) ---------- */
+/* Pakistan Season banner on Rankings (docs/DECISIONS.md ADR-102) — the
+   owner's season badge beside its English and Urdu names. */
+.season-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 1.5rem 0 0.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(255, 210, 63, 0.35);
+  background: linear-gradient(100deg, rgba(255, 210, 63, 0.1), rgba(47, 232, 154, 0.04));
+  clip-path: var(--cut-sm);
+}
+
+.season-badge {
+  display: block;
+  width: auto;
+  height: 136px;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+}
+
+.season-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.season-kicker {
+  color: var(--green);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.season-name {
+  margin: 0;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.season-name-word {
+  white-space: nowrap; /* "Zarb-e-Shaheen" never splits at a hyphen */
+}
+
+.season-urdu {
+  align-self: flex-start;
+  color: var(--gold);
+  font-size: 1.3rem;
+  line-height: 1.9;
+}
+
+.season-meta {
+  color: var(--grey);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 560px) {
+  .season-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .season-copy {
+    align-items: center;
+  }
+
+  .season-urdu {
+    align-self: center;
+  }
+
+  .season-badge {
+    height: 120px;
+  }
+}
+
 .board-tabs {
   display: flex;
   gap: 0.5rem;

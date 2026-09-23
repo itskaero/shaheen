@@ -16,6 +16,7 @@ from discord.ext import commands
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.content.clan_embeds import build_leaderboard_embed, build_pakistan_board_embed
+from bot.content.season_embeds import attach_season_badge
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
 from database.models.brawlhalla_player import BrawlhallaPlayer
@@ -68,7 +69,7 @@ class PakistanCog(commands.Cog):
         try:
             async with session_scope(self.bot.session_factory) as session:
                 await SnapshotService(
-                    session, self.bot.brawlhalla, season=self.bot.settings.brawlhalla_season
+                    session, self.bot.brawlhalla, season=self.bot.current_brawlhalla_season()
                 ).snapshot_player(player)
         except BrawlhallaAPIError as exc:
             logger.warning("Initial Pakistan-board snapshot failed for %s: %s", player.id, exc)
@@ -203,15 +204,15 @@ class PakistanCog(commands.Cog):
             )
             for row in rows
         ]
+        embed = build_leaderboard_embed(
+            entries,
+            season,
+            title=_TITLE,
+            empty_hint="add yourself with `/pakistan join`",
+            noun="player",
+        )
         await interaction.followup.send(
-            embed=build_leaderboard_embed(
-                entries,
-                season,
-                title=_TITLE,
-                empty_hint="add yourself with `/pakistan join`",
-                noun="player",
-            ),
-            ephemeral=True,
+            embed=embed, files=attach_season_badge(embed, season), ephemeral=True
         )
 
 

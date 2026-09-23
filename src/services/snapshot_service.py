@@ -113,7 +113,7 @@ class SnapshotService:
     ) -> None:
         """`season` is the Brawlhalla ranked season every row written by this
         service is stamped with (docs/DECISIONS.md ADR-088). Callers pass
-        `Settings.brawlhalla_season`; None leaves the stamp empty, which
+        `ShaheenBot.current_brawlhalla_season()` (ADR-102); None leaves the stamp empty, which
         keeps the row off every current-season leaderboard rather than
         letting an unlabelled rating rank against labelled ones.
         """

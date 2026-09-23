@@ -57,7 +57,12 @@
         `<div class="stat"><span class="value">${formatNumber(clan.discord_member_count)}</span><span class="label">Discord Members</span></div>`
       );
     }
-    if (clan.season != null) {
+    // Pakistan Season when there is one (ADR-102), else the plain number.
+    if (clan.pakistan_season) {
+      statTiles.push(
+        `<div class="stat"><span class="value">Season ${clan.pakistan_season.number}</span><span class="label">Pakistan Season &middot; ${escapeHtml(clan.pakistan_season.name)}</span></div>`
+      );
+    } else if (clan.season != null) {
       statTiles.push(
         `<div class="stat"><span class="value">${clan.season}</span><span class="label">Brawlhalla Season</span></div>`
       );
