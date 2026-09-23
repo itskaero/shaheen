@@ -34,6 +34,7 @@ from bot.content.clan_embeds import (
     build_weekly_digest_embed,
 )
 from bot.content.profile_embeds import build_not_linked_embed
+from bot.legend_art import attach_legend_strip
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.discord_user_repository import DiscordUserRepository
@@ -480,7 +481,9 @@ class ClanCog(commands.Cog):
         async with session_scope(self.bot.session_factory) as session:
             entries = await ClanService(session).legend_meta(interaction.guild.id)
 
-        await interaction.followup.send(embed=build_legend_meta_embed(entries), ephemeral=True)
+        embed = build_legend_meta_embed(entries)
+        files = await attach_legend_strip(embed, [e.legend_name_key for e in entries[:5]])
+        await interaction.followup.send(embed=embed, files=files, ephemeral=True)
 
     @app_commands.command(
         name="clanstats", description="Show clan-wide totals, rating spread and tier split"

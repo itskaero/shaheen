@@ -14,6 +14,7 @@ from database.models.chat_activity import ChatActivity
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
 from services.achievements import CATALOG
 from services.chat_gamification import level_for_xp, rank_title_for_level
+from services.legend_art import legend_display_name
 from services.playstyle import derive_playstyle_tags
 
 _LEGENDS_SHOWN = 10
@@ -25,12 +26,6 @@ _LEGENDS_SHOWN = 10
 # this (or promote it to a real Settings field) if a custom domain is ever
 # set up for the site.
 _WEBSITE_BASE_URL = "https://itskaero.github.io/shaheen"
-
-
-def _legend_display_name(legend_name_key: str) -> str:
-    # The API only gives an internal key (e.g. "bodvar"); title-case it as a
-    # reasonable display name rather than shipping a full legend name table.
-    return legend_name_key.replace("_", " ").title()
 
 
 def build_link_preview_embed(
@@ -117,7 +112,7 @@ def build_profile_embed(
         favourite = max(stats.legends, key=lambda legend: legend.games)
         embed.add_field(
             name="Favourite Legend",
-            value=f"{_legend_display_name(favourite.legend_name_key)} ({favourite.games} games)",
+            value=f"{legend_display_name(favourite.legend_name_key)} ({favourite.games} games)",
             inline=True,
         )
         # A derived label, not a Brawlhalla-reported stat — the API has no
@@ -241,7 +236,7 @@ def build_legends_embed(
     lines = []
     for legend in top:
         line = (
-            f"**{_legend_display_name(legend.legend_name_key)}** — {legend.games} games, "
+            f"**{legend_display_name(legend.legend_name_key)}** — {legend.games} games, "
             f"{legend.wins} wins, {legend.kos} KOs, {legend.damagedealt:,} DMG, "
             f"{legend.falls} falls"
         )

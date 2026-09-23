@@ -3799,3 +3799,57 @@ real Shaheen guild, and deploying the updated bot code to the Fly.io app this re
 credentials — outside what a coding session against this repository can trigger. Both steps are
 exactly what the existing `flyctl deploy` + `/setup run` workflow already covers once this round's
 code is merged; nothing new is required beyond running them.
+
+## ADR-098 — Legend portraits from the owner's roster sheet, on Discord and the website
+
+The owner supplied a 65-Legend roster sheet (13×5 framed portraits, each with a baked-in name label)
+and asked for it to be used on both the bot and the website. Until now only 5 Legends had any art
+(`web/assets/img/legends/`, the landing-page cutouts from ADR-078), so every favourite-Legend chip and
+mastery row for anyone else fell back to an initial avatar, and the bot showed no Legend art at all.
+
+**Assets.** Each card was cropped just inside its gold frame (the frame stroke is located per card,
+with any faint stretch filled from its row/column median — the sheet is AI-drawn, so the grid isn't
+perfectly regular), which also drops the painted-in name label, then normalised to 104×132. They ship
+twice, once per deploy target: `src/assets/legends/<key>.png` for the bot (inside `src/`, which the
+Dockerfile already copies) and `web/assets/img/legend-portraits/<key>.webp` for GitHub Pages (~8 KB
+each). `tests/test_legend_art.py` fails if the two rosters drift apart.
+
+**Keys.** Files use the underscored form (`lord_vraxx`, `wu_shang`). The stored `legend_name_key` is
+whatever the Brawlhalla API sent, and its multi-word shape isn't pinned down anywhere in this repo
+(fixtures only use single words), so both surfaces normalise before lookup — lowercase, spaces/hyphens
+to underscores, diacritics stripped (`Bödvar` -> `bodvar`): `services/legend_art.py`'s
+`normalize_legend_key` and `theme.js`'s `normalizeLegendKey`. The two formerly duplicated
+`_legend_display_name` helpers in `bot/content/{profile,clan}_embeds.py` now use the same normaliser,
+so "lord vraxx" displays as "Lord Vraxx" either way.
+
+**Sheet labels taken as intended, not literally.** Two labels are wrong on the sheet: the wolf card
+reads "BARBARA" (no such Legend; Mordex has no other card, and the art is Mordex) and the hooded
+scythe card reads "FADIN" (Fait). They're keyed `mordex` and `fait`. The sheet also includes a few
+names this project can't confirm against the API (e.g. Rupture, Sandstorm, Ransom, Aurus, Lady Vera);
+their files are harmless if the API never sends those keys.
+
+**Discord.** An embed's thumbnail already holds the member's avatar, so rather than displacing it the
+bot renders a strip — framed portraits side by side with names underneath — with Pillow
+(`services/legend_art.py`'s `render_legend_strip`, Discord-agnostic like `image_service.py`) and
+attaches it as the embed image: top 3 Legends on `/profile`, top 5 on `/legends`, the clan's top 5 on
+`/legendmeta`. `bot/legend_art.py`'s `attach_legend_strip` renders off-thread and returns no file when
+none of the Legends have art or rendering fails, so the embed goes out exactly as before in that case.
+
+**Website.** `theme.js`'s `LEGEND_PORTRAITS` (all 65) replaces the 5-entry `LEGEND_ICONS`;
+`legendAvatarHtml` serves the portrait, square-cropped on the face, and still falls back to the
+initial avatar for anything missing. `player.html`'s favourite-Legend chips become portrait cards
+(top 5, the first marked "Main"), and each row of the Legend mastery list gets its portrait.
+The landing page's 5 cutouts (`assets/img/legends/`) are unchanged — they're full-body scene art, not
+avatars.
+
+Files: `src/assets/legends/*.png`, `web/assets/img/legend-portraits/*.webp` (new),
+`src/services/legend_art.py`, `src/bot/legend_art.py` (new), `src/bot/cogs/{profile,clan}.py`,
+`src/bot/content/{profile,clan}_embeds.py`, `web/assets/js/theme.js`, `web/assets/js/pages/player.js`,
+`web/assets/css/style.css`, `docs/{COMMANDS,ROADMAP}.md`, `tests/test_legend_art.py` (new).
+
+Verified: `tests/test_legend_art.py` covers key normalisation, portrait lookup hits and misses,
+bot/web roster parity, and strip rendering (skipping Legends without art, `None` when none have it).
+The strip itself was checked by eye. A Playwright pass on `player.html` with the API mocked, using
+`mordex`, `lord vraxx`, `bödvar`, `wu_shang` and an unknown key: the four real ones load their
+portraits in both the cards and the mastery list, the unknown one falls back to an initial, no console
+errors, no horizontal overflow at 390px. Full suite green, ruff and mypy clean. No migration.
