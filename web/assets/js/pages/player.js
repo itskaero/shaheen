@@ -128,16 +128,19 @@
     }
     return `<div class="favourite-legends">${legends
       .slice(0, 5)
-      .map(
-        (legend) => `
-          <div class="favourite-legend-chip">
-            ${legendAvatarHtml(legend.legend_name_key, 32)}
-            <span>
-              <span class="favourite-legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
-              <span class="favourite-legend-games">${legend.games} games</span>
-            </span>
-          </div>`
-      )
+      .map((legend, index) => {
+        const portrait = legendPortraitUrl(legend.legend_name_key);
+        const art = portrait
+          ? `<img src="${portrait}" alt="" width="104" height="132" loading="lazy" />`
+          : avatarHtml(legendDisplayName(legend.legend_name_key), 56);
+        return `
+          <div class="favourite-legend-card${index === 0 ? " is-main" : ""}">
+            <div class="favourite-legend-art">${art}</div>
+            ${index === 0 ? '<span class="favourite-legend-tag">Main</span>' : ""}
+            <span class="favourite-legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
+            <span class="favourite-legend-games">${legend.games} games</span>
+          </div>`;
+      })
       .join("")}</div>`;
   }
 
@@ -262,7 +265,7 @@
             return `
               <li>
                 <div class="legend-row">
-                  <span class="legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
+                  <span class="legend-name">${legendAvatarHtml(legend.legend_name_key, 28)}${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
                   <span class="legend-meta">${legend.games} games · ${winRate}% WR · ${legend.kos} KOs · ${formatNumber(legend.damagedealt)} DMG · ${legend.falls} falls</span>
                 </div>
                 <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${width}%"></div></div>

@@ -22,13 +22,20 @@ from bot.content.profile_embeds import (
     build_refresh_embed,
     build_stats_embed,
 )
+from bot.legend_art import attach_legend_strip
 from core.exceptions import ShaheenError
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.shaheen_member import ShaheenMember
 from database.session import session_scope
+from integrations.brawlhalla.models import PlayerStatsResponse
 from services.link_service import LinkService
 from services.profile_service import ProfileService
 from services.snapshot_service import SnapshotService
+
+
+def _top_legend_keys(stats: PlayerStatsResponse, count: int) -> list[str]:
+    ranked = sorted(stats.legends, key=lambda legend: legend.games, reverse=True)
+    return [legend.legend_name_key for legend in ranked[:count] if legend.games > 0]
 
 
 class ProfileCog(commands.Cog):
@@ -73,7 +80,8 @@ class ProfileCog(commands.Cog):
             discord_created_at=member.created_at,
             discord_joined_at=member.joined_at,
         )
-        await interaction.followup.send(embed=embed, ephemeral=True)
+        files = await attach_legend_strip(embed, _top_legend_keys(stats, 3))
+        await interaction.followup.send(embed=embed, files=files, ephemeral=True)
 
     @app_commands.command(name="rank", description="Show a Shaheen member's ranked standing")
     @app_commands.describe(user="Whose rank to show (defaults to you)")
@@ -142,7 +150,8 @@ class ProfileCog(commands.Cog):
         embed = build_legends_embed(
             display_name=member.display_name, player=player, stats=stats, ranked=ranked
         )
-        await interaction.followup.send(embed=embed, ephemeral=True)
+        files = await attach_legend_strip(embed, _top_legend_keys(stats, 5))
+        await interaction.followup.send(embed=embed, files=files, ephemeral=True)
 
     @app_commands.command(
         name="compare", description="Compare two members' Brawlhalla stats side by side"

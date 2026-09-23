@@ -92,6 +92,8 @@
 - [x] 🔥 Core Member role for members past a chat-level threshold
 - [x] `🗣️ Meetings & AMAs` voice channel for clan meetings/AMAs/casting
 - [x] `/anthem` command linking to the website Music Library
+- [x] Legend portraits (65, from the owner's roster sheet) on `/profile`,
+      `/legends`, `/legendmeta` and the website player page
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

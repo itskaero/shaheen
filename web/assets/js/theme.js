@@ -43,15 +43,44 @@ function avatarHtml(name, size = 44) {
   return `<span class="avatar" style="${style}">${escapeHtml(initial)}</span>`;
 }
 
-// Only these Legends have real cutout art in assets/img/legends/ (from the
-// "Legends scene" work, ADR-078) — everything else falls back to the same
-// initial-avatar treatment as a player, so a Favourite Legend chip never
-// assumes full roster coverage it doesn't have (docs/DECISIONS.md ADR-096).
-const LEGEND_ICONS = new Set(["brynn", "jaeyun", "mordex", "nix", "tezca"]);
+// Portrait art for the roster, cut from the owner's Legend sheet
+// (docs/DECISIONS.md ADR-098) — the same crops the bot renders into its
+// /profile and /legends strips. A Legend missing from this set (a new
+// release) falls back to the initial avatar, never a broken image.
+const LEGEND_PORTRAITS = new Set([
+  "ada", "asuri", "aurus", "azoth", "baobao", "barraza", "bodvar", "brynn", "caspian",
+  "cassidy", "cross", "diana", "ember", "ezio", "fait", "gnash", "hattori", "imugi", "jaeyun",
+  "jhala", "jiro", "kaya", "king_zuva", "koji", "kor", "lady_vera", "lin_fei", "loki",
+  "lord_vraxx", "lucien", "magyar", "mako", "mirage", "mordex", "munin", "nix", "onyx",
+  "orion", "petra", "priya", "qinghua", "queen_nai", "ragnir", "ransom", "rayman", "reno",
+  "rupture", "sandstorm", "scarlet", "sentinel", "seven", "sidra", "sir_roland", "teros",
+  "tezca", "thatch", "thea", "ulgrim", "val", "vector", "volkov", "wu_shang", "xull", "yumiko",
+  "zariel",
+]);
+
+// The API's legend_name_key is lowercase but a multi-word Legend may come
+// through with a space or an underscore ("lord vraxx" / "lord_vraxx"), and
+// Bödvar may keep its umlaut — portraits are named in the underscored form.
+function normalizeLegendKey(legendNameKey) {
+  return (legendNameKey || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[-_]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .join("_");
+}
+
+function legendPortraitUrl(legendNameKey) {
+  const key = normalizeLegendKey(legendNameKey);
+  return LEGEND_PORTRAITS.has(key) ? `assets/img/legend-portraits/${key}.webp` : null;
+}
 
 function legendAvatarHtml(legendNameKey, size = 32) {
-  if (LEGEND_ICONS.has(legendNameKey)) {
-    return `<img src="assets/img/legends/${legendNameKey}.png" alt="" width="${size}" height="${size}" />`;
+  const url = legendPortraitUrl(legendNameKey);
+  if (url) {
+    return `<img class="legend-avatar" src="${url}" alt="" width="${size}" height="${size}" loading="lazy" />`;
   }
   return avatarHtml(legendDisplayName(legendNameKey), size);
 }
@@ -70,7 +99,7 @@ function rankHtml(position) {
 // — the API sends the raw legend_name_key (e.g. "wu_shang"), not a display
 // name, so both surfaces format it the same simple way.
 function legendDisplayName(legendNameKey) {
-  return legendNameKey
+  return normalizeLegendKey(legendNameKey)
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");

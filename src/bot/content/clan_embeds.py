@@ -13,15 +13,7 @@ from database.models.achievement import Achievement
 from database.models.ranking_snapshot import RankingSnapshot
 from services.achievements import AchievementDef
 from services.clan_service import ClanStats, LegendMetaEntry
-
-
-def _legend_display_name(legend_name_key: str) -> str:
-    # Same heuristic as bot/content/profile_embeds.py's private helper of
-    # the same name — the API only gives an internal key (e.g. "bodvar"),
-    # title-cased as a reasonable display name. Small intentional
-    # duplication rather than a cross-module import for one string
-    # formatting rule.
-    return legend_name_key.replace("_", " ").title()
+from services.legend_art import legend_display_name
 
 
 def build_leaderboard_embed(
@@ -184,7 +176,7 @@ def build_legend_meta_embed(entries: list[LegendMetaEntry]) -> discord.Embed:
         return embed
 
     lines = [
-        f"**{idx}. {_legend_display_name(e.legend_name_key)}** — {e.total_games} games "
+        f"**{idx}. {legend_display_name(e.legend_name_key)}** — {e.total_games} games "
         f"across {e.player_count} member(s), {e.win_rate:.0f}% win rate"
         for idx, e in enumerate(entries, start=1)
     ]
@@ -234,7 +226,7 @@ def build_clan_stats_embed(stats: ClanStats) -> discord.Embed:
         embed.add_field(
             name="Most-Played Legends",
             value=" · ".join(
-                _legend_display_name(entry.legend_name_key) for entry in stats.top_legends
+                legend_display_name(entry.legend_name_key) for entry in stats.top_legends
             ),
             inline=False,
         )

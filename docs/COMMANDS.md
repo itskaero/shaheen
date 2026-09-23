@@ -71,8 +71,9 @@ latest earned, clan role, Discord account age and this-server join date
 (ADR-096 — the only place these show, since nothing in the database
 persists per-member Discord timestamps), and a link to the full website
 profile for what an embed can't show — rating history and match record
-(ADR-059, extended in ADR-067). `/rank`, `/stats`, `/legends` below still
-exist as focused single-stat views.
+(ADR-059, extended in ADR-067). Its image is a strip of the member's top 3
+Legends' portraits (docs/DECISIONS.md ADR-098). `/rank`, `/stats`,
+`/legends` below still exist as focused single-stat views.
 
 ### /rank [user]
 Show current ranked information.
@@ -85,7 +86,8 @@ Show per-Legend statistics: games, wins, KOs, damage dealt, and falls
 (ADR-067 — damage/falls already existed in the API response, just wasn't
 shown here before). Each Legend the member has played in ranked is also
 annotated with its ranked rating, tier and W/L — data fetched on every
-snapshot since Phase 2 and discarded unread until ADR-084.
+snapshot since Phase 2 and discarded unread until ADR-084. Its image is a
+portrait strip of the top 5 Legends (ADR-098).
 
 ### /compare <member_a> [member_b]
 Side-by-side ranked and lifetime stats for two linked members (ADR-084).
@@ -119,7 +121,8 @@ Show stored rating/history snapshots.
 ### /legendmeta
 Clan-wide Legend popularity and win rate — every actively-linked member's
 latest per-legend stats aggregated together, filtered to Legends with
-enough combined games to be meaningful (docs/DECISIONS.md ADR-068).
+enough combined games to be meaningful (docs/DECISIONS.md ADR-068), with a
+portrait strip of the top 5 (ADR-098).
 
 ### /clanstats
 Clan-wide aggregate: combined games and wins, average and median rating,
