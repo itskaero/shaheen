@@ -186,3 +186,29 @@ async def test_climbers_rank_rating_gains_inside_the_window(session: AsyncSessio
     assert [
         (c.player.brawlhalla_player_id, c.rating_gain, c.owner_discord_id) for c in climbers
     ] == [(20, 120, None), (10, 50, 7)]
+
+
+async def test_unplaced_players_are_left_off_the_board_and_earn_no_role(
+    session: AsyncSession,
+) -> None:
+    """After a season reset the API reads everyone as unplaced (rating None,
+    ADR-101) — an unrated entry must not fill a Top 10 slot.
+    """
+    service = PakistanBoardService(session)
+    await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(10))
+    player = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(10)
+    assert player is not None
+    await RankingSnapshotRepository(session).add(
+        RankingSnapshot(
+            brawlhalla_player_id=player.id,
+            captured_at=datetime.now(UTC),
+            rating=None,
+            peak_rating=None,
+            tier=None,
+            wins=0,
+            games=0,
+            season=5,
+        )
+    )
+    assert await service.leaderboard(GUILD_ID) == []
+    assert await service.top_role_earners(GUILD_ID) == set()

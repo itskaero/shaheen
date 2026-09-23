@@ -172,7 +172,10 @@ class PakistanBoardService:
         rows: list[PakistanBoardRow] = []
         for entry, player in await self._board.list_active(guild_id):
             latest = await self._ranking.get_latest(player.id, season=season)
-            if latest is not None:
+            # Placed players only: right after a season reset everyone reads
+            # unplaced (ADR-101), and an unrated row must never outrank a
+            # rated one into the Top 10 role.
+            if latest is not None and latest.rating is not None:
                 rows.append(
                     PakistanBoardRow(
                         player=player,
@@ -181,7 +184,7 @@ class PakistanBoardService:
                         owner_discord_id=entry.owner_discord_id,
                     )
                 )
-        rows.sort(key=lambda row: row.snapshot.rating or -1, reverse=True)
+        rows.sort(key=lambda row: row.snapshot.rating or 0, reverse=True)
         return rows[:limit]
 
     async def top_role_earners(self, guild_id: int) -> set[int]:

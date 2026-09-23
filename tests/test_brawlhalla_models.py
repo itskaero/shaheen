@@ -80,3 +80,36 @@ def test_player_ranked_parses_full_shape() -> None:
     assert ranked.tier == "Diamond III"
     assert ranked.region == "us-e"
     assert ranked.legends[0].legend_name_key == "cassidy"
+
+
+def test_player_ranked_after_a_season_reset_reads_as_unplaced() -> None:
+    """The API answers 200 with zeros and tier "None" for a player with no
+    placement games this season — not a real rating (ADR-101).
+    """
+    raw = {
+        "brawlhalla_id": 7,
+        "name": "Reset",
+        "region": "ME",
+        "rating": 0,
+        "peak_rating": 0,
+        "tier": "None",
+        "global_rank": 0,
+        "region_rank": 0,
+        "wins": 0,
+        "games": 0,
+        "legends": [
+            {"legend_id": 2, "legend_name_key": "cassidy", "rating": 0, "tier": "None"},
+        ],
+    }
+    ranked = PlayerRankedResponse.model_validate(raw)
+    assert (ranked.rating, ranked.peak_rating, ranked.tier) == (None, None, None)
+    assert (ranked.global_rank, ranked.region_rank) == (None, None)
+    assert (ranked.legends[0].rating, ranked.legends[0].tier) == (None, None)
+    assert ranked.region == "ME"
+
+
+def test_unplaced_this_season_keeps_a_real_peak() -> None:
+    ranked = PlayerRankedResponse.model_validate(
+        {"brawlhalla_id": 7, "name": "X", "rating": 0, "peak_rating": 1906, "tier": "none"}
+    )
+    assert (ranked.rating, ranked.tier, ranked.peak_rating) == (None, None, 1906)

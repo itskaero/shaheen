@@ -3980,3 +3980,35 @@ ordered by award time. Full suite and the Alembic round-trip pass. Playwright wi
 1440px and 390px: the nav mark renders the emblem undistorted, Verified/Unclaimed tags and claim links on
 the Pakistan tab point at the Discord invite, the achievements page shows category groups, first holder,
 chips and "+N more", no horizontal overflow, no console errors.
+
+## ADR-101 — An unplaced season reads as "no rating", not 0 / "None"
+
+Brawlhalla's Season 41 ended on 23 September 2026. Right after the reset, the site's clan ladder showed
+the owner at rank 1 with a rating of 0, peak 0 and a tier badge reading "None". For a player with no
+placement games in the new season, `/player/{id}/ranked` answers **200** with `rating: 0`,
+`peak_rating: 0`, `tier: "None"` and zero ranks. That is different from the 404 an account that never
+played ranked gets, which we already handled. The zeros were stored verbatim and a 0 counted as a real
+rating (`rating != null`).
+
+**Normalize at the integration boundary.** `PlayerRankedResponse` and `RankedLegendStat` share a
+`_RankedStanding` base whose validator turns an unplaced standing (tier `""`/`none`/`unranked`, or a
+rating ≤ 0) into `rating = tier = None`, a peak ≤ 0 into `None`, and a global/region rank ≤ 0 into
+`None`. A genuine peak survives even when the current rating is unplaced. Everything downstream already
+treats `None` as unranked: the clan tab lists the player under "Not placed this season", rank roles
+fail closed, achievements need `0 < region_rank`, and climbers skip missing ratings. Only the models
+change (docs/BRAWLHALLA_API.md: API shape lives in the integration). Migration 0013 rewrites the rows
+already stored the same way; it has no downgrade because the zeros carried no information.
+
+**The Pakistan board lists placed players only.** It's a ranked board. After a reset, every entry reads
+unplaced, and an unrated claimed entry must never fill a Top 10 slot and earn `ROLE_PAKISTAN_TOP` (ADR-100).
+Unplaced entries stay on the board and reappear once they play placements.
+
+**Season stamp.** `BRAWLHALLA_SEASON` (ADR-088) still has to be bumped by hand at each reset. It was
+missing from the README's `flyctl secrets set` list, so a deploy that followed it stamped everything
+season 1; it's listed there now with a note to bump it.
+
+Files: `src/integrations/brawlhalla/models.py`, `src/services/pakistan_board_service.py`,
+`alembic/versions/0013_unplaced_snapshots.py` (new), `web/assets/js/pages/rankings.js`, `README.md`,
+`tests/test_brawlhalla_models.py`, `tests/test_pakistan_board_service.py`. Verified: model tests for the
+post-reset payload (player and per-Legend) and for a real peak surviving an unplaced rating; a service
+test that an unplaced entry is off the board and earns no role; full suite and Alembic round-trip pass.
