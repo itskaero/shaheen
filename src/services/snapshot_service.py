@@ -21,6 +21,7 @@ from database.models.ranking_snapshot import RankingSnapshot
 from database.models.shaheen_member import ShaheenMember
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
+from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
@@ -77,6 +78,8 @@ class Announcement:
 @dataclass
 class SnapshotRunResult:
     members_processed: int = 0
+    # Non-member players snapshotted for the Pakistan board (ADR-099).
+    players_processed: int = 0
     errors: list[str] = field(default_factory=list)
     announcements: list[Announcement] = field(default_factory=list)
     # discord_id -> the tier this run saw, None when unranked. Recorded so
@@ -118,13 +121,16 @@ class SnapshotService:
         self._brawlhalla = brawlhalla
         self._season = season
         self._links = MemberPlayerLinkRepository(session)
+        self._pakistan = PakistanBoardRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._legends = LegendSnapshotRepository(session)
         self._achievement_service = AchievementService(session)
 
     async def run_for_guild(self, guild_id: int) -> SnapshotRunResult:
         result = SnapshotRunResult()
+        covered: set[int] = set()
         for member, player, discord_id in await self._links.list_active_for_guild(guild_id):
+            covered.add(player.id)
             try:
                 await self.snapshot_member(member, player, discord_id, result)
                 result.members_processed += 1
@@ -133,30 +139,35 @@ class SnapshotService:
                     "Snapshot failed for player %s: %s", player.brawlhalla_player_id, exc
                 )
                 result.errors.append(f"{player.player_name}: Brawlhalla API error")
+
+        # Pakistan-board players (docs/DECISIONS.md ADR-099) — a clan member
+        # who also opted in was already snapshotted above, once is enough.
+        for _entry, player in await self._pakistan.list_active(guild_id):
+            if player.id in covered:
+                continue
+            covered.add(player.id)
+            try:
+                await self.snapshot_player(player)
+                result.players_processed += 1
+            except BrawlhallaAPIError as exc:
+                logger.warning(
+                    "Snapshot failed for player %s: %s", player.brawlhalla_player_id, exc
+                )
+                result.errors.append(f"{player.player_name}: Brawlhalla API error")
         return result
 
-    async def snapshot_member(
-        self,
-        member: ShaheenMember,
-        player: BrawlhallaPlayer,
-        discord_id: int,
-        result: SnapshotRunResult,
-    ) -> None:
-        """Snapshot one member's current rating/legend stats.
+    async def snapshot_player(
+        self, player: BrawlhallaPlayer
+    ) -> tuple[PlayerStatsResponse, PlayerRankedResponse | None]:
+        """Fetch and store one player's rating + per-Legend rows — nothing else.
 
-        Public (not `_`-prefixed) so bot/cogs/link.py can take an initial
-        snapshot synchronously right after /link, instead of the member
-        waiting for the next scheduled run_for_guild tick to appear on any
-        leaderboard (docs/DECISIONS.md ADR-059). run_for_guild uses this
-        the same way it always has — no behavior change there.
+        The member-free half of snapshot_member: Pakistan-board players who
+        aren't clan members get exactly this, no achievements, rank roles or
+        announcements (docs/DECISIONS.md ADR-099).
         """
         stats = await self._brawlhalla.get_stats(player.brawlhalla_player_id)
         ranked = await self._brawlhalla.get_ranked(player.brawlhalla_player_id)
         captured_at = datetime.now(UTC)
-
-        result.tiers[discord_id] = ranked.tier if ranked else None
-
-        previous = await self._ranking.get_latest(player.id)
 
         await self._ranking.add(
             RankingSnapshot(
@@ -193,6 +204,26 @@ class SnapshotService:
                     for legend in stats.legends
                 ]
             )
+        return stats, ranked
+
+    async def snapshot_member(
+        self,
+        member: ShaheenMember,
+        player: BrawlhallaPlayer,
+        discord_id: int,
+        result: SnapshotRunResult,
+    ) -> None:
+        """Snapshot one member's current rating/legend stats.
+
+        Public (not `_`-prefixed) so bot/cogs/link.py can take an initial
+        snapshot synchronously right after /link, instead of the member
+        waiting for the next scheduled run_for_guild tick to appear on any
+        leaderboard (docs/DECISIONS.md ADR-059). run_for_guild uses this
+        the same way it always has — no behavior change there.
+        """
+        previous = await self._ranking.get_latest(player.id)
+        stats, ranked = await self.snapshot_player(player)
+        result.tiers[discord_id] = ranked.tier if ranked else None
 
         if (
             ranked is not None

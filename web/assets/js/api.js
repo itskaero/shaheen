@@ -83,6 +83,7 @@ const ShaheenAPI = (() => {
     getClan: () => get("/clan"),
     getLeaderboard: (limit = 25) => get(`/leaderboard?limit=${limit}`),
     getRoster: () => get("/roster"),
+    getPakistanLeaderboard: (limit = 150) => get(`/pakistan/leaderboard?limit=${limit}`),
     getAchievements: () => get("/achievements"),
     getPlayer: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}`),
     getPlayerHistory: (brawlhallaId, limit = 20) =>

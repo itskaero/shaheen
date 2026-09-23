@@ -38,6 +38,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.profile",
     "bot.cogs.lookup",
     "bot.cogs.clan",
+    "bot.cogs.pakistan",
     "bot.cogs.competition",
     "bot.cogs.moderation",
     "bot.cogs.engagement",

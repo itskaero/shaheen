@@ -34,6 +34,10 @@ class LeaderboardEntryResponse(BaseModel):
     tier: str | None
 
 
+class PakistanLeaderboardEntryResponse(LeaderboardEntryResponse):
+    is_clan_member: bool
+
+
 class RosterEntryResponse(BaseModel):
     brawlhalla_id: int
     player_name: str

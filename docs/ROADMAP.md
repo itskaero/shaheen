@@ -94,6 +94,9 @@
 - [x] `/anthem` command linking to the website Music Library
 - [x] Legend portraits (65, from the owner's roster sheet) on `/profile`,
       `/legends`, `/legendmeta` and the website player page
+- [x] Pakistan leaderboard (`/pakistan join|leave|add|remove|leaderboard`),
+      separate from the clan board; website Leaderboard + Roster merged into
+      one Rankings page with Clan / Pakistan tabs
 - [ ] scheduling + reminders (timezone-aware scrims)
 - [ ] voice activity in engagement
 

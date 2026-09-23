@@ -1921,6 +1921,164 @@ h2.player-card-name {
   margin-right: 0.5rem;
 }
 
+/* ---------- rankings: clan + Pakistan tabs (docs/DECISIONS.md ADR-099) ---------- */
+.board-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.board-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--grey);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.board-tab:hover {
+  color: var(--cream);
+}
+
+.board-tab[aria-selected="true"] {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.board-tab:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.board-intro {
+  color: var(--grey);
+  margin: 0 0 1.25rem;
+  max-width: 62ch;
+}
+
+.board-intro code {
+  color: var(--cream);
+}
+
+.clan-tag {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--gold);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.podium {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.podium-step a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0.75rem 1.1rem;
+  clip-path: var(--cut-sm);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--cream);
+  text-align: center;
+}
+
+.podium-step a:hover {
+  text-decoration: none;
+  border-color: var(--card-border-hover);
+}
+
+.podium-1 a {
+  padding-top: 1.6rem;
+  border-color: var(--gold);
+  background: linear-gradient(165deg, rgba(255, 210, 63, 0.14), rgba(3, 6, 4, 0.9));
+}
+
+.podium-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.podium-rating {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.board-subhead {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: var(--cream);
+  margin: 2rem 0 0.75rem;
+}
+
+.board-subhead span {
+  color: var(--grey);
+  font-weight: 500;
+}
+
+.unplaced-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.unplaced-list li {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+}
+
+@media (max-width: 560px) {
+  .podium {
+    gap: 0.4rem;
+  }
+
+  .podium-step a {
+    padding: 0.75rem 0.4rem;
+  }
+
+  .podium-rating {
+    font-size: 1.3rem;
+  }
+
+  .podium-name {
+    font-size: 0.78rem;
+  }
+
+  .podium-step .tier-badge {
+    font-size: 0.62rem;
+  }
+}
+
 /* ---------- states ---------- */
 
 .state-msg {

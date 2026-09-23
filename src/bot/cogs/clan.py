@@ -116,8 +116,10 @@ class ClanCog(commands.Cog):
                 )
 
         logger.info(
-            "Snapshot cycle: %d member(s), %d error(s), %d announcement(s)",
+            "Snapshot cycle: %d member(s), %d Pakistan-board player(s), %d error(s), "
+            "%d announcement(s)",
             result.members_processed,
+            result.players_processed,
             len(result.errors),
             len(result.announcements),
         )
