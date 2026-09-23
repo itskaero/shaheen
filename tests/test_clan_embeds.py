@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from bot.content.clan_embeds import (
     build_clan_stats_embed,
+    build_leaderboard_embed,
     build_legend_meta_embed,
     build_mvp_announcement_embed,
     build_spotlight_embed,
@@ -145,3 +146,17 @@ def _embed_field(embed, name: str) -> str | None:
         if field.name == name:
             return field.value
     return None
+
+
+def test_leaderboard_embed_defaults_to_the_clan_board() -> None:
+    embed = build_leaderboard_embed([("Foo", "Gold", 1500)], season=5)
+    assert embed.title == "🏆 Shaheen Leaderboard"
+    assert embed.footer.text == "Season 5 · 1 member(s) placed"
+
+
+def test_leaderboard_embed_can_be_the_pakistan_board() -> None:
+    embed = build_leaderboard_embed(
+        [], title="🇵🇰 Pakistan Leaderboard", empty_hint="add yourself with `/pakistan join`"
+    )
+    assert embed.title == "🇵🇰 Pakistan Leaderboard"
+    assert "/pakistan join" in (embed.description or "")

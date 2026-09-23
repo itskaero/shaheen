@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Achievements — Shaheen</title>
-  <meta name="description" content="Clan-wide achievement gallery and completion stats." />
+  <title>Rankings — Shaheen</title>
+  <meta name="description" content="Shaheen clan and Pakistan Brawlhalla ranked leaderboards." />
   <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,9 +26,9 @@
         <a href="index.html">Home</a>
         <a href="landing.html">Scenes</a>
         <a href="clan.html">Clan</a>
-        <a href="rankings.html">Rankings</a>
+        <a href="rankings.html" class="active">Rankings</a>
         <a href="music.html">Music</a>
-        <a href="achievements.html" class="active">Achievements</a>
+        <a href="achievements.html">Achievements</a>
         <a href="player.html">Players</a>
         <a href="tournaments.html">Tournaments</a>
         <a href="join.html">Join</a>
@@ -47,15 +47,34 @@
 
   <div class="page-banner">
     <div class="wrap">
-      <h1 class="page-title">Achievements</h1>
-      <p class="page-subtitle">Every milestone in the book — earned and not yet, clan-wide.</p>
+      <h1 class="page-title">Rankings</h1>
+      <p class="page-subtitle">Ranked by results. Not excuses. The clan's ladder, and Pakistan's. Click a player for their full profile.</p>
     </div>
   </div>
 
   <main class="wrap" style="padding-top: 0">
-    <div id="achievements-content">
-      <p class="state-msg">Loading achievements… (first load can take up to a minute)</p>
+    <div class="board-tabs" role="tablist" aria-label="Leaderboards">
+      <button type="button" role="tab" id="tab-clan" class="board-tab" aria-controls="panel-clan" aria-selected="true">
+        <img src="assets/img/logo-icon.png" alt="" width="20" height="20" /> Shaheen Clan
+      </button>
+      <button type="button" role="tab" id="tab-pakistan" class="board-tab" aria-controls="panel-pakistan" aria-selected="false" tabindex="-1">
+        <span aria-hidden="true">🇵🇰</span> Pakistan
+      </button>
     </div>
+
+    <section id="panel-clan" class="board-panel" role="tabpanel" aria-labelledby="tab-clan">
+      <p class="board-intro">Every Shaheen member who has linked a Brawlhalla account with <code>/link</code>, ranked by this season's rating.</p>
+      <div id="clan-content">
+        <p class="state-msg">Loading the clan ladder… (first load can take up to a minute)</p>
+      </div>
+    </section>
+
+    <section id="panel-pakistan" class="board-panel" role="tabpanel" aria-labelledby="tab-pakistan" hidden>
+      <p class="board-intro">Pakistan's ranked Brawlhalla players, clan or not. Get on it with <code>/pakistan join</code> in our Discord. <span class="clan-tag">Shaheen</span> marks clan members.</p>
+      <div id="pakistan-content">
+        <p class="state-msg">Loading the Pakistan ladder…</p>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -74,6 +93,6 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/spotlight.js"></script>
-  <script src="assets/js/pages/achievements.js"></script>
+  <script src="assets/js/pages/rankings.js"></script>
 </body>
 </html>

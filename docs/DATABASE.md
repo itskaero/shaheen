@@ -32,6 +32,14 @@ MemberPlayerLink
 - linked_at
 - unlinked_at if history is required
 
+PakistanBoardEntry (docs/DECISIONS.md ADR-099, migration 0011)
+- guild_id
+- brawlhalla_player_id (no member required — staff can add non-members)
+- owner_discord_id (set when a member added themselves)
+- added_by_discord_id
+- added_at
+- removed_at (soft delete; one active entry per player per guild)
+
 RankingSnapshot
 - player
 - captured_at

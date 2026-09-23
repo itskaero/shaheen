@@ -68,6 +68,9 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="🏆 The Clan",
         commands=(
             CommandHelp("/leaderboard", "Shaheen's internal ranked ladder."),
+            CommandHelp("/pakistan leaderboard", "Pakistan's ranked ladder — clan or not."),
+            CommandHelp("/pakistan join", "Put yourself on the Pakistan leaderboard."),
+            CommandHelp("/pakistan leave", "Take yourself off the Pakistan leaderboard."),
             CommandHelp("/clanstats", "Clan-wide totals, rating spread and tier split."),
             CommandHelp("/legendmeta", "The clan's most-played Legends and their win rates."),
             CommandHelp("/chatboard", "The most active chatters."),
@@ -137,6 +140,8 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/emoji sync", "Upload Shaheen's legend emoji pack.", True),
             CommandHelp("/emoji browse", "Pick which candidate emoji to upload.", True),
             CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
+            CommandHelp("/pakistan add", "Add any Pakistani player to that leaderboard.", True),
+            CommandHelp("/pakistan remove", "Remove a player from the Pakistan board.", True),
             CommandHelp("/setup run", "Provision the server structure.", True),
             CommandHelp("/setup status", "Show whether expected resources exist.", True),
             CommandHelp("/setup verify", "Non-destructive validation report.", True),

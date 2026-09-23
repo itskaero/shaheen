@@ -14,7 +14,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import achievements, clan, community, leaderboard, players, roster, tournaments
+from api.routers import (
+    achievements,
+    clan,
+    community,
+    leaderboard,
+    pakistan,
+    players,
+    roster,
+    tournaments,
+)
 from core.config import load_settings
 from core.logging import configure_logging
 from database.session import create_engine, create_session_factory
@@ -63,6 +72,7 @@ app.include_router(clan.router)
 app.include_router(community.router)
 app.include_router(leaderboard.router)
 app.include_router(roster.router)
+app.include_router(pakistan.router)
 app.include_router(achievements.router)
 app.include_router(players.router)
 app.include_router(tournaments.router)

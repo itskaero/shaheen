@@ -344,3 +344,50 @@ async def test_unranked_member_is_recorded_as_none(
     result = await service.run_for_guild(GUILD_ID)
 
     assert result.tiers == {discord_id: None}
+
+
+async def test_run_for_guild_snapshots_pakistan_only_players_without_member_work(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """A staff-added Pakistan-board player (no Discord member) gets rating +
+    Legend rows, but no achievements, tiers or announcements (ADR-099).
+    """
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    outsider = await BrawlhallaPlayerRepository(session).upsert(
+        brawlhalla_player_id=77, player_name="Outsider", region=None
+    )
+    await PakistanBoardRepository(session).add(
+        guild_id=GUILD_ID, player_id=outsider.id, added_by_discord_id=5, owner_discord_id=None
+    )
+    service = SnapshotService(session, _FakeBrawlhalla(games=150))  # type: ignore[arg-type]
+
+    result = await service.run_for_guild(GUILD_ID)
+
+    assert result.members_processed == 0
+    assert result.players_processed == 1
+    assert result.announcements == []
+    assert result.tiers == {}
+    rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert [row.brawlhalla_player_id for row in rows] == [outsider.id]
+
+
+async def test_clan_member_also_on_pakistan_board_is_snapshotted_once(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    _member, player, discord_id = await _setup_linked_member(session)
+    await PakistanBoardRepository(session).add(
+        guild_id=GUILD_ID,
+        player_id=player.id,
+        added_by_discord_id=discord_id,
+        owner_discord_id=discord_id,
+    )
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+
+    result = await service.run_for_guild(GUILD_ID)
+
+    assert (result.members_processed, result.players_processed) == (1, 0)
+    rows = (await session.execute(select(RankingSnapshot))).scalars().all()
+    assert len(rows) == 1

@@ -70,6 +70,7 @@ jobs:
           snapshot clan /clan
           snapshot leaderboard "/leaderboard?limit=25"
           snapshot roster /roster
+          snapshot pakistan "/pakistan/leaderboard?limit=150"
           snapshot achievements /achievements
 
       - name: Commit if anything changed

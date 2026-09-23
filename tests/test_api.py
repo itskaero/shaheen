@@ -448,3 +448,46 @@ def test_clan_matches_endpoint_is_empty_without_confirmed_matches(
     response = client.get("/community/matches")
     assert response.status_code == 200
     assert response.json() == []
+
+
+async def test_pakistan_leaderboard_endpoint(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # clan member, brawlhalla_id=10
+        players = BrawlhallaPlayerRepository(session)
+        board = PakistanBoardRepository(session)
+        member_player = await players.get_by_brawlhalla_id(10)
+        outsider = await players.upsert(
+            brawlhalla_player_id=77, player_name="Outsider", region=None
+        )
+        assert member_player is not None
+        for player in (member_player, outsider):
+            await board.add(
+                guild_id=GUILD_ID, player_id=player.id, added_by_discord_id=1, owner_discord_id=None
+            )
+        await RankingSnapshotRepository(session).add(
+            RankingSnapshot(
+                brawlhalla_player_id=outsider.id,
+                captured_at=datetime.now(UTC),
+                rating=1800,
+                peak_rating=1800,
+                tier="Diamond",
+                wins=1,
+                games=2,
+                region="SEA",
+            )
+        )
+        await session.commit()
+
+    response = client.get("/pakistan/leaderboard")
+    assert response.status_code == 200
+    body = response.json()
+    assert [(e["player_name"], e["is_clan_member"]) for e in body] == [
+        ("Outsider", False),
+        ("Foo", True),
+    ]
+    assert body[0]["region"] == "SEA"
+    assert "discord_id" not in body[0]

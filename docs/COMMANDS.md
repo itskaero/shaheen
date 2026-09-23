@@ -110,7 +110,29 @@ the rank it would hold and the nearest member above and below with deltas
 ## Phase 3 — Clan
 
 ### /leaderboard
-Shaheen internal leaderboard.
+Shaheen internal leaderboard — linked clan members only (`/link`).
+
+### /pakistan leaderboard
+The Pakistan leaderboard (docs/DECISIONS.md ADR-099): Pakistan's ranked
+players, clan or not, current season only. 🦅 marks Shaheen members.
+
+### /pakistan join <identifier>
+Put your own Brawlhalla account (Brawlhalla or Steam64 ID) on the Pakistan
+leaderboard, with a confirm step. One entry per member — joining with a
+different account replaces the old one. Opt-in only, clan members included:
+Brawlhalla reports a server region, never a country, so nothing is assumed.
+Doesn't make you a clan member — that's `/apply`.
+
+### /pakistan leave
+Take your own entry off the Pakistan leaderboard.
+
+### /pakistan add <identifier> *(staff)*
+Add any Pakistani player — no Discord membership needed. If they join the
+server later, `/pakistan join` with the same ID makes the entry theirs.
+The board is capped at 150 players (API quota).
+
+### /pakistan remove <brawlhalla_id> *(staff)*
+Remove a player from the Pakistan leaderboard.
 
 ### /achievements [user]
 Show earned achievements.

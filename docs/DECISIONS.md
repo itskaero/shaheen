@@ -3853,3 +3853,66 @@ The strip itself was checked by eye. A Playwright pass on `player.html` with the
 `mordex`, `lord vraxx`, `bödvar`, `wu_shang` and an unknown key: the four real ones load their
 portraits in both the cards and the mastery list, the unknown one falls back to an initial, no console
 errors, no horizontal overflow at 390px. Full suite green, ruff and mypy clean. No migration.
+
+## ADR-099 — A Pakistan leaderboard beside the clan one, and one Rankings page
+
+The owner asked for two boards: the clan's (fed by `/link`, unchanged) and one for Pakistan's
+Brawlhalla scene, filled by a separate command — and for the site to reconcile its Leaderboard and
+Roster pages accordingly. Confirmed via `AskUserQuestion`: members add themselves and staff can add
+any Pakistani player (Discord member or not); clan members opt in with the same command rather than
+being added automatically; one Rankings page with two tabs replaces Leaderboard + Roster.
+
+**Its own table, not a flag on members.** `pakistan_board_entries` (migration 0011) references
+`brawlhalla_players` directly, because the whole point of staff adds is players who were never Discord
+members — a `ShaheenMember` column couldn't hold them. Soft-deleted via `removed_at` like
+`member_player_links`, with a partial unique index for one active entry per player per guild.
+`owner_discord_id` records a self-add, so `/pakistan leave` only ever removes your own entry and one
+member can't take over another's; a staff-added entry with no owner is claimed by whoever later
+`/pakistan join`s with that ID.
+
+**Opt-in only.** The Brawlhalla API reports a server region ("SEA", "EU"), never a country, and nothing
+else in Shaheen's data says where someone lives. The 🇵🇰 self-assign role was considered as an
+automatic source for clan members and rejected by the owner in favour of the explicit command.
+
+**Snapshots.** Snapshot rows already key on the player, not the member, so non-members fit the existing
+tables. `SnapshotService.snapshot_player` is the rating + per-Legend write extracted from
+`snapshot_member` (which now calls it); `run_for_guild` runs it for Pakistan entries not already covered
+by a clan link that tick. Non-members get no achievements, rank roles or announcements — those are clan
+features keyed to a `ShaheenMember`. `/pakistan join|add` takes an immediate snapshot, as `/link` does.
+
+**A cap of 150 entries.** Each costs two Brawlhalla API calls per six-hourly tick on top of the clan's;
+the cap keeps a staff bulk-add from eating the quota. Raise it deliberately if the scene outgrows it.
+
+**Discord.** A new `/pakistan` group (`join`, `leave`, `leaderboard`; staff `add`, `remove`), reusing
+`/link`'s resolver (`LinkService.resolve_candidate`, Steam64 or Brawlhalla ID) and `ConfirmView`.
+`build_leaderboard_embed` gained `title`/`empty_hint`/`noun` so both boards share one builder; the
+Pakistan board shows Brawlhalla names, with 🦅 on clan members.
+
+**Website.** `GET /pakistan/leaderboard` (Brawlhalla identity only — the ADR-040 boundary holds; this
+board holds non-members, which makes it stricter, not looser). `rankings.html` has two tabs, mirrored to
+the URL hash so `rankings.html#pakistan` links straight to that board. The clan tab is built from the
+existing `/roster` payload — already every linked member, rating-sorted, unplaced included — as a
+podium, a ranked table, and a "Not placed this season" list: the old top-25 Leaderboard and the full
+Roster were the same members viewed twice, now one list. `leaderboard.html`/`roster.html` are redirect
+stubs so old links (including ones already shared) still land; the nav across every page says Rankings.
+The `/leaderboard` and `/roster` endpoints stay — the home page and cold-start snapshots use them — and
+the snapshot workflow also captures `/pakistan/leaderboard`.
+
+Files: `src/database/models/pakistan_board_entry.py`, `alembic/versions/0011_pakistan_board.py`,
+`src/database/repositories/pakistan_board_repository.py`, `src/services/pakistan_board_service.py`,
+`src/bot/cogs/pakistan.py`, `src/api/routers/pakistan.py` (new); `src/services/snapshot_service.py`,
+`src/bot/content/{clan,help}_embeds.py`, `src/bot/cogs/clan.py`, `src/bot/client.py`,
+`src/api/{app,schemas}.py`, `web/rankings.html`, `web/assets/js/pages/rankings.js` (new),
+`web/{leaderboard,roster}.html` (now redirects; their page scripts removed), `web/*.html` nav,
+`web/assets/js/api.js`, `web/assets/css/style.css`, `.github/workflows/snapshot.yml`,
+`docs/{COMMANDS,DATABASE,ROADMAP}.md`, `tests/test_pakistan_board_service.py` (new),
+`tests/{test_snapshot_service,test_api,test_clan_embeds}.py`.
+
+Verified: new service tests cover join, replacing your own entry, staff add of a non-member and a later
+claim, ownership conflicts, leave/remove, the cap, and a season-scoped, rating-sorted leaderboard that
+flags clan members. Snapshot tests: a Pakistan-only player gets rating rows but no achievements, tiers
+or announcements, and a clan member who also joined is snapshotted once. API test for the endpoint,
+including that no Discord identity leaks. Alembic round-trip passes. Playwright on `rankings.html` with
+the API mocked, desktop and 390px: both tabs render, clicking and arrow keys switch tabs, `#pakistan`
+deep-links, podium in 2·1·3 order, unplaced members listed, clan tags shown, both old URLs redirect, no
+overflow, no console errors.

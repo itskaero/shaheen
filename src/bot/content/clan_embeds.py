@@ -19,19 +19,24 @@ from services.legend_art import legend_display_name
 def build_leaderboard_embed(
     entries: list[tuple[str, str | None, int | None]],
     season: int | None = None,
+    *,
+    title: str = "🏆 Shaheen Leaderboard",
+    empty_hint: str = "link a Brawlhalla account with `/link`",
+    noun: str = "member",
 ) -> discord.Embed:
     """entries: (display_name, tier, rating), already sorted best-first.
 
     The board is scoped to one Brawlhalla season (docs/DECISIONS.md
     ADR-088), so it says which — right after a reset a short board means
-    "most people haven't re-placed", not "the bot is broken".
+    "most people haven't re-placed", not "the bot is broken". `title`,
+    `empty_hint` and `noun` let the Pakistan board (ADR-099) reuse it.
     """
-    embed = discord.Embed(title="🏆 Shaheen Leaderboard", colour=GOLD)
+    embed = discord.Embed(title=title, colour=GOLD)
     if not entries:
         embed.description = (
             "No ranked snapshots this season yet — play a ranked game, then `/refresh`."
             if season is not None
-            else "No ranked snapshots yet — link a Brawlhalla account with `/link`."
+            else f"No ranked snapshots yet — {empty_hint}."
         )
         return embed
 
@@ -42,8 +47,13 @@ def build_leaderboard_embed(
     ]
     embed.description = "\n".join(lines)
     if season is not None:
-        embed.set_footer(text=f"Season {season} · {len(entries)} member(s) placed")
+        embed.set_footer(text=f"Season {season} · {len(entries)} {noun}(s) placed")
     return embed
+
+
+def build_pakistan_board_embed(*, title: str, description: str) -> discord.Embed:
+    """Join/leave/add/remove confirmations for /pakistan (ADR-099)."""
+    return discord.Embed(title=title, description=description, colour=FOREST_GREEN)
 
 
 def build_history_embed(
