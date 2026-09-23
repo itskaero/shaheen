@@ -36,6 +36,9 @@ class LeaderboardEntryResponse(BaseModel):
 
 class PakistanLeaderboardEntryResponse(LeaderboardEntryResponse):
     is_clan_member: bool
+    # Claimed via /pakistan join by a server member (ADR-100) — a boolean
+    # only, never which Discord account (ADR-040).
+    is_claimed: bool
 
 
 class RosterEntryResponse(BaseModel):
@@ -55,6 +58,12 @@ class AchievementResponse(BaseModel):
     awarded_at: datetime
 
 
+class AchievementHolderResponse(BaseModel):
+    brawlhalla_id: int
+    player_name: str
+    earned_at: datetime
+
+
 class AchievementGalleryEntryResponse(BaseModel):
     key: str
     name: str
@@ -64,6 +73,8 @@ class AchievementGalleryEntryResponse(BaseModel):
     total_members: int
     completion_pct: float
     rarity: str
+    # Earliest first — the first entry is who got there first (ADR-100).
+    holders: list[AchievementHolderResponse] = []
 
 
 class AchievementChecklistEntryResponse(BaseModel):

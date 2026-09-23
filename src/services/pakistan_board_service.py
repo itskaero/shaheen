@@ -12,6 +12,7 @@ Resolving an identifier to a player stays with LinkService.resolve_candidate
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +29,11 @@ from integrations.brawlhalla.models import SearchResult
 # clan's own; the cap keeps a staff bulk-add from eating the API quota.
 MAX_PAKISTAN_BOARD = 150
 
+# The top-N places whose *claimed* holders get ROLE_PAKISTAN_TOP (ADR-100).
+# An unclaimed player (staff-added, not in the server) still takes the place
+# on the board but earns nothing — that gap is the reason to join.
+PAKISTAN_TOP_ROLE_SIZE = 10
+
 
 @dataclass
 class PakistanJoinOutcome:
@@ -40,6 +46,20 @@ class PakistanBoardRow:
     player: BrawlhallaPlayer
     snapshot: RankingSnapshot
     is_clan_member: bool
+    # The Discord member who claimed this entry via /pakistan join; None
+    # while it's a staff-added, unclaimed spot (docs/DECISIONS.md ADR-100).
+    owner_discord_id: int | None = None
+
+    @property
+    def is_claimed(self) -> bool:
+        return self.owner_discord_id is not None
+
+
+@dataclass
+class PakistanClimber:
+    player: BrawlhallaPlayer
+    rating_gain: int
+    owner_discord_id: int | None
 
 
 class PakistanBoardService:
@@ -150,13 +170,43 @@ class PakistanBoardService:
             player.id for _m, player, _d in await self._links.list_active_for_guild(guild_id)
         }
         rows: list[PakistanBoardRow] = []
-        for _entry, player in await self._board.list_active(guild_id):
+        for entry, player in await self._board.list_active(guild_id):
             latest = await self._ranking.get_latest(player.id, season=season)
             if latest is not None:
                 rows.append(
                     PakistanBoardRow(
-                        player=player, snapshot=latest, is_clan_member=player.id in clan_player_ids
+                        player=player,
+                        snapshot=latest,
+                        is_clan_member=player.id in clan_player_ids,
+                        owner_discord_id=entry.owner_discord_id,
                     )
                 )
         rows.sort(key=lambda row: row.snapshot.rating or -1, reverse=True)
         return rows[:limit]
+
+    async def top_role_earners(self, guild_id: int) -> set[int]:
+        """Discord ids that should hold the Pakistan Top role right now."""
+        rows = await self.leaderboard(guild_id, limit=PAKISTAN_TOP_ROLE_SIZE)
+        return {row.owner_discord_id for row in rows if row.owner_discord_id is not None}
+
+    async def climbers(
+        self, guild_id: int, *, since: datetime, limit: int = 5
+    ) -> list[PakistanClimber]:
+        """Biggest rating gains on the board since `since` — same first-vs-last
+        diff the clan digest uses (services/digest_service.py).
+        """
+        climbers: list[PakistanClimber] = []
+        for entry, player in await self._board.list_active(guild_id):
+            ratings = [
+                s.rating for s in await self._ranking.list_since(player.id, since) if s.rating
+            ]
+            if len(ratings) >= 2 and ratings[-1] > ratings[0]:
+                climbers.append(
+                    PakistanClimber(
+                        player=player,
+                        rating_gain=ratings[-1] - ratings[0],
+                        owner_discord_id=entry.owner_discord_id,
+                    )
+                )
+        climbers.sort(key=lambda c: c.rating_gain, reverse=True)
+        return climbers[:limit]

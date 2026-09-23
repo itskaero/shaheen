@@ -33,6 +33,7 @@ async def get_pakistan_leaderboard(
             peak_rating=row.snapshot.peak_rating,
             tier=row.snapshot.tier,
             is_clan_member=row.is_clan_member,
+            is_claimed=row.is_claimed,
         )
         for row in rows
     ]

@@ -3916,3 +3916,67 @@ including that no Discord identity leaks. Alembic round-trip passes. Playwright 
 the API mocked, desktop and 390px: both tabs render, clicking and arrow keys switch tabs, `#pakistan`
 deep-links, podium in 2·1·3 order, unplaced members listed, clan tags shown, both old URLs redirect, no
 overflow, no console errors.
+
+## ADR-100 — The Pakistan board as server promotion; whole-wing logo; who earned each achievement
+
+**Promotion, not a gate.** The owner asked whether the Pakistan board could require joining the
+Discord, then chose a middle ground: the board stays open (staff can still add players who aren't in
+the server — that's what makes it the scene's board rather than a member list), but being in the server
+visibly earns more. Nothing new is stored — "claimed" is the existing `owner_discord_id` from ADR-099,
+set by `/pakistan join`. Unclaimed entries never expire; the owner declined that.
+
+- **Website.** `/pakistan/leaderboard` rows gain `is_claimed` — a boolean only, never the owner's id
+  (ADR-040). The Pakistan tab tags rows ✓ Verified or Unclaimed; unclaimed rows carry a "Claim this
+  spot" link to the Discord invite, and a banner above the board explains the claim, the role and the
+  weekly callout. The link reads `DISCORD_INVITE_URL` directly because `wireDiscordLink()` only fills
+  `[data-discord-invite]` links present at page load, not rows rendered later.
+- **🇵🇰 Pakistan Top 10 role** (`ROLE_PAKISTAN_TOP`, created by `/setup run`, cosmetic, no permissions).
+  `PakistanBoardService.top_role_earners` takes the board's top 10 by current-season rating and returns
+  the owners of the claimed rows. An unclaimed player keeps their place and simply earns nothing — the
+  role isn't passed down to #11, since that would make the board's order mean different things in
+  different places. Synced every snapshot tick after the rank roles (`_sync_pakistan_top_role`): add to
+  earners who are in the guild, remove from holders who dropped out. Best-effort like the other system
+  roles — a `Forbidden` is logged, not raised.
+- **Weekly post in #pakistan-chat**, from the Sunday digest tick. `build_pakistan_weekly_embed` lists the
+  top 10 with unclaimed rows marked, the week's biggest climbers (`PakistanBoardService.climbers`: the
+  same first-vs-last rating diff over the last seven days the clan digest uses), and — only if any spot
+  is unclaimed — how to claim one. Claimed climbers are pinged in the message content, since mentions
+  inside an embed don't notify. Skipped when the board has no ranked rows.
+
+**Logo.** The nav/footer mark (`logo-icon`, a 256px square) was a crop too tight for the crest's
+spread wings, which were clipped at both sides — the "cropped" logo the owner reported. It's replaced by
+`logo-emblem.png/.webp` (384×228), cut from `shaheen-lockup.png` with both wings whole and the wordmark
+faded out at the bottom, and sized by height (`height: 32px; width: auto`) so the aspect ratio holds.
+The same swap applies to the footer crest, the Rankings tab icon and the faint crest watermark on the
+clan section. The web copies of `logo-icon.*` are removed (nothing referenced them); favicons stay
+square and the bot keeps its own `src/assets/img/logo-icon.png`.
+
+**Achievements gallery: who earned it.** `/achievements` entries gain `holders` — each holder's
+Brawlhalla id, name and `earned_at`, earliest first (Brawlhalla identity only, ADR-040). Built in the same
+per-member loop the gallery already ran (ADR-071), now reading `list_with_details` for the award time.
+The page groups achievements by category with an "n/m unlocked" count per group, and each card shows
+who got there first and when, up to six holder chips linking to their player pages, "+N more", or
+"Nobody yet — be the first". The grid uses `auto-fill` so a one-achievement category keeps a normal
+card instead of stretching the width of the page.
+
+**Regional Force wording.** `region_top_100` is awarded when the snapshot's `region_rank` (from the
+Brawlhalla API's `/player/{id}/ranked`, stored since ADR-081) is 1–100. That's the player's rank on their
+Brawlhalla **server region's** 1v1 ladder (SEA, EU, US-E…) — Brawlhalla has no country data — so "top
+100 of your region" read like a claim about Pakistan. Migration 0012 rewrites the stored description to
+name the server region; the key, the rule and existing awards are unchanged.
+
+Files: `src/services/pakistan_board_service.py`, `src/bot/constants.py`, `src/bot/cogs/clan.py`,
+`src/bot/content/clan_embeds.py`, `src/services/website_service.py`, `src/services/achievements.py`,
+`src/api/{schemas,routers/pakistan,routers/achievements}.py`,
+`alembic/versions/0012_region_top_100_wording.py` (new), `web/assets/img/logo-emblem.{png,webp}` (new),
+`web/*.html` (brand/footer marks), `web/rankings.html`, `web/assets/js/pages/{rankings,achievements}.js`,
+`web/assets/css/style.css`, `README.md`, `docs/{COMMANDS,PERMISSIONS,ROADMAP}.md`, tests.
+
+Verified: service tests for `is_claimed`, the role going only to claimed players inside the top places
+(an unclaimed #1 earns nothing and nobody below the cut is promoted), and climbers ranked by in-window
+gain; embed tests for the weekly post with and without unclaimed spots; API tests that `is_claimed` is
+exposed without any Discord id and that gallery holders carry only Brawlhalla identity; gallery holders
+ordered by award time. Full suite and the Alembic round-trip pass. Playwright with the API mocked,
+1440px and 390px: the nav mark renders the emblem undistorted, Verified/Unclaimed tags and claim links on
+the Pakistan tab point at the Discord invite, the achievements page shows category groups, first holder,
+chips and "+N more", no horizontal overflow, no console errors.

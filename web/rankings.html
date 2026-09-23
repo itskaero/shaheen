@@ -17,8 +17,8 @@
     <div class="wrap">
       <a class="brand" href="index.html">
         <picture>
-          <source srcset="assets/img/logo-icon.webp" type="image/webp" />
-          <img class="brand-mark" src="assets/img/logo-icon.png" alt="" width="34" height="34" />
+          <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
+          <img class="brand-mark" src="assets/img/logo-emblem.png" alt="" width="54" height="32" />
         </picture>
         <span class="brand-name">SHAHEEN</span>
       </a>
@@ -55,7 +55,7 @@
   <main class="wrap" style="padding-top: 0">
     <div class="board-tabs" role="tablist" aria-label="Leaderboards">
       <button type="button" role="tab" id="tab-clan" class="board-tab" aria-controls="panel-clan" aria-selected="true">
-        <img src="assets/img/logo-icon.png" alt="" width="20" height="20" /> Shaheen Clan
+        <img src="assets/img/logo-emblem.png" alt="" width="30" height="18" /> Shaheen Clan
       </button>
       <button type="button" role="tab" id="tab-pakistan" class="board-tab" aria-controls="panel-pakistan" aria-selected="false" tabindex="-1">
         <span aria-hidden="true">🇵🇰</span> Pakistan
@@ -70,7 +70,11 @@
     </section>
 
     <section id="panel-pakistan" class="board-panel" role="tabpanel" aria-labelledby="tab-pakistan" hidden>
-      <p class="board-intro">Pakistan's ranked Brawlhalla players, clan or not. Get on it with <code>/pakistan join</code> in our Discord. <span class="clan-tag">Shaheen</span> marks clan members.</p>
+      <p class="board-intro">Pakistan's ranked Brawlhalla players, clan or not. <span class="clan-tag">Shaheen</span> marks clan members; <span class="verified-tag">✓ Verified</span> players have claimed their spot in our Discord.</p>
+      <div class="claim-banner">
+        <p><strong>Your name here, marked Unclaimed?</strong> Join our Discord and run <code>/pakistan join</code> with your Brawlhalla ID to claim it. Only claimed players in the top 10 get the 🇵🇰 Pakistan Top 10 role, and climbers get called out every week.</p>
+        <a class="btn btn-primary" data-discord-invite href="join.html" target="_blank" rel="noopener">Join the Discord</a>
+      </div>
       <div id="pakistan-content">
         <p class="state-msg">Loading the Pakistan ladder…</p>
       </div>
@@ -80,8 +84,8 @@
   <footer class="site-footer">
     <div class="wrap">
       <picture>
-        <source srcset="assets/img/logo-icon.webp" type="image/webp" />
-        <img class="crest" src="assets/img/logo-icon.png" alt="" />
+        <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
+        <img class="crest" src="assets/img/logo-emblem.png" alt="" width="51" height="30" />
       </picture>
       <span class="discord-widget" data-discord-widget hidden></span>
       <p>&copy; <span id="year"></span> Shaheen &mdash; <span lang="ur">بلندیوں کی جانب</span>. Data from the Brawlhalla API.</p>

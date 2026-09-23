@@ -41,6 +41,11 @@ hierarchy alongside MVP (docs/DECISIONS.md ADR-097):
   granted once a member's chat level reaches
   `services/chat_gamification.py`'s `CORE_MEMBER_MIN_LEVEL`. Earned once,
   never revoked (chat XP only goes up).
+- **🇵🇰 Pakistan Top 10** (`ROLE_PAKISTAN_TOP`, ADR-100) — held by members
+  whose *claimed* Pakistan-board entry is in the board's top 10, re-synced
+  every snapshot tick (`bot/cogs/clan.py`'s `_sync_pakistan_top_role`), so
+  it's removed when they drop out. An unclaimed, staff-added entry keeps its
+  place but earns nothing — there's nobody in the server to give it to.
 
 ## Per-channel send permissions
 

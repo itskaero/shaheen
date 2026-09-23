@@ -9,6 +9,7 @@ from bot.content.clan_embeds import (
     build_leaderboard_embed,
     build_legend_meta_embed,
     build_mvp_announcement_embed,
+    build_pakistan_weekly_embed,
     build_spotlight_embed,
     build_tier_change_announcement_embed,
     build_weekly_digest_embed,
@@ -160,3 +161,24 @@ def test_leaderboard_embed_can_be_the_pakistan_board() -> None:
     )
     assert embed.title == "🇵🇰 Pakistan Leaderboard"
     assert "/pakistan join" in (embed.description or "")
+
+
+def test_pakistan_weekly_embed_marks_unclaimed_spots_and_nudges_them() -> None:
+    embed = build_pakistan_weekly_embed(
+        standings=[("Ace", "Diamond", 2100, False), ("Foo", "Gold", 1500, True)],
+        climbers=[("Foo", 80, True)],
+        season=5,
+    )
+    assert "**1.** Ace — 2100 (Diamond) · *unclaimed*" in (embed.description or "")
+    assert (embed.description or "").endswith("**2.** Foo — 1500 (Gold)")
+    assert _embed_field(embed, "📈 Biggest climbers") == "Foo +80"
+    assert "/pakistan join" in (_embed_field(embed, "Unclaimed spot?") or "")
+    assert embed.footer.text == "Season 5"
+
+
+def test_pakistan_weekly_embed_skips_the_nudge_when_every_spot_is_claimed() -> None:
+    embed = build_pakistan_weekly_embed(
+        standings=[("Foo", None, 1500, True)], climbers=[], season=None
+    )
+    assert _embed_field(embed, "Unclaimed spot?") is None
+    assert _embed_field(embed, "📈 Biggest climbers") is None

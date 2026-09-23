@@ -134,6 +134,14 @@ The board is capped at 150 players (API quota).
 ### /pakistan remove <brawlhalla_id> *(staff)*
 Remove a player from the Pakistan leaderboard.
 
+**Claimed spots (ADR-100).** An entry someone `/pakistan join`ed is
+*claimed*; a staff-added one is *unclaimed* until its player joins and
+claims it. Claimed players in the top 10 get the 🇵🇰 Pakistan Top 10 role
+automatically (re-checked every six-hourly snapshot). Every Sunday the bot
+posts the standings in #pakistan-chat, marks unclaimed spots, and pings the
+week's biggest claimed climbers. The website's Pakistan tab tags each row
+✓ Verified or Unclaimed, with a "Claim this spot" link to the Discord.
+
 ### /achievements [user]
 Show earned achievements.
 

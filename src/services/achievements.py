@@ -82,8 +82,13 @@ PEAK_2000 = AchievementDef("peak_2000", "Above the Clouds", "Hit a peak rating o
 GLOBAL_TOP_1000 = AchievementDef(
     "global_top_1000", "Global Elite", "Ranked inside the global top 1,000.", "ranked"
 )
+# "Region" is the Brawlhalla server region's 1v1 ladder (SEA, EU, US-E...) —
+# the API's region_rank — not a country (docs/DECISIONS.md ADR-100).
 REGION_TOP_100 = AchievementDef(
-    "region_top_100", "Regional Force", "Ranked inside the top 100 of your region.", "ranked"
+    "region_top_100",
+    "Regional Force",
+    "Ranked inside the top 100 of your Brawlhalla server region's 1v1 ladder (e.g. SEA).",
+    "ranked",
 )
 WIN_RATE_60 = AchievementDef(
     "win_rate_60",

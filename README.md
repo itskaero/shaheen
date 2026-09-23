@@ -97,12 +97,13 @@ ADR-047/ADR-048):
   used as the homepage's `.cinematic-strip` and every inner page's
   `.page-banner`. Swap in an updated one by replacing both files (keep the
   ~2.5:1 width:height ratio) — no other change needed.
-- `web/assets/img/shaheen-lockup.*` / `logo-icon.*` — the one crest asset
-  (docs/DECISIONS.md ADR-066): `shaheen-lockup` (crest + wordmark) is the
-  animated hero on `index.html`/`join.html`, `logo-icon` (a crop of the
-  same art, crest only — legible at small sizes) is the nav/footer/favicon
-  mark. Swap the crest by replacing `shaheen-lockup.png/.webp`, then
-  re-crop `logo-icon.png/.webp` and regenerate `favicon-32.png` /
+- `web/assets/img/shaheen-lockup.*` / `logo-emblem.*` — the one crest asset
+  (docs/DECISIONS.md ADR-066/ADR-100): `shaheen-lockup` (crest + wordmark)
+  is the animated hero on `index.html`/`join.html`; `logo-emblem` (the
+  lockup's crest with both wings whole, wordmark faded out, ~1.7:1) is the
+  nav/footer mark, sized by height. Swap the crest by replacing
+  `shaheen-lockup.png/.webp`, then re-cut `logo-emblem.png/.webp` (and the
+  bot's square `src/assets/img/logo-icon.png`) and regenerate `favicon-32.png` /
   `favicon-48.png` / `apple-touch-icon.png` from the same new art at
   256/32/48/180px square so every touchpoint stays consistent.
 - `web/assets/img/hero-characters.jpg` / `.webp` — the 5-character banner

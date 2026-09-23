@@ -153,6 +153,18 @@ ROLE_CORE_MEMBER = RoleSpec(
     mentionable=True,
 )
 
+# Held by the claimed players in the Pakistan leaderboard's top 10, synced on
+# every snapshot tick (docs/DECISIONS.md ADR-100). Only server members who
+# ran /pakistan join can hold it — the reason for an unclaimed top player to
+# join. Not a clan rank; non-clan members can earn it too.
+ROLE_PAKISTAN_TOP = RoleSpec(
+    logical_key="role:pakistan_top_10",
+    name="🇵🇰 Pakistan Top 10",
+    color=FOREST_GREEN,
+    hoist=False,
+    mentionable=True,
+)
+
 # --- Brawlhalla rank roles (system-assigned from snapshots) -----------------
 #
 # Mirrors each member's current Brawlhalla 1v1 tier, applied and removed
@@ -298,6 +310,7 @@ ROLES: tuple[RoleSpec, ...] = (
     ROLE_GUEST,
     ROLE_MVP,
     ROLE_CORE_MEMBER,
+    ROLE_PAKISTAN_TOP,
     *RANK_ROLES,
     *SELF_ASSIGN_ROLES,
 )

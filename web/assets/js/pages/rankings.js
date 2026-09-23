@@ -40,13 +40,30 @@
   window.addEventListener("hashchange", () => selectTab(tabFromHash(), { updateHash: false }));
   selectTab(tabFromHash(), { updateHash: false });
 
+  // Pakistan-board status (docs/DECISIONS.md ADR-100). Clan-tab rows carry no
+  // is_claimed field, so nothing renders for them.
+  function claimHtml(entry) {
+    if (entry.is_claimed === true) {
+      return '<span class="verified-tag" title="Claimed by a member of our Discord">✓ Verified</span>';
+    }
+    if (entry.is_claimed === false) {
+      const invite = typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html";
+      return `<span class="unclaimed-tag">Unclaimed</span>
+        <a class="claim-link" href="${invite}" target="_blank" rel="noopener">Claim this spot</a>`;
+    }
+    return "";
+  }
+
   function playerCell(entry, size = 36) {
     return `
-      <a class="player-cell" href="player.html?id=${entry.brawlhalla_id}">
-        ${avatarHtml(entry.player_name, size)}
-        <span>${escapeHtml(entry.player_name)}</span>
+      <div class="player-cell-wrap">
+        <a class="player-cell" href="player.html?id=${entry.brawlhalla_id}">
+          ${avatarHtml(entry.player_name, size)}
+          <span>${escapeHtml(entry.player_name)}</span>
+        </a>
         ${entry.is_clan_member ? '<span class="clan-tag">Shaheen</span>' : ""}
-      </a>`;
+        ${claimHtml(entry)}
+      </div>`;
   }
 
   function podiumHtml(ranked) {
@@ -65,6 +82,7 @@
                   ${avatarHtml(entry.player_name, index === 0 ? 72 : 56)}
                   <span class="podium-name">${escapeHtml(entry.player_name)}</span>
                   ${entry.is_clan_member ? '<span class="clan-tag">Shaheen</span>' : ""}
+                  ${entry.is_claimed === false ? '<span class="unclaimed-tag">Unclaimed</span>' : ""}
                   ${tierBadge(entry.tier)}
                   <span class="podium-rating">${formatNumber(entry.rating)}</span>
                 </a>

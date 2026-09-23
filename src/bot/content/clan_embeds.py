@@ -51,6 +51,47 @@ def build_leaderboard_embed(
     return embed
 
 
+def build_pakistan_weekly_embed(
+    *,
+    standings: list[tuple[str, str | None, int | None, bool]],
+    climbers: list[tuple[str, int, bool]],
+    season: int | None,
+) -> discord.Embed:
+    """Weekly Pakistan standings for #pakistan-chat (docs/DECISIONS.md ADR-100).
+
+    standings: (player_name, tier, rating, is_claimed), best first.
+    climbers: (player_name, rating_gain, is_claimed), biggest gain first.
+    Unclaimed players are marked so the nudge to join is right there.
+    """
+    embed = discord.Embed(title="🇵🇰 Pakistan Leaderboard — This Week", colour=FOREST_GREEN)
+    lines = [
+        f"**{idx}.** {name} — {rating if rating is not None else '—'}"
+        + (f" ({tier})" if tier else "")
+        + ("" if claimed else " · *unclaimed*")
+        for idx, (name, tier, rating, claimed) in enumerate(standings, start=1)
+    ]
+    embed.description = "\n".join(lines)
+    if climbers:
+        embed.add_field(
+            name="📈 Biggest climbers",
+            value="\n".join(
+                f"{name} +{gain}" + ("" if claimed else " · *unclaimed*")
+                for name, gain, claimed in climbers
+            ),
+            inline=False,
+        )
+    if any(not claimed for *_rest, claimed in standings):
+        embed.add_field(
+            name="Unclaimed spot?",
+            value="If that's you, run `/pakistan join` with your Brawlhalla ID to claim it — "
+            "only claimed players in the top 10 get the 🇵🇰 Pakistan Top 10 role.",
+            inline=False,
+        )
+    if season is not None:
+        embed.set_footer(text=f"Season {season}")
+    return embed
+
+
 def build_pakistan_board_embed(*, title: str, description: str) -> discord.Embed:
     """Join/leave/add/remove confirmations for /pakistan (ADR-099)."""
     return discord.Embed(title=title, description=description, colour=FOREST_GREEN)

@@ -7,7 +7,7 @@ identity is public-facing here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -179,15 +179,26 @@ class CommunityActivityEntry:
 
 
 @dataclass
+class AchievementHolder:
+    """Who earned an achievement, as Brawlhalla identity only (ADR-040)."""
+
+    player: BrawlhallaPlayer
+    earned_at: datetime
+
+
+@dataclass
 class AchievementGalleryEntry:
     """Every catalog achievement, including ones nobody's earned yet —
     unlike PlayerProfile.achievements, which is per-member and only ever
-    lists what that one member holds (docs/DECISIONS.md ADR-071).
+    lists what that one member holds (docs/DECISIONS.md ADR-071). `holders`
+    (earliest first) was added in ADR-100 so the gallery says *who*, not
+    just how many.
     """
 
     achievement: Achievement
     holder_count: int
     total_members: int
+    holders: list[AchievementHolder] = field(default_factory=list)
 
     @property
     def completion_pct(self) -> float:
@@ -332,16 +343,19 @@ class WebsiteService:
         """
         catalog = await self._achievement_catalog.list_all()
         linked = await self._links.list_active_for_guild(guild_id)
-        holder_counts: dict[str, int] = {achievement.key: 0 for achievement in catalog}
-        for member, _player, _discord_id in linked:
-            for key in await self._awards.list_earned_keys(member.id):
-                if key in holder_counts:
-                    holder_counts[key] += 1
+        holders: dict[str, list[AchievementHolder]] = {a.key: [] for a in catalog}
+        for member, player, _discord_id in linked:
+            for achievement, earned_at in await self._awards.list_with_details(member.id):
+                if achievement.key in holders:
+                    holders[achievement.key].append(
+                        AchievementHolder(player=player, earned_at=earned_at)
+                    )
         return [
             AchievementGalleryEntry(
                 achievement=achievement,
-                holder_count=holder_counts[achievement.key],
+                holder_count=len(holders[achievement.key]),
                 total_members=len(linked),
+                holders=sorted(holders[achievement.key], key=lambda h: h.earned_at),
             )
             for achievement in catalog
         ]
