@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-09-29T22:11:55Z",
+  "captured_at": "2026-09-30T05:27:54Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -16,7 +16,7 @@
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
-      "rating": 1754,
+      "rating": 1801,
       "peak_rating": 1852,
       "tier": "Platinum 2",
       "is_clan_member": false,
