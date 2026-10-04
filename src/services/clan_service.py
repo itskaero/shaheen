@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.shaheen_member import ShaheenMember
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
@@ -40,6 +41,33 @@ def _median(sorted_values: list[int]) -> int | None:
     if count % 2 == 1:
         return sorted_values[middle]
     return round((sorted_values[middle - 1] + sorted_values[middle]) / 2)
+
+
+def aggregate_legend_meta(
+    snapshots_per_player: list[list[LegendSnapshot]], *, limit: int
+) -> list[LegendMetaEntry]:
+    """Legend popularity and win rate across players, one latest snapshot per
+    player per Legend. Shared by the clan view (/legendmeta) and the network
+    view (services/network_service.py, ADR-104) so both count the same way.
+    """
+    totals: dict[str, LegendMetaEntry] = {}
+    for snapshots in snapshots_per_player:
+        for snapshot in snapshots:
+            entry = totals.setdefault(
+                snapshot.legend_name_key,
+                LegendMetaEntry(
+                    legend_name_key=snapshot.legend_name_key,
+                    total_games=0,
+                    total_wins=0,
+                    player_count=0,
+                ),
+            )
+            entry.total_games += snapshot.games
+            entry.total_wins += snapshot.wins
+            entry.player_count += 1
+    entries = [e for e in totals.values() if e.total_games >= _MIN_GAMES_FOR_LEGEND_META]
+    entries.sort(key=lambda e: e.total_games, reverse=True)
+    return entries[:limit]
 
 
 @dataclass
@@ -168,25 +196,15 @@ class ClanService:
         leaderboard() already uses rather than one large SQL aggregate
         (docs/DECISIONS.md ADR-068).
         """
-        totals: dict[str, LegendMetaEntry] = {}
-        for _member, player, _discord_id in await self._links.list_active_for_guild(guild_id):
-            for snapshot in await self._legends.list_latest_per_legend(player.id):
-                entry = totals.setdefault(
-                    snapshot.legend_name_key,
-                    LegendMetaEntry(
-                        legend_name_key=snapshot.legend_name_key,
-                        total_games=0,
-                        total_wins=0,
-                        player_count=0,
-                    ),
+        return aggregate_legend_meta(
+            [
+                await self._legends.list_latest_per_legend(player.id)
+                for _member, player, _discord_id in await self._links.list_active_for_guild(
+                    guild_id
                 )
-                entry.total_games += snapshot.games
-                entry.total_wins += snapshot.wins
-                entry.player_count += 1
-
-        entries = [e for e in totals.values() if e.total_games >= _MIN_GAMES_FOR_LEGEND_META]
-        entries.sort(key=lambda e: e.total_games, reverse=True)
-        return entries[:limit]
+            ],
+            limit=limit,
+        )
 
     async def clan_stats(self, guild_id: int, *, legend_limit: int = 5) -> ClanStats:
         """Aggregate of the clan's current standing, for /clanstats.

@@ -19,6 +19,7 @@ from api.routers import (
     clan,
     community,
     leaderboard,
+    legends,
     pakistan,
     players,
     roster,
@@ -73,6 +74,7 @@ app.include_router(community.router)
 app.include_router(leaderboard.router)
 app.include_router(roster.router)
 app.include_router(pakistan.router)
+app.include_router(legends.router)
 app.include_router(achievements.router)
 app.include_router(players.router)
 app.include_router(tournaments.router)
@@ -80,4 +82,5 @@ app.include_router(tournaments.router)
 
 @app.get("/health", tags=["health"])
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    # The service name is BRAWLISTAN's since the pivot (ADR-103).
+    return {"status": "ok", "service": "brawlistan"}

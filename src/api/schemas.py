@@ -75,6 +75,23 @@ class PakistanLeaderboardEntryResponse(LeaderboardEntryResponse):
     is_claimed: bool
 
 
+class RisingPlayerResponse(BaseModel):
+    """A climber on the Pakistan board over the last few days (ADR-104)."""
+
+    brawlhalla_id: int
+    player_name: str
+    rating: int
+    rating_gain: int
+    is_claimed: bool
+
+
+class LegendMetaResponse(BaseModel):
+    legend_name_key: str
+    player_count: int
+    total_games: int
+    win_rate: float
+
+
 class RosterEntryResponse(BaseModel):
     brawlhalla_id: int
     player_name: str

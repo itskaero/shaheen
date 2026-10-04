@@ -4121,3 +4121,85 @@ existing stack:
 The work runs in stages (brand/shell, rankings, players, linking, Discord, seasons, teams, tournaments,
 legends/stats, reporting/PWA/SEO). Each ships deployable on its own. The checklist, the old → new map
 and every role/channel dependency are in `docs/BRAWLISTAN_MIGRATION.md`.
+
+## ADR-104 — BRAWLISTAN stage 1: brand, design system, app shell, home
+
+First stage of the pivot (ADR-103, `docs/BRAWLISTAN_MIGRATION.md`).
+
+**Brand from the owner's logo.**
+- The graffiti-falcon BRAWLISTAN master lives at `docs/brand/brawlistan-logo-master.png`. It's outside
+  `web/` and never served.
+- `scripts/brand_assets.py` cuts everything else from it (Pillow only, re-runnable).
+- **Black key:** the master sits on black, so a colour-to-alpha key is used. Alpha is the brightest
+  channel and the colour is un-premultiplied, so the neon glow survives on any dark surface.
+- **Outputs:**
+  - the full logo (home hero only);
+  - a wordmark with feathered edges (sidebar and mobile top bar);
+  - a round falcon-and-crescent mark;
+  - opaque square icons (favicons 32/48, apple-touch 180, 192/512 app icons);
+  - a 1200×630 OG card.
+  - PNG fallbacks are 256-colour.
+- The palette tokens (`--green`, `--emerald`, `--magenta`, `--cream`) are sampled from the logo.
+
+**Calm interface, loud logo.** `web/assets/css/brawlistan.css` follows the owner's reference
+screenshots:
+- a floating, rounded app window over a full-bleed landscape;
+- a translucent sidebar with icon navigation;
+- glass panels, soft 1px borders, large radii;
+- one neutral sans (Inter) with tabular numerals;
+- dense tables with subtle gold/silver/bronze rank chips for the top three.
+
+Electric colour is limited to active nav, rank changes, verified pills and season art.
+
+**The landscape is generated.** `shell.js` draws it as an SVG rather than downloading a photo:
+- seeded ridgelines (far, mid, near);
+- topographic contour lines;
+- a dashed flight path;
+- a few drifting particles, removed under `prefers-reduced-motion`.
+
+**One shell for every page.** `web/assets/js/shell.js` renders the scene, sidebar (wordmark, nav,
+current-season mini card from `/clan`, community links), top bar (Discord count and Join button),
+mobile bottom nav and footer into slots each page provides. This replaces the nav markup that had been
+copied into every HTML file.
+- **Hidden until built:** nav items for pages that don't exist yet carry `ready: false`, so the nav
+  never links to a 404.
+- **Mobile:** below 860px the window becomes a full-screen panel with a sticky top bar and a fixed
+  bottom nav (Home, Rankings, Players, Seasons, Discord as each lands). It's a different layout, not a
+  shrunk desktop.
+- **Accessibility:** skip link, `aria-current`, visible focus rings, semantic landmarks.
+- **Load order:** `shell.js` loads before `api.js`, so `api.js`'s DOMContentLoaded wiring fills the
+  shell's `[data-discord-invite]` and `[data-discord-widget]`.
+
+**Home** (`index.html` + `pages/home.js`) is rebuilt with:
+- a hero ("Track the scene. Find the players. Climb the rankings.");
+- Pakistan Top 10;
+- Current Season;
+- Featured Player (Pakistan #1, labelled as such until `/feature` lands in stage 5);
+- Rising Players;
+- Legend Meta;
+- Latest Tournament;
+- Community;
+- the SHAHEEN founding story.
+
+Every section reads the cached snapshot first and shows "Data unavailable" rather than a made-up
+number. The old first-visit redirect to `landing.html` is gone: the network home is the front door, and
+the cinematic SHAHEEN story stays reachable from the Founding Team page.
+
+**API additions** (Discord-free, Brawlhalla identity only, ADR-040):
+- `GET /pakistan/rising` (`PakistanBoardService.climbers`, now also returning the end rating).
+- `GET /legends/meta`. `NetworkService` counts the Pakistan board plus linked members once each.
+  `aggregate_legend_meta` is factored out of `ClanService.legend_meta`, so the clan and network views
+  count the same way.
+- `GET /health` now returns `{"status": "ok", "service": "brawlistan"}`.
+- The snapshot workflow also caches `rising` and `legend-meta`.
+
+**Legacy pages.** Rankings, player, achievements, tournaments, tournament, clan, music and 404 are
+moved into the shell by swapping their header, ticker and footer for the shell slots. They keep
+`style.css` for their content classes, and `brawlistan.css` (loaded after it) re-points the legacy
+tokens at the calm palette. Each is rebuilt properly in its own stage. The ambient audio player and
+cursor spotlight now stay on the Anthem page only. `join.html` is rewritten as the BRAWLISTAN Discord
+page.
+
+Verified: full test suite (new API tests for rising, legend meta counting a player on both lists once,
+and the health body). Playwright with the API mocked at 1440px and 390px across home, join, rankings,
+clan, achievements, tournaments and 404: no horizontal overflow, no console errors.

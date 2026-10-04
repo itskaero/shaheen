@@ -60,6 +60,12 @@ class PakistanClimber:
     player: BrawlhallaPlayer
     rating_gain: int
     owner_discord_id: int | None
+    # The latest rating inside the window — where the climb ended.
+    rating: int = 0
+
+    @property
+    def is_claimed(self) -> bool:
+        return self.owner_discord_id is not None
 
 
 class PakistanBoardService:
@@ -209,6 +215,7 @@ class PakistanBoardService:
                         player=player,
                         rating_gain=ratings[-1] - ratings[0],
                         owner_discord_id=entry.owner_discord_id,
+                        rating=ratings[-1],
                     )
                 )
         climbers.sort(key=lambda c: c.rating_gain, reverse=True)

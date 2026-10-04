@@ -2,210 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shaheen — Pakistan Brawlhalla Clan</title>
-  <meta name="description" content="Shaheen is a Pakistan-based Brawlhalla clan. Track the clan's leaderboard, player profiles, and rating history." />
-  <meta property="og:title" content="Shaheen — Pakistan Brawlhalla Clan" />
-  <meta property="og:description" content="بلندیوں کی جانب — Higher Together. From Pakistan to the Arena." />
-  <meta property="og:image" content="assets/img/shaheen-lockup.png" />
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BRAWLISTAN — Pakistan's Brawlhalla Network</title>
+  <meta name="description" content="Who are the best Brawlhalla players in Pakistan? Pakistan rankings, player profiles, seasons, legends and tournaments — BRAWLISTAN, Pakistan's Brawlhalla Network." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://itskaero.github.io/shaheen/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="BRAWLISTAN — Pakistan's Brawlhalla Network" />
+  <meta property="og:description" content="Track the scene. Find the players. Climb the rankings." />
+  <meta property="og:url" content="https://itskaero.github.io/shaheen/" />
+  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BRAWLISTAN — Pakistan's Brawlhalla Network" />
+  <meta name="twitter:description" content="Track the scene. Find the players. Climb the rankings." />
+  <meta name="twitter:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <script>
-    /* First-visit routing (docs/DECISIONS.md): brand-new visitors are sent
-       through the cinematic landing page once. finishing or skipping it sets
-       shaheen_landing_viewed so returning visitors land straight on the
-       homepage. Runs before paint to avoid a homepage flash; the landing page
-       itself never redirects, so "Scenes" in the menu always works. */
-    try {
-      if (!localStorage.getItem("shaheen_landing_viewed")) {
-        location.replace("landing.html");
-      }
-    } catch (err) {
-      /* localStorage blocked/private — show the homepage normally */
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
-<body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="index.html">
-        <picture>
-          <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
-          <img class="brand-mark" src="assets/img/logo-emblem.png" alt="" width="54" height="32" />
-        </picture>
-        <span class="brand-name">SHAHEEN</span>
-      </a>
-      <nav class="site-nav">
-        <a href="index.html" class="active">Home</a>
-        <a href="landing.html">Scenes</a>
-        <a href="clan.html">Clan</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="music.html">Music</a>
-        <a href="achievements.html">Achievements</a>
-        <a href="player.html">Players</a>
-        <a href="tournaments.html">Tournaments</a>
-        <a href="join.html">Join</a>
-        <span class="discord-widget" data-discord-widget hidden></span>
-        <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
-      </nav>
-    </div>
-  </header>
+<body class="bl" data-page="home">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="bl-scene" aria-hidden="true"></div>
+  <div class="bl-app">
+    <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
+    <div class="bl-main">
+      <header class="bl-topbar" data-shell="topbar"></header>
+      <main id="main">
+        <section class="hero" aria-labelledby="hero-title">
+          <div>
+            <span class="eyebrow">BRAWLISTAN &middot; Pakistan's Brawlhalla Network</span>
+            <h1 id="hero-title"><span>Track the scene.</span><span>Find the players.</span><span>Climb the rankings.</span></h1>
+            <span class="urdu" lang="ur">بلندیوں کی جانب</span>
+            <div class="hero-actions">
+              <a class="btn btn-brand" href="rankings.html">View rankings</a>
+              <a class="btn btn-ghost" data-discord-invite href="join.html" target="_blank" rel="noopener">Join Discord</a>
+            </div>
+            <div class="hero-stats" id="hero-stats" aria-live="polite"></div>
+          </div>
+          <picture>
+            <source srcset="assets/img/brawlistan/logo.webp" type="image/webp" />
+            <img class="hero-logo" src="assets/img/brawlistan/logo.png" alt="BRAWLISTAN — Pakistan's Brawlhalla Network" width="720" height="602" fetchpriority="high" />
+          </picture>
+        </section>
 
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <span>SHAHEEN</span><span>PAKISTAN'S BRAWLHALLA CLAN</span><span lang="ur">بلندیوں کی جانب</span><span>WE DON'T CARRY DEAD WEIGHT</span><span>JOIN OR GET LEFT BEHIND</span>
-      <span>SHAHEEN</span><span>PAKISTAN'S BRAWLHALLA CLAN</span><span lang="ur">بلندیوں کی جانب</span><span>WE DON'T CARRY DEAD WEIGHT</span><span>JOIN OR GET LEFT BEHIND</span>
+        <div class="home-grid" style="margin-top: 16px">
+          <section class="panel panel-pad span-8" aria-labelledby="top10-title">
+            <div class="section-head">
+              <h2 id="top10-title">Pakistan Top 10</h2>
+              <a href="rankings.html#pakistan">Full rankings &rarr;</a>
+            </div>
+            <div id="top10"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <div class="span-4 stack">
+            <section class="panel panel-pad" aria-labelledby="season-title">
+              <div class="section-head"><h2 id="season-title">Current Season</h2></div>
+              <div id="season"><p class="unavailable">Loading…</p></div>
+            </section>
+            <section class="panel panel-pad" aria-labelledby="featured-title">
+              <div class="section-head"><h2 id="featured-title">Featured Player</h2></div>
+              <div id="featured"><p class="unavailable">Loading…</p></div>
+            </section>
+          </div>
+
+          <section class="panel panel-pad span-4" aria-labelledby="rising-title">
+            <div class="section-head">
+              <h2 id="rising-title">Rising Players</h2>
+              <span class="muted" style="font-size: 12.5px">Last 7 days</span>
+            </div>
+            <div id="rising"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-4" aria-labelledby="meta-title">
+            <div class="section-head">
+              <h2 id="meta-title">Legend Meta</h2>
+              <span class="muted" style="font-size: 12.5px">Most played</span>
+            </div>
+            <div id="legend-meta"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-4" aria-labelledby="tournament-title">
+            <div class="section-head">
+              <h2 id="tournament-title">Latest Tournament</h2>
+              <a href="tournaments.html">All &rarr;</a>
+            </div>
+            <div id="tournament"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-6" aria-labelledby="community-title">
+            <div class="section-head"><h2 id="community-title">Community</h2></div>
+            <div id="community"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-6 founding" aria-labelledby="founding-title">
+            <picture>
+              <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
+              <img src="assets/img/logo-emblem.png" alt="" width="120" height="71" loading="lazy" />
+            </picture>
+            <div>
+              <span class="eyebrow">Founding Team</span>
+              <h2 id="founding-title">Built by SHAHEEN</h2>
+              <p>BRAWLISTAN started as the home of SHAHEEN, a Pakistani Brawlhalla clan. The rankings, profiles and seasons grew out of that clan's tools, and now they cover the whole Pakistani scene.</p>
+              <a class="btn btn-ghost btn-sm" href="clan.html">Meet the founding team</a>
+            </div>
+          </section>
+        </div>
+      </main>
+      <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
+  <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
 
-  <section class="hero-logo">
-    <div class="hero-glow" aria-hidden="true"></div>
-    <div class="hero-logo-wrap">
-      <picture>
-        <source srcset="assets/img/shaheen-lockup.webp" type="image/webp" />
-        <img
-          class="hero-logo-img"
-          src="assets/img/shaheen-lockup.png"
-          alt="Shaheen — Pakistan Brawlhalla Clan. بلندیوں کی جانب, Higher Together."
-          width="840"
-          height="840"
-          fetchpriority="high"
-        />
-      </picture>
-    </div>
-    <h1>Pakistan <em>Brawlhalla</em> Clan</h1>
-    <p class="tagline">Every win tracked. Every excuse ignored. This is where Pakistan's best Brawlhalla players prove it.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="rankings.html">View Rankings</a>
-      <a class="btn btn-ghost" href="clan.html">About the Clan</a>
-    </div>
-    <a class="scroll-cue" href="#pillar-hero" aria-label="Scroll down">↓</a>
-  </section>
-
-  <!-- Scroll-mapped hero (docs/DECISIONS.md ADR-066): a sticky banner
-       stays pinned while five panels of copy scroll past, each one
-       spotlighting a different character in the banner via
-       assets/js/pillar-scroll.js. -->
-  <section class="pillar-hero" id="pillar-hero" aria-label="What Shaheen is about">
-    <div class="pillar-stage">
-      <div class="pillar-visual">
-        <picture>
-          <source srcset="assets/img/hero-characters.webp" type="image/webp" />
-          <img src="assets/img/hero-characters.jpg" alt="" class="pillar-banner-img" />
-        </picture>
-        <div class="pillar-vignette" aria-hidden="true"></div>
-        <div class="pillar-caption" aria-hidden="true">
-          <span class="eyebrow" data-caption-eyebrow>01 — Pack</span>
-          <h2 data-caption-title>Community</h2>
-        </div>
-      </div>
-
-      <div class="pillar-panels">
-        <div class="pillar-panel" data-focus-x="15" data-eyebrow="01 — Pack" data-title="Community">
-          <div class="wrap">
-            <div class="pillar-panel-card">
-              <p>A pack, not a roster. Shaheen shows up for each other in ranked, in scrims, and in every chat that matters.</p>
-              <a href="clan.html">Meet the clan &rarr;</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="pillar-panel" data-focus-x="30" data-eyebrow="02 — Tracked" data-title="Competition">
-          <div class="wrap">
-            <div class="pillar-panel-card">
-              <p>Every match tracked. Every rating logged. No filters, no cherry-picked highlight reels — the record speaks for itself.</p>
-              <a href="rankings.html">See the rankings &rarr;</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="pillar-panel" data-focus-x="49" data-eyebrow="03 — Standard" data-title="The Clan">
-          <div class="wrap">
-            <div class="pillar-panel-card">
-              <p>Shaheen isn't a Discord server with a scoreboard bolted on. It's a Pakistan-based Brawlhalla clan that competes to win.</p>
-              <a href="clan.html">About the clan &rarr;</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="pillar-panel" data-focus-x="68" data-eyebrow="04 — Brackets" data-title="Tournaments">
-          <div class="wrap">
-            <div class="pillar-panel-card">
-              <p>Brackets don't lie. Show up or get run over — live tournament brackets, updated as every match reports in.</p>
-              <a href="tournaments.html">View tournaments &rarr;</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="pillar-panel" data-focus-x="86" data-eyebrow="05 — Last Call" data-title="Join Shaheen">
-          <div class="wrap">
-            <div class="pillar-panel-card">
-              <p>Two clicks. Zero regrets. Every rank above you started exactly where you are now.</p>
-              <a href="join.html">Join the clan &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <main style="padding-top: 0">
-    <section class="wrap reveal" id="live-stats">
-      <div class="divider" id="by-the-numbers"><span>By the Numbers</span></div>
-      <div class="stat-grid">
-        <div class="stat" data-stat="members">
-          <span class="value" data-count-to="0">0</span>
-          <span class="label">Linked Members</span>
-        </div>
-        <div class="stat" data-stat="rating">
-          <span class="value" data-count-to="0">0</span>
-          <span class="label">Top Rating</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="wrap reveal">
-      <div class="divider"><span>Explore</span></div>
-      <div class="stat-grid" style="margin-top: 0">
-        <a class="stat" href="clan.html" style="text-decoration: none">
-          <span class="value">🦅</span><span class="label">Clan</span>
-        </a>
-        <a class="stat" href="rankings.html" style="text-decoration: none">
-          <span class="value">🏆</span><span class="label">Leaderboard</span>
-        </a>
-        <a class="stat" href="player.html" style="text-decoration: none">
-          <span class="value">📈</span><span class="label">Rating History</span>
-        </a>
-        <a class="stat" href="tournaments.html" style="text-decoration: none">
-          <span class="value">🥇</span><span class="label">Tournaments</span>
-        </a>
-      </div>
-    </section>
-
-    <div class="divider-truck wrap" aria-hidden="true"></div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <picture>
-        <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
-        <img class="crest" src="assets/img/logo-emblem.png" alt="" width="51" height="30" />
-      </picture>
-      <span class="discord-widget" data-discord-widget hidden></span>
-      <p>&copy; <span id="year"></span> Shaheen &mdash; <span lang="ur">بلندیوں کی جانب</span>. Data from the Brawlhalla API.</p>
-    </div>
-  </footer>
-
-  <script src="assets/js/audio.js"></script>
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/shell.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/spotlight.js"></script>
-  <script src="assets/js/scroll.js"></script>
-  <script src="assets/js/pillar-scroll.js"></script>
+  <script src="assets/js/theme.js"></script>
   <script src="assets/js/pages/home.js"></script>
 </body>
 </html>

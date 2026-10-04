@@ -3,47 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clan — Shaheen</title>
+  <title>Clan — BRAWLISTAN</title>
   <meta name="description" content="Shaheen clan overview: member count and identity." />
   <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
-<body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="index.html">
-        <picture>
-          <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
-          <img class="brand-mark" src="assets/img/logo-emblem.png" alt="" width="54" height="32" />
-        </picture>
-        <span class="brand-name">SHAHEEN</span>
-      </a>
-      <nav class="site-nav">
-        <a href="index.html">Home</a>
-        <a href="landing.html">Scenes</a>
-        <a href="clan.html" class="active">Clan</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="music.html">Music</a>
-        <a href="achievements.html">Achievements</a>
-        <a href="player.html">Players</a>
-        <a href="tournaments.html">Tournaments</a>
-        <a href="join.html">Join</a>
-        <span class="discord-widget" data-discord-widget hidden></span>
-        <a href="#" id="discord-link" class="nav-cta" hidden target="_blank" rel="noopener">Join Discord</a>
-      </nav>
-    </div>
-  </header>
-
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <span>SHAHEEN</span><span>PAKISTAN'S BRAWLHALLA CLAN</span><span lang="ur">بلندیوں کی جانب</span><span>WE DON'T CARRY DEAD WEIGHT</span><span>JOIN OR GET LEFT BEHIND</span>
-      <span>SHAHEEN</span><span>PAKISTAN'S BRAWLHALLA CLAN</span><span lang="ur">بلندیوں کی جانب</span><span>WE DON'T CARRY DEAD WEIGHT</span><span>JOIN OR GET LEFT BEHIND</span>
-    </div>
-  </div>
+<body class="bl" data-page="shaheen">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="bl-scene" aria-hidden="true"></div>
+  <div class="bl-app">
+    <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
+    <div class="bl-main">
+      <header class="bl-topbar" data-shell="topbar"></header>
+      <main id="main">
 
   <!-- Clan page rebuilt in docs/DECISIONS.md ADR-085. The previous version
        stacked five 100vh "hero" panels, each wallpapered with a
@@ -80,7 +58,7 @@
     </div>
   </section>
 
-  <main class="clan-page" style="padding-top: 0">
+  <div class="clan-page" style="padding-top: 0">
     <section class="clan-section reveal" id="spirit">
       <div class="divider"><span>The Spirit of Shaheen</span></div>
       <div class="clan-split">
@@ -226,24 +204,18 @@
         <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
       </div>
     </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <picture>
-        <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
-        <img class="crest" src="assets/img/logo-emblem.png" alt="" width="51" height="30" />
-      </picture>
-      <span class="discord-widget" data-discord-widget hidden></span>
-      <p>&copy; <span id="year"></span> Shaheen &mdash; <span lang="ur">بلندیوں کی جانب</span>. Data from the Brawlhalla API.</p>
+  </div>
+      </main>
+      <footer class="bl-footer" data-shell="footer"></footer>
     </div>
-  </footer>
+  </div>
+  <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
 
-  <script src="assets/js/audio.js"></script>
+
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/shell.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
-  <script src="assets/js/spotlight.js"></script>
   <script src="assets/js/scroll.js"></script>
   <script src="assets/js/pages/clan.js"></script>
 </body>

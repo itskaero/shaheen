@@ -91,7 +91,7 @@ untouched by the restructure.
 | Stage | Scope | Status |
 |---|---|---|
 | 0 | This map, ADR-103 | done |
-| 1 | Brand, design system, app shell, home | |
+| 1 | Brand, design system, app shell, home | done (ADR-104) |
 | 2 | Rankings | |
 | 3 | Players + profiles | |
 | 4 | Linking + verification | |
