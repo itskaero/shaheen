@@ -74,9 +74,9 @@ function drawSparkline(canvas, points) {
 
     // gridlines + y-axis labels
     const gridLines = 4;
-    ctx.font = "11px Poppins, sans-serif";
-    ctx.fillStyle = "rgba(234, 246, 239, 0.45)";
-    ctx.strokeStyle = "rgba(57, 255, 176, 0.1)";
+    ctx.font = "11px Inter, system-ui, sans-serif";
+    ctx.fillStyle = "rgba(236, 238, 234, 0.42)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
     ctx.lineWidth = 1;
     for (let g = 0; g <= gridLines; g++) {
       const value = m.min + ((m.max - m.min) * g) / gridLines;
@@ -107,7 +107,7 @@ function drawSparkline(canvas, points) {
     const peakYs = shown.map((p) => m.toY(p.peak_rating ?? p.rating));
     ctx.save();
     ctx.setLineDash([4, 5]);
-    ctx.strokeStyle = "rgba(255, 210, 63, 0.65)";
+    ctx.strokeStyle = "rgba(242, 193, 78, 0.6)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     smoothPath(ctx, xs, peakYs);
@@ -121,18 +121,18 @@ function drawSparkline(canvas, points) {
     ctx.lineTo(xs[0], m.toY(m.min));
     ctx.closePath();
     const fill = ctx.createLinearGradient(0, pad.top, 0, m.height - pad.bottom);
-    fill.addColorStop(0, "rgba(57, 255, 176, 0.28)");
-    fill.addColorStop(1, "rgba(57, 255, 176, 0)");
+    fill.addColorStop(0, "rgba(61, 242, 110, 0.16)");
+    fill.addColorStop(1, "rgba(61, 242, 110, 0)");
     ctx.fillStyle = fill;
     ctx.fill();
 
     // rating curve, glowing
     ctx.beginPath();
     smoothPath(ctx, xs, ys);
-    ctx.strokeStyle = "#39ffb0";
+    ctx.strokeStyle = "#3df26e";
     ctx.lineWidth = 2.25;
     ctx.shadowColor = "rgba(57, 255, 176, 0.85)";
-    ctx.shadowBlur = 9;
+    ctx.shadowBlur = 0; // calm UI (ADR-104): no glow on data
     ctx.stroke();
     ctx.shadowBlur = 0;
 
@@ -140,7 +140,7 @@ function drawSparkline(canvas, points) {
     shown.forEach((p, i) => {
       ctx.beginPath();
       ctx.arc(xs[i], ys[i], i === hoverIndex ? 4 : 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = i === hoverIndex ? "#ffd23f" : "#eaf6ef";
+      ctx.fillStyle = i === hoverIndex ? "#f2c14e" : "#eceeea";
       ctx.fill();
     });
 

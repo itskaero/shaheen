@@ -21,7 +21,7 @@ const ShaheenAPI = (() => {
       });
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new Error("Shaheen's server is waking up — try again in a moment.");
+        throw new Error("The BRAWLISTAN server is waking up — try again in a moment.");
       }
       throw err;
     } finally {
@@ -85,6 +85,8 @@ const ShaheenAPI = (() => {
     getRoster: () => get("/roster"),
     getPakistanLeaderboard: (limit = 150) => get(`/pakistan/leaderboard?limit=${limit}`),
     getAchievements: () => get("/achievements"),
+    getPlayers: () => get("/players"),
+    getPlayerSeasons: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}/seasons`),
     getRankings: (season = null) => get(season ? `/rankings/pakistan?season=${encodeURIComponent(season)}` : "/rankings/pakistan"),
     getPakistanRising: (days = 7, limit = 10) => get(`/pakistan/rising?days=${days}&limit=${limit}`),
     getLegendMeta: (limit = 10) => get(`/legends/meta?limit=${limit}`),

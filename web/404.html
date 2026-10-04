@@ -2,15 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Not Found — BRAWLISTAN</title>
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    /* GitHub Pages serves this file for any missing path, at any depth, so
+       relative asset links need a <base> at the site root: the first path
+       segment on a *.github.io project site, "/" anywhere else.
+       A /player/<slug>/ page that hasn't been generated yet (new players
+       get one on the next 6-hourly snapshot, docs/DECISIONS.md ADR-106)
+       goes straight to the live profile instead of a dead end. */
+    (function () {
+      var parts = location.pathname.split("/");
+      var root = /\.github\.io$/.test(location.hostname) && parts[1] ? "/" + parts[1] + "/" : "/";
+      document.write('<base href="' + root + '" />');
+      var match = location.pathname.match(/\/player\/([a-z0-9-]{1,64})\/?$/);
+      if (match) location.replace(root + "player.html?p=" + match[1]);
+    })();
+  </script>
+  <title>Not found — BRAWLISTAN</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
 <body class="bl">
@@ -21,17 +35,27 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
-
-  <div class="wrap" style="text-align: center; padding-top: 4rem;">
-    <h1 class="page-title">404</h1>
-    <p class="page-subtitle">You got knocked off the map. Respawn at <a href="index.html">home</a> before we count you out.</p>
-  </div>
+        <section class="hero" aria-labelledby="nf-title" style="min-height: 0">
+          <div>
+            <span class="eyebrow">404</span>
+            <h1 id="nf-title" style="font-size: clamp(26px, 3.4vw, 38px)"><span>This page fell off the stage.</span></h1>
+            <p class="muted" style="margin: 0 0 20px">The link may be old, or the page moved when SHAHEEN became BRAWLISTAN.</p>
+            <div class="hero-actions">
+              <a class="btn btn-brand" href="index.html">Home</a>
+              <a class="btn btn-ghost" href="rankings.html">Rankings</a>
+              <a class="btn btn-ghost" href="players.html">Find a player</a>
+            </div>
+          </div>
+          <picture>
+            <source srcset="assets/img/brawlistan/mark.webp" type="image/webp" />
+            <img class="hero-logo" src="assets/img/brawlistan/mark.png" alt="" width="256" height="256" style="width: min(200px, 60%)" />
+          </picture>
+        </section>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
   <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
-
 
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shell.js"></script>

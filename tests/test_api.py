@@ -672,3 +672,23 @@ async def test_rankings_endpoint_shape_and_no_discord_identity(
     assert (row["rating_2v2"], row["tier_2v2"], row["partner_2v2"]) == (1650, "Platinum 2", "Mate")
     assert "owner_discord_id" not in row and "discord_id" not in row
     assert client.get("/rankings/pakistan?season=0").status_code == 422
+
+
+async def test_players_directory_and_seasons_endpoints(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """ADR-106: the directory and per-season summary, Brawlhalla identity only."""
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # linked member, brawlhalla_id=10, "Foo"
+        await session.commit()
+
+    (entry,) = client.get("/players").json()
+    assert (entry["brawlhalla_id"], entry["slug"], entry["team"], entry["is_claimed"]) == (
+        10,
+        "foo-10",
+        "SHAHEEN",
+        True,
+    )
+    assert "discord_id" not in entry
+    assert client.get("/players/10/seasons").status_code == 200
+    assert client.get("/players/99999/seasons").status_code == 404

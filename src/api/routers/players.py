@@ -7,19 +7,49 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies import get_session
+from api.dependencies import get_session, get_settings
 from api.schemas import (
     AchievementChecklistEntryResponse,
     AchievementResponse,
     LegendMasteryResponse,
     MatchResultResponse,
     PakistanSeasonResponse,
+    PlayerDirectoryEntryResponse,
     PlayerProfileResponse,
     RankingHistoryEntryResponse,
+    SeasonSummaryResponse,
 )
+from core.config import Settings
+from services.players_service import PlayersService
 from services.website_service import WebsiteService
 
 router = APIRouter(prefix="/players", tags=["players"])
+
+
+@router.get("", response_model=list[PlayerDirectoryEntryResponse])
+async def list_players(
+    session: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> list[PlayerDirectoryEntryResponse]:
+    """Every tracked player: the Pakistan board plus linked members (ADR-106)."""
+    entries = await PlayersService(session).directory(settings.guild_id)
+    return [
+        PlayerDirectoryEntryResponse(
+            brawlhalla_id=entry.player.brawlhalla_player_id,
+            slug=entry.slug,
+            player_name=entry.player.player_name,
+            country=entry.country,
+            team=entry.team,
+            is_claimed=entry.is_claimed,
+            on_pakistan_board=entry.on_pakistan_board,
+            region=(entry.snapshot.region if entry.snapshot else None) or entry.player.region,
+            rating=entry.snapshot.rating if entry.snapshot else None,
+            peak_rating=entry.snapshot.peak_rating if entry.snapshot else None,
+            tier=entry.snapshot.tier if entry.snapshot else None,
+            main_legend=entry.main_legend,
+        )
+        for entry in entries
+    ]
 
 
 @router.get("/{brawlhalla_id}", response_model=PlayerProfileResponse)
@@ -142,4 +172,25 @@ async def get_player_achievements(
             context=entry.context,
         )
         for entry in entries
+    ]
+
+
+@router.get("/{brawlhalla_id}/seasons", response_model=list[SeasonSummaryResponse])
+async def get_player_seasons(
+    brawlhalla_id: int, session: AsyncSession = Depends(get_session)
+) -> list[SeasonSummaryResponse]:
+    """Final rating and peak per season, newest first (ADR-106)."""
+    history = await PlayersService(session).season_history(brawlhalla_id)
+    if history is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return [
+        SeasonSummaryResponse(
+            season=summary.season,
+            pakistan_season_number=summary.pakistan_season_number,
+            pakistan_season_name=summary.pakistan_season_name,
+            final_rating=summary.final_rating,
+            peak_rating=summary.peak_rating,
+            readings=summary.readings,
+        )
+        for summary in history
     ]

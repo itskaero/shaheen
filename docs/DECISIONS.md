@@ -4285,3 +4285,89 @@ Verified:
   - API down with no snapshot shows "Data unavailable";
   - the mobile filter fold works;
   - no overflow and no console errors at 1440px and 390px.
+
+## ADR-106 — BRAWLISTAN stage 3: Players, profiles, shareable player pages
+
+**Players directory.** `GET /players` (`services/players_service.py`) lists every tracked player:
+the Pakistan board plus linked members, each once. Each entry has:
+- slug, country (PK when on the Pakistan board, otherwise not set);
+- team (SHAHEEN for linked members);
+- claimed (by `/pakistan join` or `/link`), and whether they're on the Pakistan board;
+- current-season rating and tier;
+- most-played Legend.
+
+`players.html` shows them:
+- **Grid view:** cards after the owner's Members reference (large avatar, a role pill in the corner, a
+  three-stat row of rating, tier and main Legend).
+- **List view:** a dense table. The chosen view is remembered per browser.
+- **Search:** name, team or country; the sidebar search lands here as `?q=`.
+- **Filters:** team, country and claimed. On phones they fold behind a Filters button, like Rankings.
+
+The Players nav item is now live.
+
+**Profiles.** `player.html` is rebuilt:
+- **Header:** avatar, name, country, Brawlhalla ID, region, team / claimed / playstyle pills, and
+  Compare, Share and Discord actions.
+- **Stat tiles:** Pakistan rank (out of the board), global and region rank, rating with its 7-day
+  change, peak, tier (with 2v2).
+- **Sections:** rating-history chart (the existing canvas chart, recoloured: no glow, logo green, Inter
+  labels), main Legends with portraits, season history, tournaments and matches, a full Legend stats
+  table (labelled as lifetime all-mode games, which is what the stats endpoint gives), the achievement
+  checklist as chips, and a Discord section.
+- **Discord section:** only says whether the profile is claimed. It never shows the account (ADR-040).
+
+Context the per-player API doesn't carry (Pakistan rank, team, claim, trend, 2v2) comes from the same
+cached `rankings`/`players` snapshot files as the Rankings and Players pages, so the three never
+disagree and the per-player API stays guild-agnostic. Compare is a side-by-side panel against any
+other tracked player from that same data, highlighting the better number. The page tells "no such
+player" (404) apart from "API unavailable".
+
+**Season history.** `GET /players/{id}/seasons`: per season, the final rating (the last reading's) and
+the best peak, from one grouped query. Seasons are named via ADR-102, so from S42 they read
+"Season 1 · Zarb-e-Shaheen" and before that "Brawlhalla S41".
+
+**Shareable, indexable player pages.** GitHub Pages can't route `/player/:slug`.
+- **Slug:** the readable ASCII name plus the Brawlhalla id (`kaero-5734378`). The id suffix is what
+  resolves, so a rename leaves a harmless stale label rather than a broken link.
+- **Generation:** after fetching snapshots, the workflow runs `scripts/player_pages.py`. It writes
+  `web/player/<slug>/index.html` for every tracked player from `player.html`, with:
+  - `<base href="../../">`;
+  - the brief's title format ("Khan — Pakistan Brawlhalla Ranking | Brawlistan");
+  - a description built from real facts only;
+  - canonical, Open Graph and Twitter tags;
+  - `<body data-player-id>`.
+  Search engines and Discord/WhatsApp previews see a page about that player. It uses only the standard
+  library, never trusts a slug that isn't `[a-z0-9-]`, escapes names, and prunes pages for players no
+  longer tracked.
+- **Share** uses this URL (Web Share API, falling back to the clipboard).
+- **Gaps:** a brand-new player's page doesn't exist until the next 6-hourly run, so the rebuilt
+  `404.html` sends `/player/<slug>/` to `player.html?p=<slug>`. It also sets its own `<base>`, because
+  Pages serves 404s at any depth. Under `<base>`, "#…" links would resolve against the site root, so
+  the shell now handles in-page anchors itself and the skip link stays on the page.
+
+Files:
+- new: `src/services/players_service.py`, `scripts/player_pages.py`, `web/players.html`,
+  `web/assets/js/pages/players.js`, `tests/test_players_service.py`, `tests/test_player_pages.py`;
+- changed: `src/database/repositories/ranking_snapshot_repository.py` (`season_summaries`),
+  `src/api/{schemas,routers/players}.py`, `web/player.html`, `web/assets/js/pages/player.js`,
+  `web/404.html`, `web/assets/js/{shell,api,sparkline}.js`, `web/assets/css/brawlistan.css`,
+  `.github/workflows/snapshot.yml`.
+
+Verified:
+- Tests:
+  - slugs: ASCII, id suffix, non-Latin names fall back to the id;
+  - the directory merges board and linked players once, with team, claim and country rules;
+  - season summaries give the final reading, best peak and Pakistan-season naming, with 404 for
+    unknown players;
+  - the API directory carries no Discord identity;
+  - the generator sets the title, meta, base and id, escapes names, rejects unsafe slugs and prunes
+    stale pages.
+- Playwright with mocked data:
+  - `?q=` search, the country "not set" filter, and the list view remembered across visits;
+  - profile links use slugs; the profile shows Pakistan rank, global rank, Legends, the
+    Pakistan-season name, achievements and matches;
+  - Compare highlights the better numbers; an unknown id shows "No such player";
+  - a generated page loads with its own title and working assets through `<base>`, and the skip link
+    stays on the page;
+  - the 404 fallback redirects a missing player page;
+  - no overflow and no console errors at 1440px and 390px.

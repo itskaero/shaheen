@@ -43,7 +43,7 @@
   const NAV = [
     { key: "home", label: "Home", href: "index.html", icon: "home", mobile: true },
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
-    { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true, ready: false },
+    { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield", ready: false },
     { key: "legends", label: "Legends", href: "legends.html", icon: "swords", ready: false },
     { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true, ready: false },
@@ -223,6 +223,20 @@
       <span><strong>Season ${season.number}</strong><span>${escapeHtml(season.name)}</span></span>`;
     el.hidden = false;
   }
+
+  // In-page "#…" links (the skip link, section anchors) must stay on this
+  // page. Generated player pages set <base href="../../"> (ADR-106), which
+  // would otherwise resolve "#main" against the site root and navigate away.
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest && event.target.closest('a[href^="#"]');
+    if (!link || link.getAttribute("href").length < 2) return;
+    const target = document.getElementById(link.getAttribute("href").slice(1));
+    if (!target) return;
+    event.preventDefault();
+    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   renderScene();
   renderSidebar();

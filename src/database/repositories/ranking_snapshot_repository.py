@@ -64,6 +64,40 @@ class RankingSnapshotRepository:
         )
         return [season for season in (await self._session.execute(stmt)).scalars().all() if season]
 
+    async def season_summaries(
+        self, player_id: int
+    ) -> list[tuple[int, int | None, int | None, int]]:
+        """Per season: (season, final rating, best peak, readings), newest
+        season first (docs/DECISIONS.md ADR-106). One grouped query, then the
+        final reading's rating per season, rather than loading a player's
+        whole history.
+        """
+        grouped = (
+            select(
+                RankingSnapshot.season,
+                func.max(RankingSnapshot.peak_rating),
+                func.max(RankingSnapshot.captured_at),
+                func.count(),
+            )
+            .where(
+                RankingSnapshot.brawlhalla_player_id == player_id,
+                RankingSnapshot.season.is_not(None),
+            )
+            .group_by(RankingSnapshot.season)
+            .order_by(RankingSnapshot.season.desc())
+        )
+        summaries: list[tuple[int, int | None, int | None, int]] = []
+        for season, peak, last_at, readings in (await self._session.execute(grouped)).all():
+            final = await self._session.execute(
+                select(RankingSnapshot.rating).where(
+                    RankingSnapshot.brawlhalla_player_id == player_id,
+                    RankingSnapshot.season == season,
+                    RankingSnapshot.captured_at == last_at,
+                )
+            )
+            summaries.append((season, final.scalars().first(), peak, readings))
+        return summaries
+
     async def list_recent(self, player_id: int, *, limit: int = 10) -> list[RankingSnapshot]:
         stmt = (
             select(RankingSnapshot)

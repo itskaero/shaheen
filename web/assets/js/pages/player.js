@@ -1,308 +1,320 @@
+// BRAWLISTAN player profile (docs/DECISIONS.md ADR-106).
+//
+// The player comes from, in order: a generated SEO page's
+// <body data-player-id>, ?id=, or the trailing id of ?p=<slug>. Ranking
+// context the per-player API doesn't carry (Pakistan rank, team, claim,
+// 7-day trend, 2v2) comes from the same cached rankings/players snapshots the
+// Rankings and Players pages use, so the profile never disagrees with them.
 (function () {
-  const content = document.getElementById("player-content");
-  const form = document.getElementById("search-form");
-  const input = document.getElementById("player-id-input");
+  const el = document.getElementById("profile");
+  const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
+  const COUNTRIES = { PK: "Pakistan" };
 
-  // "Pakistan Season 1 (Zarb-e-Shaheen)" from S42 on, else the plain
-  // Brawlhalla number (docs/DECISIONS.md ADR-102).
-  function seasonText(profile) {
-    if (profile.pakistan_season) {
-      return ` · Pakistan Season ${profile.pakistan_season.number} (${escapeHtml(profile.pakistan_season.name)})`;
-    }
-    return profile.season ? ` · Season ${profile.season}` : "";
+  function idFromPage() {
+    if (document.body.dataset.playerId) return document.body.dataset.playerId;
+    const params = new URLSearchParams(location.search);
+    if (params.get("id")) return params.get("id");
+    const slug = params.get("p") || "";
+    const tail = slug.split("-").pop();
+    return /^\d+$/.test(tail) ? tail : null;
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const initialId = params.get("id");
-  if (initialId) {
-    input.value = initialId;
-    loadPlayer(initialId);
+  const brawlhallaId = idFromPage();
+  if (!brawlhallaId || !/^\d{1,12}$/.test(brawlhallaId)) {
+    el.innerHTML = `<div class="panel empty-panel">
+      <h2>Pick a player</h2>
+      <p>Find someone on the <a href="players.html" class="muted" style="text-decoration:underline">Players</a> page or the <a href="rankings.html" class="muted" style="text-decoration:underline">Rankings</a>.</p>
+    </div>`;
+    return;
   }
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const id = input.value.trim();
-    if (!id) {
-      return;
-    }
-    const url = new URL(window.location);
-    url.searchParams.set("id", id);
-    window.history.pushState({}, "", url);
-    loadPlayer(id);
-  });
-
-  async function loadPlayer(brawlhallaId) {
-    content.innerHTML = '<p class="state-msg">Loading player… (first load can take up to a minute)</p>';
-
-    try {
-      const [profile, history, legends, matches, checklist] = await Promise.all([
-        ShaheenAPI.getPlayer(brawlhallaId),
-        ShaheenAPI.getPlayerHistory(brawlhallaId, 20),
-        ShaheenAPI.getPlayerLegends(brawlhallaId),
-        ShaheenAPI.getPlayerMatches(brawlhallaId),
-        // Added after the other four endpoints, so an API instance that
-        // predates it must not take the whole page down — fall back to the
-        // earned-only list carried on the profile itself.
-        ShaheenAPI.getPlayerAchievements(brawlhallaId).catch(() => null),
-      ]);
-
-      if (!profile) {
-        content.innerHTML = `<p class="state-msg error">No player found with Brawlhalla ID ${escapeHtml(brawlhallaId)}.</p>`;
-        return;
-      }
-
-      const achievements = checklist
-        ? achievementChecklistHtml(checklist)
-        : earnedOnlyHtml(profile.achievements);
-
-      content.innerHTML = `
-        <div class="card">
-          <div class="profile-head">
-            ${avatarHtml(profile.player_name, 64)}
-            <div>
-              <h2 class="player-card-name">${escapeHtml(profile.player_name)}</h2>
-              <p class="page-subtitle" style="margin: 0.25rem 0 0;">
-                ${profile.region ? escapeHtml(profile.region) : "Region unknown"} · Brawlhalla ID ${profile.brawlhalla_id}${seasonText(profile)}
-              </p>
-            </div>
-          </div>
-          ${playstyleTagsHtml(profile.playstyle_tags)}
-          ${favouriteLegendsHtml(legends)}
-        </div>
-
-        <div class="stat-grid">
-          <div class="stat">
-            <span style="display: block; margin-bottom: 0.35rem;">${tierBadge(profile.tier)}</span>
-            <span class="label">Tier</span>
-          </div>
-          <div class="stat"><span class="value">${formatNumber(profile.rating)}</span><span class="label">Rating</span></div>
-          <div class="stat"><span class="value">${formatNumber(profile.peak_rating)}</span><span class="label">Peak Rating</span></div>
-          ${
-            profile.global_rank
-              ? `<div class="stat"><span class="value">#${formatNumber(profile.global_rank)}</span><span class="label">Global Rank</span></div>`
-              : ""
-          }
-          ${
-            profile.region_rank
-              ? `<div class="stat"><span class="value">#${formatNumber(profile.region_rank)}</span><span class="label">Region Rank</span></div>`
-              : ""
-          }
-        </div>
-
-        <div class="card">
-          <h3 style="margin-top: 0">Rating History</h3>
-          <canvas id="history-chart"></canvas>
-        </div>
-
-        <div class="card">
-          <h3 style="margin-top: 0">Legend Mastery</h3>
-          ${legendMasteryHtml(legends)}
-        </div>
-
-        <div class="card">
-          <h3 style="margin-top: 0">Match History</h3>
-          ${matchHistoryHtml(matches)}
-        </div>
-
-        <div class="card">
-          <h3 style="margin-top: 0">Achievements</h3>
-          ${achievements}
-        </div>
-      `;
-
-      if (history && history.length > 0) {
-        const chronological = [...history].reverse();
-        drawSparkline(document.getElementById("history-chart"), chronological);
-      }
-    } catch (err) {
-      content.innerHTML = `<p class="state-msg error">Couldn't load this player: ${err.message}</p>`;
-    }
+  // Cached site data, then live. Each resolves to null rather than failing
+  // the whole page.
+  function cached(name, live) {
+    return new Promise((resolve) => {
+      let got = null;
+      ShaheenAPI.withSnapshot(name, live, (data) => {
+        got = data;
+      })
+        .then(() => resolve(got))
+        .catch(() => resolve(got));
+    });
   }
 
-
-  // A derived label, not a Brawlhalla-reported stat — same heuristic the
-  // /profile Discord embed uses (docs/DECISIONS.md ADR-096).
-  function playstyleTagsHtml(tags) {
-    if (!tags || tags.length === 0) {
-      return "";
-    }
-    return `<div class="playstyle-tags">${tags
-      .map((tag) => `<span class="playstyle-tag">${escapeHtml(tag)}</span>`)
-      .join("")}</div>`;
+  function tile(label, value, small = "") {
+    return `<div class="stat-tile"><span>${label}</span><strong>${value}</strong>${small ? `<small>${small}</small>` : ""}</div>`;
   }
 
-  function favouriteLegendsHtml(legends) {
-    if (!legends || legends.length === 0) {
-      return "";
-    }
-    return `<div class="favourite-legends">${legends
-      .slice(0, 5)
-      .map((legend, index) => {
-        const portrait = legendPortraitUrl(legend.legend_name_key);
-        const art = portrait
-          ? `<img src="${portrait}" alt="" width="104" height="132" loading="lazy" />`
-          : avatarHtml(legendDisplayName(legend.legend_name_key), 56);
-        return `
-          <div class="favourite-legend-card${index === 0 ? " is-main" : ""}">
-            <div class="favourite-legend-art">${art}</div>
-            ${index === 0 ? '<span class="favourite-legend-tag">Main</span>' : ""}
-            <span class="favourite-legend-name">${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
-            <span class="favourite-legend-games">${legend.games} games</span>
-          </div>`;
+  function seasonName(s) {
+    return s.pakistan_season_number ? `Season ${s.pakistan_season_number} · ${escapeHtml(s.pakistan_season_name)}` : `Brawlhalla S${s.season}`;
+  }
+
+  function mainLegendsHtml(legends) {
+    if (!legends || !legends.length) return UNAVAILABLE;
+    return `<div class="main-legends">${legends
+      .slice(0, 3)
+      .map((l) => {
+        const portrait = legendPortraitUrl(l.legend_name_key);
+        const art = portrait ? `<img src="${portrait}" alt="" width="56" height="56" loading="lazy" />` : avatarHtml(legendDisplayName(l.legend_name_key), 56);
+        const wr = l.games ? Math.round((l.wins / l.games) * 100) : 0;
+        return `<div class="main-legend">${art}<div>
+          <strong>${escapeHtml(legendDisplayName(l.legend_name_key))}</strong>
+          <div class="muted" style="font-size:12.5px">${formatNumber(l.games)} games · ${wr}% WR · ${formatNumber(l.kos)} KOs</div>
+        </div></div>`;
       })
       .join("")}</div>`;
   }
 
-  const CATEGORY_LABELS = {
-    onboarding: "Getting Started",
-    milestone: "Milestones",
-    ranked: "Ranked",
-    competition: "Competition",
-    community: "Community",
-    tenure: "Tenure",
-  };
-
-
-  // The `extra` JSON recorded when an award was granted. Written by every
-  // award source since ADR-081 and displayed for the first time in ADR-088 —
-  // it's what makes two members holding the same badge read differently.
-  const CONTEXT_LABELS = {
-    games: "career games",
-    rating: "rating",
-    peak_rating: "peak rating",
-    global_rank: "global rank",
-    chat_level: "chat level",
-    player_name: "linked as",
-    tournament_id: "tournament #",
-    placement: "placed",
-    match_id: "match #",
-    tier: "tier",
-  };
-
-  function achievementContextHtml(context) {
-    if (!context || typeof context !== "object") {
-      return "";
-    }
-    const parts = Object.entries(context)
-      .filter(([, v]) => v !== null && v !== undefined && v !== "")
-      .map(([k, v]) => {
-        const label = CONTEXT_LABELS[k] || k.replace(/_/g, " ");
-        const value = typeof v === "number" ? formatNumber(v) : String(v);
-        return `${escapeHtml(label)} ${escapeHtml(value)}`;
-      });
-    if (!parts.length) {
-      return "";
-    }
-    return `<span class="achievement-context">${parts.join(" &middot; ")}</span>`;
+  function legendTableHtml(legends) {
+    if (!legends || !legends.length) return UNAVAILABLE;
+    return `<div class="bl-table-wrap"><table class="bl-table">
+      <thead><tr><th scope="col">Legend</th><th scope="col" class="right">Games</th><th scope="col" class="right">Win %</th>
+      <th scope="col" class="right hide-sm">KOs</th><th scope="col" class="right hide-sm">Damage</th><th scope="col" class="right hide-sm">Falls</th></tr></thead>
+      <tbody>${legends
+        .map(
+          (l) => `<tr>
+            <td><span class="legend-cell">${legendAvatarHtml(l.legend_name_key, 24)}${escapeHtml(legendDisplayName(l.legend_name_key))}</span></td>
+            <td class="right num">${formatNumber(l.games)}</td>
+            <td class="right num">${l.games ? Math.round((l.wins / l.games) * 100) : 0}%</td>
+            <td class="right num hide-sm">${formatNumber(l.kos)}</td>
+            <td class="right num hide-sm">${formatNumber(l.damagedealt)}</td>
+            <td class="right num hide-sm">${formatNumber(l.falls)}</td>
+          </tr>`
+        )
+        .join("")}</tbody></table></div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Lifetime games across all modes, from the official Brawlhalla API.</p>`;
   }
 
-  function earnedOnlyHtml(earned) {
-    if (!earned || earned.length === 0) {
-      return '<p class="state-msg">No achievements yet.</p>';
-    }
-    return `<ul class="badge-list">${earned
+  function seasonsHtml(seasons) {
+    if (!seasons || !seasons.length) return UNAVAILABLE;
+    return `<div class="bl-table-wrap"><table class="bl-table">
+      <thead><tr><th scope="col">Season</th><th scope="col" class="right">Final</th><th scope="col" class="right">Peak</th></tr></thead>
+      <tbody>${seasons
+        .map((s) => `<tr><td>${seasonName(s)}</td><td class="right num">${formatNumber(s.final_rating)}</td><td class="right num">${formatNumber(s.peak_rating)}</td></tr>`)
+        .join("")}</tbody></table></div>`;
+  }
+
+  function matchesHtml(matches) {
+    if (!matches || !matches.length) return UNAVAILABLE;
+    return `<ul class="list-rows">${matches
       .map(
-        (a) =>
-          `<li><span class="badge-icon">🏅</span><span><strong>${escapeHtml(a.name)}</strong> — ${escapeHtml(a.description)}</span></li>`
+        (m) => `<li>
+          <span><span class="pill ${m.won ? "pill-live" : "pill-muted"}">${m.won ? "Win" : "Loss"}</span>
+          <span style="margin-left:8px">${escapeHtml(m.kind)} vs ${m.opponents.length ? escapeHtml(m.opponents.join(" & ")) : "unknown"}</span></span>
+          <span class="muted" style="font-size:12.5px">${formatDate(m.confirmed_at)}</span>
+        </li>`
       )
       .join("")}</ul>`;
   }
 
-  // The clan-wide gallery on achievements.html looks identical for every
-  // member by design. This is the per-member view: the same catalog, with
-  // what this player has and hasn't earned.
-  function achievementChecklistHtml(entries) {
-    if (!entries || entries.length === 0) {
-      return '<p class="state-msg">No achievements defined yet.</p>';
+  function achievementsHtml(checklist, earnedOnly) {
+    const entries = checklist || (earnedOnly || []).map((a) => ({ ...a, earned: true }));
+    if (!entries.length) return UNAVAILABLE;
+    const earned = entries.filter((e) => e.earned);
+    const sorted = [...earned, ...entries.filter((e) => !e.earned)];
+    return `<p class="muted" style="margin:0 0 12px;font-size:13px">${earned.length} of ${entries.length} earned</p>
+      <div class="achievement-chips">${sorted
+        .map(
+          (a) => `<div class="achievement-chip ${a.earned ? "earned" : "locked"}">
+            <span aria-hidden="true">${a.earned ? "🏅" : "🔒"}</span>
+            <span><strong>${escapeHtml(a.name)}</strong><small>${escapeHtml(a.description)}${a.earned && a.awarded_at ? ` · ${formatDate(a.awarded_at)}` : ""}</small></span>
+          </div>`
+        )
+        .join("")}</div>`;
+  }
+
+  function trendText(trend) {
+    if (trend == null) return "";
+    if (trend > 0) return `<span class="trend-up">▲ ${trend}</span> this week`;
+    if (trend < 0) return `<span class="trend-down">▼ ${Math.abs(trend)}</span> this week`;
+    return "No change this week";
+  }
+
+  // ---------- compare ----------
+  function compareHtml(me, others) {
+    const options = others
+      .filter((p) => String(p.brawlhalla_id) !== String(me.brawlhalla_id))
+      .map((p) => `<option value="${p.brawlhalla_id}">${escapeHtml(p.player_name)}</option>`)
+      .join("");
+    return `<section class="panel panel-pad" id="compare" hidden style="margin-top:16px" aria-labelledby="compare-title">
+      <div class="section-head"><h2 id="compare-title">Compare</h2></div>
+      <div class="field" style="max-width:320px;margin-bottom:14px">
+        <label for="compare-with">Compare with</label>
+        <select id="compare-with" class="select"><option value="">Choose a player</option>${options}</select>
+      </div>
+      <div id="compare-body"></div>
+    </section>`;
+  }
+
+  function renderCompare(a, b) {
+    const rows = [
+      ["Rating", a.rating, b.rating, true],
+      ["Peak", a.peak_rating, b.peak_rating, true],
+      ["Global rank", a.global_rank, b.global_rank, false],
+      ["2v2 rating", a.rating_2v2, b.rating_2v2, true],
+      ["7-day change", a.trend, b.trend, true],
+    ];
+    const cell = (v, other, higherBetter, side) => {
+      const better = v != null && other != null && v !== other && (higherBetter ? v > other : v < other);
+      return `<span class="${side}${better ? " better" : ""} num">${formatNumber(v)}</span>`;
+    };
+    document.getElementById("compare-body").innerHTML = `<div class="compare-grid">
+      <strong class="left">${escapeHtml(a.player_name)}</strong><span></span><strong>${escapeHtml(b.player_name)}</strong>
+      ${rows.map(([label, x, y, hb]) => `${cell(x, y, hb, "left")}<span class="label">${label}</span>${cell(y, x, hb, "")}`).join("")}
+      <span class="left">${a.tier ? tierBadge(a.tier) : "—"}</span><span class="label">Tier</span><span>${b.tier ? tierBadge(b.tier) : "—"}</span>
+      <span class="left">${a.main_legend ? escapeHtml(legendDisplayName(a.main_legend)) : "—"}</span><span class="label">Main legend</span><span>${b.main_legend ? escapeHtml(legendDisplayName(b.main_legend)) : "—"}</span>
+    </div>`;
+  }
+
+  async function load() {
+    const [profile, history, legends, matches, checklist, seasons, rankings, directory] = await Promise.all([
+      // api.js returns null for a 404 and throws on any other failure.
+      ShaheenAPI.getPlayer(brawlhallaId).catch(() => undefined),
+      ShaheenAPI.getPlayerHistory(brawlhallaId, 100).catch(() => null),
+      ShaheenAPI.getPlayerLegends(brawlhallaId, 6).catch(() => null),
+      ShaheenAPI.getPlayerMatches(brawlhallaId, 10).catch(() => null),
+      ShaheenAPI.getPlayerAchievements(brawlhallaId).catch(() => null),
+      ShaheenAPI.getPlayerSeasons(brawlhallaId).catch(() => null),
+      cached("rankings", () => ShaheenAPI.getRankings()),
+      cached("players", () => ShaheenAPI.getPlayers()),
+    ]);
+
+    if (profile === null) {
+      el.innerHTML = `<div class="panel empty-panel"><h2>No such player</h2><p>BRAWLISTAN doesn't track a player with Brawlhalla ID ${escapeHtml(brawlhallaId)}.</p></div>`;
+      return;
+    }
+    if (profile === undefined) {
+      el.innerHTML = UNAVAILABLE;
+      return;
     }
 
-    const earnedCount = entries.filter((entry) => entry.earned).length;
-    const pct = Math.round((earnedCount / entries.length) * 100);
+    const entry = (directory || []).find((p) => String(p.brawlhalla_id) === String(brawlhallaId)) || {};
+    const rated = ((rankings && rankings.rows) || []).filter((r) => r.rating != null);
+    const rankIndex = rated.findIndex((r) => String(r.brawlhalla_id) === String(brawlhallaId));
+    const rankRow = ((rankings && rankings.rows) || []).find((r) => String(r.brawlhalla_id) === String(brawlhallaId)) || {};
+    const slug = entry.slug || `player-${brawlhallaId}`;
 
-    const groups = new Map();
-    entries.forEach((entry) => {
-      const key = entry.category || "milestone";
-      if (!groups.has(key)) {
-        groups.set(key, []);
+    document.title = `${profile.player_name} — Pakistan Brawlhalla Ranking | BRAWLISTAN`;
+
+    const country = entry.country ? `${entry.country === "PK" ? "🇵🇰 " : ""}${escapeHtml(COUNTRIES[entry.country] || entry.country)}` : "Country not set";
+    const claimText = entry.is_claimed
+      ? '<span class="pill pill-verified" title="Linked to a member of the BRAWLISTAN Discord">✓ Claimed</span>'
+      : '<span class="pill pill-muted">Unclaimed</span>';
+    const s = profile.pakistan_season;
+
+    el.innerHTML = `
+      <section class="panel profile-head" aria-label="Player">
+        ${avatarHtml(profile.player_name, 72)}
+        <div>
+          <h1>${escapeHtml(profile.player_name)}</h1>
+          <div class="profile-meta">
+            <span>${country}</span><span aria-hidden="true">·</span>
+            <span>Brawlhalla ID ${escapeHtml(String(profile.brawlhalla_id))}</span>
+            ${profile.region ? `<span aria-hidden="true">·</span><span>${escapeHtml(profile.region)}</span>` : ""}
+          </div>
+          <div class="profile-meta">
+            ${entry.team ? `<span class="pill pill-team">${escapeHtml(entry.team)}</span>` : ""}
+            ${claimText}
+            ${(profile.playstyle_tags || []).map((t) => `<span class="pill">${escapeHtml(t)}</span>`).join("")}
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="compare-btn" aria-expanded="false" aria-controls="compare">Compare</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="share-btn">Share</button>
+          <a class="btn btn-primary btn-sm" data-discord-invite href="${typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html"}" target="_blank" rel="noopener">Discord</a>
+        </div>
+      </section>
+
+      <div class="stat-tiles">
+        ${tile("Pakistan rank", rankIndex >= 0 ? `#${rankIndex + 1}` : "—", rankIndex >= 0 ? `of ${rated.length}` : "Not on the board")}
+        ${tile("Global rank", profile.global_rank ? `#${formatNumber(profile.global_rank)}` : "—", profile.region_rank ? `#${formatNumber(profile.region_rank)} in ${escapeHtml(profile.region || "region")}` : "")}
+        ${tile("Rating", formatNumber(profile.rating), trendText(rankRow.trend))}
+        ${tile("Peak", formatNumber(profile.peak_rating), s ? `Season ${s.number} · ${escapeHtml(s.name)}` : "")}
+        ${tile("Tier", profile.tier ? escapeHtml(profile.tier) : "Unranked", rankRow.rating_2v2 ? `2v2: ${formatNumber(rankRow.rating_2v2)}` : "")}
+      </div>
+
+      ${compareHtml({ brawlhalla_id: brawlhallaId }, directory || [])}
+
+      <div class="home-grid" style="margin-top:16px">
+        <section class="panel panel-pad span-8" aria-labelledby="h-history">
+          <div class="section-head"><h2 id="h-history">Rating history</h2><span class="muted" style="font-size:12.5px">Dashed: peak</span></div>
+          ${history && history.some((h) => h.rating != null) ? '<div class="chart-box"><canvas id="history-chart" aria-label="Rating over time" role="img"></canvas></div>' : UNAVAILABLE}
+        </section>
+        <section class="panel panel-pad span-4" aria-labelledby="h-main">
+          <div class="section-head"><h2 id="h-main">Main legends</h2></div>
+          ${mainLegendsHtml(legends)}
+        </section>
+        <section class="panel panel-pad span-6" aria-labelledby="h-seasons">
+          <div class="section-head"><h2 id="h-seasons">Season history</h2></div>
+          ${seasonsHtml(seasons)}
+        </section>
+        <section class="panel panel-pad span-6" aria-labelledby="h-matches">
+          <div class="section-head"><h2 id="h-matches">Tournaments and matches</h2></div>
+          ${matchesHtml(matches)}
+        </section>
+        <section class="panel panel-pad span-12" aria-labelledby="h-legends">
+          <div class="section-head"><h2 id="h-legends">Legend statistics</h2></div>
+          ${legendTableHtml(legends)}
+        </section>
+        <section class="panel panel-pad span-12" aria-labelledby="h-ach">
+          <div class="section-head"><h2 id="h-ach">Achievements</h2></div>
+          ${achievementsHtml(checklist, profile.achievements)}
+        </section>
+        <section class="panel panel-pad span-12" aria-labelledby="h-discord">
+          <div class="section-head"><h2 id="h-discord">Discord</h2></div>
+          <p class="muted" style="margin:0">${
+            entry.is_claimed
+              ? "This profile is claimed by a member of the BRAWLISTAN Discord. Their Discord account stays private."
+              : "Nobody has claimed this profile yet. If it's you, join the Discord and run <code>/pakistan join</code> with this Brawlhalla ID."
+          }</p>
+        </section>
+      </div>`;
+
+    if (history && history.length) {
+      drawSparkline(document.getElementById("history-chart"), [...history].reverse());
+    }
+
+    // Compare: side by side from the same cached rankings/directory data.
+    const compareBtn = document.getElementById("compare-btn");
+    compareBtn.addEventListener("click", () => {
+      const panel = document.getElementById("compare");
+      panel.hidden = !panel.hidden;
+      compareBtn.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+      if (!panel.hidden) document.getElementById("compare-with").focus();
+    });
+    const lookup = (id) => {
+      const row = ((rankings && rankings.rows) || []).find((r) => String(r.brawlhalla_id) === String(id));
+      const dir = (directory || []).find((p) => String(p.brawlhalla_id) === String(id)) || {};
+      return { ...dir, ...(row || {}), player_name: (row || dir).player_name };
+    };
+    document.getElementById("compare-with").addEventListener("change", (event) => {
+      if (!event.target.value) {
+        document.getElementById("compare-body").innerHTML = "";
+        return;
       }
-      groups.get(key).push(entry);
+      const me = lookup(brawlhallaId);
+      renderCompare({ ...me, player_name: profile.player_name, rating: profile.rating, peak_rating: profile.peak_rating, tier: profile.tier, global_rank: profile.global_rank }, lookup(event.target.value));
     });
 
-    const sections = [...groups.entries()]
-      .map(([category, items]) => {
-        const rows = items
-          .map(
-            (entry) => `
-              <li class="${entry.earned ? "achievement-earned" : "achievement-locked"}">
-                <span class="badge-icon">${entry.earned ? "🏅" : "🔒"}</span>
-                <span>
-                  <strong>${escapeHtml(entry.name)}</strong> — ${escapeHtml(entry.description)}
-                  ${entry.earned && entry.awarded_at ? `<span class="legend-meta"> · ${formatDate(entry.awarded_at)}</span>` : ""}
-                  ${entry.earned ? achievementContextHtml(entry.context) : ""}
-                </span>
-              </li>`
-          )
-          .join("");
-        return `
-          <div class="achievement-group">
-            <h4>${escapeHtml(CATEGORY_LABELS[category] || category)}</h4>
-            <ul class="badge-list">${rows}</ul>
-          </div>`;
-      })
-      .join("");
-
-    return `
-      <div class="achievement-progress">
-        <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${Math.max(pct, earnedCount > 0 ? 4 : 0)}%"></div></div>
-        <span class="legend-meta">${earnedCount} of ${entries.length} earned · ${pct}%</span>
-      </div>
-      ${sections}
-    `;
+    // Share: the generated per-player page carries this player's own title
+    // and preview card (ADR-106).
+    document.getElementById("share-btn").addEventListener("click", async (event) => {
+      const url = new URL(`player/${slug}/`, document.baseURI).href;
+      const title = document.title;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, url });
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        event.target.textContent = "Link copied";
+      } catch {
+        /* share sheet dismissed or clipboard blocked: nothing to do */
+      }
+    });
   }
 
-  function legendMasteryHtml(legends) {
-    if (!legends || legends.length === 0) {
-      return '<p class="state-msg">No legend stats yet — plays will show up after the next snapshot.</p>';
-    }
-    const maxGames = Math.max(...legends.map((l) => l.games), 1);
-    return `
-      <ul class="legend-list">
-        ${legends
-          .map((legend) => {
-            const winRate = legend.games > 0 ? Math.round((legend.wins / legend.games) * 100) : 0;
-            const width = Math.max(6, Math.round((legend.games / maxGames) * 100));
-            return `
-              <li>
-                <div class="legend-row">
-                  <span class="legend-name">${legendAvatarHtml(legend.legend_name_key, 28)}${escapeHtml(legendDisplayName(legend.legend_name_key))}</span>
-                  <span class="legend-meta">${legend.games} games · ${winRate}% WR · ${legend.kos} KOs · ${formatNumber(legend.damagedealt)} DMG · ${legend.falls} falls</span>
-                </div>
-                <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${width}%"></div></div>
-              </li>`;
-          })
-          .join("")}
-      </ul>
-    `;
-  }
-
-  function matchHistoryHtml(matches) {
-    if (!matches || matches.length === 0) {
-      return '<p class="state-msg">No confirmed matches yet.</p>';
-    }
-    return `
-      <ul class="match-list">
-        ${matches
-          .map(
-            (m) => `
-              <li class="${m.won ? "match-win" : "match-loss"}">
-                <span class="match-result">${m.won ? "WIN" : "LOSS"}</span>
-                <span class="match-kind">${escapeHtml(m.kind)}</span>
-                <span class="match-opponents">vs ${m.opponents.length ? escapeHtml(m.opponents.join(" & ")) : "Unknown"}</span>
-                <span class="match-date">${formatDate(m.confirmed_at)}</span>
-              </li>`
-          )
-          .join("")}
-      </ul>
-    `;
-  }
+  load().catch(() => {
+    el.innerHTML = UNAVAILABLE;
+  });
 })();

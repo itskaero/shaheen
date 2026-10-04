@@ -75,15 +75,23 @@ jobs:
           snapshot rising "/pakistan/rising?days=7&limit=10"
           snapshot legend-meta "/legends/meta?limit=10"
           snapshot rankings /rankings/pakistan
+          snapshot players /players
+
+      - name: Generate per-player pages
+        # Static web/player/<slug>/index.html pages with each player's own
+        # title and Open Graph tags (docs/DECISIONS.md ADR-106) — GitHub Pages
+        # can't route /player/:slug, so the pages are written ahead of time
+        # from the players snapshot just fetched. Standard library only.
+        run: python3 scripts/player_pages.py
 
       - name: Commit if anything changed
         run: |
-          if [ -z "$(git status --porcelain web/data)" ]; then
+          if [ -z "$(git status --porcelain web/data web/player)" ]; then
             echo "No change in the snapshots."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/data
+          git add web/data web/player
           git commit -m "chore(web): refresh site data snapshots"
           git push
