@@ -1,181 +1,327 @@
-// Rankings: the clan ladder and the Pakistan ladder on one page
-// (docs/DECISIONS.md ADR-099). The clan tab is built from /roster — already
-// every linked member, rating-sorted, unplaced members included — so the old
-// separate Leaderboard and Roster pages become one list.
+// BRAWLISTAN Rankings (docs/DECISIONS.md ADR-105).
+//
+// One /rankings/pakistan payload backs the Pakistan, Global, 1v1 and 2v2 tabs:
+// each tab keeps the rows that have the number it ranks by and sorts on it.
+// Rising reads /pakistan/rising. Power has no data source, so it says so.
+// Tab state lives in the URL hash (rankings.html#2v2), so boards are linkable
+// and the old rankings.html#pakistan links still land on the Pakistan board.
 (function () {
-  const TABS = {
-    clan: { tab: "tab-clan", panel: "panel-clan" },
-    pakistan: { tab: "tab-pakistan", panel: "panel-pakistan" },
+  const TABS = ["pakistan", "global", "1v1", "2v2", "power", "rising"];
+  const TIERS = ["Valhallan", "Diamond", "Platinum", "Gold", "Silver", "Bronze", "Tin"];
+  const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
+
+  const board = document.getElementById("board");
+  const seasonSelect = document.getElementById("season-select");
+  const seasonLine = document.getElementById("season-line");
+  const filters = {
+    search: document.getElementById("f-search"),
+    region: document.getElementById("f-region"),
+    tier: document.getElementById("f-tier"),
+    legend: document.getElementById("f-legend"),
+    team: document.getElementById("f-team"),
+    claimed: document.getElementById("f-claimed"),
   };
 
-  function selectTab(name, { focus = false, updateHash = true } = {}) {
-    Object.entries(TABS).forEach(([key, ids]) => {
-      const tab = document.getElementById(ids.tab);
-      const panel = document.getElementById(ids.panel);
-      const active = key === name;
-      tab.setAttribute("aria-selected", active ? "true" : "false");
-      tab.tabIndex = active ? 0 : -1;
-      panel.hidden = !active;
-      if (active && focus) tab.focus();
-    });
-    if (updateHash) {
-      history.replaceState(null, "", name === "clan" ? location.pathname : `#${name}`);
-    }
-  }
+  let data = null; // the /rankings/pakistan payload
+  let rising = null; // the /pakistan/rising list
+  let tab = tabFromHash();
 
   function tabFromHash() {
-    return location.hash === "#pakistan" ? "pakistan" : "clan";
+    const name = location.hash.replace("#", "");
+    return TABS.includes(name) ? name : "pakistan";
   }
 
-  Object.entries(TABS).forEach(([key, ids]) => {
-    const tab = document.getElementById(ids.tab);
-    tab.addEventListener("click", () => selectTab(key));
-    tab.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-        event.preventDefault();
-        selectTab(key === "clan" ? "pakistan" : "clan", { focus: true });
-      }
+  // ---------- small renderers ----------
+  function profileHref(row) {
+    return `player.html?id=${encodeURIComponent(row.brawlhalla_id)}`;
+  }
+
+  function playerCell(row) {
+    const claimed = row.is_claimed
+      ? '<span class="pill pill-verified" title="Claimed by its player in our Discord">✓ Claimed</span>'
+      : '<span class="pill pill-muted" title="Added by staff; not yet claimed">Unclaimed</span>';
+    return `<a class="bl-player" href="${profileHref(row)}">${avatarHtml(row.player_name, 28)}<span class="bl-player-name">${escapeHtml(row.player_name)}</span></a> ${claimed}`;
+  }
+
+  function teamCell(row) {
+    return row.team ? `<span class="pill pill-team">${escapeHtml(row.team)}</span>` : '<span class="muted">—</span>';
+  }
+
+  function trendCell(trend) {
+    if (trend == null) return '<span class="muted" title="Not enough readings this week">—</span>';
+    if (trend > 0) return `<span class="trend-up num">▲ ${trend}</span>`;
+    if (trend < 0) return `<span class="trend-down num">▼ ${Math.abs(trend)}</span>`;
+    return '<span class="muted num">0</span>';
+  }
+
+  function legendCell(key) {
+    if (!key) return '<span class="muted">—</span>';
+    return `<span class="legend-cell">${legendAvatarHtml(key, 24)}${escapeHtml(legendDisplayName(key))}</span>`;
+  }
+
+  function flag(country) {
+    return country === "PK" ? '<span title="Pakistan">🇵🇰 PK</span>' : escapeHtml(country || "—");
+  }
+
+  function winRate(row) {
+    return row.games ? `${Math.round((row.wins / row.games) * 100)}%` : "—";
+  }
+
+  function table(columns, rows) {
+    const head = columns.map((c) => `<th scope="col"${c.cls ? ` class="${c.cls}"` : ""}>${c.label}</th>`).join("");
+    const body = rows
+      .map((row, i) => `<tr>${columns.map((c) => `<td${c.cls ? ` class="${c.cls}"` : ""}>${c.cell(row, i)}</td>`).join("")}</tr>`)
+      .join("");
+    return `<div class="bl-table-wrap"><table class="bl-table">
+      <caption class="sr-only">${escapeHtml(tabLabel())} rankings</caption>
+      <thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
+  function tabLabel() {
+    return document.getElementById(`tab-${tab}`).textContent;
+  }
+
+  // ---------- filtering ----------
+  function tierFamily(tier) {
+    return TIERS.find((t) => (tier || "").toLowerCase().startsWith(t.toLowerCase())) || null;
+  }
+
+  function applyFilters(rows, { tierKey = "tier" } = {}) {
+    const q = filters.search.value.trim().toLowerCase();
+    return rows.filter((row) => {
+      if (q && !row.player_name.toLowerCase().includes(q)) return false;
+      if (filters.region.value && row.region !== filters.region.value) return false;
+      if (filters.tier.value && tierFamily(row[tierKey]) !== filters.tier.value) return false;
+      if (filters.legend.value && row.main_legend !== filters.legend.value) return false;
+      if (filters.team.value === "_none" && row.team) return false;
+      if (filters.team.value && filters.team.value !== "_none" && row.team !== filters.team.value) return false;
+      if (filters.claimed.checked && !row.is_claimed) return false;
+      return true;
+    });
+  }
+
+  function fillSelect(select, values, label = (v) => v) {
+    const keep = select.value;
+    select.innerHTML = '<option value="">All</option>' + values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(label(v))}</option>`).join("");
+    if ([...select.options].some((o) => o.value === keep)) select.value = keep;
+  }
+
+  function fillFilterOptions(rows) {
+    const uniq = (xs) => [...new Set(xs.filter(Boolean))].sort();
+    fillSelect(filters.region, uniq(rows.map((r) => r.region)));
+    fillSelect(filters.tier, TIERS.filter((t) => rows.some((r) => tierFamily(r.tier) === t || tierFamily(r.tier_2v2) === t)));
+    fillSelect(filters.legend, uniq(rows.map((r) => r.main_legend)), legendDisplayName);
+    const teams = uniq(rows.map((r) => r.team));
+    filters.team.innerHTML = '<option value="">All</option>' + teams.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("") + '<option value="_none">No team</option>';
+  }
+
+  // ---------- boards ----------
+  const VIEWS = {
+    pakistan() {
+      const rows = applyFilters(data.rows.filter((r) => r.rating != null));
+      return {
+        rows,
+        html: table(
+          [
+            { label: "#", cell: (_r, i) => rankHtml(i + 1) },
+            { label: "Player", cell: playerCell },
+            { label: "Country", cls: "hide-sm", cell: (r) => flag(r.country) },
+            { label: "Team", cls: "hide-sm", cell: teamCell },
+            { label: "Rating", cls: "right", cell: (r) => `<span class="num">${formatNumber(r.rating)}</span>` },
+            { label: "Tier", cls: "hide-sm", cell: (r) => tierBadge(r.tier) },
+            { label: "7d", cls: "right", cell: (r) => trendCell(r.trend) },
+            { label: "Main legend", cls: "hide-sm", cell: (r) => legendCell(r.main_legend) },
+          ],
+          rows
+        ),
+      };
+    },
+    global() {
+      const rows = applyFilters(data.rows.filter((r) => r.global_rank != null)).sort((a, b) => a.global_rank - b.global_rank);
+      return {
+        rows,
+        html: table(
+          [
+            { label: "Global #", cell: (r) => `<span class="num">${formatNumber(r.global_rank)}</span>` },
+            { label: "Player", cell: playerCell },
+            { label: "Region", cls: "hide-sm", cell: (r) => escapeHtml(r.region || "—") },
+            { label: "Region #", cls: "right hide-sm", cell: (r) => `<span class="num">${formatNumber(r.region_rank)}</span>` },
+            { label: "Rating", cls: "right", cell: (r) => `<span class="num">${formatNumber(r.rating)}</span>` },
+            { label: "Tier", cls: "hide-sm", cell: (r) => tierBadge(r.tier) },
+          ],
+          rows
+        ),
+      };
+    },
+    "1v1"() {
+      const rows = applyFilters(data.rows.filter((r) => r.rating != null));
+      return {
+        rows,
+        html: table(
+          [
+            { label: "#", cell: (_r, i) => rankHtml(i + 1) },
+            { label: "Player", cell: playerCell },
+            { label: "Rating", cls: "right", cell: (r) => `<span class="num">${formatNumber(r.rating)}</span>` },
+            { label: "Peak", cls: "right hide-sm", cell: (r) => `<span class="num">${formatNumber(r.peak_rating)}</span>` },
+            { label: "Tier", cls: "hide-sm", cell: (r) => tierBadge(r.tier) },
+            { label: "W / Games", cls: "right hide-sm", cell: (r) => `<span class="num">${r.wins} / ${r.games}</span>` },
+            { label: "Win %", cls: "right", cell: (r) => `<span class="num">${winRate(r)}</span>` },
+          ],
+          rows
+        ),
+      };
+    },
+    "2v2"() {
+      const rows = applyFilters(data.rows.filter((r) => r.rating_2v2 != null), { tierKey: "tier_2v2" }).sort(
+        (a, b) => b.rating_2v2 - a.rating_2v2
+      );
+      return {
+        rows,
+        html: table(
+          [
+            { label: "#", cell: (_r, i) => rankHtml(i + 1) },
+            { label: "Player", cell: playerCell },
+            { label: "Partner", cls: "hide-sm", cell: (r) => escapeHtml(r.partner_2v2 || "—") },
+            { label: "Rating", cls: "right", cell: (r) => `<span class="num">${formatNumber(r.rating_2v2)}</span>` },
+            { label: "Peak", cls: "right hide-sm", cell: (r) => `<span class="num">${formatNumber(r.peak_rating_2v2)}</span>` },
+            { label: "Tier", cls: "hide-sm", cell: (r) => tierBadge(r.tier_2v2) },
+          ],
+          rows
+        ),
+      };
+    },
+  };
+
+  function renderPower() {
+    board.innerHTML = `<div class="empty-panel">
+      <h2>Power rankings</h2>
+      <p>Power rankings are compiled from tournament results by the scene's organisers. BRAWLISTAN doesn't have a source for them yet, so there's nothing to show here rather than a made-up list.</p>
+      <p class="unavailable">Data unavailable</p>
+    </div>`;
+  }
+
+  function renderRising() {
+    if (!rising) {
+      board.innerHTML = '<p class="unavailable">Loading…</p>';
+      return;
+    }
+    const q = filters.search.value.trim().toLowerCase();
+    const rows = rising.filter((r) => (!q || r.player_name.toLowerCase().includes(q)) && (!filters.claimed.checked || r.is_claimed));
+    if (!rows.length) {
+      board.innerHTML = UNAVAILABLE;
+      return;
+    }
+    board.innerHTML =
+      table(
+        [
+          { label: "#", cell: (_r, i) => rankHtml(i + 1) },
+          { label: "Player", cell: playerCell },
+          { label: "Gain (7d)", cls: "right", cell: (r) => `<span class="trend-up num">▲ ${r.rating_gain}</span>` },
+          { label: "Rating", cls: "right", cell: (r) => `<span class="num">${formatNumber(r.rating)}</span>` },
+        ],
+        rows
+      ) + '<div class="table-foot"><span>Biggest rating gains on the Pakistan board over the last seven days.</span></div>';
+  }
+
+  function render() {
+    TABS.forEach((name) => {
+      const el = document.getElementById(`tab-${name}`);
+      const active = name === tab;
+      el.setAttribute("aria-selected", active ? "true" : "false");
+      el.tabIndex = active ? 0 : -1;
+    });
+    board.setAttribute("aria-labelledby", `tab-${tab}`);
+    // Bracket filters don't apply to Rising/Power; hide the ones that don't.
+    const bracket = tab in VIEWS;
+    ["region", "tier", "legend", "team"].forEach((k) => {
+      filters[k].closest(".field").hidden = !bracket;
+    });
+    document.getElementById("filters").hidden = tab === "power";
+
+    if (tab === "power") return renderPower();
+    if (tab === "rising") return renderRising();
+    if (!data) {
+      board.innerHTML = '<p class="unavailable">Loading…</p>';
+      return;
+    }
+    const view = VIEWS[tab]();
+    if (!view.rows.length) {
+      board.innerHTML = UNAVAILABLE;
+      return;
+    }
+    const claimNote =
+      tab === "pakistan" && view.rows.some((r) => !r.is_claimed)
+        ? `<span>Unclaimed players were added by staff. If one is you, <a data-discord-invite href="${typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html"}" target="_blank" rel="noopener">join the Discord</a> and run <code>/pakistan join</code> to claim it.</span>`
+        : "<span></span>";
+    board.innerHTML = view.html + `<div class="table-foot">${claimNote}<span>${view.rows.length} of ${data.rows.length} players</span></div>`;
+  }
+
+  function seasonLabel(n) {
+    return n >= 42 ? `Season ${n - 41} · Brawlhalla S${n}` : `Brawlhalla Season ${n}`;
+  }
+
+  function onData(payload) {
+    data = payload;
+    fillFilterOptions(payload.rows);
+    if (payload.seasons && payload.seasons.length) {
+      seasonSelect.innerHTML = payload.seasons.map((n) => `<option value="${n}">${escapeHtml(seasonLabel(n))}</option>`).join("");
+      seasonSelect.value = String(payload.season);
+      seasonSelect.disabled = false;
+    }
+    const s = payload.pakistan_season;
+    seasonLine.textContent = s
+      ? `Pakistan Season ${s.number} · Season of ${s.name}. Synced from the official Brawlhalla API every six hours.`
+      : `Brawlhalla Season ${payload.season ?? "—"}. Synced from the official Brawlhalla API every six hours.`;
+    render();
+  }
+
+  // ---------- wiring ----------
+  TABS.forEach((name, index) => {
+    const el = document.getElementById(`tab-${name}`);
+    el.addEventListener("click", () => {
+      history.replaceState(null, "", `#${name}`);
+      tab = name;
+      render();
+    });
+    el.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      const next = TABS[(index + (event.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+      history.replaceState(null, "", `#${next}`);
+      tab = next;
+      render();
+      document.getElementById(`tab-${next}`).focus();
     });
   });
-  window.addEventListener("hashchange", () => selectTab(tabFromHash(), { updateHash: false }));
-  selectTab(tabFromHash(), { updateHash: false });
-
-  // Pakistan-board status (docs/DECISIONS.md ADR-100). Clan-tab rows carry no
-  // is_claimed field, so nothing renders for them.
-  function claimHtml(entry) {
-    if (entry.is_claimed === true) {
-      return '<span class="verified-tag" title="Claimed by a member of our Discord">✓ Verified</span>';
-    }
-    if (entry.is_claimed === false) {
-      const invite = typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html";
-      return `<span class="unclaimed-tag">Unclaimed</span>
-        <a class="claim-link" href="${invite}" target="_blank" rel="noopener">Claim this spot</a>`;
-    }
-    return "";
-  }
-
-  function playerCell(entry, size = 36) {
-    return `
-      <div class="player-cell-wrap">
-        <a class="player-cell" href="player.html?id=${entry.brawlhalla_id}">
-          ${avatarHtml(entry.player_name, size)}
-          <span>${escapeHtml(entry.player_name)}</span>
-        </a>
-        ${entry.is_clan_member ? '<span class="clan-tag">Shaheen</span>' : ""}
-        ${claimHtml(entry)}
-      </div>`;
-  }
-
-  function podiumHtml(ranked) {
-    if (ranked.length < 3) return "";
-    // visual order 2 · 1 · 3, so the winner stands in the middle
-    const order = [1, 0, 2];
-    return `
-      <ol class="podium" aria-label="Top three">
-        ${order
-          .map((index) => {
-            const entry = ranked[index];
-            return `
-              <li class="podium-step podium-${index + 1}">
-                <a href="player.html?id=${entry.brawlhalla_id}">
-                  ${rankHtml(index + 1)}
-                  ${avatarHtml(entry.player_name, index === 0 ? 72 : 56)}
-                  <span class="podium-name">${escapeHtml(entry.player_name)}</span>
-                  ${entry.is_clan_member ? '<span class="clan-tag">Shaheen</span>' : ""}
-                  ${entry.is_claimed === false ? '<span class="unclaimed-tag">Unclaimed</span>' : ""}
-                  ${tierBadge(entry.tier)}
-                  <span class="podium-rating">${formatNumber(entry.rating)}</span>
-                </a>
-              </li>`;
-          })
-          .join("")}
-      </ol>`;
-  }
-
-  function tableHtml(entries, { memberSince }) {
-    const rows = entries
-      .map(
-        (entry, i) => `
-        <tr>
-          <td>${rankHtml(i + 1)}</td>
-          <td>${playerCell(entry)}</td>
-          <td>${entry.region ? escapeHtml(entry.region) : "—"}</td>
-          <td>${entry.tier ? tierBadge(entry.tier) : "—"}</td>
-          <td>${formatNumber(entry.rating)}</td>
-          <td>${formatNumber(entry.peak_rating)}</td>
-          ${memberSince ? `<td>${entry.member_since ? formatDate(entry.member_since) : "—"}</td>` : ""}
-        </tr>`
-      )
-      .join("");
-    return `
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th><th>Player</th><th>Region</th><th>Tier</th><th>Rating</th><th>Peak</th>
-              ${memberSince ? "<th>Member Since</th>" : ""}
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-  }
-
-  function snapshotNote(meta) {
-    return meta && !meta.live && meta.capturedAt
-      ? `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
-      : "";
-  }
-
-  function renderClan(entries, meta) {
-    const el = document.getElementById("clan-content");
-    if (!entries || entries.length === 0) {
-      el.innerHTML = '<p class="state-msg">No linked members yet — link a Brawlhalla account with /link in Discord.</p>';
-      return;
-    }
-    const ranked = entries.filter((entry) => entry.rating != null);
-    const unplaced = entries.filter((entry) => entry.rating == null);
-    el.innerHTML = `
-      ${podiumHtml(ranked)}
-      ${ranked.length ? tableHtml(ranked, { memberSince: true }) : '<p class="state-msg">Nobody has placed in ranked this season yet.</p>'}
-      ${
-        unplaced.length
-          ? `<h2 class="board-subhead">Not placed this season <span>${unplaced.length}</span></h2>
-             <ul class="unplaced-list">
-               ${unplaced.map((entry) => `<li>${playerCell(entry, 28)}</li>`).join("")}
-             </ul>`
-          : ""
-      }
-      ${snapshotNote(meta)}`;
-  }
-
-  function renderPakistan(entries, meta) {
-    const el = document.getElementById("pakistan-content");
-    if (!entries || entries.length === 0) {
-      el.innerHTML = '<p class="state-msg">Nobody has placed in ranked this season yet — add yourself with /pakistan join in our Discord.</p>';
-      return;
-    }
-    el.innerHTML = `${podiumHtml(entries)}${tableHtml(entries, { memberSince: false })}${snapshotNote(meta)}`;
-  }
-
-  // The current Pakistan Season (ADR-102). Decorative: if /clan fails the
-  // boards still render, just without the banner.
-  function renderSeason(clan) {
-    const el = document.getElementById("season-banner");
-    const html = seasonBannerHtml(clan && clan.pakistan_season);
-    el.innerHTML = html;
-    el.hidden = !html;
-  }
-  ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), renderSeason).catch(() => {});
-
-  ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), renderClan).catch((err) => {
-    document.getElementById("clan-content").innerHTML =
-      `<p class="state-msg error">Couldn't load the clan ladder: ${escapeHtml(err.message)}</p>`;
+  window.addEventListener("hashchange", () => {
+    tab = tabFromHash();
+    render();
   });
-  ShaheenAPI.withSnapshot("pakistan", () => ShaheenAPI.getPakistanLeaderboard(150), renderPakistan).catch(
-    (err) => {
-      document.getElementById("pakistan-content").innerHTML =
-        `<p class="state-msg error">Couldn't load the Pakistan ladder: ${escapeHtml(err.message)}</p>`;
-    }
-  );
+  Object.values(filters).forEach((el) => el.addEventListener(el.type === "search" ? "input" : "change", render));
+  document.getElementById("filters").addEventListener("submit", (event) => event.preventDefault());
+  document.getElementById("filters-toggle").addEventListener("click", (event) => {
+    const form = document.getElementById("filters");
+    const open = form.classList.toggle("is-open");
+    event.currentTarget.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  seasonSelect.addEventListener("change", () => {
+    board.innerHTML = '<p class="unavailable">Loading…</p>';
+    ShaheenAPI.getRankings(seasonSelect.value)
+      .then(onData)
+      .catch(() => {
+        board.innerHTML = UNAVAILABLE;
+      });
+  });
+
+  render();
+  ShaheenAPI.withSnapshot("rankings", () => ShaheenAPI.getRankings(), onData).catch(() => {
+    if (!data && tab in VIEWS) board.innerHTML = UNAVAILABLE;
+  });
+  ShaheenAPI.withSnapshot("rising", () => ShaheenAPI.getPakistanRising(7, 25), (rows) => {
+    rising = rows;
+    if (tab === "rising") render();
+  }).catch(() => {
+    rising = rising || [];
+    if (tab === "rising") render();
+  });
 })();

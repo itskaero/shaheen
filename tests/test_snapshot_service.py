@@ -21,6 +21,7 @@ from integrations.brawlhalla.models import (
     PlayerRankedResponse,
     PlayerStatsResponse,
     RankedLegendStat,
+    RankedTeamStat,
 )
 from services.snapshot_service import (
     REFRESH_COOLDOWN_SECONDS,
@@ -391,3 +392,57 @@ async def test_clan_member_also_on_pakistan_board_is_snapshotted_once(
     assert (result.members_processed, result.players_processed) == (1, 0)
     rows = (await session.execute(select(RankingSnapshot))).scalars().all()
     assert len(rows) == 1
+
+
+class _FakeBrawlhallaWith2v2(_FakeBrawlhalla):
+    async def get_ranked(self, brawlhalla_id: int) -> PlayerRankedResponse | None:
+        ranked = await super().get_ranked(brawlhalla_id)
+        assert ranked is not None
+        ranked.teams_2v2 = [
+            RankedTeamStat(
+                brawlhalla_id_one=brawlhalla_id,
+                brawlhalla_id_two=9,
+                teamname="Foo+Partner",
+                rating=1720,
+                peak_rating=1800,
+                tier="Platinum 3",
+            ),
+            RankedTeamStat(
+                brawlhalla_id_one=5,
+                brawlhalla_id_two=brawlhalla_id,
+                teamname="Other+Foo",
+                rating=1300,
+                tier="Silver 2",
+            ),
+        ]
+        return ranked
+
+
+async def test_snapshot_stores_the_best_2v2_team(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    """ADR-105: one row per reading, carrying the best placed 2v2 team."""
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhallaWith2v2())  # type: ignore[arg-type]
+
+    await service.refresh_member(member, player, discord_id)
+
+    row = (await session.execute(select(RankingSnapshot))).scalars().one()
+    assert (row.rating_2v2, row.peak_rating_2v2, row.tier_2v2, row.partner_2v2) == (
+        1720,
+        1800,
+        "Platinum 3",
+        "Partner",
+    )
+
+
+async def test_snapshot_without_2v2_leaves_the_columns_empty(
+    session: AsyncSession, achievement_catalog: dict[str, Achievement]
+) -> None:
+    member, player, discord_id = await _setup_linked_member(session)
+    service = SnapshotService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+
+    await service.refresh_member(member, player, discord_id)
+
+    row = (await session.execute(select(RankingSnapshot))).scalars().one()
+    assert row.rating_2v2 is None and row.partner_2v2 is None

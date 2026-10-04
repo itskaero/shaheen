@@ -74,6 +74,7 @@ jobs:
           snapshot achievements /achievements
           snapshot rising "/pakistan/rising?days=7&limit=10"
           snapshot legend-meta "/legends/meta?limit=10"
+          snapshot rankings /rankings/pakistan
 
       - name: Commit if anything changed
         run: |

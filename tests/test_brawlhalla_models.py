@@ -113,3 +113,44 @@ def test_unplaced_this_season_keeps_a_real_peak() -> None:
         {"brawlhalla_id": 7, "name": "X", "rating": 0, "peak_rating": 1906, "tier": "none"}
     )
     assert (ranked.rating, ranked.tier, ranked.peak_rating) == (None, None, 1906)
+
+
+def test_player_ranked_parses_2v2_teams_and_picks_the_best() -> None:
+    """ADR-105: the API's "2v2" list, unplaced teams normalized like 1v1."""
+    raw = {
+        "brawlhalla_id": 7,
+        "name": "Kaero",
+        "2v2": [
+            {
+                "brawlhalla_id_one": 7,
+                "brawlhalla_id_two": 9,
+                "teamname": "Kaero+Ace",
+                "rating": 1650,
+                "peak_rating": 1700,
+                "tier": "Platinum 1",
+                "wins": 12,
+                "games": 20,
+                "region": "SEA",
+            },
+            {
+                "brawlhalla_id_one": 3,
+                "brawlhalla_id_two": 7,
+                "teamname": "Zed+Kaero",
+                "rating": 0,
+                "tier": "None",
+            },
+        ],
+    }
+    ranked = PlayerRankedResponse.model_validate(raw)
+    assert len(ranked.teams_2v2) == 2
+    assert ranked.teams_2v2[1].rating is None  # unplaced team
+    best = ranked.best_2v2
+    assert best is not None
+    assert (best.rating, best.tier, best.partner_name(7)) == (1650, "Platinum 1", "Ace")
+    assert ranked.teams_2v2[1].partner_name(7) == "Zed"
+
+
+def test_player_ranked_without_2v2_has_no_best_team() -> None:
+    ranked = PlayerRankedResponse.model_validate({"brawlhalla_id": 7, "name": "Solo"})
+    assert ranked.teams_2v2 == []
+    assert ranked.best_2v2 is None

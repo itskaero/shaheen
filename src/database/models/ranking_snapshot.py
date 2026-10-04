@@ -36,6 +36,12 @@ class RankingSnapshot(TimestampMixin, Base):
     # Nullable because rows captured before seasons were tracked genuinely
     # do not know; treat NULL as "some earlier season", never as current.
     season: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    # The player's best placed 2v2 team at capture time (ADR-105). NULL when
+    # they have no placed team this season.
+    rating_2v2: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    peak_rating_2v2: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tier_2v2: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    partner_2v2: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (

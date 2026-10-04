@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rankings — BRAWLISTAN</title>
-  <meta name="description" content="Shaheen clan and Pakistan Brawlhalla ranked leaderboards." />
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pakistan Brawlhalla Rankings — BRAWLISTAN</title>
+  <meta name="description" content="Pakistan's ranked Brawlhalla players: 1v1, 2v2, global standing and this week's biggest climbers, synced from the official Brawlhalla API." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://itskaero.github.io/shaheen/rankings.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="Pakistan Brawlhalla Rankings — BRAWLISTAN" />
+  <meta property="og:description" content="Who are the best Brawlhalla players in Pakistan?" />
+  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
 <body class="bl" data-page="rankings">
@@ -22,49 +28,59 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
+        <div class="bl-page-head">
+          <div>
+            <h1>Rankings</h1>
+            <p id="season-line">Pakistan's ranked Brawlhalla players, synced from the official Brawlhalla API every six hours.</p>
+          </div>
+          <div class="field">
+            <label for="season-select">Season</label>
+            <select id="season-select" class="select" disabled></select>
+          </div>
+        </div>
 
-  <div class="page-banner">
-    <div class="wrap">
-      <h1 class="page-title">Rankings</h1>
-      <p class="page-subtitle">Ranked by results. Not excuses. The clan's ladder, and Pakistan's. Click a player for their full profile.</p>
-    </div>
-  </div>
+        <div class="tabs" role="tablist" aria-label="Ranking boards">
+          <button class="tab" role="tab" id="tab-pakistan" aria-controls="board" data-tab="pakistan">Pakistan</button>
+          <button class="tab" role="tab" id="tab-global" aria-controls="board" data-tab="global">Global</button>
+          <button class="tab" role="tab" id="tab-1v1" aria-controls="board" data-tab="1v1">1v1</button>
+          <button class="tab" role="tab" id="tab-2v2" aria-controls="board" data-tab="2v2">2v2</button>
+          <button class="tab" role="tab" id="tab-power" aria-controls="board" data-tab="power">Power</button>
+          <button class="tab" role="tab" id="tab-rising" aria-controls="board" data-tab="rising">Rising</button>
+        </div>
 
-  <div class="wrap" style="padding-top: 0">
-    <section id="season-banner" class="season-banner" aria-label="Current season" hidden></section>
-    <div class="board-tabs" role="tablist" aria-label="Leaderboards">
-      <button type="button" role="tab" id="tab-clan" class="board-tab" aria-controls="panel-clan" aria-selected="true">
-        <img src="assets/img/logo-emblem.png" alt="" width="30" height="18" /> Shaheen Clan
-      </button>
-      <button type="button" role="tab" id="tab-pakistan" class="board-tab" aria-controls="panel-pakistan" aria-selected="false" tabindex="-1">
-        <span aria-hidden="true">🇵🇰</span> Pakistan
-      </button>
-    </div>
+        <form class="filters" id="filters" role="search" aria-label="Filter players">
+          <div class="field field-grow">
+            <label for="f-search">Player</label>
+            <input id="f-search" class="input" type="search" placeholder="Search by name" autocomplete="off" />
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters">Filters</button>
+          <div class="field">
+            <label for="f-region">Region</label>
+            <select id="f-region" class="select"><option value="">All</option></select>
+          </div>
+          <div class="field">
+            <label for="f-tier">Rank</label>
+            <select id="f-tier" class="select"><option value="">All</option></select>
+          </div>
+          <div class="field">
+            <label for="f-legend">Legend</label>
+            <select id="f-legend" class="select"><option value="">All</option></select>
+          </div>
+          <div class="field">
+            <label for="f-team">Team</label>
+            <select id="f-team" class="select"><option value="">All</option></select>
+          </div>
+          <label class="check"><input id="f-claimed" type="checkbox" /> Claimed only</label>
+        </form>
 
-    <section id="panel-clan" class="board-panel" role="tabpanel" aria-labelledby="tab-clan">
-      <p class="board-intro">Every Shaheen member who has linked a Brawlhalla account with <code>/link</code>, ranked by this season's rating.</p>
-      <div id="clan-content">
-        <p class="state-msg">Loading the clan ladder… (first load can take up to a minute)</p>
-      </div>
-    </section>
-
-    <section id="panel-pakistan" class="board-panel" role="tabpanel" aria-labelledby="tab-pakistan" hidden>
-      <p class="board-intro">Pakistan's ranked Brawlhalla players, clan or not. <span class="clan-tag">Shaheen</span> marks clan members; <span class="verified-tag">✓ Verified</span> players have claimed their spot in our Discord.</p>
-      <div class="claim-banner">
-        <p><strong>Your name here, marked Unclaimed?</strong> Join our Discord and run <code>/pakistan join</code> with your Brawlhalla ID to claim it. Only claimed players in the top 10 get the 🇵🇰 Pakistan Top 10 role, and climbers get called out every week.</p>
-        <a class="btn btn-primary" data-discord-invite href="join.html" target="_blank" rel="noopener">Join the Discord</a>
-      </div>
-      <div id="pakistan-content">
-        <p class="state-msg">Loading the Pakistan ladder…</p>
-      </div>
-    </section>
-  </div>
+        <section class="panel panel-pad" id="board" role="tabpanel" aria-labelledby="tab-pakistan" aria-live="polite">
+          <p class="unavailable">Loading…</p>
+        </section>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
   <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
-
 
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shell.js"></script>

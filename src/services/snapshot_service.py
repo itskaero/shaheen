@@ -168,6 +168,8 @@ class SnapshotService:
         stats = await self._brawlhalla.get_stats(player.brawlhalla_player_id)
         ranked = await self._brawlhalla.get_ranked(player.brawlhalla_player_id)
         captured_at = datetime.now(UTC)
+        team = ranked.best_2v2 if ranked else None
+        partner = team.partner_name(player.brawlhalla_player_id) if team else None
 
         await self._ranking.add(
             RankingSnapshot(
@@ -184,6 +186,10 @@ class SnapshotService:
                 # stored until ADR-081; backs the region_top_100 achievement.
                 region_rank=ranked.region_rank if ranked else None,
                 season=self._season,
+                rating_2v2=team.rating if team else None,
+                peak_rating_2v2=team.peak_rating if team else None,
+                tier_2v2=team.tier if team else None,
+                partner_2v2=partner[:64] if partner else None,
             )
         )
 

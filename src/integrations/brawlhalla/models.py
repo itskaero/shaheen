@@ -96,10 +96,34 @@ class RankedLegendStat(_RankedStanding):
     games: int = 0
 
 
+class RankedTeamStat(_RankedStanding):
+    """One 2v2 team in PlayerRankedResponse.teams_2v2 (docs/DECISIONS.md ADR-105).
+
+    `teamname` is Brawlhalla's "PlayerOne+PlayerTwo" label.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    brawlhalla_id_one: int
+    brawlhalla_id_two: int
+    teamname: str = ""
+    region: str | None = None
+    global_rank: int | None = None
+    wins: int = 0
+    games: int = 0
+
+    def partner_name(self, brawlhalla_id: int) -> str | None:
+        """The other player's name, from the "One+Two" team label."""
+        one, sep, two = self.teamname.partition("+")
+        if not sep:
+            return None
+        return two if brawlhalla_id == self.brawlhalla_id_one else one
+
+
 class PlayerRankedResponse(_RankedStanding):
     """GET /player/{id}/ranked — current 1v1 ranked standing. 404 if unranked."""
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     brawlhalla_id: int
     name: str
@@ -109,6 +133,14 @@ class PlayerRankedResponse(_RankedStanding):
     wins: int = 0
     games: int = 0
     legends: list[RankedLegendStat] = Field(default_factory=list)
+    # The API's key is "2v2", which isn't a Python identifier.
+    teams_2v2: list[RankedTeamStat] = Field(default_factory=list, alias="2v2")
+
+    @property
+    def best_2v2(self) -> RankedTeamStat | None:
+        """The player's highest-rated placed 2v2 team this season, if any."""
+        placed = [team for team in self.teams_2v2 if team.rating is not None]
+        return max(placed, key=lambda team: team.rating or 0, default=None)
 
     @model_validator(mode="after")
     def _unranked_positions_are_none(self) -> Self:

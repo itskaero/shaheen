@@ -4203,3 +4203,85 @@ page.
 Verified: full test suite (new API tests for rising, legend meta counting a player on both lists once,
 and the health body). Playwright with the API mocked at 1440px and 390px across home, join, rankings,
 clan, achievements, tournaments and 404: no horizontal overflow, no console errors.
+
+## ADR-105 — BRAWLISTAN stage 2: Rankings
+
+The Rankings page is the site's main page: "who are the best Brawlhalla players in Pakistan?". The brief
+asks for six boards: Pakistan, Global, 1v1, 2v2, Power, Rising.
+
+**One payload, four bracket tabs.** `GET /rankings/pakistan` (`services/rankings_service.py`) returns
+every Pakistan-board player with a reading in the season. Each row carries:
+- 1v1: rating, peak, tier, wins/games;
+- global and region rank;
+- best 2v2 team;
+- a 7-day rating trend inside the season;
+- most-played Legend;
+- team (SHAHEEN for linked clan members);
+- claim status.
+
+The page sorts and filters this client-side:
+- **Pakistan:** by 1v1 rating, with trend and main Legend.
+- **Global:** by Brawlhalla global rank, the honest answer to "where does Pakistan stand worldwide".
+  No extra API calls, and no thousands of foreign players.
+- **1v1:** win/loss detail.
+- **2v2:** best placed team.
+
+Unplaced players are in the payload (a 2v2-only player still belongs on the 2v2 tab), and each tab drops
+rows lacking the number it ranks by. The whole board is one cached snapshot file (`rankings.json`), so
+the site never calls Brawlhalla.
+
+**2v2 is real data, not inferred.** `PlayerRankedResponse` now parses the API's `"2v2"` team list
+(`RankedTeamStat`, with the ADR-101 unplaced normalisation). Each snapshot stores the best placed team's
+rating, peak, tier and partner name (from Brawlhalla's "One+Two" label): migration 0016, four nullable
+columns.
+
+**Rising** reads `/pakistan/rising` (ADR-104).
+
+**Power has no source.** Power rankings come from tournament organisers, so the tab says so and shows
+"Data unavailable" instead of a fabricated list.
+
+**Filters** (all client-side): name search, region, rank (tier family, 2v2 tier on the 2v2 tab),
+main Legend, team (including "No team"), claimed only. On phones they fold behind a Filters button and
+the search stays visible. "Claimed only" stands in for the brief's "Verified" filter until staff
+verification exists (stage 4); a claim isn't a verification, so the two aren't conflated.
+
+**Season selector.** The payload lists every season with data. The current one comes from the snapshot
+file; older seasons load live. Labels read "Season 1 · Brawlhalla S42", or "Brawlhalla Season 41"
+before the Pakistan seasons began (ADR-102).
+
+**Table, not cards.** A dense glass table with rank chips (subtle gold/silver/bronze for the top three),
+Claimed/Unclaimed pills, a SHAHEEN team pill, ▲/▼ trend, and a Legend portrait.
+- On phones the secondary columns hide.
+- Tabs are real `role="tab"` buttons with arrow-key navigation.
+- The tab lives in the URL hash, so old `rankings.html#pakistan` links still land correctly.
+- An unclaimed spot carries the claim nudge from ADR-100.
+
+**The clan ladder moves to the Founding Team page.** The old "Shaheen Clan" tab, built from `/roster`,
+now renders as the roster on `clan.html` until stage 7 builds team pages.
+
+Files:
+- new: `src/services/rankings_service.py`, `src/api/routers/rankings.py`,
+  `alembic/versions/0016_ranking_2v2.py`, `tests/test_rankings_service.py`;
+- changed: `src/integrations/brawlhalla/models.py`, `src/database/models/ranking_snapshot.py`,
+  `src/database/repositories/ranking_snapshot_repository.py` (`list_seasons`),
+  `src/services/snapshot_service.py`, `src/api/{schemas,app}.py`, `web/rankings.html`,
+  `web/assets/js/pages/{rankings,clan}.js`, `web/clan.html`, `web/assets/css/brawlistan.css`,
+  `web/assets/js/api.js`, `.github/workflows/snapshot.yml`.
+
+Verified:
+- Tests:
+  - the model parses 2v2 and picks the best placed team;
+  - snapshots store it, or nothing when there's no team;
+  - the board is season-scoped, sorted, includes unplaced rows, and serves older seasons on request;
+  - the 7-day trend is within the season, with no trend from a single reading;
+  - team, claim and main Legend;
+  - the API shape exposes no Discord identity, and an invalid season returns 422;
+  - Alembic round-trip.
+- Playwright with mocked data:
+  - each filter narrows correctly;
+  - every tab renders its rows and ordering;
+  - arrow keys move between tabs and `#2v2` deep-links;
+  - bracket filters hide on Rising and Power;
+  - API down with no snapshot shows "Data unavailable";
+  - the mobile filter fold works;
+  - no overflow and no console errors at 1440px and 390px.
