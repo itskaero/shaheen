@@ -9,16 +9,17 @@ into core.exceptions so cogs never see raw external errors
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.exceptions import IntegrationError, NotFoundError
+from core.exceptions import ConflictError, IntegrationError, NotFoundError
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.shaheen_member import ShaheenMember
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
+from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError, BrawlhallaNotFound
 from integrations.brawlhalla.models import SearchResult
@@ -43,6 +44,7 @@ class LinkService:
         self._members = ShaheenMemberRepository(session)
         self._players = BrawlhallaPlayerRepository(session)
         self._links = MemberPlayerLinkRepository(session)
+        self._board = PakistanBoardRepository(session)
         self._achievement_service = AchievementService(session)
 
     async def resolve_candidate(self, identifier: str) -> SearchResult:
@@ -102,9 +104,9 @@ class LinkService:
             player_name=candidate.name,
             region=region,
         )
-        await self._links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
-
-        first_link_awarded = await self._award_first_link(member, player)
+        first_link_awarded = await self.attach(
+            guild_id=guild_id, discord_id=discord_id, member=member, player=player
+        )
 
         return LinkOutcome(
             member=member,
@@ -112,6 +114,55 @@ class LinkService:
             previous_player_name=previous_player_name,
             first_link_awarded=first_link_awarded,
         )
+
+    async def attach(
+        self,
+        *,
+        guild_id: int,
+        discord_id: int,
+        member: ShaheenMember,
+        player: BrawlhallaPlayer,
+    ) -> bool:
+        """Make `player` the member's active link — the one place both /link
+        and the website claim (ADR-107) go through.
+
+        Refuses an account another member already holds, or a Pakistan-board
+        entry claimed by someone else: linking is never a takeover. Returns
+        whether the first-link achievement was awarded.
+        """
+        holder = await self._links.get_active_by_player(player.id)
+        if holder is not None and holder.shaheen_member_id != member.id:
+            raise ConflictError(
+                f"**{player.player_name}** is already linked to another member. "
+                "If it's yours, ask staff to sort it out."
+            )
+        board_entry = await self._board.get_active(guild_id, player.id)
+        if board_entry is not None and board_entry.owner_discord_id not in (None, discord_id):
+            raise ConflictError(
+                f"**{player.player_name}** is already claimed on the Pakistan board by "
+                "another member. If it's yours, ask staff."
+            )
+        if holder is None:
+            await self._links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
+        if board_entry is not None and board_entry.owner_discord_id is None:
+            board_entry.owner_discord_id = discord_id  # linking claims the board spot too
+        return await self._award_first_link(member, player)
+
+    async def set_verified(
+        self, *, guild_id: int, discord_id: int, staff_discord_id: int, verified: bool
+    ) -> BrawlhallaPlayer | None:
+        """Staff confirm (or withdraw) that a member owns their linked account
+        (/verify, ADR-107). Returns the linked player, or None if not linked.
+        """
+        active = await self.get_active_link(guild_id=guild_id, discord_id=discord_id)
+        if active is None:
+            return None
+        member, player = active
+        link = await self._links.get_active(member.id)
+        assert link is not None  # get_active_link just found it
+        link.verified_at = datetime.now(UTC) if verified else None
+        link.verified_by_discord_id = staff_discord_id if verified else None
+        return player
 
     async def _award_first_link(self, member: ShaheenMember, player: BrawlhallaPlayer) -> bool:
         awarded = await self._achievement_service.award(

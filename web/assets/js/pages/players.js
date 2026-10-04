@@ -33,7 +33,8 @@
 
   function rolePill(p) {
     if (p.team) return `<span class="pill pill-team card-pill">${escapeHtml(p.team)}</span>`;
-    if (p.is_claimed) return '<span class="pill pill-verified card-pill">✓ Claimed</span>';
+    if (p.is_verified) return '<span class="pill pill-verified card-pill">✓ Verified</span>';
+    if (p.is_claimed) return '<span class="pill pill-muted card-pill">Claimed</span>';
     return '<span class="pill pill-muted card-pill">Unclaimed</span>';
   }
 

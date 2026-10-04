@@ -44,6 +44,39 @@ def build_link_success_embed(*, player_name: str, promoted: bool) -> discord.Emb
     return discord.Embed(title="✅ Brawlhalla Linked", description=description, colour=FOREST_GREEN)
 
 
+def build_link_code_embed(*, code: str, expires_at: datetime, site_url: str) -> discord.Embed:
+    """The one-time website code from /link with no arguments (ADR-107)."""
+    embed = discord.Embed(
+        title="🔗 Your BRAWLISTAN link code",
+        description=(
+            f"# `{code}`\n"
+            f"Expires <t:{int(expires_at.timestamp())}:R>. Only this code works; asking for "
+            "another replaces it.\n\n"
+            f"**1.** Find yourself on [{site_url.removeprefix('https://')}/players]"
+            f"({site_url}/players.html).\n"
+            "**2.** Open your profile and choose **Claim this profile**.\n"
+            "**3.** Enter the code.\n\n"
+            "Not on the site yet? Run `/pakistan join` with your Brawlhalla ID first, or use "
+            "`/link <your Brawlhalla ID>` to link straight from Discord."
+        ),
+        colour=FOREST_GREEN,
+    )
+    embed.set_footer(text="Never share this code. Staff will never ask for it.")
+    return embed
+
+
+def build_verify_embed(*, player_name: str, verified: bool) -> discord.Embed:
+    return discord.Embed(
+        title="✅ Verified" if verified else "Verification removed",
+        description=(
+            f"**{player_name}** is now verified on BRAWLISTAN."
+            if verified
+            else f"**{player_name}** is no longer marked verified."
+        ),
+        colour=FOREST_GREEN if verified else GOLD,
+    )
+
+
 def build_unlink_confirm_embed(player_name: str) -> discord.Embed:
     return discord.Embed(
         title="Confirm Unlink",

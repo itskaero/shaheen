@@ -13,18 +13,25 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.constants import FULL_MEMBER_ROLES, ROLE_ALLY, ROLE_TRIAL
 from bot.content.profile_embeds import (
+    build_link_code_embed,
     build_link_preview_embed,
     build_link_success_embed,
     build_unlink_confirm_embed,
     build_unlink_success_embed,
+    build_verify_embed,
 )
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
+from database.models.provisioned_resource import ResourceType
+from database.repositories.audit_log_repository import AuditLogRepository
+from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.session import session_scope
 from integrations.brawlhalla.errors import BrawlhallaAPIError
+from services.link_code_service import LinkCodeService
 from services.link_service import LinkService
 from services.snapshot_service import SnapshotRunResult, SnapshotService
 
@@ -36,15 +43,34 @@ class LinkCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="link", description="Link your Discord account to a Brawlhalla player"
+        name="link", description="Link your Discord account to your Brawlhalla profile"
     )
-    @app_commands.describe(identifier="Your Brawlhalla player ID or Steam64 ID")
-    async def link(self, interaction: discord.Interaction, identifier: str) -> None:
+    @app_commands.describe(
+        identifier="Your Brawlhalla or Steam64 ID — or leave empty for a website link code"
+    )
+    async def link(self, interaction: discord.Interaction, identifier: str | None = None) -> None:
         member = interaction.user
         if not isinstance(member, discord.Member):
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the server.")
 
         await interaction.response.defer(ephemeral=True)
+
+        if identifier is None:
+            # Website claim flow (ADR-107): a one-time code to enter on the
+            # player's profile page.
+            async with session_scope(self.bot.session_factory) as session:
+                issued = await LinkCodeService(session).issue(
+                    guild_id=member.guild.id, discord_id=member.id
+                )
+            await interaction.followup.send(
+                embed=build_link_code_embed(
+                    code=issued.code,
+                    expires_at=issued.expires_at,
+                    site_url=self.bot.settings.site_url,
+                ),
+                ephemeral=True,
+            )
+            return
 
         async with session_scope(self.bot.session_factory) as session:
             link_service = LinkService(session, self.bot.brawlhalla)
@@ -132,6 +158,56 @@ class LinkCog(commands.Cog):
             await link_service.unlink(guild_id=member.guild.id, discord_id=member.id)
 
         await message.edit(content=None, embed=build_unlink_success_embed(player_name), view=None)
+
+    @app_commands.command(
+        name="verify",
+        description="Confirm a member owns their linked Brawlhalla account (staff)",
+    )
+    @app_commands.describe(
+        user="The member to verify", revoke="Withdraw verification instead of granting it"
+    )
+    @require_staff_authorized()
+    async def verify(
+        self, interaction: discord.Interaction, user: discord.Member, revoke: bool = False
+    ) -> None:
+        """Staff-only (ADR-107): a link or website claim proves Discord
+        ownership, not Brawlhalla ownership. Staff check that separately
+        (e.g. a screenshot of the in-game profile) and mark it here.
+        """
+        await interaction.response.defer(ephemeral=True)
+        guild = user.guild
+        async with session_scope(self.bot.session_factory) as session:
+            player = await LinkService(session, self.bot.brawlhalla).set_verified(
+                guild_id=guild.id,
+                discord_id=user.id,
+                staff_discord_id=interaction.user.id,
+                verified=not revoke,
+            )
+            if player is None:
+                raise ShaheenError(f"{user.display_name} hasn't linked a Brawlhalla account yet.")
+            await AuditLogRepository(session).add(
+                guild_id=guild.id,
+                action="link.unverify" if revoke else "link.verify",
+                source="discord",
+                actor_discord_id=interaction.user.id,
+                subject=f"{player.player_name} ({player.brawlhalla_player_id})",
+            )
+            role_resource = await ProvisionedResourceRepository(session).get(
+                guild_id=guild.id, resource_type=ResourceType.ROLE, logical_key="role:verified"
+            )
+        role = guild.get_role(role_resource.discord_id) if role_resource else None
+        if role is not None:
+            try:
+                if revoke:
+                    await user.remove_roles(role, reason="BRAWLISTAN /verify revoke")
+                else:
+                    await user.add_roles(role, reason="BRAWLISTAN /verify")
+            except discord.Forbidden:
+                logger.warning("Missing permission to change the Verified role on %s", user.id)
+        await interaction.followup.send(
+            embed=build_verify_embed(player_name=player.player_name, verified=not revoke),
+            ephemeral=True,
+        )
 
     async def _maybe_promote(self, member: discord.Member) -> bool:
         """Promote ALLY -> TRIAL SHAHEEN on link (docs/DECISIONS.md ADR-090,

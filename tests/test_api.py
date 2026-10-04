@@ -692,3 +692,44 @@ async def test_players_directory_and_seasons_endpoints(
     assert "discord_id" not in entry
     assert client.get("/players/10/seasons").status_code == 200
     assert client.get("/players/99999/seasons").status_code == 404
+
+
+async def test_link_claim_endpoint(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """ADR-107: claim with a /link code; bad codes are 400, conflicts 409."""
+    from api.routers.link import claim_limiter
+    from services.link_code_service import LinkCodeService
+
+    claim_limiter.reset()
+    async with session_factory() as session:
+        await BrawlhallaPlayerRepository(session).upsert(
+            brawlhalla_player_id=77, player_name="Outsider", region=None
+        )
+        issued = await LinkCodeService(session).issue(guild_id=GUILD_ID, discord_id=555)
+        await session.commit()
+
+    bad = client.post("/link/claim", json={"brawlhalla_id": 77, "code": "ABCD-EFGH"})
+    assert bad.status_code == 400
+    ok = client.post("/link/claim", json={"brawlhalla_id": 77, "code": issued.code})
+    assert ok.status_code == 200 and ok.json() == {"status": "linked", "player_name": "Outsider"}
+    again = client.post("/link/claim", json={"brawlhalla_id": 77, "code": issued.code})
+    assert again.status_code == 400  # single use
+    assert client.post("/link/claim", json={"brawlhalla_id": 77, "code": ""}).status_code == 422
+
+    # the directory now shows the claim, still without any Discord id
+    (entry,) = client.get("/players").json()
+    assert entry["is_claimed"] is True and "555" not in str(entry)
+
+
+def test_link_claim_is_rate_limited(client: TestClient) -> None:
+    from api.routers.link import claim_limiter
+
+    claim_limiter.reset()
+    statuses = [
+        client.post("/link/claim", json={"brawlhalla_id": 1, "code": "ABCD-EFGH"}).status_code
+        for _ in range(11)
+    ]
+    assert statuses[:10] == [400] * 10
+    assert statuses[10] == 429
+    claim_limiter.reset()

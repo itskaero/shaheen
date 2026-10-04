@@ -4371,3 +4371,83 @@ Verified:
     stays on the page;
   - the 404 fallback redirects a missing player page;
   - no overflow and no console errors at 1440px and 390px.
+
+## ADR-107 — BRAWLISTAN stage 4: account linking and verification
+
+The brief asks for `/link` to hand out a short one-time code that the website accepts, linking Discord
+ID, Brawlhalla account and profile, with expiry and protection against duplicates, takeover and reuse.
+It also asks for stored verification state and an audit trail.
+
+**Two ways in, one rule.**
+- **`/link` with no identifier** issues a code. The member enters it on their profile page ("Claim this
+  profile", `POST /link/claim`).
+- **`/link <ID>`** still links straight from Discord.
+
+Both go through `LinkService.attach`, which:
+- refuses an account another member already holds, or a Pakistan-board entry someone else claimed
+  (`ConflictError`): linking is never a takeover;
+- claims an unclaimed board spot for the new holder;
+- awards the first-link achievement.
+
+**A real gap closed.** Nothing used to stop two members linking the same Brawlhalla account: the
+database only allowed one active link per *member*. Migration 0017 adds the partial unique index
+`uq_one_active_link_per_player`. It first closes all but the earliest active link per account, so a
+production duplicate (if any) is resolved without deleting history.
+
+**Codes** (`services/link_code_service.py`, table `link_codes`):
+- 8 characters from an alphabet without 0/O/1/I/L, shown as `XXXX-XXXX`, and forgiving of
+  case, spaces and the dash when typed;
+- stored only as SHA-256;
+- single use, expire after 15 minutes, and scoped to the guild;
+- a new code expires the pending one;
+- at most 5 issued per member per hour.
+
+Malformed, unknown, used, expired and wrong-guild codes all get one identical message, so the response
+never tells a guesser which part was right. `POST /link/claim` is rate-limited per client (10 per
+10 minutes, an in-memory sliding window that fits the single Render instance; `api/rate_limit.py`).
+With ~10^11 codes alive for 15 minutes, guessing is pointless. CORS now allows POST; no cookies or
+credentials exist, so the code itself is the credential.
+
+**What a claim proves, and doesn't.** Entering a code proves control of the Discord account that asked
+for it. It can't prove ownership of the Brawlhalla account, and the site doesn't pretend otherwise:
+- **Claimed:** someone linked it.
+- **✓ Verified:** staff confirmed the owner with `/verify <user> [revoke]`, which sets
+  `member_player_links.verified_at`/`verified_by_discord_id`. It grants the Verified role once
+  `/setup` has provisioned it (stage 5), and is audit-logged.
+
+The old `/verify`, which granted the clan-era Ally role, is retired with the clan roles; its helpers
+leave with those roles in stage 5. `is_verified` (a boolean, never an id, ADR-040) is on the rankings
+and players payloads. The Rankings page gains the brief's **Verified** filter next to **Claimed**.
+Profiles, rankings and player cards show Verified / Claimed / Unclaimed.
+
+**Audit log** (`audit_log`, append-only): `link.claim` (website), `link.verify` / `link.unverify`
+(Discord), with actor, subject and source. Reports use it next (stage 10).
+
+`SITE_URL` (brief's env list) is now a setting, used for the link-code message.
+
+Files:
+- new: `src/database/models/{link_code,audit_log}.py`,
+  `src/database/repositories/{link_code,audit_log}_repository.py`,
+  `src/services/link_code_service.py`, `src/api/{rate_limit.py,routers/link.py}`,
+  `alembic/versions/0017_link_codes_audit_verify.py`, `tests/test_link_code_service.py`;
+- changed: `src/services/link_service.py` (`attach`, `set_verified`), `src/bot/cogs/{link,moderation}.py`,
+  `src/bot/content/{profile,help}_embeds.py`, `src/core/{config,exceptions}.py`,
+  `src/database/models/member_player_link.py`,
+  `src/database/repositories/member_player_link_repository.py`,
+  `src/services/{rankings,players}_service.py`, `src/api/{app,schemas,routers/rankings,routers/players}.py`,
+  `web/assets/js/{api,pages/player,pages/rankings,pages/players}.js`, `web/rankings.html`,
+  `docs/COMMANDS.md`.
+
+Verified:
+- Tests:
+  - normalisation rejects ambiguous characters; issuing stores only a hash;
+  - a claim links, audits, and is single use;
+  - expired, unknown, malformed and wrong-guild codes get the same rejection;
+  - a new code replaces the old one; issuing is rate-limited; an unknown player is a 404;
+  - no takeover of another member's link or board claim, through the website or `/link`;
+  - an unclaimed board spot is claimed; verification can be set and withdrawn;
+  - the API returns 400/200/400 for bad, good and reused codes, 422 for an empty code, and 429 on
+    the 11th attempt; no Discord id leaks.
+- Alembic round-trip.
+- Playwright: the claim form's format check, server rejection and success state; no form on a
+  claimed profile; the Verified filter and pill on Rankings.

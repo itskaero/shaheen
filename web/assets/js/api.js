@@ -36,6 +36,32 @@ const ShaheenAPI = (() => {
     return response.json();
   }
 
+  // The few write calls (ADR-107) need the status and the API's message, so
+  // this resolves with both rather than throwing.
+  async function post(path, body) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        /* empty or non-JSON body */
+      }
+      return { ok: response.ok, status: response.status, data };
+    } catch (err) {
+      return { ok: false, status: 0, data: { detail: "Couldn't reach the server. Try again in a minute." } };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   // Cold-start cover (docs/DECISIONS.md ADR-087). The API runs on Render's
   // free tier, which sleeps after 15 minutes idle and can take 30-60s to
   // wake — so a first visitor used to sit on "Loading…" for a minute on
@@ -86,6 +112,7 @@ const ShaheenAPI = (() => {
     getPakistanLeaderboard: (limit = 150) => get(`/pakistan/leaderboard?limit=${limit}`),
     getAchievements: () => get("/achievements"),
     getPlayers: () => get("/players"),
+    claimProfile: (brawlhallaId, code) => post("/link/claim", { brawlhalla_id: Number(brawlhallaId), code }),
     getPlayerSeasons: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}/seasons`),
     getRankings: (season = null) => get(season ? `/rankings/pakistan?season=${encodeURIComponent(season)}` : "/rankings/pakistan"),
     getPakistanRising: (days = 7, limit = 10) => get(`/pakistan/rising?days=${days}&limit=${limit}`),

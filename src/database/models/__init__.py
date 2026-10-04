@@ -2,6 +2,7 @@
 
 from database.models.achievement import Achievement
 from database.models.application import Application, ApplicationStatus
+from database.models.audit_log import AuditLogEntry
 from database.models.base import Base
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
@@ -10,6 +11,7 @@ from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
 from database.models.guild_snapshot import GuildSnapshot
 from database.models.legend_snapshot import LegendSnapshot
+from database.models.link_code import LinkCode
 from database.models.match import Match, MatchKind, MatchParticipant, MatchSide, MatchStatus
 from database.models.member_achievement import MemberAchievement
 from database.models.member_player_link import MemberPlayerLink
@@ -32,6 +34,7 @@ __all__ = [
     "Achievement",
     "Application",
     "ApplicationStatus",
+    "AuditLogEntry",
     "Base",
     "BrawlhallaPlayer",
     "Challenge",
@@ -41,6 +44,7 @@ __all__ = [
     "GuildSettings",
     "GuildSnapshot",
     "LegendSnapshot",
+    "LinkCode",
     "Match",
     "MatchKind",
     "MatchParticipant",

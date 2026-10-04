@@ -36,3 +36,20 @@ class IntegrationError(ShaheenError):
     with a user-safe message — cogs never see the raw external error
     (docs/COMMANDS.md).
     """
+
+
+class ConflictError(ShaheenError):
+    """Raised when an action would take something already held by someone
+    else — e.g. linking a Brawlhalla account another member holds (ADR-107).
+    """
+
+
+class InvalidCodeError(ShaheenError):
+    """Raised for a one-time link code that is malformed, unknown, used or
+    expired (ADR-107). Deliberately one message for all four, so the
+    response never tells a guesser which part was right.
+    """
+
+
+class RateLimitedError(ShaheenError):
+    """Raised when a caller is doing something too often (ADR-107)."""

@@ -72,3 +72,13 @@ class MemberPlayerLinkRepository:
         )
         result = await self._session.execute(stmt)
         return [(member, player, discord_id) for member, player, discord_id in result]
+
+    async def verified_player_ids(self) -> set[int]:
+        """Internal BrawlhallaPlayer ids whose active link staff have verified
+        (/verify, ADR-107).
+        """
+        stmt = select(MemberPlayerLink.brawlhalla_player_id).where(
+            MemberPlayerLink.unlinked_at.is_(None),
+            MemberPlayerLink.verified_at.is_not(None),
+        )
+        return set((await self._session.execute(stmt)).scalars().all())

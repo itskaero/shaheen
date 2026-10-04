@@ -130,6 +130,57 @@
     return "No change this week";
   }
 
+  // ---------- claim (ADR-107) ----------
+  function claimedHtml(entry) {
+    return `<p class="muted" style="margin:0">${
+      entry.is_verified
+        ? "Claimed and <strong>verified</strong>: staff confirmed this Brawlhalla account belongs to the member who claimed it."
+        : "Claimed by a member of the BRAWLISTAN Discord. Staff haven't verified the account owner yet."
+    } Their Discord account stays private.</p>`;
+  }
+
+  function claimFormHtml() {
+    return `<p class="muted" style="margin:0 0 12px">Is this you? Run <code>/link</code> in the BRAWLISTAN Discord (with no ID) to get a one-time code, then enter it here.</p>
+      <form id="claim-form" class="filters" style="margin:0" novalidate>
+        <div class="field">
+          <label for="claim-code">Link code</label>
+          <input id="claim-code" class="input" name="code" inputmode="text" autocomplete="one-time-code"
+            placeholder="XXXX-XXXX" maxlength="9" pattern="[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}" required />
+        </div>
+        <button type="submit" class="btn btn-brand btn-sm" style="height:36px">Claim this profile</button>
+        <a class="btn btn-ghost btn-sm" style="height:36px" data-discord-invite href="${typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html"}" target="_blank" rel="noopener">Open Discord</a>
+      </form>
+      <p id="claim-result" role="status" aria-live="polite" class="muted" style="margin:10px 0 0;min-height:1.4em"></p>`;
+  }
+
+  function wireClaimForm(profile) {
+    const form = document.getElementById("claim-form");
+    if (!form) return;
+    const input = document.getElementById("claim-code");
+    const result = document.getElementById("claim-result");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const code = input.value.trim();
+      if (!/^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$/.test(code)) {
+        result.textContent = "Codes look like ABCD-EFGH. Run /link in the Discord to get one.";
+        input.focus();
+        return;
+      }
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      result.textContent = "Checking…";
+      const response = await ShaheenAPI.claimProfile(profile.brawlhalla_id, code);
+      button.disabled = false;
+      if (response.ok) {
+        form.remove();
+        result.innerHTML = `<strong class="trend-up">Linked.</strong> ${escapeHtml(response.data.player_name)} is now yours. Staff can verify it next; the site updates within a few hours.`;
+        return;
+      }
+      const detail = response.data && typeof response.data.detail === "string" ? response.data.detail : "That didn't work. Try again.";
+      result.textContent = detail;
+    });
+  }
+
   // ---------- compare ----------
   function compareHtml(me, others) {
     const options = others
@@ -197,9 +248,11 @@
     document.title = `${profile.player_name} — Pakistan Brawlhalla Ranking | BRAWLISTAN`;
 
     const country = entry.country ? `${entry.country === "PK" ? "🇵🇰 " : ""}${escapeHtml(COUNTRIES[entry.country] || entry.country)}` : "Country not set";
-    const claimText = entry.is_claimed
-      ? '<span class="pill pill-verified" title="Linked to a member of the BRAWLISTAN Discord">✓ Claimed</span>'
-      : '<span class="pill pill-muted">Unclaimed</span>';
+    const claimText = entry.is_verified
+      ? '<span class="pill pill-verified" title="Staff confirmed this account\'s owner">✓ Verified</span>'
+      : entry.is_claimed
+        ? '<span class="pill pill-team" title="Linked to a member of the BRAWLISTAN Discord">Claimed</span>'
+        : '<span class="pill pill-muted">Unclaimed</span>';
     const s = profile.pakistan_season;
 
     el.innerHTML = `
@@ -262,13 +315,11 @@
         </section>
         <section class="panel panel-pad span-12" aria-labelledby="h-discord">
           <div class="section-head"><h2 id="h-discord">Discord</h2></div>
-          <p class="muted" style="margin:0">${
-            entry.is_claimed
-              ? "This profile is claimed by a member of the BRAWLISTAN Discord. Their Discord account stays private."
-              : "Nobody has claimed this profile yet. If it's you, join the Discord and run <code>/pakistan join</code> with this Brawlhalla ID."
-          }</p>
+          ${entry.is_claimed ? claimedHtml(entry) : claimFormHtml()}
         </section>
       </div>`;
+
+    wireClaimForm(profile);
 
     if (history && history.length) {
       drawSparkline(document.getElementById("history-chart"), [...history].reverse());

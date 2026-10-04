@@ -53,6 +53,7 @@ class DirectoryEntry:
     country: str | None
     team: str | None
     is_claimed: bool
+    is_verified: bool
     on_pakistan_board: bool
     main_legend: str | None
 
@@ -86,6 +87,7 @@ class PlayersService:
             for _m, player, _d in await self._links.list_active_for_guild(guild_id)
         }
         players = {**{pid: p for pid, (_e, p) in board.items()}, **linked}
+        verified = await self._links.verified_player_ids()
 
         entries: list[DirectoryEntry] = []
         for pid, player in players.items():
@@ -106,6 +108,7 @@ class PlayersService:
                     # join or by /link (ADR-100).
                     is_claimed=pid in linked
                     or (board_entry is not None and board_entry[0].owner_discord_id is not None),
+                    is_verified=pid in verified,
                     on_pakistan_board=board_entry is not None,
                     main_legend=main.legend_name_key if main and main.games > 0 else None,
                 )

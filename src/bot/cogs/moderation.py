@@ -25,9 +25,7 @@ from discord.utils import format_dt
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import ROLE_ALLY
 from bot.content.moderation_embeds import (
-    build_already_verified_embed,
     build_clearwarnings_log_embed,
     build_lock_log_embed,
     build_mod_confirm_embed,
@@ -38,13 +36,10 @@ from bot.content.moderation_embeds import (
     build_unban_log_embed,
     build_unlock_log_embed,
     build_untimeout_log_embed,
-    build_verify_dm_embed,
-    build_verify_success_embed,
     build_warn_confirmation_embed,
     build_warn_dm_embed,
     build_warnings_embed,
 )
-from bot.membership import grant_member_access, is_already_verified
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
 from database.repositories.warning_repository import WarningRepository
@@ -75,47 +70,6 @@ class ModerationCog(commands.Cog):
             await channel.send(embed=embed)
         except discord.Forbidden:
             logger.warning("Missing permission to post in #mod-log")
-
-    # --- /verify ---------------------------------------------------------------
-
-    @app_commands.command(
-        name="verify",
-        description="Grant general community access (Ally) — not clan membership (staff only)",
-    )
-    @app_commands.describe(user="Who to verify")
-    @require_staff_authorized()
-    async def verify(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        moderator = _require_member(interaction)
-        await interaction.response.defer(ephemeral=True)
-
-        # Community access only — distinct from an approved /apply, which
-        # grants clan roster membership (Trial Shaheen) directly, not Ally
-        # (docs/DECISIONS.md ADR-092).
-        if is_already_verified(user):
-            await interaction.followup.send(
-                embed=build_already_verified_embed(target=user), ephemeral=True
-            )
-            return
-
-        guild = moderator.guild
-        await grant_member_access(user, reason=f"Shaheen /verify by {moderator}")
-
-        with contextlib.suppress(discord.Forbidden):
-            # Best-effort — DMs closed doesn't block verification.
-            await user.send(embed=build_verify_dm_embed(guild_name=guild.name))
-
-        await self._log(
-            guild,
-            build_mod_log_embed(
-                action="Member Verified",
-                target=user,
-                moderator=moderator,
-                detail=f"Promoted to **{ROLE_ALLY.name}**.",
-            ),
-        )
-        await interaction.followup.send(
-            embed=build_verify_success_embed(target=user), ephemeral=True
-        )
 
     # --- /warn / /warnings / /clearwarnings --------------------------------
 
