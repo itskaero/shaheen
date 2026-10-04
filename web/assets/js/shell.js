@@ -219,7 +219,7 @@
     if (!el || !season) return;
     const badge = `assets/img/seasons/${encodeURIComponent(season.badge)}`;
     el.innerHTML = `
-      <picture><source srcset="${badge}.webp" type="image/webp" /><img src="${badge}.png" alt="" width="34" height="30" /></picture>
+      <picture><source srcset="${badge}.webp" type="image/webp" /><img src="${badge}.jpg" alt="" width="34" height="30" /></picture>
       <span><strong>Season ${season.number}</strong><span>${escapeHtml(season.name)}</span></span>`;
     el.hidden = false;
   }

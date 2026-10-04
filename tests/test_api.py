@@ -426,10 +426,10 @@ async def test_clan_endpoint_names_the_pakistan_season(
     assert {k: season[k] for k in ("number", "brawlhalla_season", "name", "badge")} == {
         "number": 1,
         "brawlhalla_season": 42,
-        "name": "Zarb-e-Shaheen",
+        "name": "Markhor",
         "badge": "01",
     }
-    assert season["name_urdu"] == "ضربِ شاہین"
+    assert season["name_urdu"] == "مارخور"
     assert season["starts_at"].startswith("2026-09-23")
     assert season["ends_at"].startswith("2026-12-23")
 
@@ -661,7 +661,7 @@ async def test_rankings_endpoint_shape_and_no_discord_identity(
 
     body = client.get("/rankings/pakistan").json()
     assert (body["season"], body["seasons"]) == (42, [42])
-    assert body["pakistan_season"]["name"] == "Zarb-e-Shaheen"
+    assert body["pakistan_season"]["name"] == "Markhor"
     (row,) = body["rows"]
     assert {k: row[k] for k in ("player_name", "country", "is_claimed", "global_rank")} == {
         "player_name": "Outsider",

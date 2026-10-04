@@ -105,7 +105,7 @@ async def test_season_history_summarises_each_season(session: AsyncSession) -> N
     ]
     assert (history[0].pakistan_season_number, history[0].pakistan_season_name) == (
         1,
-        "Zarb-e-Shaheen",
+        "Markhor",
     )
     assert history[1].pakistan_season_number is None
     assert await PlayersService(session).season_history(999) is None

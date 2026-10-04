@@ -1,7 +1,7 @@
 """Pakistan Season visuals for Discord (docs/DECISIONS.md ADR-102).
 
-The badges are cut from the owner's 13-badge sheet into
-src/assets/img/seasons/<badge>.png. Inside src/, so the Dockerfile's
+The cards are cut from the owner's BRAWLISTAN season sheet into
+src/assets/img/seasons/<badge>.jpg (ADR-108). Inside src/, so the Dockerfile's
 `COPY src/` ships them the same way it ships the other bot art (ADR-060).
 """
 
@@ -15,11 +15,11 @@ from bot.palette import GOLD
 from services.seasons import PakistanSeason, pakistan_season
 
 _SEASON_DIR = Path(__file__).resolve().parents[2] / "assets" / "img" / "seasons"
-_THUMBNAIL_NAME = "season.png"
+_THUMBNAIL_NAME = "season.jpg"
 
 
 def season_badge_path(season: PakistanSeason) -> Path:
-    return _SEASON_DIR / f"{season.badge}.png"
+    return _SEASON_DIR / f"{season.badge}.jpg"
 
 
 def attach_season_badge(embed: discord.Embed, brawlhalla_season: int | None) -> list[discord.File]:
@@ -48,9 +48,9 @@ def build_season_start_embed(season: PakistanSeason) -> tuple[discord.Embed, lis
         ),
         colour=GOLD,
     )
-    embed.set_footer(text="Shaheen Clan · a new season every 13 weeks")
+    embed.set_footer(text="BRAWLISTAN · a new season every 13 weeks")
     path = season_badge_path(season)
     if not path.is_file():
         return embed, []
-    embed.set_image(url="attachment://season-badge.png")
-    return embed, [discord.File(path, filename="season-badge.png")]
+    embed.set_image(url="attachment://season-card.jpg")
+    return embed, [discord.File(path, filename="season-card.jpg")]

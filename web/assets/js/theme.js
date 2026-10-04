@@ -145,7 +145,7 @@ function seasonBannerHtml(season) {
   return `
     <picture>
       <source srcset="${badge}.webp" type="image/webp" />
-      <img class="season-badge" src="${badge}.png" alt="Season of ${escapeHtml(season.name)} badge" width="152" height="136" />
+      <img class="season-badge" src="${badge}.jpg" alt="Season of ${escapeHtml(season.name)} card" width="152" height="136" />
     </picture>
     <div class="season-copy">
       <span class="season-kicker">Pakistan Season ${season.number}</span>

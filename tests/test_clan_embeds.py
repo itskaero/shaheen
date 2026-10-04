@@ -159,7 +159,7 @@ def test_leaderboard_embed_defaults_to_the_clan_board() -> None:
 def test_leaderboard_embed_names_the_pakistan_season() -> None:
     embed = build_leaderboard_embed([("Foo", "Gold", 1500)], season=42)
     assert embed.footer.text == (
-        "Pakistan Season 1 · Zarb-e-Shaheen · Brawlhalla S42 · 1 member(s) placed"
+        "Pakistan Season 1 · Markhor · Brawlhalla S42 · 1 member(s) placed"
     )
 
 

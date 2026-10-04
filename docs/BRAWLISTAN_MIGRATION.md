@@ -18,7 +18,7 @@ deployable) and updates the status column here.
 | Bot hosting | Stays on Fly.io: Render's free tier sleeps and would drop the Discord gateway connection (ADR-053). The API stays on Render. |
 | Public data | The existing `web/data/*.json` snapshots, written by `.github/workflows/snapshot.yml` from the API. Postgres stays the source of truth. |
 | Discord server | Full restructure to the brief's 7 roles and 12 channels. No rank roles. The bot never sets channel permissions. Old bot-created roles and channels are deleted behind a confirm step. |
-| Season order | Unchanged: Season 1 Zarb-e-Shaheen (Brawlhalla S42), Season 2 Sarfaroshi, … (ADR-102). |
+| Season order | The owner's BRAWLISTAN season cards (ADR-108): Season 1 Markhor (Brawlhalla S42), Season 2 Zarb-e-Shaheen, Season 3 Sarfaroshi, … (supersedes the ADR-102 order). |
 | Visual reference | The owner's DesignLab screenshots (sidebar app window over a landscape, glass panels, list/grid toggle, member cards, event timeline, mobile icon rail) and the BRAWLISTAN graffiti-falcon logo. |
 | `npm test / lint / build` | `pytest` / `ruff check` + `mypy` / the Pages deploy. There's no Node toolchain. |
 
