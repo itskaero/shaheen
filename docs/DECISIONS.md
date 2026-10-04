@@ -4094,3 +4094,30 @@ Verified:
   boundary second, with NULL left alone; Alembic round-trip.
 - Playwright at 1440px and 390px: the banner with a loaded badge and Urdu name, the clan tile, the
   player season line, no overflow, no console errors.
+
+## ADR-103 — SHAHEEN becomes BRAWLISTAN, Pakistan's Brawlhalla Network
+
+The owner is pivoting the project from a clan platform to a Pakistan-first Brawlhalla ranking and
+community network, **BRAWLISTAN**. The site's main question becomes "who are the best Brawlhalla players
+in Pakistan?". SHAHEEN stays as the Founding Team. The brief proposed a greenfield shape: Node/TypeScript
+bot, JSON files as the database, bot on Render. Asked directly, the owner chose a migration on the
+existing stack:
+
+- **Keep Python.** The discord.py bot (~35 commands, ~500 tests), FastAPI + Postgres and the
+  integration layer already cover what the brief's adapter, sync layer and repository abstraction ask
+  for. A Node rewrite would spend weeks reaching today's feature level.
+  - The bot stays on Fly.io: Render's free tier sleeps and drops the gateway connection (ADR-053).
+  - The API stays on Render; static JSON snapshots keep feeding GitHub Pages (ADR-089).
+- **Full Discord restructure.** The brief's 7 roles and 12 channels:
+  - no rank roles;
+  - roles created without permissions;
+  - the bot never writes channel permission overwrites;
+  - old bot-created roles and channels deleted behind a confirm, ledger-only.
+  - This retires clan-specific automation (rank roles, Pakistan Top 10 role, MVP rotation, Core Member,
+    self-assign roles, `/apply`). Each removal is listed in the migration doc.
+- **Seasons unchanged** (ADR-102): the brief's example order differed, but Season 1 = Zarb-e-Shaheen
+  matches the badge art and what Discord already announced.
+
+The work runs in stages (brand/shell, rankings, players, linking, Discord, seasons, teams, tournaments,
+legends/stats, reporting/PWA/SEO). Each ships deployable on its own. The checklist, the old → new map
+and every role/channel dependency are in `docs/BRAWLISTAN_MIGRATION.md`.
