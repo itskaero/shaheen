@@ -1,0 +1,66 @@
+{
+  "captured_at": "2026-10-04T21:20:07Z",
+  "source": "/legends/meta?limit=10",
+  "data": [
+    {
+      "legend_name_key": "koji",
+      "player_count": 2,
+      "total_games": 6022,
+      "win_rate": 58.8
+    },
+    {
+      "legend_name_key": "mordex",
+      "player_count": 3,
+      "total_games": 4484,
+      "win_rate": 61.6
+    },
+    {
+      "legend_name_key": "mirage",
+      "player_count": 3,
+      "total_games": 3892,
+      "win_rate": 58.1
+    },
+    {
+      "legend_name_key": "nix",
+      "player_count": 3,
+      "total_games": 2418,
+      "win_rate": 59.6
+    },
+    {
+      "legend_name_key": "wu shang",
+      "player_count": 3,
+      "total_games": 2382,
+      "win_rate": 63.7
+    },
+    {
+      "legend_name_key": "asuri",
+      "player_count": 2,
+      "total_games": 2224,
+      "win_rate": 62.5
+    },
+    {
+      "legend_name_key": "hattori",
+      "player_count": 3,
+      "total_games": 1884,
+      "win_rate": 61.1
+    },
+    {
+      "legend_name_key": "brynn",
+      "player_count": 3,
+      "total_games": 1794,
+      "win_rate": 64.7
+    },
+    {
+      "legend_name_key": "val",
+      "player_count": 2,
+      "total_games": 1137,
+      "win_rate": 62.3
+    },
+    {
+      "legend_name_key": "fait",
+      "player_count": 3,
+      "total_games": 1094,
+      "win_rate": 60.1
+    }
+  ]
+}
