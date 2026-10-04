@@ -2,16 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Player Profile — BRAWLISTAN</title>
-  <meta name="description" content="Shaheen clan member Brawlhalla profile, ranking, and achievements." />
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Player — Pakistan Brawlhalla Ranking | BRAWLISTAN</title>
+  <meta name="description" content="A Pakistani Brawlhalla player's ranking, rating history, legends, seasons and achievements on BRAWLISTAN." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://itskaero.github.io/shaheen/player.html" />
+  <meta property="og:type" content="profile" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="Player — Pakistan Brawlhalla Ranking | BRAWLISTAN" />
+  <meta property="og:description" content="Ranking, rating history, legends and achievements on BRAWLISTAN, Pakistan's Brawlhalla Network." />
+  <meta property="og:url" content="https://itskaero.github.io/shaheen/player.html" />
+  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Player — Pakistan Brawlhalla Ranking | BRAWLISTAN" />
+  <meta name="twitter:description" content="Ranking, rating history, legends and achievements on BRAWLISTAN, Pakistan's Brawlhalla Network." />
+  <meta name="twitter:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@600;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
 <body class="bl" data-page="players">
@@ -22,28 +32,12 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
-
-  <div class="page-banner">
-    <div class="wrap">
-      <h1 class="page-title">Player Profile</h1>
-      <p class="page-subtitle">No stats, no standing. Look up any Shaheen member by their Brawlhalla ID (find IDs on the <a href="rankings.html">rankings</a>) and prove it.</p>
-    </div>
-  </div>
-
-  <div class="wrap" style="padding-top: 0">
-    <form class="search-form" id="search-form">
-      <input type="number" min="1" id="player-id-input" placeholder="Brawlhalla ID, e.g. 12345678" required />
-      <button type="submit">Search</button>
-    </form>
-
-    <div id="player-content"></div>
-  </div>
+        <div id="profile" aria-live="polite"><p class="unavailable">Loading…</p></div>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
   <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
-
 
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shell.js"></script>

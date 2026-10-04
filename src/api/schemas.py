@@ -106,6 +106,32 @@ class RankingsBoardResponse(BaseModel):
     rows: list[RankingRowResponse]
 
 
+class PlayerDirectoryEntryResponse(BaseModel):
+    """One tracked player on the Players page (ADR-106). Brawlhalla identity only."""
+
+    brawlhalla_id: int
+    slug: str
+    player_name: str
+    country: str | None
+    team: str | None
+    is_claimed: bool
+    on_pakistan_board: bool
+    region: str | None
+    rating: int | None
+    peak_rating: int | None
+    tier: str | None
+    main_legend: str | None
+
+
+class SeasonSummaryResponse(BaseModel):
+    season: int
+    pakistan_season_number: int | None
+    pakistan_season_name: str | None
+    final_rating: int | None
+    peak_rating: int | None
+    readings: int
+
+
 class RisingPlayerResponse(BaseModel):
     """A climber on the Pakistan board over the last few days (ADR-104)."""
 
