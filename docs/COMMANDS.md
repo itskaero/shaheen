@@ -43,8 +43,18 @@ clan membership) can still apply.
 ### /application
 Check the status of your own application, including any staff note.
 
-### /link
-Associate a Discord user with a Brawlhalla player ID.
+### /link [identifier]
+Two ways to link (docs/DECISIONS.md ADR-107):
+- **`/link` with no identifier** gives you a one-time code (`XXXX-XXXX`, 15
+  minutes, single use; asking again replaces it). Open your profile on the
+  website, choose **Claim this profile** and enter it.
+- **`/link <Brawlhalla or Steam64 ID>`** links straight from Discord, as before.
+
+Either way, an account already linked to (or claimed on the Pakistan board by)
+another member is refused: linking is never a takeover. Linking proves you own
+the Discord account; staff `/verify` confirms you own the Brawlhalla account.
+
+The direct `/link <ID>` flow:
 Flow:
 1. request ID
 2. validate
@@ -223,15 +233,12 @@ All commands below require `require_staff_authorized()` (docs/PERMISSIONS.md)
 and log to `#mod-log` (docs/DECISIONS.md ADR-065). Destructive actions
 (`/clearwarnings`, `/kick`, `/ban`) go through `ConfirmView` first.
 
-### /verify <user>
-Manually grant general **community access** — promotes Guest to Ally,
-granting access to the gated categories (THE NEST, BRAWLHALLA, VOICE) hidden
-from everyone until then (docs/DECISIONS.md ADR-069). Not clan roster
-membership — that's what an approved `/apply` grants instead, promoting
-straight to Trial Shaheen (docs/DECISIONS.md ADR-092). Not destructive, no
-confirmation step. Idempotent: a no-op on a member who already holds any
-rank role above Guest. Best-effort DM to the member; logs to `#mod-log` like
-every other command in this section.
+### /verify <user> [revoke] *(staff)*
+Mark that a member really owns their linked Brawlhalla account (docs/DECISIONS.md
+ADR-107). Staff check it themselves (for example a screenshot of the in-game
+profile), then run this. It grants the Verified role once that role exists, and
+shows "✓ Verified" on the website. `revoke:true` withdraws it. Logged to the audit
+log. (Replaces the SHAHEEN-era `/verify`, which granted clan community access.)
 
 ### /warn <user> <reason>
 Record a warning against a member — best-effort DMs them, posts to

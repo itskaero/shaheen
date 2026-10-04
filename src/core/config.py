@@ -61,6 +61,8 @@ class Settings(BaseSettings):
     # dates drift from the 13-week rhythm — and unset it again afterwards,
     # or the season stops advancing.
     brawlhalla_season: int | None = Field(default=None, ge=1)
+    # The public website, for links the bot posts (ADR-107).
+    site_url: str = "https://itskaero.github.io/shaheen"
 
     @field_validator("database_url")
     @classmethod

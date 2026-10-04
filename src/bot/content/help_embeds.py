@@ -45,8 +45,12 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         commands=(
             CommandHelp("/apply", "Apply for the clan roster — approval makes you Trial Shaheen."),
             CommandHelp("/application", "Check the status of your application."),
-            CommandHelp("/link", "Link your Brawlhalla account (Steam64 or Brawlhalla ID)."),
+            CommandHelp(
+                "/link",
+                "Link your Brawlhalla account by ID, or get a code to claim your website profile.",
+            ),
             CommandHelp("/unlink", "Remove your active link."),
+            CommandHelp("/verify", "Confirm a member owns their linked account.", staff_only=True),
             CommandHelp("/profile", "Your one-look card: rank, stats, chat level, badges."),
             CommandHelp("/refresh", "Pull your latest stats now instead of waiting for the loop."),
         ),
@@ -116,7 +120,6 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="🛡️ Staff — Moderation",
         commands=(
             CommandHelp("/applications", "The queue of applications awaiting review.", True),
-            CommandHelp("/verify", "Grant general community access — not roster status.", True),
             CommandHelp("/warn", "Issue a warning.", True),
             CommandHelp("/warnings", "List a member's active warnings.", True),
             CommandHelp("/clearwarnings", "Clear a member's active warnings.", True),

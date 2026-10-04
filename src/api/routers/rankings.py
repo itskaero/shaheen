@@ -31,6 +31,7 @@ async def get_pakistan_rankings(
                 country=row.country,
                 team=row.team,
                 is_claimed=row.is_claimed,
+                is_verified=row.is_verified,
                 region=row.snapshot.region or row.player.region,
                 rating=row.snapshot.rating,
                 peak_rating=row.snapshot.peak_rating,

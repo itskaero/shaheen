@@ -20,6 +20,7 @@ from api.routers import (
     community,
     leaderboard,
     legends,
+    link,
     pakistan,
     players,
     rankings,
@@ -66,7 +67,10 @@ app.add_middleware(
     # no per-origin data to protect — allow any origin rather than
     # maintaining a frontend-hosting-URL allowlist (ADR-043).
     allow_origins=["*"],
-    allow_methods=["GET"],
+    # POST only for the code-gated write endpoints (/link/claim, ADR-107).
+    # No cookies or credentials are involved, so a permissive origin list
+    # doesn't open anything up: the one-time code is the credential.
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -77,6 +81,7 @@ app.include_router(roster.router)
 app.include_router(pakistan.router)
 app.include_router(legends.router)
 app.include_router(rankings.router)
+app.include_router(link.router)
 app.include_router(achievements.router)
 app.include_router(players.router)
 app.include_router(tournaments.router)

@@ -94,7 +94,7 @@ untouched by the restructure.
 | 1 | Brand, design system, app shell, home | done (ADR-104) |
 | 2 | Rankings | done (ADR-105) |
 | 3 | Players + profiles | done (ADR-106) |
-| 4 | Linking + verification | |
+| 4 | Linking + verification | done (ADR-107) |
 | 5 | Discord restructure + bot commands | |
 | 6 | Seasons page | |
 | 7 | Teams | |

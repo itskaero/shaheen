@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.models.base import Base, TimestampMixin
@@ -28,6 +28,15 @@ class MemberPlayerLink(TimestampMixin, Base):
             postgresql_where=_ACTIVE_LINK_ONLY,
             sqlite_where=_ACTIVE_LINK_ONLY,
         ),
+        # And at most one active link per Brawlhalla account, so nobody can
+        # link an account someone else already holds (ADR-107).
+        Index(
+            "uq_one_active_link_per_player",
+            "brawlhalla_player_id",
+            unique=True,
+            postgresql_where=_ACTIVE_LINK_ONLY,
+            sqlite_where=_ACTIVE_LINK_ONLY,
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -39,6 +48,10 @@ class MemberPlayerLink(TimestampMixin, Base):
     )
     linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     unlinked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Staff confirmed the member really owns this Brawlhalla account (/verify,
+    # ADR-107). A link or website claim alone proves nothing about that.
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_by_discord_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (

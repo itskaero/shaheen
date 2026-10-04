@@ -97,3 +97,18 @@ async def test_link_survives_region_lookup_failure(session: AsyncSession) -> Non
         guild_id=GUILD_ID, discord_id=DISCORD_ID, joined_at=None, candidate=candidate
     )
     assert outcome.player.region is None
+
+
+async def test_link_refuses_an_account_another_member_holds(session: AsyncSession) -> None:
+    """ADR-107: /link can't take over someone else's linked account."""
+    from core.exceptions import ConflictError
+
+    service = LinkService(session, _FakeBrawlhalla())  # type: ignore[arg-type]
+    candidate = SearchResult(brawlhalla_id=42, name="Foo")
+    await service.link(guild_id=1, discord_id=100, joined_at=None, candidate=candidate)
+
+    with pytest.raises(ConflictError):
+        await service.link(guild_id=1, discord_id=200, joined_at=None, candidate=candidate)
+    # the original holder is untouched, and relinking your own account is fine
+    await service.link(guild_id=1, discord_id=100, joined_at=None, candidate=candidate)
+    assert (await service.get_active_link(guild_id=1, discord_id=200)) is None

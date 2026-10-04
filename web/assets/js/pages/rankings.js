@@ -20,6 +20,7 @@
     legend: document.getElementById("f-legend"),
     team: document.getElementById("f-team"),
     claimed: document.getElementById("f-claimed"),
+    verified: document.getElementById("f-verified"),
   };
 
   let data = null; // the /rankings/pakistan payload
@@ -37,9 +38,11 @@
   }
 
   function playerCell(row) {
-    const claimed = row.is_claimed
-      ? '<span class="pill pill-verified" title="Claimed by its player in our Discord">✓ Claimed</span>'
-      : '<span class="pill pill-muted" title="Added by staff; not yet claimed">Unclaimed</span>';
+    const claimed = row.is_verified
+      ? '<span class="pill pill-verified" title="Staff confirmed the account owner">✓ Verified</span>'
+      : row.is_claimed
+        ? '<span class="pill pill-team" title="Claimed by its player in our Discord">Claimed</span>'
+        : '<span class="pill pill-muted" title="Added by staff; not yet claimed">Unclaimed</span>';
     return `<a class="bl-player" href="${profileHref(row)}">${avatarHtml(row.player_name, 28)}<span class="bl-player-name">${escapeHtml(row.player_name)}</span></a> ${claimed}`;
   }
 
@@ -96,6 +99,7 @@
       if (filters.team.value === "_none" && row.team) return false;
       if (filters.team.value && filters.team.value !== "_none" && row.team !== filters.team.value) return false;
       if (filters.claimed.checked && !row.is_claimed) return false;
+      if (filters.verified.checked && !row.is_verified) return false;
       return true;
     });
   }

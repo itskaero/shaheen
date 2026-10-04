@@ -41,6 +41,7 @@ async def list_players(
             country=entry.country,
             team=entry.team,
             is_claimed=entry.is_claimed,
+            is_verified=entry.is_verified,
             on_pakistan_board=entry.on_pakistan_board,
             region=(entry.snapshot.region if entry.snapshot else None) or entry.player.region,
             rating=entry.snapshot.rating if entry.snapshot else None,

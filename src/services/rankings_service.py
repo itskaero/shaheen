@@ -36,6 +36,7 @@ class RankingRow:
     player: BrawlhallaPlayer
     snapshot: RankingSnapshot
     is_claimed: bool
+    is_verified: bool
     team: str | None
     country: str
     # Rating change over TREND_WINDOW within the season; None when there's
@@ -76,6 +77,7 @@ class RankingsService:
         clan_player_ids = {
             player.id for _m, player, _d in await self._links.list_active_for_guild(guild_id)
         }
+        verified = await self._links.verified_player_ids()
         for entry, player in await self._board.list_active(guild_id):
             latest = await self._ranking.get_latest(player.id, season=season)
             if latest is None:
@@ -84,7 +86,8 @@ class RankingsService:
                 RankingRow(
                     player=player,
                     snapshot=latest,
-                    is_claimed=entry.owner_discord_id is not None,
+                    is_claimed=entry.owner_discord_id is not None or player.id in clan_player_ids,
+                    is_verified=player.id in verified,
                     team=FOUNDING_TEAM if player.id in clan_player_ids else None,
                     country=PAKISTAN,
                     trend=await self._trend(player.id, season, now),
