@@ -22,6 +22,7 @@ from api.routers import (
     legends,
     pakistan,
     players,
+    rankings,
     roster,
     tournaments,
 )
@@ -75,6 +76,7 @@ app.include_router(leaderboard.router)
 app.include_router(roster.router)
 app.include_router(pakistan.router)
 app.include_router(legends.router)
+app.include_router(rankings.router)
 app.include_router(achievements.router)
 app.include_router(players.router)
 app.include_router(tournaments.router)

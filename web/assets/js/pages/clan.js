@@ -174,3 +174,35 @@
     activityEl.innerHTML = `<p class="state-msg error">Couldn't load community activity: ${err.message}</p>`;
   }
 })();
+
+// Founding Team roster (docs/DECISIONS.md ADR-105): every SHAHEEN member
+// who linked a Brawlhalla account, this season's rating first. This was the
+// Rankings page's "Shaheen Clan" tab before BRAWLISTAN made that page
+// Pakistan-wide; it lives with the team now.
+(function () {
+  const el = document.getElementById("roster-content");
+  if (!el) return;
+  function render(entries) {
+    if (!entries || !entries.length) {
+      el.innerHTML = '<p class="unavailable">Data unavailable</p>';
+      return;
+    }
+    const rows = entries
+      .map(
+        (e, i) => `<tr>
+          <td>${e.rating != null ? rankHtml(i + 1) : '<span class="muted">—</span>'}</td>
+          <td><a class="bl-player" href="player.html?id=${encodeURIComponent(e.brawlhalla_id)}">${avatarHtml(e.player_name, 28)}<span class="bl-player-name">${escapeHtml(e.player_name)}</span></a></td>
+          <td class="hide-sm">${tierBadge(e.tier)}</td>
+          <td class="right num">${formatNumber(e.rating)}</td>
+          <td class="right hide-sm">${e.member_since ? formatDate(e.member_since) : "—"}</td>
+        </tr>`
+      )
+      .join("");
+    el.innerHTML = `<div class="bl-table-wrap"><table class="bl-table">
+      <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="hide-sm">Tier</th><th scope="col" class="right">Rating</th><th scope="col" class="right hide-sm">Member since</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+  ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), render).catch(() => {
+    if (el.textContent.trim() === "Loading…") el.innerHTML = '<p class="unavailable">Data unavailable</p>';
+  });
+})();

@@ -54,6 +54,16 @@ class RankingSnapshotRepository:
         stmt = select(func.max(RankingSnapshot.season))
         return (await self._session.execute(stmt)).scalar_one_or_none()
 
+    async def list_seasons(self) -> list[int]:
+        """Every season any snapshot carries, newest first (ADR-105)."""
+        stmt = (
+            select(RankingSnapshot.season)
+            .where(RankingSnapshot.season.is_not(None))
+            .distinct()
+            .order_by(RankingSnapshot.season.desc())
+        )
+        return [season for season in (await self._session.execute(stmt)).scalars().all() if season]
+
     async def list_recent(self, player_id: int, *, limit: int = 10) -> list[RankingSnapshot]:
         stmt = (
             select(RankingSnapshot)

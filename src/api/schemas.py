@@ -75,6 +75,37 @@ class PakistanLeaderboardEntryResponse(LeaderboardEntryResponse):
     is_claimed: bool
 
 
+class RankingRowResponse(BaseModel):
+    """One player on the Rankings page (ADR-105). Brawlhalla identity only."""
+
+    brawlhalla_id: int
+    player_name: str
+    country: str
+    team: str | None
+    is_claimed: bool
+    region: str | None
+    rating: int | None
+    peak_rating: int | None
+    tier: str | None
+    wins: int
+    games: int
+    global_rank: int | None
+    region_rank: int | None
+    rating_2v2: int | None
+    peak_rating_2v2: int | None
+    tier_2v2: str | None
+    partner_2v2: str | None
+    trend: int | None
+    main_legend: str | None
+
+
+class RankingsBoardResponse(BaseModel):
+    season: int | None
+    pakistan_season: PakistanSeasonResponse | None
+    seasons: list[int]
+    rows: list[RankingRowResponse]
+
+
 class RisingPlayerResponse(BaseModel):
     """A climber on the Pakistan board over the last few days (ADR-104)."""
 

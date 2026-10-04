@@ -626,3 +626,49 @@ async def test_legend_meta_counts_board_and_linked_players_once(
         "total_games": 60,
         "win_rate": 50.0,
     }
+
+
+async def test_rankings_endpoint_shape_and_no_discord_identity(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """ADR-105: one payload for every bracket tab, Brawlhalla identity only."""
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    async with session_factory() as session:
+        player = await BrawlhallaPlayerRepository(session).upsert(
+            brawlhalla_player_id=77, player_name="Outsider", region="SEA"
+        )
+        await PakistanBoardRepository(session).add(
+            guild_id=GUILD_ID, player_id=player.id, added_by_discord_id=1, owner_discord_id=8
+        )
+        await RankingSnapshotRepository(session).add(
+            RankingSnapshot(
+                brawlhalla_player_id=player.id,
+                captured_at=datetime.now(UTC),
+                rating=1800,
+                peak_rating=1850,
+                tier="Diamond",
+                wins=30,
+                games=50,
+                global_rank=4321,
+                season=42,
+                rating_2v2=1650,
+                tier_2v2="Platinum 2",
+                partner_2v2="Mate",
+            )
+        )
+        await session.commit()
+
+    body = client.get("/rankings/pakistan").json()
+    assert (body["season"], body["seasons"]) == (42, [42])
+    assert body["pakistan_season"]["name"] == "Zarb-e-Shaheen"
+    (row,) = body["rows"]
+    assert {k: row[k] for k in ("player_name", "country", "is_claimed", "global_rank")} == {
+        "player_name": "Outsider",
+        "country": "PK",
+        "is_claimed": True,
+        "global_rank": 4321,
+    }
+    assert (row["rating_2v2"], row["tier_2v2"], row["partner_2v2"]) == (1650, "Platinum 2", "Mate")
+    assert "owner_discord_id" not in row and "discord_id" not in row
+    assert client.get("/rankings/pakistan?season=0").status_code == 422
