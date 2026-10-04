@@ -8,7 +8,7 @@ is involved.
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -77,7 +77,7 @@ def client(
 def test_health(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ok", "service": "brawlistan"}
 
 
 def test_cors_allows_any_origin(client: TestClient) -> None:
@@ -540,3 +540,89 @@ async def test_pakistan_leaderboard_endpoint(
     assert [e["is_claimed"] for e in body] == [False, True]
     assert "discord_id" not in body[0]
     assert "owner_discord_id" not in body[0]
+
+
+# ---------- BRAWLISTAN home data (ADR-104) ----------
+
+
+async def test_pakistan_rising_ranks_rating_gains(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    async with session_factory() as session:
+        players = BrawlhallaPlayerRepository(session)
+        board = PakistanBoardRepository(session)
+        now = datetime.now(UTC)
+        for bid, owner, before, after in ((10, 5, 1400, 1460), (20, None, 1500, 1620)):
+            player = await players.upsert(
+                brawlhalla_player_id=bid, player_name=f"P{bid}", region=None
+            )
+            await board.add(
+                guild_id=GUILD_ID,
+                player_id=player.id,
+                added_by_discord_id=1,
+                owner_discord_id=owner,
+            )
+            for days_ago, rating in ((5, before), (1, after)):
+                await RankingSnapshotRepository(session).add(
+                    RankingSnapshot(
+                        brawlhalla_player_id=player.id,
+                        captured_at=now - timedelta(days=days_ago),
+                        rating=rating,
+                        peak_rating=rating,
+                        tier="Gold",
+                        wins=1,
+                        games=2,
+                    )
+                )
+        await session.commit()
+
+    body = client.get("/pakistan/rising?days=7").json()
+    assert [(e["brawlhalla_id"], e["rating_gain"], e["rating"], e["is_claimed"]) for e in body] == [
+        (20, 120, 1620, False),
+        (10, 60, 1460, True),
+    ]
+    assert client.get("/pakistan/rising?days=0").status_code == 422
+
+
+async def test_legend_meta_counts_board_and_linked_players_once(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from database.models.legend_snapshot import LegendSnapshot
+    from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # linked member, brawlhalla_id=10
+        players = BrawlhallaPlayerRepository(session)
+        linked = await players.get_by_brawlhalla_id(10)
+        outsider = await players.upsert(brawlhalla_player_id=77, player_name="O", region=None)
+        assert linked is not None
+        board = PakistanBoardRepository(session)
+        # the linked member is ALSO on the board: must still count once
+        for player in (linked, outsider):
+            await board.add(
+                guild_id=GUILD_ID, player_id=player.id, added_by_discord_id=1, owner_discord_id=None
+            )
+            await LegendSnapshotRepository(session).add_all(
+                [
+                    LegendSnapshot(
+                        brawlhalla_player_id=player.id,
+                        captured_at=datetime.now(UTC),
+                        legend_id=2,
+                        legend_name_key="cassidy",
+                        games=30,
+                        wins=15,
+                    )
+                ]
+            )
+        await session.commit()
+
+    (entry,) = client.get("/legends/meta").json()
+    assert entry == {
+        "legend_name_key": "cassidy",
+        "player_count": 2,
+        "total_games": 60,
+        "win_rate": 50.0,
+    }

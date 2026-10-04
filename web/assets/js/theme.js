@@ -85,14 +85,11 @@ function legendAvatarHtml(legendNameKey, size = 32) {
   return avatarHtml(legendDisplayName(legendNameKey), size);
 }
 
-const RANK_MEDALS = ["gold", "silver", "bronze"];
-
+// Rank chip (brawlistan.css): the top three get a subtle medal tint and
+// nothing louder (docs/DECISIONS.md ADR-104).
 function rankHtml(position) {
-  const medal = RANK_MEDALS[position - 1];
-  if (medal) {
-    return `<span class="rank-medal rank-${medal}">${position}</span>`;
-  }
-  return `<span class="rank-plain">#${position}</span>`;
+  const medal = position >= 1 && position <= 3 ? ` rank-${position}` : "";
+  return `<span class="rank${medal}">${position}</span>`;
 }
 
 // Same heuristic as src/bot/content/profile_embeds.py's _legend_display_name

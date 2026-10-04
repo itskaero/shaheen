@@ -72,6 +72,8 @@ jobs:
           snapshot roster /roster
           snapshot pakistan "/pakistan/leaderboard?limit=150"
           snapshot achievements /achievements
+          snapshot rising "/pakistan/rising?days=7&limit=10"
+          snapshot legend-meta "/legends/meta?limit=10"
 
       - name: Commit if anything changed
         run: |
