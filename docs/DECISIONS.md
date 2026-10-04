@@ -4451,3 +4451,52 @@ Verified:
 - Alembic round-trip.
 - Playwright: the claim form's format check, server rejection and success state; no form on a
   claimed profile; the Verified filter and pill on Rankings.
+
+## ADR-108 — BRAWLISTAN season cards and banner art (Season 1 is Markhor)
+
+The owner supplied two new pieces of art:
+- a wide BRAWLISTAN banner (Pakistani landscape, Minar-e-Pakistan, mosques, floating Brawlhalla
+  islands, the graffiti logo), for the landing page;
+- a sheet of 13 BRAWLISTAN season cards, numbered on the art in the brief's order: Markhor, then
+  Zarb-e-Shaheen, Sarfaroshi, Chogori, Sindhu Dhaara, Panchnad, Shimsal, Rang-e-Thar, Gwadar, Namak
+  Koh, Baad-e-Saawan, Margallah, Nayi Subah.
+
+**The season order changes.** ADR-102 had Season 1 as Zarb-e-Shaheen, after the old SHAHEEN-clan
+badge sheet, and the owner had asked to keep that order when only the brief disagreed. With art that
+prints the new numbers, they chose to switch, so a card never shows a number other than its season's.
+- **Mapping:** `services/seasons.py` lists the 13 names in card order, so Brawlhalla S42 (now) is
+  **Season 1 · Markhor**.
+- **Spellings follow the cards** (Sindhu Dhaara, Shimsal, Baad-e-Saawan). The exception is the Season 2
+  card's "SHAHEN" typo: the site spells it Zarb-e-Shaheen. The owner will send a corrected card later.
+- **Timing:** it's eleven days into the season, the cheapest moment to rename.
+- **Re-announcement:** migration 0018 clears `guild_settings.announced_season`, so the bot posts the
+  start of the "Season of Markhor" once, with its card.
+
+**Art pipeline.**
+- The masters live in `docs/brand/` (not served).
+- `scripts/brand_assets.py` now also cuts:
+  - **season cards:** each card from its recorded grid region (5 + 5 + 3 on black gutters), trimmed to
+    its own edges. They go to `web/assets/img/seasons/NN.{webp,jpg}` (320px tall) and
+    `src/assets/img/seasons/NN.jpg` for Discord. The cards are opaque paintings, so JPEG replaces the
+    PNG badges.
+  - **banner:** `web/assets/img/brawlistan/banner.{webp,jpg}` at 1600px.
+  - **link-preview card:** the Open Graph image is now the banner's centre, where the logo sits.
+- **The old SHAHEEN badges aren't deleted:** they move to `seasons/legacy/` on both sides.
+
+**Home hero.** The banner is the hero's full-width art (5:2, 16:10 on phones). The headline, buttons and
+stats sit below it rather than over it, because the art already carries the logo. The hero stays
+calm text on glass.
+
+Files:
+- new: `docs/brand/brawlistan-{banner,seasons}-master.png`,
+  `alembic/versions/0018_reannounce_season_one.py`;
+- changed: `scripts/brand_assets.py`, `src/services/seasons.py`, `src/bot/content/season_embeds.py`,
+  `web/index.html`, `web/assets/css/brawlistan.css`, `web/assets/js/{shell,theme,pages/home}.js`,
+  `web/assets/img/{seasons,brawlistan}/*`, `src/assets/img/seasons/*`, season tests,
+  `docs/BRAWLISTAN_MIGRATION.md`.
+
+Verified: the season tests now assert the card order (S42 is Markhor, the names cycle back to Markhor
+at Season 14), the bot attaches the JPEG card, and footers and the API carry the new names. Full suite
+and Alembic round-trip pass. All 13 crops were checked on a contact sheet. Playwright shows the banner
+hero, sidebar season card and Current Season panel at 1440px and 390px with no overflow and no console
+errors.

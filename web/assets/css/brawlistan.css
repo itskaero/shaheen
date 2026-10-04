@@ -342,8 +342,9 @@ body.bl :focus-visible {
 }
 
 .bl-season-mini img {
-  width: 34px;
+  width: 40px;
   height: auto;
+  border-radius: 6px;
 }
 
 .bl-season-mini strong {
@@ -860,6 +861,41 @@ body.bl main {
   gap: 10px;
 }
 
+/* Home hero with the owner's banner art (ADR-108): the art carries the
+   logo, so the text sits below it rather than on top. */
+.hero.hero-banner {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  background: var(--surface-glass);
+}
+
+.hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 2;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: end;
+  gap: 18px 32px;
+  padding: 26px 36px 30px;
+}
+
+.hero-body h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(26px, 3.2vw, 40px);
+}
+
+.hero-side .hero-stats {
+  margin-top: 22px;
+}
+
 .hero-logo {
   justify-self: center;
   width: min(420px, 100%);
@@ -919,6 +955,8 @@ body.bl main {
 .season-card img {
   width: 88px;
   height: auto;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
 
 .season-card h3 {
@@ -929,6 +967,7 @@ body.bl main {
 
 .season-card .urdu {
   display: block;
+  text-align: left;
   color: var(--gold);
   font-size: 15px;
   line-height: 1.9;
@@ -1192,6 +1231,19 @@ body.bl table td {
     min-height: 0;
     padding: 26px 20px;
     text-align: center;
+  }
+
+  .hero.hero-banner {
+    padding: 0;
+  }
+
+  .hero-art img {
+    aspect-ratio: 16 / 10;
+  }
+
+  .hero-body {
+    grid-template-columns: 1fr;
+    padding: 20px 18px 24px;
   }
 
   .hero-actions,

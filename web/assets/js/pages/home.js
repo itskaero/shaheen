@@ -75,7 +75,7 @@
     setHtml(
       "season",
       `<div class="season-card">
-        <picture><source srcset="${badge}.webp" type="image/webp" /><img src="${badge}.png" alt="Season of ${escapeHtml(season.name)} badge" width="88" height="80" loading="lazy" /></picture>
+        <picture><source srcset="${badge}.webp" type="image/webp" /><img src="${badge}.jpg" alt="Season of ${escapeHtml(season.name)} card" width="88" height="80" loading="lazy" /></picture>
         <div>
           <span class="eyebrow">Season ${season.number}</span>
           <h3>${escapeHtml(season.name)}</h3>

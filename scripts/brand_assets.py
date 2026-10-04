@@ -16,13 +16,37 @@ from PIL import Image, ImageChops, ImageMath
 
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "docs" / "brand" / "brawlistan-logo-master.png"
+BANNER_MASTER = ROOT / "docs" / "brand" / "brawlistan-banner-master.png"
+SEASONS_MASTER = ROOT / "docs" / "brand" / "brawlistan-seasons-master.png"
+
 WEB = ROOT / "web" / "assets" / "img"
 OUT = WEB / "brawlistan"
+WEB_SEASONS = WEB / "seasons"
+BOT_SEASONS = ROOT / "src" / "assets" / "img" / "seasons"
 
 # Regions of the master, in master pixels (left, top, right, bottom).
 WORDMARK_BOX = (40, 605, 1230, 1005)  # BRAWLISTAN + "Pakistan's Brawlhalla Network"
 MARK_BOX = (560, 170, 1010, 620)  # crescent, star and the falcon's eye
 BLACK = (5, 5, 6)
+
+# The season sheet's 13 cards in season order (ADR-108): 5 + 5 + 3 on black
+# gutters, found from the sheet's row/column projections. Each region is
+# padded a little and then trimmed to the card's own edges.
+SEASON_CARD_BOXES = (
+    (6, 19, 341, 331),
+    (360, 19, 665, 331),
+    (685, 19, 990, 331),
+    (1009, 19, 1313, 331),
+    (1331, 19, 1665, 331),
+    (10, 366, 341, 647),
+    (361, 366, 674, 647),
+    (693, 366, 981, 647),
+    (1000, 366, 1312, 647),
+    (1331, 366, 1660, 647),
+    (62, 670, 555, 919),
+    (595, 670, 1094, 919),
+    (1128, 670, 1606, 919),
+)
 
 
 def colour_to_alpha(img: Image.Image) -> Image.Image:
@@ -129,11 +153,45 @@ def main() -> None:
         icon = mark_square.resize((size, size), Image.LANCZOS)
         icon.quantize(256, method=Image.Quantize.FASTOCTREE).save(path, optimize=True)
 
-    # Open Graph / Twitter card: 1200x630, logo centred on black.
-    og = Image.new("RGBA", (1200, 630), (*BLACK, 255))
-    card_logo = by_height(logo, 560)
-    og.alpha_composite(card_logo, ((1200 - card_logo.width) // 2, 35))
-    og.convert("RGB").save(OUT / "og-card.jpg", quality=88, optimize=True)
+    banner = Image.open(BANNER_MASTER).convert("RGB")
+    wide = by_width(banner, 1600)
+    wide.save(OUT / "banner.webp", quality=82, method=6)
+    wide.save(OUT / "banner.jpg", quality=84, optimize=True, progressive=True)
+
+    # Open Graph / Twitter card: 1200x630 from the banner's centre, which is
+    # where the logo sits.
+    og = by_height(banner, 630)
+    left = (og.width - 1200) // 2
+    og.crop((left, 0, left + 1200, 630)).save(OUT / "og-card.jpg", quality=86, optimize=True)
+
+    cut_season_cards()
+
+
+def _trim_dark(img: Image.Image) -> Image.Image:
+    """Crop to the card itself, dropping the sheet's black gutter."""
+    mask = img.convert("L").point(lambda v: 255 if v > 26 else 0)
+    box = mask.getbbox()
+    return img.crop(box) if box else img
+
+
+def cut_season_cards() -> None:
+    sheet = Image.open(SEASONS_MASTER).convert("RGB")
+    WEB_SEASONS.mkdir(parents=True, exist_ok=True)
+    BOT_SEASONS.mkdir(parents=True, exist_ok=True)
+    pad = 10
+    for number, (x0, y0, x1, y1) in enumerate(SEASON_CARD_BOXES, start=1):
+        region = (
+            max(0, x0 - pad),
+            max(0, y0 - pad),
+            min(sheet.width, x1 + pad),
+            min(sheet.height, y1 + pad),
+        )
+        card = _trim_dark(sheet.crop(region))
+        stem = f"{number:02d}"
+        web_card = by_height(card, 320) if card.height > 320 else card
+        web_card.save(WEB_SEASONS / f"{stem}.webp", quality=84, method=6)
+        web_card.save(WEB_SEASONS / f"{stem}.jpg", quality=86, optimize=True, progressive=True)
+        card.save(BOT_SEASONS / f"{stem}.jpg", quality=90, optimize=True)
 
 
 if __name__ == "__main__":
