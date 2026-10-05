@@ -79,6 +79,13 @@
   // ---- current season (ADR-102) ----
   function renderSeason(clan) {
     const season = clan && clan.pakistan_season;
+    // The hero's identity card names the season (ADR-117).
+    if (season) {
+      const num = document.getElementById("hero-card-season");
+      const name = document.getElementById("hero-card-name");
+      if (num) num.textContent = `Season ${String(season.number).padStart(2, "0")}`;
+      if (name) name.textContent = season.name;
+    }
     if (!season) {
       setHtml("season", UNAVAILABLE);
       return;
@@ -253,5 +260,31 @@
     ["legend-meta"],
     ShaheenAPI.withSnapshot("legend-meta", () => ShaheenAPI.getLegendMeta(10), renderLegendMeta)
   );
+  // ---- featured team: the top-rated team, else the founding team (ADR-117) ----
+  // A light panel, not a second WebGPU card: the hero card is the page's one.
+  function renderFeaturedTeam(list) {
+    const teams = Array.isArray(list) ? list : [];
+    const team = teams.find((t) => t.rank === 1) || teams.find((t) => t.is_founding) || teams[0];
+    if (!team) {
+      setHtml("featured-team", UNAVAILABLE);
+      return;
+    }
+    const why = team.rank === 1 ? "Highest team rating this season" : "Pakistan's founding team";
+    const logo = team.logo
+      ? `<img class="featured-team-logo" src="assets/img/teams/${encodeURIComponent(team.logo)}.webp" alt="" width="96" height="96" loading="lazy" />`
+      : `<span class="team-monogram" style="--size:96px" aria-hidden="true">${escapeHtml(team.tag)}</span>`;
+    setHtml(
+      "featured-team",
+      `<a class="featured featured-team" href="${teamHref(team.slug)}">
+        ${logo}
+        <span>
+          <strong>${escapeHtml(team.name)} <span class="muted">[${escapeHtml(team.tag)}]</span></strong>
+          <span class="muted">${why}</span>
+          <span class="featured-team-stats"><span class="num">${team.rating != null ? formatNumber(team.rating) : "—"}</span> power &middot; <span class="num">${formatNumber(team.members)}</span> players</span>
+        </span>
+      </a>`
+    );
+  }
+  guard(["featured-team"], ShaheenAPI.withSnapshot("teams", () => ShaheenAPI.getTeams(), renderFeaturedTeam));
   guard(["tournament"], ShaheenAPI.getTournaments(5).then(renderTournament));
 })();

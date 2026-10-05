@@ -12,7 +12,10 @@
 
   const hero = document.querySelector(".hero-banner");
   const art = hero && hero.querySelector(".hero-art img");
-  if (!hero || !art) return;
+  // With the holographic identity card (ADR-117) the card is the hero's one
+  // animated object: only the fireflies and the seam stay, no city network.
+  const withCard = !!hero && hero.classList.contains("hero-has-card");
+  if (!hero || (!art && !withCard)) return;
 
   const canvas = document.createElement("canvas");
   canvas.className = "hero-fx";
@@ -81,7 +84,7 @@
     canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const artRect = art.getBoundingClientRect();
+    const artRect = art ? art.getBoundingClientRect() : rect;
     const artTop = artRect.top - rect.top;
     bannerBottom = immersive ? height - 1 : artTop + artRect.height;
     unit = Math.max(0.55, Math.min(1.3, width / 1200));
@@ -93,7 +96,7 @@
     const boxW = Math.min(width * (narrow ? 0.36 : 0.26), boxH * 1.05);
     const boxX = width * (narrow ? 0.97 : 0.975) - boxW;
     const boxY = artTop + artRect.height * 0.07;
-    veil = { x: boxX + boxW * 0.5, y: boxY + boxH * 0.5, r: Math.max(boxW, boxH) * 0.72 };
+    veil = withCard ? null : { x: boxX + boxW * 0.5, y: boxY + boxH * 0.5, r: Math.max(boxW, boxH) * 0.72 };
     for (const n of nodes) {
       n.x = boxX + n.u * boxW;
       n.y = boxY + n.v * boxH;
@@ -336,8 +339,10 @@
     ctx.clearRect(0, 0, width, height);
     drawVeil();
     ctx.globalCompositeOperation = "lighter";
-    updatePulses(dt, now);
-    drawNetwork(now, false);
+    if (!withCard) {
+      updatePulses(dt, now);
+      drawNetwork(now, false);
+    }
     drawSeam(now, false);
     updateFlies(dt, now);
     drawFlies(now);
@@ -350,7 +355,7 @@
     ctx.clearRect(0, 0, width, height);
     drawVeil();
     ctx.globalCompositeOperation = "lighter";
-    drawNetwork(0, true);
+    if (!withCard) drawNetwork(0, true);
     drawSeam(0, true);
     ctx.globalCompositeOperation = "source-over";
   }
@@ -368,7 +373,7 @@
 
   const update = () => setRunning(visible && !document.hidden);
 
-  if (art.complete) layout();
+  if (!art || art.complete) layout();
   else art.addEventListener("load", layout, { once: true });
   if ("ResizeObserver" in window) new ResizeObserver(layout).observe(hero);
   else window.addEventListener("resize", layout);

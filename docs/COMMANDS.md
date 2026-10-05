@@ -426,8 +426,10 @@ tracked Brawlhalla account. A player is on at most one team at a time:
 someone on another team has to leave (or be removed) first. Rosters hold up
 to 20 players. Audit-logged.
 
-### /team create <name> <tag> [description] *(staff)*
-Create a team. Tags are 2–6 letters or digits and names must be unique. A
+### /team create <name> <tag> [description] [colour] [colour2] *(staff)*
+Create a team. Tags are 2–6 letters or digits and names must be unique.
+`colour` and `colour2` (hex, e.g. `#2ad4ff`) tint the team's holographic
+card; without them it uses the BRAWLISTAN emerald and magenta (ADR-117). A
 team's logo is added to the website by the site owner (docs/DECISIONS.md
 ADR-114: `scripts/team_logos.py`).
 

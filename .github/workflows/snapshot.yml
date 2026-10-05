@@ -88,14 +88,21 @@ jobs:
         # from the players snapshot just fetched. Standard library only.
         run: python3 scripts/player_pages.py
 
+      - name: Generate per-team pages
+        # Static web/teams/<slug>/index.html pages with each team's own title,
+        # description and logo preview (docs/DECISIONS.md ADR-117), from the
+        # teams snapshot just fetched. Automatic: a team created with
+        # /team create gets its page on the next run.
+        run: python3 scripts/team_pages.py
+
       - name: Commit if anything changed
         run: |
-          if [ -z "$(git status --porcelain web/data web/player)" ]; then
+          if [ -z "$(git status --porcelain web/data web/player web/teams)" ]; then
             echo "No change in the snapshots."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/data web/player
+          git add web/data web/player web/teams
           git commit -m "chore(web): refresh site data snapshots"
           git push

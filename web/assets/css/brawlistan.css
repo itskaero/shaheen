@@ -2528,207 +2528,43 @@ body.hide-tags .clan-tag {
   display: none;
 }
 
-/* ---------- Teams slider (ADR-116) ----------
-   One tall slide per team: the logo gets the top of the card at full size
-   (contained, never cropped), lit by the team's own colours. */
+/* ---------- Teams grid of holographic cards (ADR-117; replaces ADR-116's slider) ---------- */
 
-.team-slider {
-  position: relative;
-}
-
-.team-track {
+.team-grid {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: min(380px, 82%);
-  gap: 18px;
-  padding: 6px 4px 18px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 4px;
-  scrollbar-width: none;
-  outline: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
 }
 
-.team-track::-webkit-scrollbar {
-  display: none;
-}
-
-.team-track:focus-visible {
-  border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 2px var(--emerald);
-}
-
-.team-slide {
-  --accent: 30, 224, 138;
-  --accent-2: 61, 242, 110;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 560px;
-  overflow: hidden;
-  border: 1px solid rgba(var(--accent), 0.28);
-  border-radius: 26px;
-  background:
-    radial-gradient(90% 55% at 50% 22%, rgba(var(--accent), 0.22), transparent 70%),
-    radial-gradient(70% 45% at 80% 8%, rgba(var(--accent-2), 0.18), transparent 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015) 60%);
-  color: var(--text);
-  scroll-snap-align: start;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.team-slide:hover,
-.team-slide:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(var(--accent), 0.6);
-  box-shadow: 0 24px 60px -24px rgba(var(--accent), 0.55);
-}
-
-.team-slide.is-founding {
-  border-color: rgba(242, 193, 78, 0.45);
-}
-
-.team-slide-art {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1 / 1;
-  max-height: 340px;
-  padding: 18px 18px 0;
-}
-
-.team-slide-art picture,
-.team-slide-art .team-logo {
-  display: block;
+.team-grid > .holo-card {
+  max-width: 360px;
   width: 100%;
-  height: 100%;
-  max-height: 320px;
+  justify-self: center;
 }
 
-.team-slide-art .team-logo {
-  object-fit: contain;
-  filter: drop-shadow(0 0 28px rgba(var(--accent), 0.35)) drop-shadow(0 18px 36px rgba(0, 0, 0, 0.6));
-  transition: transform 0.35s ease;
-}
-
-.team-slide:hover .team-logo {
-  transform: scale(1.03);
-}
-
-.team-slide-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 20px 22px;
-  text-align: center;
-}
-
-.team-slide-pills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-
-.team-slide-name {
-  font-size: 24px;
-  font-weight: 750;
-  letter-spacing: -0.01em;
-}
-
-.team-slide-stats {
+.holo-fallback-art.team-monogram {
+  --size: auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  width: 100%;
+  width: 60%;
+  height: auto;
+  aspect-ratio: 1;
+  left: 20%;
+  top: 9%;
 }
 
-.team-slide-cta {
-  margin-top: auto;
-  color: rgb(var(--accent));
-  font-size: 13.5px;
-  font-weight: 650;
+@media (max-width: 1100px) {
+  .team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.team-nav {
-  position: absolute;
-  top: 270px;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  background: rgba(10, 14, 12, 0.82);
-  color: var(--text);
-  cursor: pointer;
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  transition: opacity 0.2s ease, background 0.2s ease;
-}
-
-.team-nav svg {
-  width: 20px;
-  height: 20px;
-}
-
-.team-nav:hover {
-  background: rgba(30, 224, 138, 0.18);
-}
-
-.team-nav:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.team-nav-prev {
-  left: -8px;
-}
-
-.team-nav-next {
-  right: -8px;
-}
-
-.team-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.team-dots button {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  cursor: pointer;
-  transition: width 0.25s ease, background 0.25s ease;
-}
-
-.team-dots button[aria-selected="true"] {
-  width: 24px;
-  background: var(--green);
-}
-
-@media (max-width: 860px) {
-  .team-track {
-    grid-auto-columns: 86%;
-    gap: 12px;
+@media (max-width: 640px) {
+  .team-grid {
+    grid-template-columns: 1fr;
   }
 
-  .team-slide {
-    min-height: 0;
-  }
-
-  .team-slide-art {
-    max-height: 280px;
-  }
-
-  .team-nav {
-    display: none;
+  .team-grid > .holo-card {
+    max-width: 340px;
   }
 }
 
@@ -2745,4 +2581,388 @@ body.hide-tags .clan-tag {
   .team-hero-logo {
     width: 200px;
   }
+}
+
+/* ---------- Holographic cards (ADR-117) ----------
+   The WebGPU card (assets/js/holo.js) draws the foil and the logo; every word
+   is HTML on .holo-face, which sits exactly on the shader's card face and
+   copies its tilt. Geometry comes from the shader: the canvas is 20:27, the
+   card is 1.28 x 1.82 card units at 2.1 canvas units per card unit, so the
+   face is inset 6.667% top/bottom and 8.857% left/right. Without WebGPU the
+   same card shows .holo-fallback, a static CSS foil. */
+
+.holo-card {
+  --accent: 61, 242, 110;
+  --accent-2: 240, 22, 140;
+  position: relative;
+  display: block;
+  color: var(--text);
+  border-radius: 22px;
+}
+
+.holo-card:focus-visible {
+  outline: none;
+}
+
+.holo-card:focus-visible .holo-face {
+  box-shadow: 0 0 0 2px rgb(var(--accent)), 0 0 0 5px rgba(var(--accent), 0.25);
+}
+
+.holo-stage {
+  position: relative;
+  aspect-ratio: 20 / 27;
+  perspective: var(--holo-persp, 1100px);
+  touch-action: pan-y;
+}
+
+.holo-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.holo-card.is-gpu .holo-canvas {
+  opacity: 1;
+}
+
+.holo-face {
+  position: absolute;
+  inset: 6.667% 8.857%;
+  border-radius: 4.3% / 3.02%;
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease, box-shadow 0.2s ease;
+}
+
+.holo-card.is-gpu .holo-face {
+  transition: box-shadow 0.2s ease; /* the GPU loop drives the tilt every frame */
+}
+
+.holo-fallback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background:
+    radial-gradient(120% 80% at var(--holo-mx, 30%) var(--holo-my, 20%), rgba(var(--accent), 0.22), transparent 55%),
+    radial-gradient(90% 70% at 85% 10%, rgba(var(--accent-2), 0.16), transparent 60%),
+    linear-gradient(180deg, #121614, #0b0e0d 70%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 50px -22px rgba(0, 0, 0, 0.85);
+  transition: opacity 0.45s ease;
+}
+
+/* A soft foil sweep for the CSS card; follows the pointer, still otherwise. */
+.holo-fallback::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(var(--accent), 0.16) 42%,
+    rgba(251, 249, 216, 0.14) 48%,
+    rgba(var(--accent-2), 0.14) 54%,
+    transparent 66%
+  );
+  background-size: 220% 220%;
+  background-position: var(--holo-mx, 40%) var(--holo-my, 40%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.holo-card.is-gpu .holo-fallback {
+  opacity: 0;
+}
+
+/* The logo's square: card units (0, -0.33), 0.92 wide, as in the shader. */
+.holo-fallback-art {
+  position: absolute;
+  top: 6.59%;
+  left: 14.06%;
+  width: 71.875%;
+  height: 50.55%;
+  object-fit: contain;
+}
+
+.holo-content {
+  position: absolute;
+  inset: 57.5% 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 7% 6%;
+  text-align: center;
+  transform: translateZ(18px); /* floats a touch above the foil */
+}
+
+.holo-title {
+  margin: 0;
+  font-size: clamp(17px, 1.6vw, 22px);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.holo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 8px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.holo-meta .holo-tag {
+  color: rgb(var(--accent));
+}
+
+.holo-stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.holo-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.holo-stats strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.holo-stats span {
+  color: var(--text-faint);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.holo-cta {
+  margin-top: 2px;
+  color: rgb(var(--accent));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holo-face,
+  .holo-canvas,
+  .holo-fallback {
+    transition: none;
+  }
+}
+
+/* Team page header: the holographic card is the team's identity (ADR-117). */
+.team-hero-card {
+  width: 280px;
+  max-width: 100%;
+}
+
+.team-hero .team-hero-stats {
+  grid-template-columns: repeat(4, minmax(0, 130px));
+}
+
+@media (max-width: 860px) {
+  .team-hero-card {
+    width: min(280px, 86%);
+  }
+
+  .team-hero .team-hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Landing hero with the holographic identity card (ADR-117) ----------
+   Hierarchy: brand, value proposition, the rankings CTA, then the card, then
+   the atmosphere (the banner, blurred, and the fireflies). The card floats in
+   the scene at a fixed size; it never fills the screen or covers the CTA. */
+
+.hero.hero-has-card {
+  justify-content: center;
+  min-height: max(600px, calc(100svh - 150px));
+}
+
+.hero-has-card .hero-bg img {
+  filter: blur(18px) saturate(1.25) brightness(0.36);
+}
+
+.hero-has-card .hero-bg::after {
+  background:
+    radial-gradient(60% 70% at 78% 50%, rgba(61, 242, 110, 0.12), transparent 70%),
+    radial-gradient(50% 60% at 90% 20%, rgba(240, 22, 140, 0.1), transparent 70%),
+    linear-gradient(90deg, rgba(5, 8, 7, 0.82) 0%, rgba(5, 8, 7, 0.5) 55%, rgba(5, 8, 7, 0.2) 100%);
+}
+
+.hero-has-card .hero-body {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  align-items: center;
+  gap: 28px 56px;
+  margin-top: 0;
+  padding: 48px 56px 72px;
+}
+
+.hero-has-card .hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.hero-brand {
+  margin: 0;
+  line-height: 0;
+}
+
+.hero-brand img {
+  width: min(460px, 100%);
+  height: auto;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.55));
+  animation: bl-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.hero-lines {
+  margin: 4px 0 0;
+  font-size: clamp(26px, 3.2cqw, 44px);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.hero-lines span {
+  display: block;
+  animation: bl-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.hero-lines span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.hero-lines span:nth-child(3) {
+  animation-delay: 0.2s;
+  background: linear-gradient(100deg, var(--green), var(--emerald) 55%, var(--cream));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-has-card .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.hero-has-card .hero-stats {
+  width: min(480px, 100%);
+  margin-top: 6px;
+}
+
+.hero-card {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  max-width: 360px;
+  animation: bl-rise 1s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* A soft pool of light under the floating card. */
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 12% -12% -6%;
+  z-index: -1;
+  background: radial-gradient(50% 45% at 50% 60%, rgba(61, 242, 110, 0.2), transparent 70%);
+  filter: blur(20px);
+}
+
+.holo-links {
+  display: flex;
+  justify-content: center;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.holo-links a {
+  color: var(--text-muted);
+}
+
+.holo-links a:hover,
+.holo-links a:focus-visible {
+  color: rgb(var(--accent));
+}
+
+.holo-card.is-identity .holo-title {
+  font-size: clamp(20px, 1.9vw, 26px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .hero-has-card .hero-body {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+    padding: 40px 32px 72px;
+    gap: 24px 32px;
+  }
+}
+
+/* Phones and small tablets: text first, card second. */
+@media (max-width: 860px) {
+  .hero.hero-has-card {
+    min-height: 0;
+  }
+
+  .hero-has-card .hero-body {
+    grid-template-columns: 1fr;
+    padding: 28px 18px 64px;
+  }
+
+  .hero-has-card .hero-copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero-brand img {
+    width: min(320px, 90%);
+  }
+
+  .hero-has-card .hero-actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .hero-card {
+    max-width: min(290px, 78%);
+  }
+}
+
+/* Home: Featured Team panel (ADR-117). */
+.featured-team-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+}
+
+.featured-team-stats {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
 }

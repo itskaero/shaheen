@@ -33,21 +33,21 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
-        <section class="hero hero-banner hero-immersive" aria-labelledby="hero-title">
+        <section class="hero hero-banner hero-immersive hero-has-card" aria-labelledby="hero-title">
           <div class="hero-bg" aria-hidden="true">
             <img src="assets/img/brawlistan/banner.jpg" alt="" width="1600" height="640" />
           </div>
-          <picture class="hero-art">
-            <source srcset="assets/img/brawlistan/banner.webp" type="image/webp" />
-            <img src="assets/img/brawlistan/banner.jpg" alt="BRAWLISTAN — Pakistan's Brawlhalla Network" width="1600" height="640" fetchpriority="high" />
-          </picture>
           <div class="hero-body">
             <div class="hero-copy">
+              <h1 id="hero-title" class="hero-brand">
+                <picture>
+                  <source srcset="assets/img/brawlistan/wordmark.webp" type="image/webp" />
+                  <img src="assets/img/brawlistan/wordmark.png" alt="BRAWLISTAN" width="1190" height="400" fetchpriority="high" />
+                </picture>
+              </h1>
               <span class="eyebrow hero-live"><span class="dot" aria-hidden="true"></span>Pakistan's Brawlhalla Network</span>
-              <h1 id="hero-title"><span>Track the scene.</span><span>Find the players.</span><span>Climb the rankings.</span></h1>
+              <p class="hero-lines"><span>Track the scene.</span><span>Find the players.</span><span>Climb the rankings.</span></p>
               <span class="urdu" lang="ur">بلندیوں کی جانب</span>
-            </div>
-            <div class="hero-side">
               <div class="hero-actions">
                 <a class="btn btn-current" href="rankings.html">
                   <span>View rankings</span>
@@ -59,6 +59,28 @@
                 </a>
               </div>
               <div class="hero-stats" id="hero-stats" aria-live="polite"></div>
+            </div>
+            <div class="hero-card">
+              <!-- BRAWLISTAN identity card: WebGPU foil from assets/js/holo.js (ADR-117). -->
+              <div class="holo-card is-identity" data-holo data-holo-art="assets/img/brawlistan/logo.webp"
+                   data-holo-accent="#3df26e" data-holo-accent2="#f0168c" data-holo-ambient="0.4" data-holo-dpr="2"
+                   aria-label="BRAWLISTAN identity card">
+                <div class="holo-stage">
+                  <canvas class="holo-canvas" aria-hidden="true"></canvas>
+                  <div class="holo-face">
+                    <div class="holo-fallback" aria-hidden="true">
+                      <img class="holo-fallback-art" src="assets/img/brawlistan/logo.webp" alt="" />
+                    </div>
+                    <div class="holo-content">
+                      <p class="holo-meta"><span class="holo-tag">🇵🇰 Pakistan</span><span id="hero-card-season">Season 01</span></p>
+                      <p class="holo-title" id="hero-card-name">Markhor</p>
+                      <nav class="holo-links" aria-label="Explore">
+                        <a href="players.html">Top players</a><a href="teams.html">Top teams</a><a href="rankings.html">Rankings</a>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <a class="hero-scroll" href="#home-sections" aria-label="Scroll to the rankings">
@@ -114,6 +136,14 @@
             <div id="tournament"><p class="unavailable">Loading…</p></div>
           </section>
 
+          <section class="panel panel-pad span-6" aria-labelledby="team-title">
+            <div class="section-head">
+              <h2 id="team-title">Featured Team</h2>
+              <a href="teams.html">All teams &rarr;</a>
+            </div>
+            <div id="featured-team"><p class="unavailable">Loading…</p></div>
+          </section>
+
           <section class="panel panel-pad span-6" aria-labelledby="community-title">
             <div class="section-head"><h2 id="community-title">Community</h2></div>
             <div id="community"><p class="unavailable">Loading…</p></div>
@@ -144,5 +174,6 @@
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/pages/home.js"></script>
   <script src="assets/js/hero-fx.js" defer></script>
+  <script type="module" src="assets/js/holo.js"></script>
 </body>
 </html>

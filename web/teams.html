@@ -38,16 +38,7 @@
             <input id="t-search" class="input" type="search" placeholder="Team or tag" autocomplete="off" />
           </div>
         </div>
-        <section class="team-slider" aria-roledescription="carousel" aria-label="Teams">
-          <div class="team-track" id="team-grid" tabindex="0" aria-live="polite"><p class="unavailable">Loading…</p></div>
-          <button type="button" class="team-nav team-nav-prev" id="team-prev" aria-label="Previous team">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
-          </button>
-          <button type="button" class="team-nav team-nav-next" id="team-next" aria-label="Next team">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-          </button>
-          <div class="team-dots" id="team-dots" role="tablist" aria-label="Choose a team"></div>
-        </section>
+        <div class="team-grid" id="team-grid" aria-live="polite"><p class="unavailable">Loading…</p></div>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
@@ -59,5 +50,6 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/pages/teams.js"></script>
+  <script type="module" src="assets/js/holo.js"></script>
 </body>
 </html>

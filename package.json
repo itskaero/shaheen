@@ -1,0 +1,16 @@
+{
+  "name": "brawlistan-web",
+  "private": true,
+  "description": "Build step for BRAWLISTAN's WebGPU holographic cards (docs/DECISIONS.md ADR-117). The rest of web/ is plain static files.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild web-src/holo/index.ts --bundle --format=esm --platform=browser --target=es2022 --minify --loader:.wgsl=text --legal-comments=eof --banner:js=\"/*! BRAWLISTAN holographic cards (docs/DECISIONS.md ADR-117). Built from web-src/holo with npm run build; do not edit. Includes vgpu 0.5.0 and the vGPU holographic-card example, MIT License, Copyright (c) 2025 Vercel, Inc. */\" --outfile=web/assets/js/holo.js",
+    "lint": "tsc -p web-src/tsconfig.json",
+    "test": "node --test \"web-src/holo/*.test.ts\""
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3",
+    "vgpu": "0.5.0"
+  }
+}

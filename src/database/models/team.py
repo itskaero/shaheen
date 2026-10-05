@@ -36,6 +36,10 @@ class Team(TimestampMixin, Base):
     logo: Mapped[str | None] = mapped_column(String(48), nullable=True)
     description: Mapped[str | None] = mapped_column(String(280), nullable=True)
     is_founding: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # The team's two colours as #rrggbb (ADR-117): they tint its holographic
+    # card. None uses the BRAWLISTAN emerald and magenta.
+    accent: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    accent_secondary: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
 
 class TeamMember(TimestampMixin, Base):

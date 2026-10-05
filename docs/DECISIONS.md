@@ -5037,3 +5037,98 @@ Verified with Playwright at 1440 and 390 px:
 - three dots with the first active, and the next arrow moves the row;
 - search, the founding team first, the monogram fallback, the team page, no overflow and no console
   errors.
+
+## ADR-117 — WebGPU holographic cards (vGPU), team pages generated automatically
+
+**Status:** accepted. Builds on ADR-112 (landing hero) and ADR-114/116 (teams). The Teams grid replaces
+ADR-116's slider, as the owner's brief asked for a 3/2/1 grid of holographic cards.
+
+**Context.** The owner asked to integrate the official vGPU `holographic-card` example as BRAWLISTAN's
+identity material: one card in the landing hero, a reusable team card for the Teams page and team
+headers, and the GPU behaviour kept genuine (no CSS, WebGL or video imitation). The site must still
+work without WebGPU and stay deployable to GitHub Pages.
+
+**Source.** `npx vgpu examples pull` refuses to write files on Windows (`VGPU-EXAMPLES-FILESYSTEM`), so
+the example was fetched with the CLI's read-only `examples show`/`cat`. All five files match the
+published SHA-256 manifest (revision `6fa27bb4…`). A verbatim copy, with provenance and the MIT
+licence (© 2025 Vercel, Inc.), is in `web-src/holo/upstream/`.
+
+**What was kept from the example:**
+- `vgpu` 0.5.0 (`init` → `surface` with dpr [1, 2] → `effect` → `frameLoop` at 60 fps with `clock`
+  timing);
+- the whole optical shader: perspective tilt, wavy engraving, triangular fractal, Stam-style
+  diffraction, pearlescence, light band, glint and sparkle;
+- the pointer-proximity reveal and the tilt and light smoothing, unchanged in `pointer.ts`;
+- reduced-motion handling, `output.onResize`, and idempotent dispose (including mid-initialisation).
+
+**What was adapted:**
+- **Artwork:** the baked demo text mask is replaced by the team's logo texture; every word on a card is
+  HTML on a face that copies the GPU tilt (CSS 3D with the shader's own eye distance).
+- **Colours:** team colours tint the pearl and the graphite; the shader is shared and only the uniforms
+  differ.
+- **Backdrop:** transparent, so a card floats on the page with its soft shadow.
+- **Framing and light:** tighter framing (2.1), a faint ambient light drift, and a calmer foil behind the
+  text panel.
+
+**Performance and lifecycle (`renderer.ts`):**
+- **One GPU device per page**, with a surface per card.
+- **Pooling:** effects are pooled and logo textures are shared and ref-counted.
+- **A single frame loop** that runs only while a visible card is still moving: idle and off-screen cards
+  (IntersectionObserver) render nothing, and a hidden tab renders nothing.
+- **Release:** the device is disposed 4 s after the last card goes, or on `pagehide`, and re-created
+  from the back/forward cache.
+- **Device loss** falls back to CSS cards.
+- **Grid cards** cap DPR at 1.5.
+- **Mounting:** `index.ts` mounts `[data-holo]` elements automatically and follows DOM changes, so page
+  scripts never manage GPU lifetimes.
+
+**Fallback.** Without WebGPU (no `navigator.gpu`, no adapter, init failure, device loss) each card stays
+its static CSS card with a light CSS tilt. Visitors see no error. Diagnostics go to the console only
+on localhost or with `?holo-debug`.
+
+**Build.** Root `package.json` (devDependencies `vgpu`, `esbuild`, `typescript` only):
+- `npm run build` bundles `web-src/holo` to `web/assets/js/holo.js` (173 KB, about 60 KB gzipped).
+  The bundle is committed, because Pages serves `web/` as-is with no Node step.
+- `npm run lint` runs tsc; `npm test` runs node --test.
+
+**Pages:**
+- **Landing (`index.html`):** wordmark, the network line, the three lines and the CTAs on the left; the
+  identity card (BRAWLISTAN logo, season label from live data, links to players, teams and rankings)
+  on the right. Phones stack text first. The banner is the blurred atmosphere; `hero-fx.js` keeps
+  only the fireflies and seam.
+- **Home:** gains a light, non-GPU Featured Team panel (the #1 team, else the founding team).
+- **Teams:** a grid of `holoTeamCardHtml` cards (3/2/1 columns), each a single link.
+- **Team page:** the holographic card is its header identity, and a Tournament results panel is added.
+  Teams aren't tournament entrants yet, so it says so rather than inventing results.
+- **Player profiles** stay lightweight (no GPU) for now.
+
+**Data.**
+- **Migration 0022** adds `teams.accent` / `accent_secondary` (seeded SHAHEEN #3df26e/#f0168c and
+  Delight #2ad4ff/#9b3cff); `/team create` takes optional `colour`/`colour2`.
+- **Rank:** `TeamService` computes each team's `rank` among rated teams.
+- **API:** exposes `accent`, `accent_secondary` and `rank`.
+
+**Automatic team pages.**
+- **Generator:** `scripts/team_pages.py` writes `web/teams/<slug>/index.html` (own title such as
+  "SHAHEEN — Brawlistan Team", description, canonical URL, logo as preview image, and
+  `data-team-slug`) plus a `/teams/` redirect.
+- **When it runs:** the snapshot workflow runs it after the teams snapshot and commits `web/teams`, so a
+  team made with `/team create` gets its page on the next run.
+- **Before then:** `404.html` sends `/teams/<slug>/` to `team.html?t=<slug>`. Team links now use
+  `teams/<slug>/`.
+
+Verified:
+- **Python:** pytest 535 (colours and rank, the team page generator, existing tests), ruff, mypy, and the
+  Alembic round trip for 0022.
+- **TypeScript:** tsc, and node tests for the pointer maths and colours.
+- **Playwright, real WebGPU** (Chrome, NVIDIA D3D12) and **without an adapter** (bundled Chromium), at
+  1440 and 390 px, on the landing page, Teams and a team page:
+  - cards on the GPU, or on CSS without an adapter;
+  - no overflow and no console errors;
+  - an off-screen card on the phone not rendering.
+- **Lifecycle:**
+  - 20 rapid re-renders keep 3 cards, 2 textures and no leaked effects;
+  - off-screen and hidden-tab pause, with resume;
+  - `pagehide` frees the GPU;
+  - reduced motion draws once and idles with no tilt;
+  - keyboard focus reaches card links.
