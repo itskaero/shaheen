@@ -318,7 +318,13 @@
   });
 
   render();
-  ShaheenAPI.withSnapshot("rankings", () => ShaheenAPI.getRankings(), onData).catch(() => {
+  // ?season=<n> opens a past season directly (linked from the Seasons page,
+  // ADR-113); otherwise the current one, snapshot first.
+  const askedSeason = Number(new URLSearchParams(location.search).get("season")) || null;
+  (askedSeason
+    ? ShaheenAPI.getRankings(askedSeason).then(onData)
+    : ShaheenAPI.withSnapshot("rankings", () => ShaheenAPI.getRankings(), onData)
+  ).catch(() => {
     if (!data && tab in VIEWS) board.innerHTML = UNAVAILABLE;
   });
   ShaheenAPI.withSnapshot("rising", () => ShaheenAPI.getPakistanRising(7, 25), (rows) => {

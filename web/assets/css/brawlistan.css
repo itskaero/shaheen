@@ -2149,3 +2149,223 @@ body.bl table td {
     display: none;
   }
 }
+
+/* ---------- Seasons page (ADR-113) ---------- */
+
+.season-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+  padding: 26px 30px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(70% 120% at 0% 50%, rgba(61, 242, 110, 0.12), transparent 60%),
+    radial-gradient(60% 100% at 100% 0%, rgba(242, 193, 78, 0.08), transparent 60%),
+    var(--surface-glass);
+}
+
+.season-hero-card {
+  display: block;
+  width: 220px;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  animation: bl-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.season-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.season-hero-copy h2 {
+  margin: 0;
+  font-size: clamp(26px, 3.4vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+
+.season-hero .season-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.season-hero .season-name-word {
+  background: linear-gradient(100deg, var(--green), var(--emerald) 55%, var(--cream));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.season-hero .season-urdu {
+  align-self: flex-start;
+  color: var(--gold);
+  font-family: "Noto Nastaliq Urdu", serif;
+  font-size: 20px;
+  line-height: 2;
+}
+
+.season-hero .season-meta {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.season-progress {
+  max-width: 420px;
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.season-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--emerald), var(--green));
+  box-shadow: 0 0 12px rgba(61, 242, 110, 0.6);
+}
+
+/* The strip of every season card. */
+.season-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 128px;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 6px 2px 12px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.season-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.season-chip:hover,
+.season-chip:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.season-chip-img {
+  display: block;
+  width: 92px;
+  height: auto;
+  margin-bottom: 4px;
+  border-radius: 12px;
+}
+
+.season-chip-num {
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.season-chip strong {
+  font-size: 13.5px;
+  line-height: 1.2;
+}
+
+.season-chip-note {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-chip.is-current {
+  border-color: rgba(61, 242, 110, 0.45);
+  box-shadow: 0 0 0 1px rgba(61, 242, 110, 0.25), 0 10px 30px -12px rgba(61, 242, 110, 0.6);
+}
+
+.season-chip.is-current .season-chip-note {
+  color: var(--green);
+}
+
+.season-chip.is-upcoming .season-chip-img {
+  filter: grayscale(0.85) brightness(0.55);
+}
+
+.season-chip.is-upcoming strong {
+  color: var(--text-muted);
+}
+
+.season-chip[aria-pressed="true"] {
+  border-color: var(--green);
+  background: rgba(61, 242, 110, 0.08);
+}
+
+.season-grid {
+  margin-top: 0;
+}
+
+.season-legend .legend-avatar,
+.season-legend img {
+  border-radius: 12px;
+}
+
+@media (max-width: 860px) {
+  .season-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 16px;
+    padding: 22px 18px;
+    text-align: center;
+  }
+
+  .season-hero-card {
+    width: 168px;
+  }
+
+  .season-hero-copy {
+    align-items: center;
+  }
+
+  .season-hero .season-kicker {
+    justify-content: center;
+  }
+
+  .season-hero .season-urdu {
+    align-self: center;
+  }
+
+  .season-progress {
+    width: 100%;
+  }
+
+  .season-strip {
+    grid-auto-columns: 112px;
+  }
+}

@@ -757,3 +757,21 @@ async def test_featured_player_is_404_until_staff_pick_one(
     assert body["note"] == "MVP"
     assert body["rating"] is None  # no snapshot yet: no number invented
     assert "discord_id" not in str(body)  # ADR-040
+
+
+def test_seasons_list_and_details(client: TestClient) -> None:
+    cards = client.get("/seasons").json()
+    assert len(cards) >= 13
+    assert cards[0]["season"]["number"] == 1 and cards[0]["season"]["name"] == "Markhor"
+    assert {c["status"] for c in cards} <= {"past", "current", "upcoming"}
+
+    current = client.get("/seasons/current")
+    assert current.status_code == 200
+    body = current.json()
+    assert body["top"] == [] and body["rising"] is None  # empty DB: nothing invented
+    assert body["has_data"] is False
+
+    assert client.get("/seasons/42").status_code == 200
+    assert client.get("/seasons/41").status_code == 422  # before Pakistan Season 1
+    assert client.get("/seasons/abc").status_code == 422
+    assert "discord" not in str(client.get("/seasons/42").json()).lower()

@@ -113,3 +113,10 @@ def test_report_card_names_the_target_and_hides_nothing_staff_need() -> None:
     assert fields["Reporter"] == "Website visitor"
     assert fields["Source"] == "Website"
     assert fields["Status"] == "Open"
+
+
+def test_season_view_links_to_the_season_page() -> None:
+    from bot.content.network_embeds import season_view
+
+    (button,) = season_view(SITE, 43).children
+    assert button.url == "https://example.test/brawlistan/seasons.html?s=43"

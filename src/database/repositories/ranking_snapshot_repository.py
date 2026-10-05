@@ -107,6 +107,18 @@ class RankingSnapshotRepository:
         )
         return list((await self._session.execute(stmt)).scalars().all())
 
+    async def list_for_season(self, player_id: int, season: int) -> list[RankingSnapshot]:
+        """One player's readings in one season, oldest first (ADR-113)."""
+        stmt = (
+            select(RankingSnapshot)
+            .where(
+                RankingSnapshot.brawlhalla_player_id == player_id,
+                RankingSnapshot.season == season,
+            )
+            .order_by(RankingSnapshot.captured_at.asc())
+        )
+        return list((await self._session.execute(stmt)).scalars().all())
+
     async def list_since(self, player_id: int, since: datetime) -> list[RankingSnapshot]:
         """Oldest first (unlike list_recent) — services/digest_service.py
         diffs the first and last entries to get a rating gain over the

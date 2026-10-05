@@ -305,3 +305,38 @@ class CommunityActivityEntryResponse(BaseModel):
     level: int
     rank_title: str
     xp: int
+
+
+class SeasonCardResponse(BaseModel):
+    """One Pakistan season on the Seasons page (ADR-113)."""
+
+    season: PakistanSeasonResponse
+    status: str  # "past" | "current" | "upcoming"
+    has_data: bool
+    champion: str | None
+
+
+class SeasonRiserResponse(BaseModel):
+    brawlhalla_id: int
+    player_name: str
+    rating_gain: int
+    rating: int
+
+
+class SeasonLegendResponse(BaseModel):
+    legend_name_key: str
+    games: int
+    win_rate: float
+    players: int
+
+
+class SeasonDetailResponse(BaseModel):
+    """A season's story (ADR-113). Every part is null/empty without data."""
+
+    season: PakistanSeasonResponse
+    status: str
+    has_data: bool
+    top: list[RankingRowResponse]
+    rising: SeasonRiserResponse | None
+    legend: SeasonLegendResponse | None
+    tournaments: list[TournamentSummaryResponse]

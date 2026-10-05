@@ -118,6 +118,9 @@ const ShaheenAPI = (() => {
     getPakistanRising: (days = 7, limit = 10) => get(`/pakistan/rising?days=${days}&limit=${limit}`),
     getLegendMeta: (limit = 10) => get(`/legends/meta?limit=${limit}`),
     getFeatured: () => get("/featured"),
+    getSeasons: () => get("/seasons"),
+    getCurrentSeason: () => get("/seasons/current"),
+    getSeason: (brawlhallaSeason) => get(`/seasons/${encodeURIComponent(brawlhallaSeason)}`),
     getPlayer: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}`),
     getPlayerHistory: (brawlhallaId, limit = 20) =>
       get(`/players/${encodeURIComponent(brawlhallaId)}/history?limit=${limit}`),

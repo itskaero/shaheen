@@ -77,6 +77,19 @@ def profile_view(site_url: str, player_name: str, brawlhalla_id: int) -> discord
     return view
 
 
+def season_view(site_url: str, brawlhalla_season: int) -> discord.ui.View:
+    """A link to the season's page on the website (ADR-113)."""
+    view = discord.ui.View()
+    view.add_item(
+        discord.ui.Button(
+            label="Season page",
+            url=f"{site_url.rstrip('/')}/seasons.html?s={brawlhalla_season}",
+            emoji="🗓️",
+        )
+    )
+    return view
+
+
 def build_rankings_embed(
     *,
     rows: Sequence[RankingRow],

@@ -77,6 +77,8 @@ jobs:
           snapshot rankings /rankings/pakistan
           snapshot players /players
           snapshot featured /featured
+          snapshot seasons /seasons
+          snapshot season-current /seasons/current
 
       - name: Generate per-player pages
         # Static web/player/<slug>/index.html pages with each player's own
