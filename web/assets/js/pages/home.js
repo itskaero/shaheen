@@ -38,7 +38,7 @@
             (e, i) => `<tr>
               <td>${rankHtml(i + 1)}</td>
               <td><a class="bl-player" href="${profileHref(e)}">${avatarHtml(e.player_name, 28)}<span class="bl-player-name">${escapeHtml(e.player_name)}</span></a>
-                ${e.is_clan_member ? '<span class="pill pill-team">SHAHEEN</span>' : ""} ${verifiedPill(e)}</td>
+                ${verifiedPill(e)}</td>
               <td class="hide-sm">${tierBadge(e.tier)}</td>
               <td class="right num">${formatNumber(e.rating)}</td>
             </tr>`

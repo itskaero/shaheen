@@ -44,7 +44,7 @@
     { key: "home", label: "Home", href: "index.html", icon: "home", mobile: true },
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
-    { key: "teams", label: "Teams", href: "teams.html", icon: "shield", ready: false },
+    { key: "teams", label: "Teams", href: "teams.html", icon: "shield" },
     { key: "legends", label: "Legends", href: "legends.html", icon: "swords", ready: false },
     { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true },
     { key: "tournaments", label: "Tournaments", href: "tournaments.html", icon: "flag" },

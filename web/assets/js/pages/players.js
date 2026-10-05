@@ -32,7 +32,7 @@
   }
 
   function rolePill(p) {
-    if (p.team) return `<span class="pill pill-team card-pill">${escapeHtml(p.team)}</span>`;
+    if (p.team) return teamPillHtml(p.team, p.team_slug, "card-pill");
     if (p.is_verified) return '<span class="pill pill-verified card-pill">✓ Verified</span>';
     if (p.is_claimed) return '<span class="pill pill-muted card-pill">Claimed</span>';
     return '<span class="pill pill-muted card-pill">Unclaimed</span>';
@@ -83,7 +83,7 @@
             <td><a class="bl-player" href="${profileHref(p)}">${avatarHtml(p.player_name, 28)}<span class="bl-player-name">${escapeHtml(p.player_name)}</span></a>
               ${p.is_claimed ? '<span class="pill pill-verified">✓ Claimed</span>' : ""}</td>
             <td class="hide-sm">${escapeHtml(countryName(p.country) || "—")}</td>
-            <td class="hide-sm">${p.team ? `<span class="pill pill-team">${escapeHtml(p.team)}</span>` : '<span class="muted">—</span>'}</td>
+            <td class="hide-sm">${p.team ? teamPillHtml(p.team, p.team_slug) : '<span class="muted">—</span>'}</td>
             <td class="right num">${formatNumber(p.rating)}</td>
             <td class="hide-sm">${tierBadge(p.tier)}</td>
             <td class="hide-sm">${p.main_legend ? `<span class="legend-cell">${legendAvatarHtml(p.main_legend, 24)}${escapeHtml(legendDisplayName(p.main_legend))}</span>` : '<span class="muted">—</span>'}</td>

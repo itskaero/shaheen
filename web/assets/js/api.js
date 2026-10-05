@@ -119,6 +119,8 @@ const ShaheenAPI = (() => {
     getLegendMeta: (limit = 10) => get(`/legends/meta?limit=${limit}`),
     getFeatured: () => get("/featured"),
     getSeasons: () => get("/seasons"),
+    getTeams: () => get("/teams"),
+    getTeam: (slug) => get(`/teams/${encodeURIComponent(slug)}`),
     getCurrentSeason: () => get("/seasons/current"),
     getSeason: (brawlhallaSeason) => get(`/seasons/${encodeURIComponent(brawlhallaSeason)}`),
     getPlayer: (brawlhallaId) => get(`/players/${encodeURIComponent(brawlhallaId)}`),

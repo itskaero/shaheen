@@ -154,3 +154,13 @@ function seasonBannerHtml(season) {
       <span class="season-meta">Brawlhalla Season ${season.brawlhalla_season} &middot; until about ${until} &middot; a new season every 13 weeks</span>
     </div>`;
 }
+
+// A team pill that links to the team's page (ADR-114); plain text when the
+// team has no slug.
+function teamPillHtml(name, slug, extraClass = "") {
+  if (!name) return "";
+  const cls = `pill pill-team${extraClass ? ` ${extraClass}` : ""}`;
+  return slug
+    ? `<a class="${cls}" href="team.html?t=${encodeURIComponent(slug)}">${escapeHtml(name)}</a>`
+    : `<span class="${cls}">${escapeHtml(name)}</span>`;
+}

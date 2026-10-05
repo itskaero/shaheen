@@ -23,12 +23,12 @@ from database.repositories.legend_snapshot_repository import LegendSnapshotRepos
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
+from database.repositories.team_repository import TeamRepository
 
 TREND_WINDOW = timedelta(days=7)
 # Every Pakistan-board player is on the board because they (or staff) put
 # them on the Pakistan board, so that is the country it can honestly state.
 PAKISTAN = "PK"
-FOUNDING_TEAM = "SHAHEEN"
 
 
 @dataclass
@@ -38,6 +38,7 @@ class RankingRow:
     is_claimed: bool
     is_verified: bool
     team: str | None
+    team_slug: str | None
     country: str
     # Rating change over TREND_WINDOW within the season; None when there's
     # nothing to compare against yet.
@@ -58,6 +59,7 @@ class RankingsService:
         self._links = MemberPlayerLinkRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._legends = LegendSnapshotRepository(session)
+        self._teams = TeamRepository(session)
 
     async def pakistan(
         self, guild_id: int, *, season: int | None = None, now: datetime | None = None
@@ -78,7 +80,9 @@ class RankingsService:
             player.id for _m, player, _d in await self._links.list_active_for_guild(guild_id)
         }
         verified = await self._links.verified_player_ids()
-        for entry, player in await self._board.list_active(guild_id):
+        entries = await self._board.list_active(guild_id)
+        teams = await self._teams.teams_of(guild_id, [player.id for _e, player in entries])
+        for entry, player in entries:
             latest = await self._ranking.get_latest(player.id, season=season)
             if latest is None:
                 continue
@@ -88,7 +92,8 @@ class RankingsService:
                     snapshot=latest,
                     is_claimed=entry.owner_discord_id is not None or player.id in clan_player_ids,
                     is_verified=player.id in verified,
-                    team=FOUNDING_TEAM if player.id in clan_player_ids else None,
+                    team=teams[player.id].name if player.id in teams else None,
+                    team_slug=teams[player.id].slug if player.id in teams else None,
                     country=PAKISTAN,
                     trend=await self._trend(player.id, season, now),
                     main_legend=await self._main_legend(player.id),

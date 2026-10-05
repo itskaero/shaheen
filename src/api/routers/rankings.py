@@ -20,6 +20,7 @@ def ranking_row_response(row: RankingRow) -> RankingRowResponse:
         player_name=row.player.player_name,
         country=row.country,
         team=row.team,
+        team_slug=row.team_slug,
         is_claimed=row.is_claimed,
         is_verified=row.is_verified,
         region=row.snapshot.region or row.player.region,

@@ -97,7 +97,7 @@ untouched by the restructure.
 | 4 | Linking + verification | done (ADR-107) |
 | 5 | Discord restructure + bot commands | done (ADR-109, ADR-111) |
 | 6 | Seasons page | done (ADR-113) |
-| 7 | Teams | |
+| 7 | Teams | done (ADR-114) |
 | 8 | Tournaments | |
 | 9 | Legends + statistics | |
 | 10 | Reporting, PWA, SEO, README | |

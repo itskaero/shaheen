@@ -686,7 +686,7 @@ async def test_players_directory_and_seasons_endpoints(
     assert (entry["brawlhalla_id"], entry["slug"], entry["team"], entry["is_claimed"]) == (
         10,
         "foo-10",
-        "SHAHEEN",
+        None,  # linked, but on no team roster yet (ADR-114)
         True,
     )
     assert "discord_id" not in entry
@@ -775,3 +775,43 @@ def test_seasons_list_and_details(client: TestClient) -> None:
     assert client.get("/seasons/41").status_code == 422  # before Pakistan Season 1
     assert client.get("/seasons/abc").status_code == 422
     assert "discord" not in str(client.get("/seasons/42").json()).lower()
+
+
+async def test_teams_endpoints(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from database.models.team import Team
+    from database.repositories.team_repository import TeamRepository
+
+    assert client.get("/teams").json() == []
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # brawlhalla_id=10, "Foo"
+        team = await TeamRepository(session).add(
+            Team(
+                guild_id=GUILD_ID,
+                slug="delight-esports",
+                name="Delight Esports",
+                tag="DE",
+                logo="delight-esports",
+            )
+        )
+        foo = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(10)
+        assert foo is not None
+        await TeamRepository(session).add_member(
+            team_id=team.id, player_id=foo.id, role="captain", joined_at=datetime.now(UTC)
+        )
+        await session.commit()
+
+    (summary,) = client.get("/teams").json()
+    assert (summary["slug"], summary["members"], summary["logo"]) == (
+        "delight-esports",
+        1,
+        "delight-esports",
+    )
+    detail = client.get("/teams/delight-esports").json()
+    assert [(p["player_name"], p["role"], p["slug"]) for p in detail["roster"]] == [
+        ("Foo", "captain", "foo-10")
+    ]
+    assert "discord" not in str(detail).lower()
+    assert client.get("/teams/nope").status_code == 404
+    assert client.get("/players").json()[0]["team_slug"] == "delight-esports"

@@ -82,6 +82,7 @@ class RankingRowResponse(BaseModel):
     player_name: str
     country: str
     team: str | None
+    team_slug: str | None = None
     is_claimed: bool
     # Staff confirmed the account owner (/verify, ADR-107). A boolean only.
     is_verified: bool
@@ -116,6 +117,7 @@ class PlayerDirectoryEntryResponse(BaseModel):
     player_name: str
     country: str | None
     team: str | None
+    team_slug: str | None = None
     is_claimed: bool
     is_verified: bool
     on_pakistan_board: bool
@@ -340,3 +342,51 @@ class SeasonDetailResponse(BaseModel):
     rising: SeasonRiserResponse | None
     legend: SeasonLegendResponse | None
     tournaments: list[TournamentSummaryResponse]
+
+
+class TeamPlayerResponse(BaseModel):
+    """A player on a team (ADR-114). Brawlhalla identity only (ADR-040)."""
+
+    brawlhalla_id: int
+    player_name: str
+    slug: str
+    role: str  # "captain" | "player"
+    rating: int | None
+    peak_rating: int | None
+    tier: str | None
+    main_legend: str | None
+
+
+class TeamSummaryResponse(BaseModel):
+    slug: str
+    name: str
+    tag: str
+    country: str
+    logo: str | None
+    description: str | None
+    is_founding: bool
+    members: int
+    # Average of the best 3 placed players; null when nobody's placed.
+    rating: int | None
+    best: TeamPlayerResponse | None
+
+
+class TeamAchievementResponse(BaseModel):
+    player_name: str
+    key: str
+    name: str
+    awarded_at: datetime
+
+
+class TeamSeasonResponse(BaseModel):
+    season: int
+    pakistan_season: PakistanSeasonResponse | None
+    best: int | None
+    average: int | None
+    players: int
+
+
+class TeamDetailResponse(TeamSummaryResponse):
+    roster: list[TeamPlayerResponse]
+    achievements: list[TeamAchievementResponse]
+    seasons: list[TeamSeasonResponse]

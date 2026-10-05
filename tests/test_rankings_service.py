@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
+from database.models.team import Team
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
@@ -15,6 +16,7 @@ from database.repositories.member_player_link_repository import MemberPlayerLink
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from database.repositories.team_repository import TeamRepository
 from services.rankings_service import RankingsService
 
 GUILD_ID = 1
@@ -106,13 +108,20 @@ async def test_team_claim_and_main_legend(session: AsyncSession) -> None:
     b = await _board_player(session, 20)
     await _reading(session, a, rating=1500)
     await _reading(session, b, rating=1400)
-    # player 10 is also a linked clan member -> founding team
+    # player 10 is also a linked member of the founding team
     user = await DiscordUserRepository(session).get_or_create(5)
     member = await ShaheenMemberRepository(session).get_or_create(
         discord_user_id=user.id, guild_id=GUILD_ID
     )
     await MemberPlayerLinkRepository(session).link(
         shaheen_member_id=member.id, brawlhalla_player_id=a
+    )
+    # Teams come from rosters now (ADR-114), not from being linked.
+    shaheen = await TeamRepository(session).add(
+        Team(guild_id=GUILD_ID, slug="shaheen", name="SHAHEEN", tag="SHN", is_founding=True)
+    )
+    await TeamRepository(session).add_member(
+        team_id=shaheen.id, player_id=a, role="player", joined_at=NOW
     )
     await LegendSnapshotRepository(session).add_all(
         [
@@ -132,6 +141,7 @@ async def test_team_claim_and_main_legend(session: AsyncSession) -> None:
         row.player.brawlhalla_player_id: row
         for row in (await RankingsService(session).pakistan(GUILD_ID, now=NOW)).rows
     }
+    assert rows[10].team_slug == "shaheen"
     assert (rows[10].team, rows[10].is_claimed, rows[10].main_legend) == (
         "SHAHEEN",
         True,

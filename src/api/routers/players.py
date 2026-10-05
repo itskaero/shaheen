@@ -40,6 +40,7 @@ async def list_players(
             player_name=entry.player.player_name,
             country=entry.country,
             team=entry.team,
+            team_slug=entry.team_slug,
             is_claimed=entry.is_claimed,
             is_verified=entry.is_verified,
             on_pakistan_board=entry.on_pakistan_board,

@@ -44,6 +44,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.emoji",
     "bot.cogs.network",
     "bot.cogs.staff",
+    "bot.cogs.teams",
 )
 
 
