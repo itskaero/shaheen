@@ -84,3 +84,10 @@ def test_empty_optional_ids_mean_unset(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_channel_overrides_parse(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _from_env(monkeypatch, GUILD_ID="1", MOD_LOG_CHANNEL_ID="99")
     assert settings.mod_log_channel_id == 99
+
+
+def test_level_up_posts_are_off_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    settings = _from_env(monkeypatch, GUILD_ID="1")
+    assert settings.announce_level_ups is False
+    assert settings.announce_season_start is True
+    assert _from_env(monkeypatch, GUILD_ID="1", ANNOUNCE_LEVEL_UPS="true").announce_level_ups

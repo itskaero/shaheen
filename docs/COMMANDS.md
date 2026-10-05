@@ -202,8 +202,9 @@ Log a match directly between named players.
 ### /match view <match>
 Inspect a match's current status.
 
-### /report
-Report a match result.
+### /match report <match_id> <result>
+Report a match result for the other side to confirm. (Was `/report` until
+docs/DECISIONS.md ADR-111 gave `/report` to player reports.)
 
 ### /matches [user]
 Show a Shaheen member's match history.
@@ -271,9 +272,10 @@ Remove an active timeout early. Not destructive, no confirmation step.
 Remove a ban. Not destructive, no confirmation step; a no-op error if the
 user wasn't banned.
 
-### /purge <amount> [user]
-Bulk-delete up to `amount` recent messages in the current channel,
-optionally filtered to one user's messages.
+### /clear <amount> [user]
+Bulk-delete up to `amount` (1–100) recent messages in the current channel,
+optionally filtered to one user's messages, and log it. (Was `/purge`
+until ADR-111.)
 
 ### /lock [channel] [reason]
 Set `send_messages=False` for `@everyone` on a channel (defaults to the
@@ -340,6 +342,77 @@ ever added by hand too. Two-step confirmation matching `/setup reset`: a
 warning screen, then a modal requiring the exact text `DELETE ALL EMOJI`.
 Cannot be undone; the pack itself can be restored afterward with
 `/emoji sync`, nothing else can.
+
+## Phase 10 — BRAWLISTAN network (docs/DECISIONS.md ADR-111)
+
+None of these call the Brawlhalla API: they read what the snapshot loop
+stored. Read-only replies are ephemeral.
+
+### /ping
+Gateway latency.
+
+### /site
+The website, as link buttons (Home, Rankings, Players, Tournaments).
+
+### /rankings [board]
+Pakistan's top 10 for `1v1` (default) or `2v2`, or `rising` (this week's
+biggest rating gains). Placed players only; an empty board says "Data
+unavailable".
+
+### /season
+The current Pakistan season: number, name (English and Urdu), Brawlhalla
+season, dates and days left, with its card.
+
+### /legend <name>
+How a Legend is played across every tracked Pakistani player: players,
+lifetime games, win rate and popularity rank. Autocompletes names.
+
+### /tournaments
+The ten most recent tournaments and their status.
+
+### /looking <mode>
+Find a 1v1 sparring partner or a 2v2 game: posts a joinable card in
+#looking-for-game (the same flow as `/scrim`). One every 2 minutes per
+member.
+
+### /report <reason> [player] [name]
+Privately report a player to staff: a Discord member, or a Brawlhalla name
+for someone outside the server. Creates a moderation record and posts a card
+to #report (or `REPORT_CHANNEL_ID`) with the reporter, the reported player,
+the reason, the source, the time and the status. The reason needs 10+
+characters, you can't report yourself, and each member can send 3 reports
+per 10 minutes. The website's Report Player (Stage 10) creates the same
+record.
+
+### /profile — View profile
+`/profile` now carries a **View profile** button to the player's page on
+the website.
+
+### /announce <title> <message> [ping] *(staff)*
+Post a branded announcement to #announcements (or
+`ANNOUNCEMENT_CHANNEL_ID`) after a preview and confirm. Pings nobody unless
+`ping` is `here` or `everyone`. Audit-logged.
+
+### /feature [user] [brawlhalla_id] [note] [clear] *(staff)*
+Set the website's Featured Player to a linked member or a tracked
+Brawlhalla account, with an optional note; `clear:true` removes it. The
+home page shows it (`GET /featured`) and falls back to the Pakistan #1 when
+nobody is featured. Announced in #announcements unless `ANNOUNCE_FEATURED`
+is off. Audit-logged.
+
+### /sync *(Founder/Admin)*
+Re-sync the bot's slash commands to the server, for example after a deploy
+added commands.
+
+### /team
+Arrives with Teams (Stage 7).
+
+## Automatic posts
+
+Each can be switched off in the environment: `ANNOUNCE_SEASON_START`,
+`ANNOUNCE_WEEKLY_DIGEST`, `ANNOUNCE_PAKISTAN_WEEKLY`, `ANNOUNCE_ACHIEVEMENTS`
+(rank-ups and milestones in #achievements), `ANNOUNCE_FEATURED`, and
+`ANNOUNCE_LEVEL_UPS`, which is **off by default** to keep the server quiet.
 
 ## Weekly digest (standing job, not a command)
 

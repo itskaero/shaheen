@@ -78,6 +78,14 @@ class Settings(BaseSettings):
     report_channel_id: int | None = None
     mod_log_channel_id: int | None = None
     announcement_channel_id: int | None = None
+    # Which automatic posts the bot makes (ADR-111). Level-ups are off by
+    # default: they were the noisiest post and say little about the scene.
+    announce_season_start: bool = True
+    announce_weekly_digest: bool = True
+    announce_pakistan_weekly: bool = True
+    announce_achievements: bool = True
+    announce_level_ups: bool = False
+    announce_featured: bool = True
 
     @field_validator("database_url")
     @classmethod

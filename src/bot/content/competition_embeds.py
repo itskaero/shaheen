@@ -1,4 +1,4 @@
-"""Branded embeds for /challenge, /scrim, /match, /report, /matches, /tournament."""
+"""Branded embeds for /challenge, /scrim, /match (incl. /match report), /matches, /tournament."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def build_challenge_result_embed(*, accepted: bool, opponent_name: str) -> disco
         return discord.Embed(
             title="✅ Challenge Accepted",
             description=(
-                f"**{opponent_name}** accepted. Good luck — report the result with `/report`."
+                f"**{opponent_name}** accepted. Good luck — report the result with `/match report`."
             ),
             colour=FOREST_GREEN,
         )
@@ -67,7 +67,7 @@ def build_scrim_full_embed(*, kind: MatchKind) -> discord.Embed:
     return discord.Embed(
         title="✅ Scrim Full",
         description=(
-            f"The {kind.value} scrim is full — good luck! Report the result with `/report`."
+            f"The {kind.value} scrim is full — good luck! Report the result with `/match report`."
         ),
         colour=FOREST_GREEN,
     )

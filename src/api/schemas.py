@@ -152,6 +152,18 @@ class LegendMetaResponse(BaseModel):
     win_rate: float
 
 
+class FeaturedPlayerResponse(BaseModel):
+    """Staff's /feature pick (ADR-111). Brawlhalla identity only (ADR-040)."""
+
+    brawlhalla_id: int
+    player_name: str
+    note: str | None
+    featured_at: datetime
+    rating: int | None
+    peak_rating: int | None
+    tier: str | None
+
+
 class RosterEntryResponse(BaseModel):
     brawlhalla_id: int
     player_name: str

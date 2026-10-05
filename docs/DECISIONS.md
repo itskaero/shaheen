@@ -4659,3 +4659,83 @@ Verified with Playwright at 1440px and 390px:
 - **Reduced motion:** a still frame and zero animation frames.
 - **Layout:** no horizontal overflow, and no canvas on other pages.
 - **Console:** no errors.
+
+## ADR-111 — BRAWLISTAN bot commands, player reports, featured player, quiet announcements
+
+**Status:** accepted. Completes Stage 5 (Stage 5a was ADR-109).
+
+**Context.** The brief lists the bot's commands. Most existed under SHAHEEN-era names; the rest needed
+adding.
+
+**New commands.**
+- **`bot/cogs/network.py`:**
+  - `/ping`, `/site` (link buttons);
+  - `/rankings [1v1|2v2|rising]`, which uses `RankingsService.pakistan` plus a new pure
+    `ranked_rows()`, and `PakistanBoardService.climbers`;
+  - `/season`, `/legend` (`NetworkService.legend_meta`, with autocomplete from the portrait set);
+  - `/tournaments`;
+  - `/looking`: reuses `announce_scrim`, so it posts the same joinable card as `/scrim` and the kiosk,
+    with a 2-minute cooldown.
+  - None of them call the Brawlhalla API.
+- **`bot/cogs/staff.py`:**
+  - `/announce`: preview and confirm, `AllowedMentions.none()` unless asked, audit-logged;
+  - `/feature`;
+  - `/sync`: Founder/Admin, re-syncs the slash commands.
+- **Renames:**
+  - `/purge` becomes `/clear`;
+  - match reporting moves from `/report` to `/match report`, freeing `/report` for player reports.
+- **`/profile`** gains a **View profile** link button to `player/<slug>/`.
+- **`/team`** waits for Stage 7.
+
+**Player reports.**
+- **One record for both sources:** a `player_reports` table (migration 0019), shared by Discord
+  `/report` and, in Stage 10, the website.
+- **`services/report_service.ReportService` rules:**
+  - text is cleaned (control characters stripped, whitespace collapsed);
+  - a reason needs at least 10 characters, and the length is capped;
+  - nobody can report themselves;
+  - each Discord reporter gets 3 reports per 10 minutes;
+  - every report is audit-logged.
+- **The #report card:** reporter, reported player, reason, source, time and status. Mentions never ping.
+- **The queue:** a report whose card didn't post (and every future website report) stays queued, and
+  the snapshot tick posts it. The bot has no inbound HTTP, so this is how website reports reach staff.
+
+**Featured Player.**
+- **Storage:** `guild_settings.featured_*` holds a Brawlhalla id, never a Discord id (ADR-040).
+- **Set by `/feature`**, only for an account BRAWLISTAN already tracks, so its numbers are real.
+- **`GET /featured`:** 404 when nobody is featured. It's added to the snapshot workflow.
+- **Home page:** shows the staff pick with its note, and otherwise falls back to "Pakistan #1 this
+  season" as before.
+
+**Quiet by default.** Each automatic post has a setting: `ANNOUNCE_SEASON_START`,
+`ANNOUNCE_WEEKLY_DIGEST`, `ANNOUNCE_PAKISTAN_WEEKLY`, `ANNOUNCE_ACHIEVEMENTS`, `ANNOUNCE_FEATURED`
+and `ANNOUNCE_LEVEL_UPS`. Chat level-ups, the noisiest post, are off by default.
+
+Files:
+- **new:**
+  - `src/bot/cogs/{network,staff}.py`, `src/bot/content/network_embeds.py`;
+  - `src/services/{report_service,featured_service}.py`, `src/database/models/player_report.py`,
+    `src/database/repositories/player_report_repository.py`, `src/api/routers/featured.py`;
+  - `alembic/versions/0019_player_reports_featured.py`;
+  - tests for the reports, the featured player and the embeds.
+- **changed:**
+  - `bot/cogs/{moderation,competition,profile,clan,engagement}.py`, `bot/client.py`,
+    `bot/content/{help_embeds,competition_embeds,moderation_embeds}.py`;
+  - `services/rankings_service.py`, `database/models/guild_settings.py` and its repository,
+    `core/config.py`, `.env.example`, `api/{app,schemas}.py`;
+  - `.github/workflows/snapshot.yml`, `web/assets/js/{api,pages/home}.js`;
+  - `docs/COMMANDS.md`.
+
+Verified:
+- **Tests:**
+  - reports: validation, the self-report block, rate limiting (website reporters are exempt), audit
+    rows and the queue;
+  - the featured player: only tracked players, set and clear, `/featured` 404 then 200 with no Discord
+    ids;
+  - embeds: medals, the 2v2 numbers, "Data unavailable", slugged profile links, days left in the
+    season, report card fields;
+  - config: level-ups off by default;
+  - the help catalog matches the registered commands, and each section fits Discord's 1024-character
+    field limit (setup commands split into their own section).
+- **Migration:** Alembic upgrade, downgrade and upgrade for 0019.
+- **Checks:** ruff, mypy and the full suite pass.

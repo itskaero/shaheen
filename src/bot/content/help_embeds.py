@@ -51,6 +51,8 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/verify", "Confirm a member owns their linked account.", staff_only=True),
             CommandHelp("/profile", "Your one-look card: rank, stats, chat level, badges."),
             CommandHelp("/refresh", "Pull your latest stats now instead of waiting for the loop."),
+            CommandHelp("/site", "Links to the BRAWLISTAN website."),
+            CommandHelp("/ping", "Check that the bot is awake."),
         ),
     ),
     HelpSection(
@@ -67,9 +69,12 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
     ),
     HelpSection(
         key="clan",
-        title="🏆 The Clan",
+        title="🇵🇰 Rankings & Scene",
         commands=(
-            CommandHelp("/leaderboard", "Shaheen's internal ranked ladder."),
+            CommandHelp("/rankings", "Pakistan's top 10 — 1v1, 2v2 or this week's risers."),
+            CommandHelp("/season", "The current Pakistan season and days left."),
+            CommandHelp("/legend", "How a Legend is played across Pakistan."),
+            CommandHelp("/leaderboard", "SHAHEEN (founding team) ranked ladder."),
             CommandHelp("/pakistan leaderboard", "Pakistan's ranked ladder — clan or not."),
             CommandHelp("/pakistan join", "Put yourself on the Pakistan leaderboard."),
             CommandHelp("/pakistan leave", "Take yourself off the Pakistan leaderboard."),
@@ -86,8 +91,9 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="⚔️ Playing",
         commands=(
             CommandHelp("/challenge", "Challenge another member to a 1v1."),
+            CommandHelp("/looking", "Find a 1v1 sparring partner or a 2v2 game."),
             CommandHelp("/scrim", "Announce a scrim for members to join."),
-            CommandHelp("/report", "Report a match result for the other side to confirm."),
+            CommandHelp("/match report", "Report a match result for the other side to confirm."),
             CommandHelp("/matches", "A member's match history."),
             CommandHelp("/match create", "Log a match directly between named players."),
             CommandHelp("/match view", "Inspect a match's current status."),
@@ -97,6 +103,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="tournaments",
         title="🥇 Tournaments",
         commands=(
+            CommandHelp("/tournaments", "Upcoming and recent tournaments."),
             CommandHelp("/tournament register", "Enter an open tournament."),
             CommandHelp("/tournament bracket", "Show a tournament's current bracket."),
             CommandHelp("/tournament create", "Create a tournament.", staff_only=True),
@@ -108,7 +115,8 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="community",
         title="💬 Community",
         commands=(
-            CommandHelp("/anthem", "Link to Shaheen's Music Library on the website."),
+            CommandHelp("/report", "Privately report a player to staff."),
+            CommandHelp("/anthem", "Link to the Music Library on the website."),
             CommandHelp("/help", "This list."),
         ),
     ),
@@ -125,13 +133,17 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/ban", "Ban a member.", True),
             CommandHelp("/unban", "Remove a ban.", True),
             CommandHelp("/nickname", "Set or reset a member's nickname.", True),
-            CommandHelp("/purge", "Delete recent messages in a channel.", True),
+            CommandHelp("/clear", "Delete recent messages in a channel.", True),
         ),
     ),
     HelpSection(
         key="staff_server",
         title="🛠️ Staff — Server",
         commands=(
+            CommandHelp(
+                "/announce", "Post an announcement (preview first, no ping by default).", True
+            ),
+            CommandHelp("/feature", "Set the website's Featured Player.", True),
             CommandHelp("/spotlight", "Feature a member in #announcements.", True),
             CommandHelp("/lock", "Stop @everyone from sending in a channel.", True),
             CommandHelp("/unlock", "Undo a /lock on a channel.", True),
@@ -141,6 +153,13 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
             CommandHelp("/pakistan add", "Add any Pakistani player to that leaderboard.", True),
             CommandHelp("/pakistan remove", "Remove a player from the Pakistan board.", True),
+        ),
+    ),
+    HelpSection(
+        key="staff_setup",
+        title="⚙️ Staff — Setup",
+        commands=(
+            CommandHelp("/sync", "Re-sync the bot's slash commands.", True),
             CommandHelp("/setup run", "Create or reuse the BRAWLISTAN roles and channels.", True),
             CommandHelp(
                 "/setup roles", "Create missing roles only; never grants permissions.", True

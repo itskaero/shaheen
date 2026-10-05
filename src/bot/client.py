@@ -42,6 +42,8 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.moderation",
     "bot.cogs.engagement",
     "bot.cogs.emoji",
+    "bot.cogs.network",
+    "bot.cogs.staff",
 )
 
 

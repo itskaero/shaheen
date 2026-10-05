@@ -41,10 +41,13 @@ from bot.content.moderation_embeds import (
     build_warn_dm_embed,
     build_warnings_embed,
 )
+from bot.content.network_embeds import build_player_report_embed, build_report_received_embed
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
+from database.models.player_report import PlayerReport
 from database.repositories.warning_repository import WarningRepository
 from database.session import session_scope
+from services.report_service import ReportService
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,27 @@ def _require_member(interaction: discord.Interaction) -> discord.Member:
     if not isinstance(member, discord.Member) or interaction.guild is None:
         raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
     return member
+
+
+async def post_player_report(
+    bot: ShaheenBot, guild: discord.Guild, report: PlayerReport, *, reporter: str | None
+) -> int | None:
+    """Post a report's card to #report (or REPORT_CHANNEL_ID); the message id,
+    or None when there's nowhere to post (ADR-111). Mentions in the card never
+    ping anyone."""
+    channel = await resolve_provisioned_channel(bot, guild, CHANNEL_REPORT.logical_key)
+    if channel is None:
+        logger.warning("Report #%s not posted: no #report channel", report.id)
+        return None
+    try:
+        message = await channel.send(
+            embed=build_player_report_embed(report, reporter=reporter),
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
+    except discord.HTTPException as exc:
+        logger.warning("Report #%s not posted: %s", report.id, exc)
+        return None
+    return message.id
 
 
 class ModerationCog(commands.Cog):
@@ -76,6 +100,45 @@ class ModerationCog(commands.Cog):
             await channel.send(embed=embed)
         except discord.Forbidden:
             logger.warning("Missing permission to post in the mod-log channel")
+
+    # --- /report (players; ADR-111) -----------------------------------------
+
+    @app_commands.command(name="report", description="Privately report a player to staff")
+    @app_commands.describe(
+        player="The member you're reporting",
+        name="Or their Brawlhalla name, if they're not in the server",
+        reason="What happened (at least 10 characters)",
+    )
+    async def report(
+        self,
+        interaction: discord.Interaction,
+        reason: app_commands.Range[str, 1, 1000],
+        player: discord.Member | None = None,
+        name: app_commands.Range[str, 1, 64] | None = None,
+    ) -> None:
+        reporter = _require_member(interaction)
+        if player is None and not name:
+            raise ShaheenError("Pick the member you're reporting, or give their name.")
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            service = ReportService(session)
+            report = await service.create(
+                guild_id=reporter.guild.id,
+                source="discord",
+                reporter_discord_id=reporter.id,
+                reported_discord_id=player.id if player else None,
+                reported_name=player.display_name if player else (name or ""),
+                reason=reason,
+            )
+            message_id = await post_player_report(
+                self.bot, reporter.guild, report, reporter=reporter.mention
+            )
+            if message_id is not None:
+                await service.mark_posted(report, message_id)
+            report_id = report.id
+        await interaction.followup.send(
+            embed=build_report_received_embed(report_id), ephemeral=True
+        )
 
     # --- /warn / /warnings / /clearwarnings --------------------------------
 
@@ -316,16 +379,16 @@ class ModerationCog(commands.Cog):
             f"{user.mention} timed out for {minutes} minute(s).", ephemeral=True
         )
 
-    # --- /purge --------------------------------------------------------------
+    # --- /clear (was /purge until ADR-111) ------------------------------------
 
     @app_commands.command(
-        name="purge", description="Delete recent messages in this channel (staff only)"
+        name="clear", description="Delete recent messages in this channel (staff only)"
     )
     @app_commands.describe(
         amount="How many messages to delete (1-100)", user="Only delete this user's messages"
     )
     @require_staff_authorized()
-    async def purge(
+    async def clear(
         self,
         interaction: discord.Interaction,
         amount: app_commands.Range[int, 1, 100],

@@ -12,6 +12,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot.client import ShaheenBot
+from bot.content.network_embeds import profile_view
 from bot.content.profile_embeds import (
     build_compare_embed,
     build_legends_embed,
@@ -81,7 +82,11 @@ class ProfileCog(commands.Cog):
             discord_joined_at=member.joined_at,
         )
         files = await attach_legend_strip(embed, _top_legend_keys(stats, 3))
-        await interaction.followup.send(embed=embed, files=files, ephemeral=True)
+        # VIEW PROFILE opens the player's page on the website (ADR-111).
+        view = profile_view(
+            self.bot.settings.site_url, player.player_name, player.brawlhalla_player_id
+        )
+        await interaction.followup.send(embed=embed, files=files, view=view, ephemeral=True)
 
     @app_commands.command(name="rank", description="Show a Shaheen member's ranked standing")
     @app_commands.describe(user="Whose rank to show (defaults to you)")

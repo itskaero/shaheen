@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
+from bot.cogs.moderation import post_player_report
 from bot.constants import ROLE_PLAYER, ROLE_VERIFIED, RoleSpec
 from bot.content.clan_embeds import (
     build_achievement_announcement_embed,
@@ -54,6 +55,7 @@ from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import render_milestone_card
 from services.link_service import LinkService
 from services.pakistan_board_service import PakistanBoardService
+from services.report_service import ReportService
 from services.seasons import season_to_announce
 from services.snapshot_service import Announcement, SnapshotService
 
@@ -132,10 +134,14 @@ class ClanCog(commands.Cog):
             len(result.announcements),
         )
         await self._sync_account_roles(guild)
-        await self._announce_season_start(guild)
-
-        for announcement in result.announcements:
-            await self._announce(guild, announcement)
+        # Automatic posts are individually switchable (ADR-111).
+        announce = self.bot.settings
+        if announce.announce_season_start:
+            await self._announce_season_start(guild)
+        if announce.announce_achievements:
+            for announcement in result.announcements:
+                await self._announce(guild, announcement)
+        await self._post_pending_reports(guild)
 
     async def _announce(self, guild: discord.Guild, announcement: Announcement) -> None:
         channel = await self._hall_of_fame_channel(guild)
@@ -224,13 +230,15 @@ class ClanCog(commands.Cog):
         async with session_scope(self.bot.session_factory) as session:
             digest = await WeeklyDigestService(session).build_and_rotate(guild.id, since=since)
 
-        await self._post_weekly_digest(guild, digest)
+        if self.bot.settings.announce_weekly_digest:
+            await self._post_weekly_digest(guild, digest)
         if digest.mvp_discord_id is not None:
             # Being named MVP is itself an achievement (docs/DECISIONS.md
             # ADR-081). The MVP of the Week role retired with ADR-109.
             async with session_scope(self.bot.session_factory) as session:
                 await self._award_mvp_achievement(session, guild.id, digest.mvp_discord_id)
-        await self._post_pakistan_weekly(guild, since)
+        if self.bot.settings.announce_pakistan_weekly:
+            await self._post_pakistan_weekly(guild, since)
 
     async def _post_pakistan_weekly(self, guild: discord.Guild, since: datetime) -> None:
         """Pakistan standings to #rankings (docs/DECISIONS.md ADR-100, ADR-109).
@@ -329,6 +337,21 @@ class ClanCog(commands.Cog):
                 await channel.send(embed=mvp_embed)
             except discord.Forbidden:
                 logger.warning("Missing permission to post MVP announcement")
+
+    async def _post_pending_reports(self, guild: discord.Guild) -> None:
+        """Post any report whose #report card isn't up yet — website reports,
+        and Discord ones whose first post failed (ADR-111). The bot has no
+        inbound HTTP, so this tick is how a website report reaches staff."""
+        async with session_scope(self.bot.session_factory) as session:
+            service = ReportService(session)
+            for report in await service.unposted(guild.id):
+                reporter = (
+                    f"<@{report.reporter_discord_id}>" if report.reporter_discord_id else None
+                )
+                message_id = await post_player_report(self.bot, guild, report, reporter=reporter)
+                if message_id is None:
+                    return  # no channel or no permission: retry next tick
+                await service.mark_posted(report, message_id)
 
     async def _sync_account_roles(self, guild: discord.Guild) -> None:
         """Player for every linked member, Verified for every staff-verified
