@@ -21,7 +21,7 @@ from database.repositories.member_player_link_repository import MemberPlayerLink
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.team_repository import TeamRepository
-from services.rankings_service import PAKISTAN
+from services.rankings_service import PAKISTAN, shown_tag
 from services.seasons import pakistan_season
 
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
@@ -54,6 +54,7 @@ class DirectoryEntry:
     country: str | None
     team: str | None
     team_slug: str | None
+    team_tag: str | None
     is_claimed: bool
     is_verified: bool
     on_pakistan_board: bool
@@ -91,7 +92,7 @@ class PlayersService:
         }
         players = {**{pid: p for pid, (_e, p) in board.items()}, **linked}
         verified = await self._links.verified_player_ids()
-        teams = await self._teams.teams_of(guild_id, list(players))
+        teams = await self._teams.memberships_of(guild_id, list(players))
 
         entries: list[DirectoryEntry] = []
         for pid, player in players.items():
@@ -107,8 +108,9 @@ class PlayersService:
                     slug=player_slug(player.player_name, player.brawlhalla_player_id),
                     snapshot=snapshot,
                     country=PAKISTAN if board_entry else None,
-                    team=teams[pid].name if pid in teams else None,
-                    team_slug=teams[pid].slug if pid in teams else None,
+                    team=teams[pid][0].name if pid in teams else None,
+                    team_slug=teams[pid][0].slug if pid in teams else None,
+                    team_tag=shown_tag(teams.get(pid)),
                     # Claimed = tied to a Discord member, either by /pakistan
                     # join or by /link (ADR-100).
                     is_claimed=pid in linked

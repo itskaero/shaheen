@@ -189,3 +189,37 @@ async def test_detail_roster_and_season_results(session: AsyncSession) -> None:
     (s42,) = detail.seasons
     assert (s42.season, s42.best, s42.average, s42.players) == (42, 1900, 1700, 2)
     assert await service.detail(GUILD, "nope") is None
+
+
+async def test_players_choose_whether_to_wear_their_tag(session: AsyncSession) -> None:
+    from database.models.pakistan_board_entry import PakistanBoardEntry  # noqa: F401
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+    from services.rankings_service import RankingsService
+
+    service = TeamService(session)
+    delight = await _team(service)
+    pid = await _player(session, 10, 1900)
+    await PakistanBoardRepository(session).add(
+        guild_id=GUILD, player_id=pid, added_by_discord_id=1, owner_discord_id=None
+    )
+    await service.add_member(delight, brawlhalla_id=10, actor_discord_id=STAFF, is_staff=True)
+
+    async def tag() -> str | None:
+        (row,) = (await RankingsService(session).pakistan(GUILD)).rows
+        return row.team_tag
+
+    assert await tag() == "DE"  # on by default
+    player = await BrawlhallaPlayerRepository(session).get_by_id(pid)
+    assert player is not None
+    await service.set_show_tag(guild_id=GUILD, player=player, show=False, actor_discord_id=7)
+    assert await tag() is None
+    (row,) = (await RankingsService(session).pakistan(GUILD)).rows
+    assert row.team == "Delight Esports"  # still on the team, just not wearing the tag
+    await service.set_show_tag(guild_id=GUILD, player=player, show=True, actor_discord_id=7)
+    assert await tag() == "DE"
+
+    other = await BrawlhallaPlayerRepository(session).upsert(
+        brawlhalla_player_id=20, player_name="Solo", region=None
+    )
+    with pytest.raises(NotFoundError):
+        await service.set_show_tag(guild_id=GUILD, player=other, show=True, actor_discord_id=8)

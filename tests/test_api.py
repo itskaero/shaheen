@@ -814,4 +814,5 @@ async def test_teams_endpoints(
     ]
     assert "discord" not in str(detail).lower()
     assert client.get("/teams/nope").status_code == 404
-    assert client.get("/players").json()[0]["team_slug"] == "delight-esports"
+    (entry,) = client.get("/players").json()
+    assert (entry["team_slug"], entry["team_tag"]) == ("delight-esports", "DE")

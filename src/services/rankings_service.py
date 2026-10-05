@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.ranking_snapshot import RankingSnapshot
+from database.models.team import Team, TeamMember
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
@@ -39,6 +40,9 @@ class RankingRow:
     is_verified: bool
     team: str | None
     team_slug: str | None
+    # The tag shown before the name, e.g. "SHN"; None when the player has no
+    # team or chose not to wear it (ADR-115).
+    team_tag: str | None
     country: str
     # Rating change over TREND_WINDOW within the season; None when there's
     # nothing to compare against yet.
@@ -81,7 +85,7 @@ class RankingsService:
         }
         verified = await self._links.verified_player_ids()
         entries = await self._board.list_active(guild_id)
-        teams = await self._teams.teams_of(guild_id, [player.id for _e, player in entries])
+        teams = await self._teams.memberships_of(guild_id, [player.id for _e, player in entries])
         for entry, player in entries:
             latest = await self._ranking.get_latest(player.id, season=season)
             if latest is None:
@@ -92,8 +96,9 @@ class RankingsService:
                     snapshot=latest,
                     is_claimed=entry.owner_discord_id is not None or player.id in clan_player_ids,
                     is_verified=player.id in verified,
-                    team=teams[player.id].name if player.id in teams else None,
-                    team_slug=teams[player.id].slug if player.id in teams else None,
+                    team=teams[player.id][0].name if player.id in teams else None,
+                    team_slug=teams[player.id][0].slug if player.id in teams else None,
+                    team_tag=shown_tag(teams.get(player.id)),
                     country=PAKISTAN,
                     trend=await self._trend(player.id, season, now),
                     main_legend=await self._main_legend(player.id),
@@ -115,6 +120,14 @@ class RankingsService:
         legends = await self._legends.list_latest_per_legend(player_id)
         best = max(legends, key=lambda legend: legend.games, default=None)
         return best.legend_name_key if best and best.games > 0 else None
+
+
+def shown_tag(membership: tuple[Team, TeamMember] | None) -> str | None:
+    """The team tag a player wears next to their name, if they wear one."""
+    if membership is None:
+        return None
+    team, member = membership
+    return team.tag if member.show_tag else None
 
 
 def ranked_rows(board: RankingsBoard, bracket: str = "1v1") -> list[RankingRow]:

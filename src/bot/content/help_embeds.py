@@ -76,6 +76,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/legend", "How a Legend is played across Pakistan."),
             CommandHelp("/team info", "A team's roster and rating (yours by default)."),
             CommandHelp("/team leave", "Leave your team."),
+            CommandHelp("/team tag", "Show or hide your [TAG] next to your name."),
             CommandHelp("/leaderboard", "SHAHEEN (founding team) ranked ladder."),
             CommandHelp("/pakistan leaderboard", "Pakistan's ranked ladder — clan or not."),
             CommandHelp("/pakistan join", "Put yourself on the Pakistan leaderboard."),

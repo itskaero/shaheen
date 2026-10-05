@@ -414,6 +414,12 @@ placed players; with nobody placed it says "Data unavailable".
 ### /team leave
 Leave your team. Your history on it is kept.
 
+### /team tag <show>
+Show or hide your team tag, e.g. **[SHN] kaero.**, before your name on the
+rankings, Players page, your profile and `/rankings` (ADR-115). On by
+default; hiding it keeps you on the team. Visitors can also hide every tag
+on the Rankings page with its "Team tags" switch.
+
 ### /team add <name> [user] [brawlhalla_id] · /team remove … *(staff or that team's captain)*
 Add a player to a team, or remove one. The player is a linked member or a
 tracked Brawlhalla account. A player is on at most one team at a time:

@@ -164,3 +164,9 @@ function teamPillHtml(name, slug, extraClass = "") {
     ? `<a class="${cls}" href="team.html?t=${encodeURIComponent(slug)}">${escapeHtml(name)}</a>`
     : `<span class="${cls}">${escapeHtml(name)}</span>`;
 }
+
+// "[SHN]" before a player's name, when they wear their team tag (ADR-115).
+// The Rankings page can hide every tag (body.hide-tags).
+function tagChipHtml(tag) {
+  return tag ? `<span class="clan-tag" title="Team tag">[${escapeHtml(tag)}]</span> ` : "";
+}

@@ -58,7 +58,7 @@
         (p) => `<a class="player-card" href="${profileHref(p)}">
           ${rolePill(p)}
           ${avatarHtml(p.player_name, 76)}
-          <h3>${escapeHtml(p.player_name)}</h3>
+          <h3>${tagChipHtml(p.team_tag)}${escapeHtml(p.player_name)}</h3>
           <span class="sub">${p.country === "PK" ? "🇵🇰 " : ""}${escapeHtml(countryName(p.country) || "Country not set")}${p.region ? ` · ${escapeHtml(p.region)}` : ""}</span>
           <div class="card-stats">
             <div><strong class="num">${formatNumber(p.rating)}</strong><span>Rating</span></div>
@@ -80,7 +80,7 @@
       <tbody>${list
         .map(
           (p) => `<tr>
-            <td><a class="bl-player" href="${profileHref(p)}">${avatarHtml(p.player_name, 28)}<span class="bl-player-name">${escapeHtml(p.player_name)}</span></a>
+            <td><a class="bl-player" href="${profileHref(p)}">${avatarHtml(p.player_name, 28)}<span class="bl-player-name">${tagChipHtml(p.team_tag)}${escapeHtml(p.player_name)}</span></a>
               ${p.is_claimed ? '<span class="pill pill-verified">✓ Claimed</span>' : ""}</td>
             <td class="hide-sm">${escapeHtml(countryName(p.country) || "—")}</td>
             <td class="hide-sm">${p.team ? teamPillHtml(p.team, p.team_slug) : '<span class="muted">—</span>'}</td>

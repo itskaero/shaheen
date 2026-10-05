@@ -58,3 +58,6 @@ class TeamMember(TimestampMixin, Base):
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="player")
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # The player's choice to wear the team tag next to their name, e.g.
+    # "[SHN] kaero." on the rankings (ADR-115). On by default.
+    show_tag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
