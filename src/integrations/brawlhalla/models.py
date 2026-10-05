@@ -54,6 +54,13 @@ def fix_name(name: str) -> str:
         return name
 
 
+def _region_text(value: object) -> object:
+    """Regions arrive as a code ("SEA") on a player, but as a number on a 2v2
+    team (seen live: 10). Keep either as text rather than fail the whole
+    ranked response over a field nothing depends on (ADR-123)."""
+    return str(value) if isinstance(value, int) and not isinstance(value, bool) else value
+
+
 class SearchResult(BaseModel):
     """GET /search?steamid=... — a Steam account resolved to a Brawlhalla ID."""
 
@@ -127,6 +134,8 @@ class RankedTeamStat(_RankedStanding):
     wins: int = 0
     games: int = 0
 
+    _region = field_validator("region", mode="before")(_region_text)
+
     def partner_name(self, brawlhalla_id: int) -> str | None:
         """The other player's name, from the "One+Two" team label."""
         one, sep, two = self.teamname.partition("+")
@@ -150,6 +159,8 @@ class PlayerRankedResponse(_RankedStanding):
     legends: list[RankedLegendStat] = Field(default_factory=list)
     # The API's key is "2v2", which isn't a Python identifier.
     teams_2v2: list[RankedTeamStat] = Field(default_factory=list, alias="2v2")
+
+    _region = field_validator("region", mode="before")(_region_text)
 
     @property
     def best_2v2(self) -> RankedTeamStat | None:

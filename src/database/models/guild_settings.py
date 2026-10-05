@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String
+from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.models.base import Base, TimestampMixin
@@ -28,6 +28,14 @@ class GuildSettings(TimestampMixin, Base):
     featured_brawlhalla_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     featured_note: Mapped[str | None] = mapped_column(String(140), nullable=True)
     featured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Join access (ADR-123): the role a new member gets while approval is on,
+    # the role that grants access (/approval, or on join while approval is
+    # off), and the switch. Internal only; never exposed by the API.
+    join_role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    approved_role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    approval_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"GuildSettings(guild_id={self.guild_id}, setup_mode={self.setup_mode!r})"

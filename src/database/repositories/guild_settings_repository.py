@@ -47,6 +47,22 @@ class GuildSettingsRepository:
         settings.featured_at = at
         await self._session.flush()
 
+    async def set_access(
+        self,
+        guild_id: int,
+        *,
+        join_role_id: int | None,
+        approved_role_id: int | None,
+        approval_enabled: bool,
+    ) -> GuildSettings:
+        """Store the join-access settings (ADR-123)."""
+        settings = await self._get_or_create(guild_id)
+        settings.join_role_id = join_role_id
+        settings.approved_role_id = approved_role_id
+        settings.approval_enabled = approval_enabled
+        await self._session.flush()
+        return settings
+
     async def mark_season_announced(self, guild_id: int, brawlhalla_season: int) -> None:
         """Remember the season-start post (docs/DECISIONS.md ADR-102).
 

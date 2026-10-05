@@ -45,6 +45,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.network",
     "bot.cogs.staff",
     "bot.cogs.teams",
+    "bot.cogs.access",
 )
 
 

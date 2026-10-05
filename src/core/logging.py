@@ -12,14 +12,23 @@ import logging
 import re
 
 _TOKEN_LIKE = re.compile(r"[\w-]{20,}\.[\w-]{6,}\.[\w-]{20,}")  # discord token shape
+# The Brawlhalla API takes its key as a query parameter, so any logged
+# request URL carries it (ADR-123).
+_API_KEY_PARAM = re.compile(r"(api_key=)[^&\s\"']+", re.IGNORECASE)
 _REDACTED = "[REDACTED]"
+
+
+def redact(message: str) -> str:
+    message = _TOKEN_LIKE.sub(_REDACTED, message)
+    return _API_KEY_PARAM.sub(lambda m: m.group(1) + _REDACTED, message)
 
 
 class _SecretRedactionFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         message = record.getMessage()
-        if _TOKEN_LIKE.search(message):
-            record.msg = _TOKEN_LIKE.sub(_REDACTED, message)
+        redacted = redact(message)
+        if redacted != message:
+            record.msg = redacted
             record.args = ()
         return True
 
@@ -43,3 +52,7 @@ def configure_logging(level: str = "INFO") -> None:
 
     # discord.py is chatty at INFO; keep it visible but not overwhelming.
     logging.getLogger("discord").setLevel(max(root.level, logging.INFO))
+    # httpx logs every request URL at INFO, and Brawlhalla's carry the API
+    # key. The client logs its own failures, so only warnings are kept.
+    for name in ("httpx", "httpcore"):
+        logging.getLogger(name).setLevel(max(root.level, logging.WARNING))
