@@ -55,7 +55,7 @@
   const COMMUNITY = [
     { key: "achievements", label: "Achievements", href: "achievements.html", icon: "award" },
     { key: "shaheen", label: "Founding Team", href: "clan.html", icon: "feather" },
-    { key: "anthem", label: "Anthem", href: "music.html", icon: "music" },
+    { key: "anthem", label: "Music", href: "music.html", icon: "music" },
   ];
 
   const page = document.body.dataset.page || "";

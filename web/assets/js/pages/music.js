@@ -1,297 +1,365 @@
-// Music library page (docs/DECISIONS.md ADR-095): a small player over two
-// full-length clan anthem tracks, with a live Web Audio frequency
-// visualizer — it only animates while a track is actually playing, and
-// draws one static bar pattern instead under prefers-reduced-motion.
+// Music library (docs/DECISIONS.md ADR-118, replacing ADR-095's player).
 //
-// Playback here is always user-initiated (a click on Play), so none of
-// assets/js/audio.js's autoplay-block workaround is needed. One courtesy
-// borrowed from it: starting a library track pauses the sitewide
-// `#site-audio` element if it's playing, so two anthems never overlap.
-
+// One <audio> element plays the library; the page moves on the beat. Each
+// track has a beat map made offline by scripts/beat_map.py (tempo, every
+// beat, its strength, bar starts and a loudness curve), so the background
+// video, the cover and the visualizer pulse exactly on the music's beats —
+// also after a seek — rather than on guesses from live audio. A Web Audio
+// analyser still draws the live spectrum.
+//
+// Calm by default: nothing animates until something plays; under
+// prefers-reduced-motion the video stays on its poster, beats change only
+// colour, never scale. The visualizer and beat loop run only while playing
+// and the tab is visible.
 (function () {
-  const nowPlayingEl = document.getElementById("music-now-playing");
-  const tracksEl = document.getElementById("music-tracks");
-  if (!nowPlayingEl || !tracksEl) {
-    return;
-  }
-
   const TRACKS = [
-    {
-      title: "Anthem",
-      subtitle: "Full-length version — HIGHER TOGETHER.",
-      src: "assets/audio/anthem-full.mp3",
-      cover: "assets/img/music/anthem-full.jpg",
-    },
-    {
-      title: "بلندیوں کی جانب",
-      subtitle: "Bulandiyon Ki Janab — towards the heights.",
-      src: "assets/audio/bulandiyon-ki-janab.mp3",
-      cover: "assets/img/music/bulandiyon-ki-janab.jpg",
-    },
+    { slug: "brawlistan", title: "Brawlistan", subtitle: "The network's theme", group: "originals" },
+    { slug: "urooj", title: "Urooj", urdu: "عروج", subtitle: "The rise", group: "originals" },
+    { slug: "zarb", title: "Zarb!", urdu: "ضرب!", subtitle: "The strike", group: "originals" },
+    { slug: "zarb-2", title: "Zarb! II", urdu: "ضرب!", subtitle: "The strike, second cut", group: "originals" },
+    { slug: "anthem-full", title: "Anthem", subtitle: "Higher together", group: "shaheen", cover: "anthem-full" },
+    { slug: "bulandiyon-ki-janab", title: "Bulandiyon Ki Janab", urdu: "بلندیوں کی جانب", subtitle: "Towards the heights", group: "shaheen", cover: "bulandiyon-ki-janab" },
   ];
-
+  const ARTIST = "BRAWLISTAN";
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (id) => document.getElementById(id);
 
-  nowPlayingEl.innerHTML = `
-    <div class="music-disc" id="music-disc"><img id="music-cover" src="" alt="" /></div>
-    <div class="music-visualizer">
-      <canvas id="music-canvas" aria-hidden="true"></canvas>
-      <h3 class="music-track-title" id="music-title"></h3>
-      <p class="music-track-subtitle" id="music-subtitle"></p>
-      <div class="music-transport">
-        <button type="button" class="music-playpause" id="music-playpause" aria-label="Play">▶</button>
-        <div class="music-progress">
-          <div class="music-progress-track" id="music-progress-track" role="slider" aria-label="Seek" tabindex="0"><div class="music-progress-fill" id="music-progress-fill"></div></div>
-          <span class="music-time" id="music-time">0:00 / 0:00</span>
-        </div>
-        <input type="range" class="music-volume" id="music-volume" min="0" max="100" value="80" aria-label="Volume" />
-      </div>
-    </div>`;
+  const els = {
+    video: $("music-video"),
+    cover: $("music-cover"),
+    coverWebp: $("music-cover-webp"),
+    title: $("music-title"),
+    subtitle: $("music-subtitle"),
+    bpm: $("music-bpm"),
+    state: $("music-state"),
+    count: $("music-count"),
+    play: $("music-play"),
+    prev: $("music-prev"),
+    next: $("music-next"),
+    progress: $("music-progress"),
+    current: $("music-current"),
+    duration: $("music-duration"),
+    volume: $("music-volume"),
+    viz: $("music-viz"),
+    originals: $("music-originals"),
+    shaheen: $("music-shaheen"),
+  };
+  if (!els.play) return;
 
-  const discEl = document.getElementById("music-disc");
-  const coverEl = document.getElementById("music-cover");
-  const canvas = document.getElementById("music-canvas");
-  const canvasCtx = canvas.getContext("2d");
-  const titleEl = document.getElementById("music-title");
-  const subtitleEl = document.getElementById("music-subtitle");
-  const playPauseEl = document.getElementById("music-playpause");
-  const progressTrackEl = document.getElementById("music-progress-track");
-  const progressFillEl = document.getElementById("music-progress-fill");
-  const timeEl = document.getElementById("music-time");
-  const volumeEl = document.getElementById("music-volume");
-
+  const root = document.documentElement;
   const audio = new Audio();
-  audio.id = "library-audio";
-  audio.preload = "none";
+  audio.preload = "metadata";
   audio.volume = 0.8;
-  audio.style.display = "none";
-  document.body.appendChild(audio);
 
-  // Courtesy (docs/DECISIONS.md ADR-073/ADR-095): never let the sitewide
-  // background anthem play at the same time as a library track. A single
-  // pause-on-click isn't enough — assets/js/audio.js arms its own
-  // document-level click listener when its autoplay was blocked, and that
-  // listener can fire right after this one (same click, bubbling to
-  // document) and start it anyway. Watching #site-audio's own "play"
-  // event catches that case too, not just the moment a library track
-  // starts.
-  function watchSiteAudio() {
-    // assets/js/audio.js creates #site-audio from its own DOMContentLoaded
-    // handler, which can still be pending when this script runs (both are
-    // plain <script> tags near the end of <body>, so this one can execute
-    // before the page has actually finished parsing) — look it up lazily
-    // rather than once at module load, or this listener would silently
-    // never attach.
-    const siteAudio = document.getElementById("site-audio");
-    if (siteAudio) {
-      siteAudio.addEventListener("play", () => {
-        if (!audio.paused) {
-          siteAudio.pause();
-        }
-      });
-    }
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", watchSiteAudio);
-  } else {
-    watchSiteAudio();
-  }
-
-  let currentIndex = 0;
+  let index = 0;
+  let beatMap = null; // the current track's beats.json
+  let beatCursor = 0;
+  let beat = 0; // 0..1 pulse, decays between beats
+  let raf = 0;
+  let seeking = false;
   let audioCtx = null;
   let analyser = null;
-  let freqData = null;
-  let rafId = null;
+  let freq = null;
+  const beatMaps = new Map();
 
-  function formatTime(seconds) {
-    if (!isFinite(seconds) || seconds < 0) {
-      return "0:00";
+  // ---- the background video: 720p on small screens or data saver ----
+  function startVideo() {
+    if (!els.video || reduced) return; // reduced motion: the poster stays
+    const saveData = navigator.connection && navigator.connection.saveData;
+    const small = Math.min(screen.width, screen.height) < 900 || window.innerWidth < 900;
+    if (!els.video.src) {
+      els.video.src = `assets/video/music-loop-${small || saveData ? "720" : "1080"}.mp4`;
     }
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${String(s).padStart(2, "0")}`;
+    const play = els.video.play();
+    if (play) play.catch(() => {}); // autoplay refused: the poster is fine
   }
 
-  function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(1, Math.round(rect.width));
-    canvas.height = Math.max(1, Math.round(rect.height));
+  // ---- library list ----
+  function format(seconds) {
+    if (!isFinite(seconds)) return "0:00";
+    const s = Math.floor(seconds);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   }
 
-  function drawBars(values) {
-    const { width, height } = canvas;
-    const bars = 32;
-    const gap = 3;
-    const barWidth = width / bars - gap;
-    canvasCtx.clearRect(0, 0, width, height);
-    const gradient = canvasCtx.createLinearGradient(0, height, 0, 0);
-    gradient.addColorStop(0, "#1fb87e");
-    gradient.addColorStop(1, "#ffd23f");
-    canvasCtx.fillStyle = gradient;
-    for (let i = 0; i < bars; i++) {
-      const h = Math.max(3, values[i] * height);
-      canvasCtx.fillRect(i * (barWidth + gap), height - h, barWidth, h);
-    }
+  function coverStem(track) {
+    return `assets/img/music/${track.cover || track.slug}`;
   }
 
-  function drawStaticBars() {
-    drawBars(new Array(32).fill(0.12));
+  function renderList() {
+    for (const group of ["originals", "shaheen"]) {
+      const list = els[group];
+      list.innerHTML = TRACKS.map((t, i) =>
+        t.group !== group
+          ? ""
+          : `<li>
+              <button type="button" class="music-row" data-i="${i}" aria-label="Play ${escapeHtml(t.title)}">
+                <span class="music-row-num" aria-hidden="true"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="music-eq"><i></i><i></i><i></i></span></span>
+                <img class="music-row-cover" src="${coverStem(t)}.jpg" alt="" width="48" height="48" loading="lazy" />
+                <span class="music-row-text">
+                  <strong>${escapeHtml(t.title)}${t.urdu ? ` <span class="music-urdu" lang="ur">${escapeHtml(t.urdu)}</span>` : ""}</strong>
+                  <span class="muted">${escapeHtml(t.subtitle)}</span>
+                </span>
+                <span class="music-row-bpm muted num" data-bpm="${t.slug}"></span>
+                <span class="music-row-time muted num" data-time="${t.slug}"></span>
+              </button>
+            </li>`
+      ).join("");
+    }
+    document.querySelectorAll(".music-row").forEach((row) =>
+      row.addEventListener("click", () => {
+        const i = Number(row.dataset.i);
+        if (i === index && !audio.paused) audio.pause();
+        else select(i, true);
+      })
+    );
   }
 
-  function draw() {
-    rafId = requestAnimationFrame(draw);
-    if (!analyser || !freqData) {
-      return;
-    }
-    analyser.getByteFrequencyData(freqData);
-    const bars = 32;
-    const step = Math.max(1, Math.floor(freqData.length / bars));
-    const values = [];
-    for (let i = 0; i < bars; i++) {
-      values.push((freqData[i * step] || 0) / 255);
-    }
-    drawBars(values);
-  }
-
-  function stopDraw() {
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-  }
-
-  function ensureAudioGraph() {
-    if (audioCtx) {
-      return;
-    }
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) {
-      return;
-    }
-    audioCtx = new AudioContextCtor();
-    const sourceNode = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 128;
-    freqData = new Uint8Array(analyser.frequencyBinCount);
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-  }
-
-  function renderTrackCards() {
-    tracksEl.innerHTML = TRACKS.map(
-      (track, i) => `
-      <div class="card music-track-card${i === currentIndex ? " is-active" : ""}" data-index="${i}" tabindex="0" role="button" aria-label="Play ${escapeHtml(track.title)}">
-        <div class="music-track-cover"><img src="${track.cover}" alt="" /></div>
-        <div class="music-track-card-info">
-          <div class="music-track-card-title">${escapeHtml(track.title)}</div>
-          <div class="music-track-card-meta">${escapeHtml(track.subtitle)}</div>
-        </div>
-      </div>`
-    ).join("");
-    tracksEl.querySelectorAll(".music-track-card").forEach((card) => {
-      const play = () => loadTrack(Number(card.dataset.index), true);
-      card.addEventListener("click", play);
-      card.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          play();
-        }
-      });
+  function markRows() {
+    document.querySelectorAll(".music-row").forEach((row) => {
+      const on = Number(row.dataset.i) === index;
+      row.classList.toggle("is-current", on);
+      row.classList.toggle("is-playing", on && !audio.paused);
+      row.setAttribute("aria-current", on ? "true" : "false");
     });
   }
 
-  function pauseVisuals() {
-    discEl.classList.remove("is-playing");
-    playPauseEl.textContent = "▶";
-    playPauseEl.setAttribute("aria-label", "Play");
-    stopDraw();
-    // The static bar pattern itself isn't animation — only the rAF loop
-    // in draw() is, and that's what prefers-reduced-motion should stop.
-    drawStaticBars();
+  // ---- beat maps ----
+  function loadBeatMap(slug) {
+    if (!beatMaps.has(slug)) {
+      beatMaps.set(
+        slug,
+        fetch(`assets/audio/${slug}.beats.json`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      );
+    }
+    return beatMaps.get(slug);
+  }
+
+  function annotateRow(slug, map) {
+    if (!map) return;
+    const bpm = document.querySelector(`[data-bpm="${slug}"]`);
+    const time = document.querySelector(`[data-time="${slug}"]`);
+    if (bpm) bpm.textContent = `${Math.round(map.bpm)} BPM`;
+    if (time) time.textContent = format(map.duration);
+  }
+
+  // First beat at or after `time` (binary search): re-syncs instantly after a seek.
+  function beatIndexAt(time) {
+    const beats = beatMap ? beatMap.beats : [];
+    let lo = 0;
+    let hi = beats.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (beats[mid] < time) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  // ---- selecting and playing ----
+  function select(i, autoplay) {
+    index = (i + TRACKS.length) % TRACKS.length;
+    const t = TRACKS[index];
+    audio.src = `assets/audio/${t.slug}.mp3`;
+    els.title.innerHTML = `${escapeHtml(t.title)}${t.urdu ? ` <span class="music-urdu" lang="ur">${escapeHtml(t.urdu)}</span>` : ""}`;
+    els.subtitle.textContent = `${t.subtitle} · ${t.group === "shaheen" ? "SHAHEEN" : ARTIST}`;
+    els.cover.src = `${coverStem(t)}.jpg`;
+    if (els.coverWebp) els.coverWebp.srcset = `${coverStem(t)}.webp`;
+    els.count.textContent = `Track ${index + 1} of ${TRACKS.length}`;
+    els.bpm.textContent = "— BPM";
+    beatMap = null;
+    loadBeatMap(t.slug).then((map) => {
+      if (TRACKS[index] !== t) return;
+      beatMap = map;
+      beatCursor = beatIndexAt(audio.currentTime);
+      els.bpm.textContent = map ? `${Math.round(map.bpm)} BPM` : "— BPM";
+    });
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title,
+        artist: t.group === "shaheen" ? "SHAHEEN" : ARTIST,
+        album: "BRAWLISTAN Music",
+        artwork: [{ src: new URL(`${coverStem(t)}.jpg`, document.baseURI).href, sizes: "512x512", type: "image/jpeg" }],
+      });
+    }
+    markRows();
+    if (autoplay) play();
+  }
+
+  function ensureAnalyser() {
+    if (audioCtx || !window.AudioContext) return;
+    try {
+      audioCtx = new AudioContext();
+      const source = audioCtx.createMediaElementSource(audio);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.78;
+      freq = new Uint8Array(analyser.frequencyBinCount);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    } catch {
+      analyser = null; // playback still works without the live spectrum
+    }
   }
 
   function play() {
-    const siteAudio = document.getElementById("site-audio");
-    if (siteAudio && !siteAudio.paused) {
-      siteAudio.pause();
-    }
-    ensureAudioGraph();
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-    audio
-      .play()
-      .then(() => {
-        discEl.classList.add("is-playing");
-        playPauseEl.textContent = "⏸";
-        playPauseEl.setAttribute("aria-label", "Pause");
-        if (!reduced) {
-          stopDraw();
-          draw();
-        }
-      })
-      .catch(() => {
-        // Playback failed (e.g. interrupted by a rapid track switch) —
-        // pauseVisuals below already reflects the paused state.
-      });
+    ensureAnalyser();
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    const p = audio.play();
+    if (p) p.catch(() => {});
   }
 
-  function loadTrack(index, autoplay) {
-    currentIndex = index;
-    const track = TRACKS[index];
-    coverEl.src = track.cover;
-    coverEl.alt = track.title;
-    titleEl.textContent = track.title;
-    subtitleEl.textContent = track.subtitle;
-    audio.src = track.src;
-    progressFillEl.style.width = "0%";
-    timeEl.textContent = "0:00 / 0:00";
-    renderTrackCards();
-    if (autoplay) {
-      play();
-    } else {
-      pauseVisuals();
+  // ---- the beat loop: runs only while playing and visible ----
+  function latency() {
+    // What we hear lags what the element reports by the output latency.
+    return audioCtx ? (audioCtx.outputLatency || audioCtx.baseLatency || 0) : 0;
+  }
+
+  function onBeat(i) {
+    const strength = beatMap.strength ? beatMap.strength[i] / 9 : 0.7;
+    const downbeat = (i - (beatMap.downbeat_phase || 0)) % 4 === 0;
+    beat = Math.min(1, 0.45 + strength * 0.4 + (downbeat ? 0.25 : 0));
+    root.style.setProperty("--beat-hue", downbeat ? "1" : "0");
+  }
+
+  function frame() {
+    raf = requestAnimationFrame(frame);
+    const now = audio.currentTime - latency();
+    if (beatMap) {
+      const beats = beatMap.beats;
+      while (beatCursor < beats.length && beats[beatCursor] <= now) {
+        onBeat(beatCursor);
+        beatCursor += 1;
+      }
+      const e = beatMap.energy;
+      const energy = e ? (e.values[Math.min(e.values.length - 1, Math.floor(now * e.rate))] || 0) / 99 : 0.5;
+      root.style.setProperty("--energy", energy.toFixed(3));
+    }
+    // Exponential decay: a quick hit that settles before the next beat.
+    beat *= reduced ? 0.86 : 0.9;
+    root.style.setProperty("--beat", beat.toFixed(3));
+    drawViz();
+    if (!seeking) {
+      els.progress.value = audio.duration ? Math.round((audio.currentTime / audio.duration) * 1000) : 0;
+      els.current.textContent = format(audio.currentTime);
     }
   }
 
-  playPauseEl.addEventListener("click", () => {
-    if (audio.paused) {
-      play();
+  function startLoop() {
+    if (!raf && !document.hidden) raf = requestAnimationFrame(frame);
+  }
+
+  function stopLoop() {
+    cancelAnimationFrame(raf);
+    raf = 0;
+    beat = 0;
+    root.style.setProperty("--beat", "0");
+  }
+
+  // ---- visualizer: live spectrum, mirrored, brightened on the beat ----
+  const ctx = els.viz.getContext("2d");
+  function sizeViz() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = els.viz.getBoundingClientRect();
+    els.viz.width = Math.max(1, Math.round(r.width * dpr));
+    els.viz.height = Math.max(1, Math.round(r.height * dpr));
+  }
+
+  function drawViz(still) {
+    const w = els.viz.width;
+    const h = els.viz.height;
+    ctx.clearRect(0, 0, w, h);
+    const bars = 48;
+    const gap = w / bars;
+    if (analyser && freq && !still) analyser.getByteFrequencyData(freq);
+    for (let b = 0; b < bars; b++) {
+      // Mirror around the centre: bass in the middle.
+      const k = Math.abs(b - (bars - 1) / 2) / (bars / 2);
+      let v;
+      if (still || !freq) v = 0.18 + 0.12 * Math.sin(b * 0.7) ** 2;
+      else v = freq[Math.min(freq.length - 1, Math.floor(k * freq.length * 0.72))] / 255;
+      v = Math.min(1, v * (0.85 + beat * 0.3));
+      const bh = Math.max(2, v * h * 0.92);
+      const x = b * gap + gap * 0.2;
+      const grad = ctx.createLinearGradient(0, h, 0, h - bh);
+      grad.addColorStop(0, `rgba(61, 242, 110, ${0.55 + beat * 0.35})`);
+      grad.addColorStop(1, `rgba(240, 22, 140, ${0.35 + beat * 0.45})`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, (h - bh) / 2, gap * 0.6, bh, gap * 0.3);
+      else ctx.rect(x, (h - bh) / 2, gap * 0.6, bh);
+      ctx.fill();
+    }
+  }
+
+  // ---- wiring ----
+  audio.addEventListener("play", () => {
+    document.body.classList.add("is-playing");
+    els.play.setAttribute("aria-label", "Pause");
+    els.state.textContent = "Playing";
+    beatCursor = beatIndexAt(audio.currentTime);
+    startVideo();
+    startLoop();
+    markRows();
+  });
+  audio.addEventListener("pause", () => {
+    document.body.classList.remove("is-playing");
+    els.play.setAttribute("aria-label", "Play");
+    els.state.textContent = "Paused";
+    stopLoop();
+    drawViz(true);
+    markRows();
+  });
+  audio.addEventListener("seeked", () => {
+    beatCursor = beatIndexAt(audio.currentTime);
+  });
+  audio.addEventListener("loadedmetadata", () => {
+    els.duration.textContent = format(audio.duration);
+  });
+  audio.addEventListener("ended", () => select(index + 1, true));
+
+  els.play.addEventListener("click", () => (audio.paused ? play() : audio.pause()));
+  els.prev.addEventListener("click", () => (audio.currentTime > 3 ? (audio.currentTime = 0) : select(index - 1, !audio.paused)));
+  els.next.addEventListener("click", () => select(index + 1, !audio.paused));
+  els.progress.addEventListener("input", () => {
+    seeking = true;
+    if (audio.duration) els.current.textContent = format((els.progress.value / 1000) * audio.duration);
+  });
+  els.progress.addEventListener("change", () => {
+    if (audio.duration) audio.currentTime = (els.progress.value / 1000) * audio.duration;
+    seeking = false;
+  });
+  els.volume.addEventListener("input", () => {
+    audio.volume = els.volume.value / 100;
+  });
+
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", play);
+    navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+    navigator.mediaSession.setActionHandler("previoustrack", () => select(index - 1, true));
+    navigator.mediaSession.setActionHandler("nexttrack", () => select(index + 1, true));
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      if (els.video) els.video.pause();
     } else {
-      audio.pause();
+      if (!audio.paused) startLoop();
+      startVideo();
     }
   });
-
-  audio.addEventListener("pause", pauseVisuals);
-  audio.addEventListener("ended", pauseVisuals);
-
-  audio.addEventListener("timeupdate", () => {
-    if (audio.duration) {
-      progressFillEl.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-    }
-    timeEl.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-  });
-
-  progressTrackEl.addEventListener("click", (event) => {
-    if (!audio.duration) {
-      return;
-    }
-    const rect = progressTrackEl.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    audio.currentTime = ratio * audio.duration;
-  });
-
-  volumeEl.addEventListener("input", () => {
-    audio.volume = Number(volumeEl.value) / 100;
-  });
-
   window.addEventListener("resize", () => {
-    resizeCanvas();
-    if (audio.paused) {
-      drawStaticBars();
-    }
+    sizeViz();
+    if (audio.paused) drawViz(true);
   });
 
-  resizeCanvas();
-  loadTrack(0, false);
+  renderList();
+  TRACKS.forEach((t) => loadBeatMap(t.slug).then((map) => annotateRow(t.slug, map)));
+  select(0, false);
+  sizeViz();
+  drawViz(true);
+  startVideo(); // the loop plays quietly behind the page; muted, so autoplay is allowed
 })();
