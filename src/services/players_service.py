@@ -91,6 +91,11 @@ class PlayersService:
             for _m, player, _d in await self._links.list_active_for_guild(guild_id)
         }
         players = {**{pid: p for pid, (_e, p) in board.items()}, **linked}
+        # Team rosters, clan-synced ones included (ADR-120).
+        for pid in await self._teams.active_player_ids(guild_id) - players.keys():
+            rostered = await self._players.get_by_id(pid)
+            if rostered is not None:
+                players[pid] = rostered
         verified = await self._links.verified_player_ids()
         teams = await self._teams.memberships_of(guild_id, list(players))
 

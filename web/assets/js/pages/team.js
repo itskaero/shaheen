@@ -34,6 +34,7 @@
         </div>
         <h1>${escapeHtml(t.name)}</h1>
         ${t.description ? `<p class="muted">${escapeHtml(t.description)}</p>` : ""}
+        ${t.brawlhalla_clan_id ? `<p class="muted team-clan-note">Roster synced from in-game clan #${escapeHtml(String(t.brawlhalla_clan_id))} every few hours.</p>` : ""}
         <div class="team-hero-stats">
           <div><strong class="num">${t.rank ? `#${t.rank}` : "—"}</strong><span>Ranking</span></div>
           <div><strong class="num">${t.rating != null ? formatNumber(t.rating) : "—"}</strong><span>Power rating</span></div>
@@ -51,7 +52,7 @@
             <tbody>${t.roster
               .map(
                 (p) => `<tr>
-                  <td><a class="bl-player" href="player.html?id=${encodeURIComponent(p.brawlhalla_id)}">${avatarHtml(p.player_name, 28)}<span class="bl-player-name">${p.role === "captain" ? '<span title="Captain" aria-label="Captain">👑</span> ' : ""}${escapeHtml(p.player_name)}</span></a></td>
+                  <td><a class="bl-player" href="player.html?id=${encodeURIComponent(p.brawlhalla_id)}">${avatarHtml(p.player_name, 28)}<span class="bl-player-name">${p.role === "captain" ? '<span title="Captain" aria-label="Captain">👑</span> ' : ""}${escapeHtml(p.player_name)}</span></a>${p.clan_rank ? ` <span class="pill pill-muted clan-rank">${escapeHtml(p.clan_rank)}</span>` : ""}</td>
                   <td class="hide-sm">${tierBadge(p.tier)}</td>
                   <td class="hide-sm">${p.main_legend ? `<span class="legend-cell">${legendAvatarHtml(p.main_legend, 24)}${escapeHtml(legendDisplayName(p.main_legend))}</span>` : '<span class="muted">—</span>'}</td>
                   <td class="right num">${formatNumber(p.rating)}</td>

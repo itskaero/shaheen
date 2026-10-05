@@ -5247,3 +5247,97 @@ Verified with Playwright (Chrome, WebGPU and no-adapter Chromium):
 - **Landing, Founding Team, Teams and team page:** render with no overflow and no console errors at
   1440 and 390 px.
 - **Earlier checks:** the holographic lifecycle checks (ADR-117) still pass.
+
+## ADR-120 — Teams mirror in-game Brawlhalla clans; four clan teams; API rate limiter
+
+**Status:** accepted. Builds on ADR-114/117.
+
+**Context.** The owner gave four Brawlhalla clan IDs (Sigma Grinders 1777529, Delight Esports 2042085,
+Revenant Wolf 2542774, Clan Monke 1389219) and their logos, and asked for the player IDs to be pulled
+and the teams populated. A one-off fetch with the owner's key confirmed the clans: 11, 28, 22 and 26
+members, each with a Leader.
+
+**Decision.** Rosters follow the in-game clans automatically, rather than being pasted in once and
+going stale.
+- **Data (migration 0023).**
+  - `teams.brawlhalla_clan_id` links a team to its in-game clan.
+  - `team_members.source` (`clan` | `manual`) and `clan_rank` (Leader, Officer, Member, Recruit).
+  - The migration seeds Sigma Grinders [SG], Revenant Wolf [RW] and Clan Monke [MONKE] in every known
+    guild, with logos and colours. It links Delight Esports to its clan and gives it colours for its
+    new gold-and-teal logo. It is idempotent.
+- **Sync (`TeamService.sync_clan`).**
+  - Every clan member is on the team, with their clan rank.
+  - A member who left the clan is removed only if the sync added them; manual `/team add`s stay.
+  - Membership history is closed, never deleted.
+  - A player the sync put on another team (they switched clans in game) moves here.
+  - A player added to another team by hand stays there and is reported.
+  - The clan's Leader becomes captain when the team has none.
+  - Player rows are created or renamed, but never lose their region or history.
+  - Each sync that changes something is audit-logged.
+- **Snapshot tick.** It reads each linked team's clan (one call per clan), syncs it, then snapshots
+  every rostered player the board and link passes didn't already cover. That gives clan players real
+  ratings, team ratings and profiles.
+  - Rostered players also join the Players directory and the Legend meta.
+  - They don't join the Pakistan rankings board, since clan membership doesn't say where a player is
+    from.
+- **Bot.**
+  - `/team clan <team> <clan_id>` (staff) links a team, checks the clan exists, and syncs at once;
+    0 unlinks.
+  - `/team sync <team>` (staff) syncs now.
+  - Both report what changed: added, moved, left and kept counts.
+- **API and website.** Roster entries carry `clan_rank`, shown as a pill on the team page; teams carry
+  `brawlhalla_clan_id`, and the team page says the roster is synced from the in-game clan.
+- **Client (`integrations/brawlhalla`).**
+  - `get_clan`, with `ClanResponse`/`ClanMember` models.
+  - Name repair: the API's UTF-8 names arrive read as Latin-1, so "WÃ\x98LF" becomes "WØLF". This now
+    also applies to player stats names.
+  - A shared sliding-window `RateLimiter`: 170 requests per 15 minutes (the API allows about 180) and
+    at least 0.12 s between calls. Every request waits for budget. The 87 clan players add about 175
+    calls a tick, so a full tick paces itself over about 15 minutes instead of hitting 429s.
+- **Logos.**
+  - Masters: `docs/brand/teams/{clan-monke,revenant-wolf,sigma-grinders,delight-esports}-master.png`,
+    cut from the owner's sheet.
+  - Delight's new logo replaces its earlier one.
+  - **Better cut-out for dark art:** `scripts/team_logos.py` now keys "on black" with a solid body,
+    taking alpha as the larger of colour-to-alpha and a soft not-background mask. Dark artwork such as
+    the grey wolf, the stone Σ and deep red lettering stays opaque, while glows still fade.
+
+**The owner's API key** was used once, from an environment variable, for the verification fetch. It is
+not in the repository.
+
+**Verified:**
+- **Tests:**
+  - the rate limiter (fake clock: spacing, then the 15-minute window);
+  - name repair;
+  - sync: adds with the Leader as captain; re-sync removes leavers, keeps manual adds and updates
+    ranks; switching clans moves a player while manual picks stay; renames keep region; history is
+    closed;
+  - the snapshot tick syncs and rates clan players, giving a team rating.
+- **Migration 0023:** seed, re-run and round trip.
+- **Checks:** pytest 548, ruff, mypy, all 85 commands load.
+- **Playwright:** the Teams grid with six teams, each card on the GPU in its own colours.
+
+**After deploy:** the bot syncs the four clans on its first snapshot tick at startup. Staff can run
+`/team sync` to see the result at once.
+
+## ADR-121 — Paginated /help
+
+**Status:** accepted.
+
+**Context.** With teams, music and clan commands, `/help` had outgrown one embed: a section had already
+crossed Discord's 1024-character field limit.
+
+**Decision.** `/help` opens an overview page: each category with its command count and first few
+commands. Then:
+- **Paging:** ◀ / ▶ buttons, a page counter and a category menu page through one category per page.
+- **Who sees what:** staff-only categories appear only for staff (owner, Administrator,
+  Founder/Admin/Moderator, `BOT_OWNER_ID`).
+- **Starting page:** `/help category:<name>` opens on that page.
+- **Ownership:** the controls answer only the member who ran it and switch off after 5 minutes.
+- **Reply:** ephemeral, as before.
+- **Code:** pages come from `help_pages()` / `build_help_page()` (pure); the view is
+  `bot/views/help.py`; the team staff commands moved to their own "Staff — Teams" category.
+
+**Verified.** Tests check that members never see staff pages, that every page fits Discord's limits and
+carries its page number, that the overview matches the pages, that buttons stop at the ends, that only
+the author can page, and that a requested category opens with the menu in step.

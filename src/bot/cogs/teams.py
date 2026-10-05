@@ -16,8 +16,25 @@ from bot.client import ShaheenBot
 from bot.content.team_embeds import build_team_embed, team_view
 from core.exceptions import NotFoundError, ShaheenError
 from database.session import session_scope
+from integrations.brawlhalla.errors import BrawlhallaAPIError, BrawlhallaNotFound
 from services.link_service import LinkService
-from services.team_service import TeamService
+from services.team_service import ClanSyncResult, TeamService
+
+
+def _sync_summary(result: ClanSyncResult) -> str:
+    """One line per kind of change, so staff can see what a sync did."""
+    lines = [
+        f"✅ {result.kept} already on the roster" if result.kept else "",
+        f"➕ {len(result.added)} added: {', '.join(result.added[:10])}" if result.added else "",
+        f"↪️ {len(result.moved)} moved from another team" if result.moved else "",
+        f"➖ {len(result.removed)} left the clan: {', '.join(result.removed[:10])}"
+        if result.removed
+        else "",
+        f"⚠️ {len(result.skipped)} kept on their own team: {', '.join(result.skipped[:5])}"
+        if result.skipped
+        else "",
+    ]
+    return "\n".join(line for line in lines if line) or "Nothing to change."
 
 
 def _member(interaction: discord.Interaction) -> discord.Member:
@@ -252,6 +269,68 @@ class TeamsCog(commands.Cog):
         await interaction.followup.send(message, ephemeral=True)
 
     captain.autocomplete("name")(_team_names)
+
+    @team.command(name="clan", description="Link a team to its in-game Brawlhalla clan (staff)")
+    @app_commands.describe(name="The team", clan_id="The Brawlhalla clan ID; 0 unlinks")
+    @require_staff_authorized()
+    async def clan(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        clan_id: app_commands.Range[int, 0, 10**12],
+    ) -> None:
+        member = _member(interaction)
+        await interaction.response.defer(ephemeral=True)
+        clan = None
+        if clan_id:
+            try:
+                clan = await self.bot.brawlhalla.get_clan(clan_id)
+            except BrawlhallaNotFound as exc:
+                raise ShaheenError(f"No Brawlhalla clan with ID {clan_id}.") from exc
+            except BrawlhallaAPIError as exc:
+                raise ShaheenError("The Brawlhalla API didn't answer. Try again shortly.") from exc
+        async with session_scope(self.bot.session_factory) as session:
+            service = TeamService(session)
+            team = await service.get(member.guild.id, name)
+            await service.set_clan(team, clan_id=clan_id or None, actor_discord_id=member.id)
+            if clan is None:
+                message = (
+                    f"**{team.name}** is no longer linked to a clan. Its roster stays as it is."
+                )
+            else:
+                result = await service.sync_clan(team, clan, actor_discord_id=member.id)
+                message = (
+                    f"**{team.name}** now mirrors the clan **{clan.clan_name}**.\n"
+                    + _sync_summary(result)
+                )
+        await interaction.followup.send(message, ephemeral=True)
+
+    clan.autocomplete("name")(_team_names)
+
+    @team.command(
+        name="sync", description="Pull a team's roster from its Brawlhalla clan now (staff)"
+    )
+    @app_commands.describe(name="The team")
+    @require_staff_authorized()
+    async def sync(self, interaction: discord.Interaction, name: str) -> None:
+        member = _member(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            service = TeamService(session)
+            team = await service.get(member.guild.id, name)
+            if team.brawlhalla_clan_id is None:
+                raise ShaheenError(f"{team.name} isn't linked to a clan. Use /team clan first.")
+            try:
+                clan = await self.bot.brawlhalla.get_clan(team.brawlhalla_clan_id)
+            except BrawlhallaAPIError as exc:
+                raise ShaheenError("The Brawlhalla API didn't answer. Try again shortly.") from exc
+            result = await service.sync_clan(team, clan, actor_discord_id=member.id)
+            message = f"**{team.name}** ← **{clan.clan_name}**\n" + _sync_summary(result)
+        await interaction.followup.send(
+            message + "\nRatings fill in on the next snapshot (every few hours).", ephemeral=True
+        )
+
+    sync.autocomplete("name")(_team_names)
 
 
 async def setup(bot: ShaheenBot) -> None:

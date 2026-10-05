@@ -29,10 +29,13 @@ from database.repositories.member_achievement_repository import MemberAchievemen
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.team_repository import TeamRepository
+from integrations.brawlhalla.models import ClanResponse
 from services.report_service import clean_text
 
 TEAM_RATING_SIZE = 3  # a team's rating is the average of its best 3 placed players
-MAX_ROSTER = 20
+# Manual /team add limit. In-game clans hold up to 100 and a clan sync
+# mirrors them in full (ADR-120).
+MAX_ROSTER = 100
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
 _TAG = re.compile(r"^[A-Z0-9]{2,6}$")
 _HEX = re.compile(r"^#?([0-9a-fA-F]{6})$")
@@ -87,6 +90,23 @@ class SeasonResult:
     best: int | None
     average: int | None
     players: int
+
+
+@dataclass
+class ClanSyncResult:
+    """What a clan sync changed (ADR-120)."""
+
+    team: Team
+    clan_name: str
+    added: list[str] = field(default_factory=list)
+    removed: list[str] = field(default_factory=list)
+    moved: list[str] = field(default_factory=list)  # came from another clan-synced team
+    skipped: list[str] = field(default_factory=list)  # on another team by hand
+    kept: int = 0
+
+    @property
+    def changed(self) -> bool:
+        return bool(self.added or self.removed or self.moved)
 
 
 @dataclass
@@ -260,6 +280,98 @@ class TeamService:
             f"{player.player_name} [{team.tag}] {'on' if show else 'off'}",
         )
         return team
+
+    async def set_clan(self, team: Team, *, clan_id: int | None, actor_discord_id: int) -> None:
+        """Link a team to its in-game Brawlhalla clan (or unlink with None)."""
+        team.brawlhalla_clan_id = clan_id
+        await self._log(
+            team.guild_id, "team.clan", actor_discord_id, f"{team.name} -> clan {clan_id}"
+        )
+
+    async def sync_clan(
+        self,
+        team: Team,
+        clan: ClanResponse,
+        *,
+        actor_discord_id: int | None = None,
+        now: datetime | None = None,
+    ) -> ClanSyncResult:
+        """Make the roster match the in-game clan (ADR-120).
+
+        Every clan member is on the team. A member who left the clan leaves
+        the team, but only if the sync added them; players added by hand stay.
+        A player the sync put on another team (they switched clans in game)
+        moves here; one added to another team by hand is left there and
+        reported. The clan's Leader is made captain if the team has none.
+        """
+        now = now or datetime.now(UTC)
+        result = ClanSyncResult(team=team, clan_name=clan.clan_name)
+        current = await self._teams.active_members(team.id)
+        has_captain = any(member.role == "captain" for member, _p in current)
+        seen: set[int] = set()
+
+        for entry in clan.members:
+            player = await self._clan_player(entry.brawlhalla_id, entry.name)
+            seen.add(player.id)
+            membership = await self._teams.active_membership(player.id)
+            if membership is not None and membership[1].id == team.id:
+                membership[0].clan_rank = entry.rank
+                result.kept += 1
+                continue
+            if membership is not None:
+                other_member, other_team = membership
+                if other_member.source != "clan":
+                    result.skipped.append(f"{player.player_name} ({other_team.name})")
+                    continue
+                await self._teams.close(other_member, now)
+                result.moved.append(player.player_name)
+            role = "captain" if entry.rank == "Leader" and not has_captain else "player"
+            has_captain = has_captain or role == "captain"
+            await self._teams.add_member(
+                team_id=team.id,
+                player_id=player.id,
+                role=role,
+                joined_at=now,
+                source="clan",
+                clan_rank=entry.rank,
+            )
+            if player.player_name not in result.moved:
+                result.added.append(player.player_name)
+
+        for member, player in current:
+            if member.source == "clan" and player.id not in seen:
+                await self._teams.close(member, now)
+                result.removed.append(player.player_name)
+
+        if result.changed or actor_discord_id is not None:
+            await self._audit.add(
+                guild_id=team.guild_id,
+                action="team.clan_sync",
+                source="discord" if actor_discord_id is not None else "system",
+                actor_discord_id=actor_discord_id,
+                subject=f"{team.name} <- clan {clan.clan_id}",
+                detail={
+                    "added": len(result.added),
+                    "removed": len(result.removed),
+                    "moved": len(result.moved),
+                    "skipped": len(result.skipped),
+                    "kept": result.kept,
+                },
+            )
+        return result
+
+    async def _clan_player(self, brawlhalla_id: int, name: str) -> BrawlhallaPlayer:
+        """The player row for a clan member: created if new, renamed if changed,
+        anything else (region, history) left as it is."""
+        clean = clean_text(name, limit=64) or f"Player {brawlhalla_id}"
+        player = await self._players.get_by_brawlhalla_id(brawlhalla_id)
+        if player is None:
+            return await self._players.upsert(
+                brawlhalla_player_id=brawlhalla_id, player_name=clean, region=None
+            )
+        if player.player_name != clean:
+            player.player_name = clean
+        return player
 
     async def set_captain(
         self, team: Team, *, brawlhalla_id: int, actor_discord_id: int

@@ -353,6 +353,9 @@ class TeamPlayerResponse(BaseModel):
     player_name: str
     slug: str
     role: str  # "captain" | "player"
+    # In-game clan rank (Leader, Officer, Member, Recruit) for a clan-synced
+    # player; null for one added by hand (ADR-120).
+    clan_rank: str | None = None
     rating: int | None
     peak_rating: int | None
     tier: str | None
@@ -372,6 +375,8 @@ class TeamSummaryResponse(BaseModel):
     accent_secondary: str | None = None
     # Position among teams with a team rating; null when the team has none.
     rank: int | None = None
+    # The in-game Brawlhalla clan the roster mirrors (ADR-120).
+    brawlhalla_clan_id: int | None = None
     members: int
     # Average of the best 3 placed players; null when nobody's placed.
     rating: int | None

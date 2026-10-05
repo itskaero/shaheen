@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
+from collections import deque
+from collections.abc import Awaitable, Callable
 
 import httpx
 
@@ -28,6 +31,54 @@ BASE_URL = "https://api.brawlhalla.com/"  # ADR-022
 DEFAULT_TIMEOUT = 10.0
 MAX_RETRIES = 2
 RETRY_BACKOFF_SECONDS = (0.5, 1.5)
+# The API allows about 180 requests per 15 minutes per key (and ~10 a
+# second). Stay under it so a snapshot tick that walks every tracked player,
+# clan rosters included (ADR-120), paces itself instead of hitting 429s.
+RATE_LIMIT = 170
+RATE_WINDOW_SECONDS = 900.0
+MIN_INTERVAL_SECONDS = 0.12
+
+
+class RateLimiter:
+    """Sliding-window limiter: at most `limit` requests per `window` seconds,
+    and at least `min_interval` between two requests. Waits rather than
+    refusing. The clock and sleep are injectable for tests."""
+
+    def __init__(
+        self,
+        limit: int = RATE_LIMIT,
+        window: float = RATE_WINDOW_SECONDS,
+        min_interval: float = MIN_INTERVAL_SECONDS,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[object]] = asyncio.sleep,
+    ) -> None:
+        self._limit = limit
+        self._window = window
+        self._min_interval = min_interval
+        self._clock = clock
+        self._sleep = sleep
+        self._sent: deque[float] = deque()
+        self._lock = asyncio.Lock()
+
+    async def acquire(self) -> None:
+        async with self._lock:
+            while True:
+                now = self._clock()
+                while self._sent and now - self._sent[0] >= self._window:
+                    self._sent.popleft()
+                waits = []
+                if len(self._sent) >= self._limit:
+                    waits.append(self._sent[0] + self._window - now)
+                if self._sent and now - self._sent[-1] < self._min_interval:
+                    waits.append(self._sent[-1] + self._min_interval - now)
+                if not waits:
+                    self._sent.append(now)
+                    return
+                delay = max(waits)
+                if delay > 5:
+                    logger.info("Brawlhalla API budget used up; waiting %.0fs", delay)
+                await self._sleep(delay)
 
 
 class BrawlhallaClient:
@@ -40,8 +91,10 @@ class BrawlhallaClient:
         base_url: str = BASE_URL,
         timeout: float = DEFAULT_TIMEOUT,
         http_client: httpx.AsyncClient | None = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
         self._api_key = api_key
+        self._limiter = rate_limiter or RateLimiter()
         self._owns_client = http_client is None
         self._http = http_client or httpx.AsyncClient(base_url=base_url, timeout=timeout)
 
@@ -61,6 +114,11 @@ class BrawlhallaClient:
         """GET /player/{id}/ranked. None if the player has no ranked history."""
         return await self._get_or_none(f"player/{brawlhalla_id}/ranked")
 
+    async def get_clan(self, clan_id: int) -> dict:
+        """GET /clan/{id}: the clan and its members (ADR-120). Raises
+        BrawlhallaNotFound for an unknown clan."""
+        return await self._get(f"clan/{clan_id}/")
+
     async def _get_or_none(self, path: str, *, params: dict | None = None) -> dict | None:
         try:
             return await self._get(path, params=params)
@@ -72,6 +130,7 @@ class BrawlhallaClient:
 
         attempt = 0
         while True:
+            await self._limiter.acquire()
             try:
                 response = await self._http.get(path, params=query)
             except httpx.TimeoutException as exc:
