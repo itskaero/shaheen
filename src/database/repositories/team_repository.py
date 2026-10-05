@@ -87,14 +87,39 @@ class TeamRepository:
         }
 
     async def add_member(
-        self, *, team_id: int, player_id: int, role: str, joined_at: datetime
+        self,
+        *,
+        team_id: int,
+        player_id: int,
+        role: str,
+        joined_at: datetime,
+        source: str = "manual",
+        clan_rank: str | None = None,
     ) -> TeamMember:
         member = TeamMember(
-            team_id=team_id, brawlhalla_player_id=player_id, role=role, joined_at=joined_at
+            team_id=team_id,
+            brawlhalla_player_id=player_id,
+            role=role,
+            joined_at=joined_at,
+            source=source,
+            clan_rank=clan_rank,
         )
         self._session.add(member)
         await self._session.flush()
         return member
+
+    async def active_player_ids(self, guild_id: int) -> set[int]:
+        """Internal player ids on any team in this guild: tracked players (ADR-120)."""
+        stmt = (
+            select(TeamMember.brawlhalla_player_id)
+            .join(Team, Team.id == TeamMember.team_id)
+            .where(Team.guild_id == guild_id, TeamMember.left_at.is_(None))
+        )
+        return set((await self._session.execute(stmt)).scalars().all())
+
+    async def with_clans(self, guild_id: int) -> list[Team]:
+        stmt = select(Team).where(Team.guild_id == guild_id, Team.brawlhalla_clan_id.is_not(None))
+        return list((await self._session.execute(stmt)).scalars().all())
 
     async def close(self, member: TeamMember, at: datetime) -> None:
         member.left_at = at

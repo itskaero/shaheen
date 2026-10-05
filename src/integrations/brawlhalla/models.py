@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # What the API reports for a player (or a Legend) with no placement games
 # in the current ranked season — e.g. everyone right after a season reset:
@@ -43,6 +43,15 @@ class _RankedStanding(BaseModel):
         if self.peak_rating is not None and self.peak_rating <= 0:
             self.peak_rating = None
         return self
+
+
+def fix_name(name: str) -> str:
+    """The API sends UTF-8 names that arrive read as Latin-1 ("WÃLF" for
+    "WØLF"). Undo that when it is what happened; leave anything else alone."""
+    try:
+        return name.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return name
 
 
 class SearchResult(BaseModel):
@@ -80,6 +89,12 @@ class PlayerStatsResponse(BaseModel):
     name: str
     xp: int = 0
     level: int = 1
+
+    @field_validator("name")
+    @classmethod
+    def _fix_name(cls, value: str) -> str:
+        return fix_name(value)
+
     games: int = 0
     wins: int = 0
     legends: list[LegendStat] = Field(default_factory=list)
@@ -149,3 +164,35 @@ class PlayerRankedResponse(_RankedStanding):
         if self.region_rank is not None and self.region_rank <= 0:
             self.region_rank = None
         return self
+
+
+class ClanMember(BaseModel):
+    """One member of GET /clan/{id} (ADR-120)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    brawlhalla_id: int
+    name: str
+    rank: str = "Member"  # Leader | Officer | Member | Recruit
+    join_date: int | None = None
+    xp: int = 0
+
+    @field_validator("name")
+    @classmethod
+    def _fix_name(cls, value: str) -> str:
+        return fix_name(value)
+
+
+class ClanResponse(BaseModel):
+    """GET /clan/{id}: the clan and its members (ADR-120)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    clan_id: int
+    clan_name: str
+    members: list[ClanMember] = Field(default_factory=list, alias="clan")
+
+    @field_validator("clan_name")
+    @classmethod
+    def _fix_clan_name(cls, value: str) -> str:
+        return fix_name(value)

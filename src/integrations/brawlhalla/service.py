@@ -12,7 +12,12 @@ from dataclasses import dataclass
 
 from integrations.brawlhalla.client import BrawlhallaClient
 from integrations.brawlhalla.errors import BrawlhallaNotFound
-from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse, SearchResult
+from integrations.brawlhalla.models import (
+    ClanResponse,
+    PlayerRankedResponse,
+    PlayerStatsResponse,
+    SearchResult,
+)
 
 # A Steam64 ID is always 17 digits; a Brawlhalla player ID is much shorter.
 # This is a heuristic, not a protocol guarantee — see docs/DECISIONS.md ADR-023.
@@ -67,6 +72,11 @@ class BrawlhallaService:
         stats = PlayerStatsResponse.model_validate(raw)
         self._stats_cache[brawlhalla_id] = _CacheEntry(stats, time.monotonic() + self._ttl_seconds)
         return stats
+
+    async def get_clan(self, clan_id: int) -> ClanResponse:
+        """A Brawlhalla clan and its members (ADR-120). Not cached: it is
+        read once per team per snapshot tick, or on a staff /team sync."""
+        return ClanResponse.model_validate(await self._client.get_clan(clan_id))
 
     async def get_ranked(self, brawlhalla_id: int) -> PlayerRankedResponse | None:
         cached = self._ranked_cache.get(brawlhalla_id)

@@ -19,10 +19,12 @@ from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.legend_snapshot import LegendSnapshot
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.shaheen_member import ShaheenMember
+from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
+from database.repositories.team_repository import TeamRepository
 from integrations.brawlhalla.errors import BrawlhallaAPIError
 from integrations.brawlhalla.models import PlayerRankedResponse, PlayerStatsResponse
 from integrations.brawlhalla.service import BrawlhallaService
@@ -33,6 +35,7 @@ from services.achievements import (
     evaluate_tenure_achievements,
     tier_index,
 )
+from services.team_service import ClanSyncResult, TeamService
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +81,11 @@ class Announcement:
 @dataclass
 class SnapshotRunResult:
     members_processed: int = 0
-    # Non-member players snapshotted for the Pakistan board (ADR-099).
+    # Non-member players snapshotted for the Pakistan board (ADR-099) and
+    # team rosters (ADR-120).
     players_processed: int = 0
+    # In-game clan syncs this run made (ADR-120).
+    clan_syncs: list[ClanSyncResult] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     announcements: list[Announcement] = field(default_factory=list)
     # discord_id -> the tier this run saw, None when unranked. Recorded so
@@ -122,6 +128,8 @@ class SnapshotService:
         self._season = season
         self._links = MemberPlayerLinkRepository(session)
         self._pakistan = PakistanBoardRepository(session)
+        self._teams = TeamRepository(session)
+        self._players = BrawlhallaPlayerRepository(session)
         self._ranking = RankingSnapshotRepository(session)
         self._legends = LegendSnapshotRepository(session)
         self._achievement_service = AchievementService(session)
@@ -154,6 +162,33 @@ class SnapshotService:
                     "Snapshot failed for player %s: %s", player.brawlhalla_player_id, exc
                 )
                 result.errors.append(f"{player.player_name}: Brawlhalla API error")
+
+        # Team rosters (ADR-120): mirror each team's in-game clan first (one
+        # API call per clan), then snapshot every rostered player the passes
+        # above didn't cover, so team ratings and profiles have real numbers.
+        teams = TeamService(self._session)
+        for team in await self._teams.with_clans(guild_id):
+            assert team.brawlhalla_clan_id is not None
+            try:
+                clan = await self._brawlhalla.get_clan(team.brawlhalla_clan_id)
+            except BrawlhallaAPIError as exc:
+                logger.warning("Clan sync failed for %s: %s", team.name, exc)
+                result.errors.append(f"{team.name}: clan sync failed")
+                continue
+            result.clan_syncs.append(await teams.sync_clan(team, clan))
+        for player_id in sorted(await self._teams.active_player_ids(guild_id) - covered):
+            rostered = await self._players.get_by_id(player_id)
+            if rostered is None:
+                continue
+            covered.add(rostered.id)
+            try:
+                await self.snapshot_player(rostered)
+                result.players_processed += 1
+            except BrawlhallaAPIError as exc:
+                logger.warning(
+                    "Snapshot failed for player %s: %s", rostered.brawlhalla_player_id, exc
+                )
+                result.errors.append(f"{rostered.player_name}: Brawlhalla API error")
         return result
 
     async def snapshot_player(

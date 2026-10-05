@@ -40,6 +40,9 @@ class Team(TimestampMixin, Base):
     # card. None uses the BRAWLISTAN emerald and magenta.
     accent: Mapped[str | None] = mapped_column(String(7), nullable=True)
     accent_secondary: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    # The in-game Brawlhalla clan this team mirrors (ADR-120). When set, the
+    # snapshot tick keeps the roster in step with the clan's member list.
+    brawlhalla_clan_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
 
 class TeamMember(TimestampMixin, Base):
@@ -65,3 +68,8 @@ class TeamMember(TimestampMixin, Base):
     # The player's choice to wear the team tag next to their name, e.g.
     # "[SHN] kaero." on the rankings (ADR-115). On by default.
     show_tag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # "clan" when the in-game clan sync added this player (ADR-120), "manual"
+    # for /team add. A sync only ever removes the players it added.
+    source: Mapped[str] = mapped_column(String(8), nullable=False, default="manual")
+    # The player's in-game clan rank (Leader, Officer, Member, Recruit).
+    clan_rank: Mapped[str | None] = mapped_column(String(16), nullable=True)

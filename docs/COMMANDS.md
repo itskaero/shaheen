@@ -433,6 +433,18 @@ card; without them it uses the BRAWLISTAN emerald and magenta (ADR-117). A
 team's logo is added to the website by the site owner (docs/DECISIONS.md
 ADR-114: `scripts/team_logos.py`).
 
+### /team clan <name> <clan_id> *(staff)*
+Link a team to its in-game Brawlhalla clan (ADR-120). The bot checks the
+clan exists and syncs the roster at once; from then on every snapshot tick
+keeps it in step: clan members are on the team with their clan rank,
+players who left the clan leave the team (only those the sync added), and
+the clan's Leader becomes captain if the team has none. `clan_id:0` unlinks.
+
+### /team sync <name> *(staff)*
+Pull a linked team's roster from its clan now, and see what changed
+(added, moved from another team, left, kept). Ratings follow on the next
+snapshot.
+
 ### /team captain <name> [user] [brawlhalla_id] *(staff)*
 Name a team's captain, who must already be on the roster; the previous
 captain becomes a player. A captain can add and remove their own team's

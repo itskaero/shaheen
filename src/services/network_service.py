@@ -11,9 +11,11 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.brawlhalla_player import BrawlhallaPlayer
+from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.legend_snapshot_repository import LegendSnapshotRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
+from database.repositories.team_repository import TeamRepository
 from services.clan_service import LegendMetaEntry, aggregate_legend_meta
 
 
@@ -22,6 +24,8 @@ class NetworkService:
         self._board = PakistanBoardRepository(session)
         self._links = MemberPlayerLinkRepository(session)
         self._legends = LegendSnapshotRepository(session)
+        self._teams = TeamRepository(session)
+        self._players = BrawlhallaPlayerRepository(session)
 
     async def tracked_players(self, guild_id: int) -> list[BrawlhallaPlayer]:
         """Pakistan-board players plus linked members, each once."""
@@ -30,6 +34,11 @@ class NetworkService:
             players[player.id] = player
         for _member, player, _discord_id in await self._links.list_active_for_guild(guild_id):
             players.setdefault(player.id, player)
+        # Team rosters, clan-synced ones included (ADR-120).
+        for pid in await self._teams.active_player_ids(guild_id) - players.keys():
+            rostered = await self._players.get_by_id(pid)
+            if rostered is not None:
+                players[pid] = rostered
         return list(players.values())
 
     async def legend_meta(self, guild_id: int, *, limit: int = 10) -> list[LegendMetaEntry]:

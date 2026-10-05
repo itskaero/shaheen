@@ -147,10 +147,6 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
                 "/announce", "Post an announcement (preview first, no ping by default).", True
             ),
             CommandHelp("/feature", "Set the website's Featured Player.", True),
-            CommandHelp("/team create", "Create a team.", True),
-            CommandHelp("/team captain", "Name a team's captain.", True),
-            CommandHelp("/team add", "Add a player (staff or that team's captain)."),
-            CommandHelp("/team remove", "Remove a player (staff or that team's captain)."),
             CommandHelp("/spotlight", "Feature a member in #announcements.", True),
             CommandHelp("/lock", "Stop @everyone from sending in a channel.", True),
             CommandHelp("/unlock", "Undo a /lock on a channel.", True),
@@ -160,6 +156,18 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
             CommandHelp("/pakistan add", "Add any Pakistani player to that leaderboard.", True),
             CommandHelp("/pakistan remove", "Remove a player from the Pakistan board.", True),
+        ),
+    ),
+    HelpSection(
+        key="staff_teams",
+        title="🛡️ Staff — Teams",
+        commands=(
+            CommandHelp("/team create", "Create a team.", True),
+            CommandHelp("/team captain", "Name a team's captain.", True),
+            CommandHelp("/team clan", "Link a team to its in-game clan.", True),
+            CommandHelp("/team sync", "Pull a team's roster from its clan now.", True),
+            CommandHelp("/team add", "Add a player (staff or that team's captain)."),
+            CommandHelp("/team remove", "Remove a player (staff or that team's captain)."),
         ),
     ),
     HelpSection(
@@ -189,6 +197,48 @@ def _format(section: HelpSection) -> str:
     )
 
 
+def is_staff_section(section: HelpSection) -> bool:
+    """A category made only of staff commands (shown to staff only)."""
+    return all(command.staff_only for command in section.commands)
+
+
+def help_pages(*, staff: bool) -> list[HelpSection | None]:
+    """The /help pages: None is the overview, then one page per category.
+    Staff-only categories are left out for everyone else (ADR-121)."""
+    return [None, *(s for s in HELP_SECTIONS if staff or not is_staff_section(s))]
+
+
+def build_help_page(pages: list[HelpSection | None], index: int) -> discord.Embed:
+    """One page of the paginated /help (ADR-121)."""
+    index = max(0, min(index, len(pages) - 1))
+    page = pages[index]
+    footer = f"Page {index + 1} of {len(pages)} · use the buttons or the menu"
+    if page is None:
+        embed = discord.Embed(
+            title="BRAWLISTAN commands",
+            description=(
+                "Everything the bot can do. Most commands reply only to you.\n"
+                "Page through the categories below, or jump straight to one with the menu.\n"
+                "New here? Start with `/link`."
+            ),
+            colour=GOLD,
+        )
+        for section in pages[1:]:
+            assert section is not None
+            sample = ", ".join(command.name for command in section.commands[:4])
+            more = len(section.commands) - 4
+            embed.add_field(
+                name=f"{section.title} · {len(section.commands)}",
+                value=sample + (f" and {more} more" if more > 0 else ""),
+                inline=False,
+            )
+        embed.set_footer(text=footer)
+        return embed
+    embed = discord.Embed(title=page.title, description=_format(page), colour=EMERALD)
+    embed.set_footer(text=footer)
+    return embed
+
+
 def build_help_embed(section_key: str | None = None) -> discord.Embed:
     """The whole catalog, or one section when `section_key` matches.
 
@@ -204,7 +254,7 @@ def build_help_embed(section_key: str | None = None) -> discord.Embed:
         return embed
 
     embed = discord.Embed(
-        title="🦅 Shaheen Commands",
+        title="BRAWLISTAN commands",
         description=(
             "Everything the bot can do. Most commands reply only to you.\n"
             "Run `/help category:<name>` to see one group on its own."
