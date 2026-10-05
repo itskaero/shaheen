@@ -8,13 +8,16 @@ from __future__ import annotations
 
 import io
 
-from PIL import Image, ImageFont
+from PIL import Image, ImageChops, ImageFont
 
 from services.image_service import (
+    _GOODBYE_NAME_BOX,
     _GOODBYE_TEMPLATE_PATH,
+    _NAME_FONT_PATH,
     _SUBTITLE_FONT_PATH,
     _TEMPLATE_PATH,
     _TITLE_FONT_PATH,
+    _WELCOME_NAME_BOX,
     _WELCOME_TEMPLATE_PATH,
     CARD_HEIGHT,
     CARD_WIDTH,
@@ -68,7 +71,7 @@ def test_brand_fonts_ship_inside_src() -> None:
     .dockerignore — docs/DECISIONS.md ADR-060/ADR-061. Missing here means
     missing in production too, silently falling back to the generic font.
     """
-    for font_path in (_TITLE_FONT_PATH, _SUBTITLE_FONT_PATH):
+    for font_path in (_TITLE_FONT_PATH, _SUBTITLE_FONT_PATH, _NAME_FONT_PATH):
         assert font_path.exists()
         assert "src" in font_path.parts
         assert "web" not in font_path.parts
@@ -118,7 +121,7 @@ def test_make_masks_outer_stroke_mask_covers_more_pixels_than_inner() -> None:
     assert outer_opaque > inner_opaque
 
 
-# --- welcome/goodbye cards (docs/DECISIONS.md ADR-065, redesigned ADR-091) --
+# --- welcome/goodbye cards (docs/DECISIONS.md ADR-065, redesigned ADR-122) --
 
 
 def test_render_welcome_card_returns_a_valid_png_at_the_new_size() -> None:
@@ -155,3 +158,32 @@ def test_welcome_and_goodbye_templates_ship_inside_src() -> None:
         assert template_path.exists()
         assert "src" in template_path.parts
         assert "web" not in template_path.parts
+
+
+def _changed_area(rendered: bytes, template_path) -> tuple[int, int, int, int] | None:
+    card = Image.open(io.BytesIO(rendered)).convert("RGB")
+    template = Image.open(template_path).convert("RGB")
+    diff = ImageChops.difference(card, template).convert("L").point(lambda v: 255 if v > 24 else 0)
+    return diff.getbbox()
+
+
+def test_the_name_lands_inside_each_cards_name_plate() -> None:
+    """Short or very long, the name is drawn inside the empty plate and
+    never over the banner's title or artwork (only its soft glow may spill
+    a few pixels)."""
+    cases = (
+        (render_welcome_card, _WELCOME_TEMPLATE_PATH, _WELCOME_NAME_BOX),
+        (render_goodbye_card, _GOODBYE_TEMPLATE_PATH, _GOODBYE_NAME_BOX),
+    )
+    for render, template_path, (x0, y0, x1, y1) in cases:
+        # The last is Discord's longest display name (32) in its widest letter.
+        for name in ("Reko", "gjpqy Wolf", "xXx_TheLegendaryBrawlhallaChampion2024_xXx", "W" * 32):
+            area = _changed_area(render(member_name=name), template_path)
+            assert area is not None
+            slack = 8
+            assert area[0] >= x0 - slack and area[2] <= x1 + slack
+            assert area[1] >= y0 - slack and area[3] <= y1 + slack
+
+
+def test_an_empty_name_leaves_the_banner_untouched() -> None:
+    assert _changed_area(render_welcome_card(member_name=""), _WELCOME_TEMPLATE_PATH) is None
