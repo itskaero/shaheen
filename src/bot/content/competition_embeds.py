@@ -90,7 +90,7 @@ def build_report_outcome_embed(*, confirmed: bool) -> discord.Embed:
         )
     return discord.Embed(
         title="⚠️ Result Disputed",
-        description="A Moderator or Leader will need to resolve this with `/match resolve`.",
+        description="A Moderator or Admin will need to resolve this with `/match resolve`.",
         colour=GOLD,
     )
 

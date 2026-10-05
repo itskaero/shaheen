@@ -154,21 +154,6 @@ async def test_rows_report_whether_the_spot_is_claimed(session: AsyncSession) ->
     ]
 
 
-async def test_top_role_goes_only_to_claimed_players_inside_the_top_places(
-    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(pakistan_board_service, "PAKISTAN_TOP_ROLE_SIZE", 2)
-    service = PakistanBoardService(session)
-    await service.add(guild_id=GUILD_ID, added_by_discord_id=1, candidate=_candidate(10))
-    await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(20))
-    await service.join(guild_id=GUILD_ID, discord_id=8, candidate=_candidate(30))
-    await _rate(session, 10, 2200)  # 1st but unclaimed: keeps the place, no role
-    await _rate(session, 20, 2000)  # 2nd, claimed: gets it
-    await _rate(session, 30, 1500)  # 3rd: outside the top 2
-
-    assert await service.top_role_earners(GUILD_ID) == {7}
-
-
 async def test_climbers_rank_rating_gains_inside_the_window(session: AsyncSession) -> None:
     service = PakistanBoardService(session)
     await service.join(guild_id=GUILD_ID, discord_id=7, candidate=_candidate(10))
@@ -188,7 +173,7 @@ async def test_climbers_rank_rating_gains_inside_the_window(session: AsyncSessio
     ] == [(20, 120, None), (10, 50, 7)]
 
 
-async def test_unplaced_players_are_left_off_the_board_and_earn_no_role(
+async def test_unplaced_players_are_left_off_the_board(
     session: AsyncSession,
 ) -> None:
     """After a season reset the API reads everyone as unplaced (rating None,
@@ -211,4 +196,3 @@ async def test_unplaced_players_are_left_off_the_board_and_earn_no_role(
         )
     )
     assert await service.leaderboard(GUILD_ID) == []
-    assert await service.top_role_earners(GUILD_ID) == set()

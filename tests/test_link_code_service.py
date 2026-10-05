@@ -170,8 +170,12 @@ async def test_verification_is_set_and_withdrawn(session: AsyncSession) -> None:
     from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 
     assert await MemberPlayerLinkRepository(session).verified_player_ids() == {player.id}
+    # What the Player/Verified role sync mirrors (ADR-109).
+    assert await MemberPlayerLinkRepository(session).account_states(GUILD) == {7: True}
     await links.set_verified(guild_id=GUILD, discord_id=7, staff_discord_id=1, verified=False)
     assert await MemberPlayerLinkRepository(session).verified_player_ids() == set()
+    assert await MemberPlayerLinkRepository(session).account_states(GUILD) == {7: False}
+    assert await MemberPlayerLinkRepository(session).account_states(GUILD + 1) == {}
     assert (
         await links.set_verified(guild_id=GUILD, discord_id=99, staff_discord_id=1, verified=True)
         is None

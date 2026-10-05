@@ -25,6 +25,7 @@ from discord.utils import format_dt
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
+from bot.constants import CHANNEL_REPORT
 from bot.content.moderation_embeds import (
     build_clearwarnings_log_embed,
     build_lock_log_embed,
@@ -47,13 +48,14 @@ from database.session import session_scope
 
 logger = logging.getLogger(__name__)
 
-_MOD_LOG_KEY = "channel:mod_log"
+# Moderation actions are logged to MOD_LOG_CHANNEL_ID if set, else to
+# #report (ADR-109; the old #mod-log channel retired).
 
 
 def _require_member(interaction: discord.Interaction) -> discord.Member:
     member = interaction.user
     if not isinstance(member, discord.Member) or interaction.guild is None:
-        raise ShaheenError("This command can only be used inside the Shaheen server.")
+        raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
     return member
 
 
@@ -62,14 +64,18 @@ class ModerationCog(commands.Cog):
         self.bot = bot
 
     async def _log(self, guild: discord.Guild, embed: discord.Embed) -> None:
-        channel = await resolve_provisioned_channel(self.bot, guild, _MOD_LOG_KEY)
+        channel: discord.abc.GuildChannel | None = None
+        if self.bot.settings.mod_log_channel_id is not None:
+            channel = guild.get_channel(self.bot.settings.mod_log_channel_id)
+        if not isinstance(channel, discord.TextChannel):
+            channel = await resolve_provisioned_channel(self.bot, guild, CHANNEL_REPORT.logical_key)
         if channel is None:
-            logger.warning("Mod-log channel not provisioned — run /setup run first")
+            logger.warning("No mod-log channel — run /setup run or set MOD_LOG_CHANNEL_ID")
             return
         try:
             await channel.send(embed=embed)
         except discord.Forbidden:
-            logger.warning("Missing permission to post in #mod-log")
+            logger.warning("Missing permission to post in the mod-log channel")
 
     # --- /warn / /warnings / /clearwarnings --------------------------------
 

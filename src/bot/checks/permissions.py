@@ -2,13 +2,13 @@
 
 See docs/DECISIONS.md:
 - ADR-010: `/setup` is authorized for the guild owner, any member with the
-  native Administrator permission, or a holder of ROLE_LEADER (docs/
-  DECISIONS.md ADR-060 for its current display name). The Administrator/
-  owner fallback is permanent, not a one-time bootstrap step, because the
-  Leader role does not exist until /setup creates it.
-- ADR-036: staff actions short of full server administration (tournament
-  management, match dispute resolution) are authorized for the same
-  owner/admin fallback, or a holder of ROLE_MODERATOR or ROLE_LEADER.
+  native Administrator permission, or a holder of a leadership role
+  (Founder or Admin since ADR-109). The Administrator/owner fallback is
+  permanent, not a one-time bootstrap step, because the roles do not exist
+  until /setup creates them.
+- ADR-036: staff actions short of full server administration (moderation,
+  tournaments, verification) are authorized for the same owner/admin
+  fallback, or a holder of any staff role (Founder, Admin, Moderator).
 """
 
 from __future__ import annotations
@@ -19,10 +19,15 @@ from typing import TypeVar
 import discord
 from discord import app_commands
 
-from bot.constants import ROLE_LEADER, ROLE_MODERATOR
+from bot.constants import LEADERSHIP_ROLES, STAFF_ROLES, RoleSpec
 from core.exceptions import PermissionDeniedError
 
 T = TypeVar("T")
+
+
+def _names(roles: Iterable[RoleSpec]) -> str:
+    names = [role.name for role in roles]
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} or {names[-1]}"
 
 
 def _role_authorized(
@@ -41,7 +46,7 @@ def is_setup_authorized(
         is_owner=is_owner,
         is_administrator=is_administrator,
         role_names=role_names,
-        allowed_roles={ROLE_LEADER.name},
+        allowed_roles={role.name for role in LEADERSHIP_ROLES},
     )
 
 
@@ -53,23 +58,33 @@ def is_staff_authorized(
         is_owner=is_owner,
         is_administrator=is_administrator,
         role_names=role_names,
-        allowed_roles={ROLE_LEADER.name, ROLE_MODERATOR.name},
+        allowed_roles={role.name for role in STAFF_ROLES},
     )
 
 
-def check_setup_authorized(member: discord.Member) -> bool:
+def _is_owner(member: discord.Member, bot_owner_id: int | None) -> bool:
+    # The guild owner, or BOT_OWNER_ID (core/config.py, ADR-109).
+    return member.id in {member.guild.owner_id, bot_owner_id}
+
+
+def _bot_owner_id(interaction: discord.Interaction) -> int | None:
+    settings = getattr(interaction.client, "settings", None)
+    return getattr(settings, "bot_owner_id", None)
+
+
+def check_setup_authorized(member: discord.Member, bot_owner_id: int | None = None) -> bool:
     """Discord-facing wrapper around `is_setup_authorized`."""
     return is_setup_authorized(
-        is_owner=member.guild.owner_id == member.id,
+        is_owner=_is_owner(member, bot_owner_id),
         is_administrator=member.guild_permissions.administrator,
         role_names=(role.name for role in member.roles),
     )
 
 
-def check_staff_authorized(member: discord.Member) -> bool:
+def check_staff_authorized(member: discord.Member, bot_owner_id: int | None = None) -> bool:
     """Discord-facing wrapper around `is_staff_authorized`."""
     return is_staff_authorized(
-        is_owner=member.guild.owner_id == member.id,
+        is_owner=_is_owner(member, bot_owner_id),
         is_administrator=member.guild_permissions.administrator,
         role_names=(role.name for role in member.roles),
     )
@@ -81,11 +96,13 @@ def require_setup_authorized() -> Callable[[T], T]:
     async def predicate(interaction: discord.Interaction) -> bool:
         member = interaction.user
         if not isinstance(member, discord.Member):
-            raise PermissionDeniedError("This command can only be used inside the Shaheen server.")
-        if not check_setup_authorized(member):
+            raise PermissionDeniedError(
+                "This command can only be used inside the BRAWLISTAN server."
+            )
+        if not check_setup_authorized(member, _bot_owner_id(interaction)):
             raise PermissionDeniedError(
                 "You need to be a server administrator or hold the "
-                f"{ROLE_LEADER.name} role to run this command."
+                f"{_names(LEADERSHIP_ROLES)} role to run this command."
             )
         return True
 
@@ -98,11 +115,13 @@ def require_staff_authorized() -> Callable[[T], T]:
     async def predicate(interaction: discord.Interaction) -> bool:
         member = interaction.user
         if not isinstance(member, discord.Member):
-            raise PermissionDeniedError("This command can only be used inside the Shaheen server.")
-        if not check_staff_authorized(member):
+            raise PermissionDeniedError(
+                "This command can only be used inside the BRAWLISTAN server."
+            )
+        if not check_staff_authorized(member, _bot_owner_id(interaction)):
             raise PermissionDeniedError(
                 "You need to be a server administrator or hold the "
-                f"{ROLE_MODERATOR.name} or {ROLE_LEADER.name} role to run this command."
+                f"{_names(STAFF_ROLES)} role to run this command."
             )
         return True
 

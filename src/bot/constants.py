@@ -1,12 +1,20 @@
-"""Desired Shaheen guild structure — the single source of truth.
+"""Desired BRAWLISTAN Discord structure — the single source of truth
+(docs/DECISIONS.md ADR-109, docs/BRAWLISTAN_MIGRATION.md).
 
-Both the setup planner/service (what to create/verify) and the permission
-checks (which role names count as "leader") read from here, so the guild
-structure defined in docs/DISCORD_SPEC.md and docs/PERMISSIONS.md is only
-encoded once. `logical_key` values are stable identifiers used to look up
-ProvisionedResource rows — do not rename them once /setup has run against a
-real guild, or the idempotency lookup will treat the resource as missing and
-recreate it.
+The server stays small: seven roles and twelve text channels in four
+categories. /setup creates or reuses them and never sets permissions:
+roles are created with none, channels get no permission overwrites, and
+existing roles are never re-permissioned (repair only renames). The owner
+configures who sees and does what, by hand.
+
+`logical_key` values are stable identifiers for ProvisionedResource rows.
+Where a SHAHEEN-era resource plays the same part, its key is reused, so the
+existing role/channel (and its members/history) carries over instead of
+being deleted and recreated:
+- Founder reuses the Leader role ("role:shaheen_leader");
+- #rankings reuses #leaderboard, #looking-for-game reuses #ranked,
+  #achievements reuses #hall-of-fame, #bot-commands reuses #commands.
+Do not rename keys once /setup has run against a real guild.
 """
 
 from __future__ import annotations
@@ -28,6 +36,8 @@ class RoleSpec:
     color: int
     hoist: bool = True
     mentionable: bool = False
+    # Always none for BRAWLISTAN roles (brief: never grant dangerous
+    # permissions); kept as a field so the type stays explicit.
     permissions: discord.Permissions = field(default_factory=discord.Permissions.none)
 
 
@@ -37,10 +47,6 @@ class ChannelSpec:
     name: str
     kind: ChannelKind
     topic: str | None = None
-    # Everyone can still view/read; only ROLES_WITH_STAFF_ACCESS can send.
-    # False (default) leaves Send Messages inherited from the category —
-    # docs/DECISIONS.md ADR-060, docs/PERMISSIONS.md.
-    staff_only_send: bool = False
 
 
 @dataclass(frozen=True)
@@ -48,567 +54,109 @@ class CategorySpec:
     logical_key: str
     name: str
     channels: tuple[ChannelSpec, ...]
-    # Restricted categories are hidden from @everyone; only ROLES_WITH_STAFF_ACCESS can see them.
-    restricted: bool = False
-    # Gated categories are hidden from @everyone AND Guest; visible to every
-    # other rank role (VERIFIED_ROLES) once a member is manually verified —
-    # docs/DECISIONS.md ADR-069, docs/PERMISSIONS.md. Mutually exclusive with
-    # `restricted`: a category is either staff-only or verified-only, never both.
-    gated: bool = False
-    # Only meaningful combined with gated=True: nobody in VERIFIED_ROLES gets
-    # send_messages/speak, not even Trial Shaheen and up — a broadcast-only
-    # category (bot-posted milestones/rankings) that every verified member can
-    # read but nobody types in (docs/DECISIONS.md ADR-091).
-    readonly: bool = False
 
 
-# --- Roles, highest to lowest (docs/PERMISSIONS.md) -------------------------
-#
-# SHAHEEN BOT is deliberately absent: it is Discord's own managed integration
-# role for the bot, not one /setup creates (docs/DECISIONS.md ADR-018).
-#
-# Bilingual "English | Urdu" names, no emoji prefix — matches the owner's own
-# hand-made roles (docs/DECISIONS.md ADR-060), replacing the earlier
-# "emoji + ALL CAPS" style. All rank roles now carry an owner-confirmed Urdu
-# translation (docs/DECISIONS.md ADR-061).
+# --- Roles, highest to lowest ------------------------------------------------
+# The bot's own managed integration role is Discord's, not /setup's.
 
-ROLE_LEADER = RoleSpec(
-    logical_key="role:shaheen_leader",
-    name="Leader | سربراہ",
-    color=GOLD,
-    mentionable=True,
-    # Server owner-equivalent by design; every other role below is deliberately
-    # unprivileged so day-to-day moderation never needs Administrator.
-    permissions=discord.Permissions(administrator=True),
-)
-
+ROLE_FOUNDER = RoleSpec(logical_key="role:shaheen_leader", name="Founder", color=GOLD)
+ROLE_ADMIN = RoleSpec(logical_key="role:admin", name="Admin", color=EMERALD)
 ROLE_MODERATOR = RoleSpec(
-    logical_key="role:moderator",
-    name="Moderator | ناظم",
-    color=EMERALD,
-    mentionable=True,
-    permissions=discord.Permissions(
-        kick_members=True,
-        moderate_members=True,
-        manage_messages=True,
-        manage_nicknames=True,
-        mute_members=True,
-        deafen_members=True,
-        move_members=True,
-    ),
+    logical_key="role:moderator", name="Moderator", color=EMERALD, mentionable=True
 )
-
-ROLE_ELITE = RoleSpec(
-    logical_key="role:elite_shaheen",
-    name="Elite Shaheen | شاہینِ خاص",
-    color=GOLD,
+ROLE_TEAM_CAPTAIN = RoleSpec(logical_key="role:team_captain", name="Team Captain", color=CREAM)
+ROLE_CONTRIBUTOR = RoleSpec(
+    logical_key="role:contributor", name="Contributor", color=CREAM, hoist=False
 )
-
-ROLE_SHAHEEN = RoleSpec(
-    logical_key="role:shaheen",
-    name="Shaheen | شاہین",
-    color=FOREST_GREEN,
+# Staff confirmed the member owns their linked Brawlhalla account (/verify, ADR-107).
+ROLE_VERIFIED = RoleSpec(
+    logical_key="role:verified", name="Verified", color=FOREST_GREEN, hoist=False
 )
+# Has a linked Brawlhalla account (/link or a website claim).
+ROLE_PLAYER = RoleSpec(logical_key="role:player", name="Player", color=GREY, hoist=False)
 
-ROLE_TRIAL = RoleSpec(
-    logical_key="role:trial_shaheen",
-    name="Trial Shaheen | آزمائشی شاہین",
-    color=EMERALD,
-)
-
-ROLE_ALLY = RoleSpec(
-    logical_key="role:ally",
-    name="Ally | اتحادی",
-    color=CREAM,
-)
-
-ROLE_GUEST = RoleSpec(
-    logical_key="role:guest",
-    name="Guest | مہمان",
-    color=GREY,
-    hoist=False,
-)
-
-# Purely cosmetic, system-rotated weekly by ClanCog's digest loop — never
-# self-assigned, not part of the rank ladder or VERIFIED_ROLES (docs/
-# DECISIONS.md ADR-070). Held by at most one member at a time.
-ROLE_MVP = RoleSpec(
-    logical_key="role:mvp_of_the_week",
-    name="🌟 MVP of the Week",
-    color=GOLD,
-    hoist=True,
-)
-
-# System-assigned by EngagementCog once a member's chat level reaches
-# services/chat_gamification.py's CORE_MEMBER_MIN_LEVEL (docs/DECISIONS.md
-# ADR-097) — the chat-activity equivalent of the Brawlhalla rank roles
-# below: cosmetic recognition for sustained engagement, earned once and
-# never revoked (XP only goes up). Not part of the rank ladder or
-# VERIFIED_ROLES, same posture as ROLE_MVP above.
-ROLE_CORE_MEMBER = RoleSpec(
-    logical_key="role:core_member",
-    name="🔥 Core Member",
-    color=GOLD,
-    hoist=False,
-    mentionable=True,
-)
-
-# Held by the claimed players in the Pakistan leaderboard's top 10, synced on
-# every snapshot tick (docs/DECISIONS.md ADR-100). Only server members who
-# ran /pakistan join can hold it — the reason for an unclaimed top player to
-# join. Not a clan rank; non-clan members can earn it too.
-ROLE_PAKISTAN_TOP = RoleSpec(
-    logical_key="role:pakistan_top_10",
-    name="🇵🇰 Pakistan Top 10",
-    color=FOREST_GREEN,
-    hoist=False,
-    mentionable=True,
-)
-
-# --- Brawlhalla rank roles (system-assigned from snapshots) -----------------
-#
-# Mirrors each member's current Brawlhalla 1v1 tier, applied and removed
-# automatically by the snapshot loop (docs/DECISIONS.md ADR-087). The bot has
-# tracked every member's tier every six hours since Phase 3 and never did
-# anything with it; these make that visible and, more usefully, mentionable —
-# "@Diamond scrims at 9" is the point.
-#
-# Gold and above each get their own named tier. Below that, Tin/Bronze/Silver
-# collapse into one combined "Rising Shaheen" role rather than a role per
-# tier (docs/DECISIONS.md ADR-097) — a wall of low-tier roles is
-# discouraging, but leaving new ranked players with nothing was a real gap:
-# it's the one rank tag a brand-new member can actually earn on day one.
-#
-# hoist=False on purpose: the member-list sidebar is already grouped by the
-# clan rank ladder (Elite/Shaheen/Trial/...), and adding more hoisted groups
-# would bury it. These are colour/mention tags, not ladder positions.
-# Held by at most one at a time — the loop revokes the others.
-
-ROLE_RANK_RISING = RoleSpec(
-    logical_key="role:rank_rising_shaheen",
-    name="🌱 Rising Shaheen",
-    color=GREY,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_RANK_GOLD = RoleSpec(
-    logical_key="role:rank_gold",
-    name="🥇 Gold",
-    color=GOLD,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_RANK_PLATINUM = RoleSpec(
-    logical_key="role:rank_platinum",
-    name="💠 Platinum",
-    color=CREAM,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_RANK_DIAMOND = RoleSpec(
-    logical_key="role:rank_diamond",
-    name="💎 Diamond",
-    color=EMERALD,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_RANK_VALHALLAN = RoleSpec(
-    logical_key="role:rank_valhallan",
-    name="⚔️ Valhallan",
-    color=FOREST_GREEN,
-    hoist=False,
-    mentionable=True,
-)
-
-# Lowest tier first. services/rank_roles.py maps a Brawlhalla tier string to
-# one of these logical keys; nothing else should hardcode the order.
-RANK_ROLES: tuple[RoleSpec, ...] = (
-    ROLE_RANK_RISING,
-    ROLE_RANK_GOLD,
-    ROLE_RANK_PLATINUM,
-    ROLE_RANK_DIAMOND,
-    ROLE_RANK_VALHALLAN,
-)
-
-
-# --- Self-assignable roles (opt-in pings/tags, not clan rank) ---------------
-#
-# Deliberately separate from the rank ladder above: these carry no
-# permissions, aren't staff-assigned, and members toggle them themselves via
-# the persistent panel bot/views/roles.py posts to #roles (docs/DECISIONS.md
-# ADR-058). Not in ROLES_WITH_STAFF_ACCESS. hoist=False so they don't create
-# extra sidebar groupings alongside the real rank roles.
-
-ROLE_TOURNAMENT_ALERTS = RoleSpec(
-    logical_key="role:tournament_alerts",
-    name="🔔 Tournament Alerts",
-    color=GOLD,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_SCRIM_ALERTS = RoleSpec(
-    logical_key="role:scrim_alerts",
-    name="📣 Scrim Alerts",
-    color=EMERALD,
-    hoist=False,
-    mentionable=True,
-)
-
-ROLE_REGION_PAKISTAN = RoleSpec(
-    logical_key="role:region_pakistan",
-    name="🇵🇰 Pakistan",
-    color=FOREST_GREEN,
-    hoist=False,
-)
-
-ROLE_REGION_INTERNATIONAL = RoleSpec(
-    logical_key="role:region_international",
-    name="🌍 International",
-    color=CREAM,
-    hoist=False,
-)
-
-ROLE_MODE_1V1 = RoleSpec(
-    logical_key="role:mode_1v1",
-    name="🥊 1v1 Player",
-    color=GREY,
-    hoist=False,
-)
-
-ROLE_MODE_2V2 = RoleSpec(
-    logical_key="role:mode_2v2",
-    name="👥 2v2 Player",
-    color=GREY,
-    hoist=False,
-)
-
-# Order here is display order on the self-assign panel, not hierarchy.
-SELF_ASSIGN_ROLES: tuple[RoleSpec, ...] = (
-    ROLE_TOURNAMENT_ALERTS,
-    ROLE_SCRIM_ALERTS,
-    ROLE_REGION_PAKISTAN,
-    ROLE_REGION_INTERNATIONAL,
-    ROLE_MODE_1V1,
-    ROLE_MODE_2V2,
-)
-
-# Highest position first — /setup creates/repairs roles in this order and
-# leaves later roles positioned below earlier ones. Self-assign roles are
-# appended last (lowest position) since they carry no rank/permissions.
 ROLES: tuple[RoleSpec, ...] = (
-    ROLE_LEADER,
+    ROLE_FOUNDER,
+    ROLE_ADMIN,
     ROLE_MODERATOR,
-    ROLE_ELITE,
-    ROLE_SHAHEEN,
-    ROLE_TRIAL,
-    ROLE_ALLY,
-    ROLE_GUEST,
-    ROLE_MVP,
-    ROLE_CORE_MEMBER,
-    ROLE_PAKISTAN_TOP,
-    *RANK_ROLES,
-    *SELF_ASSIGN_ROLES,
+    ROLE_TEAM_CAPTAIN,
+    ROLE_CONTRIBUTOR,
+    ROLE_VERIFIED,
+    ROLE_PLAYER,
 )
 
-# Roles authorized to see restricted categories (DEVELOPMENT, SHAHEEN ARENA
-# until launch) in addition to the /setup-authorized fallback in
-# bot/checks/permissions.py.
-ROLES_WITH_STAFF_ACCESS: tuple[RoleSpec, ...] = (ROLE_LEADER, ROLE_MODERATOR)
+# Holders of these may run staff commands (bot/checks/permissions.py), on
+# top of Discord's own Administrator / Manage Server permissions.
+STAFF_ROLES: tuple[RoleSpec, ...] = (ROLE_FOUNDER, ROLE_ADMIN, ROLE_MODERATOR)
+LEADERSHIP_ROLES: tuple[RoleSpec, ...] = (ROLE_FOUNDER, ROLE_ADMIN)
 
-# Roles authorized to see gated categories — every rank role except Guest,
-# i.e. everyone who has been manually verified (docs/DECISIONS.md ADR-069).
-# Guest is deliberately excluded even though it's a rank role: it's the
-# auto-assigned, not-yet-verified state a new member starts in.
-#
-# Full read+write from the moment of approval — an Ally is not read-only
-# (docs/DECISIONS.md ADR-091, superseding ADR-090's Ally-read-only channel
-# design). The one exception is `readonly` categories above, which apply to
-# every VERIFIED_ROLE equally rather than singling Ally out.
-VERIFIED_ROLES: tuple[RoleSpec, ...] = (
-    ROLE_LEADER,
-    ROLE_MODERATOR,
-    ROLE_ELITE,
-    ROLE_SHAHEEN,
-    ROLE_TRIAL,
-    ROLE_ALLY,
+# --- Channels ----------------------------------------------------------------
+
+CHANNEL_WELCOME = ChannelSpec(
+    "channel:welcome",
+    "welcome",
+    "text",
+    topic="Welcome to BRAWLISTAN — Pakistan's Brawlhalla Network.",
 )
-
-# Every rank role above Ally — a real roster member, not just an approved
-# friend of the clan. No longer a channel-permission distinction (ADR-091:
-# Ally already gets full read+write on VERIFIED_ROLES' channels); this is
-# purely about rank, used by LinkCog._maybe_promote to tell "already Trial
-# or above, leave alone" from "still Ally, eligible to be promoted".
-FULL_MEMBER_ROLES: tuple[RoleSpec, ...] = (
-    ROLE_LEADER,
-    ROLE_MODERATOR,
-    ROLE_ELITE,
-    ROLE_SHAHEEN,
-    ROLE_TRIAL,
+CHANNEL_RULES = ChannelSpec("channel:rules", "rules", "text", topic="Server rules.")
+CHANNEL_ANNOUNCEMENTS = ChannelSpec(
+    "channel:announcements", "announcements", "text", topic="BRAWLISTAN news, seasons and events."
 )
-
-
-# --- Categories & channels (docs/DISCORD_SPEC.md) ---------------------------
+CHANNEL_RANKINGS = ChannelSpec(
+    "channel:leaderboard", "rankings", "text", topic="Pakistan rankings, climbers and rank changes."
+)
+CHANNEL_TOURNAMENTS = ChannelSpec(
+    "channel:tournaments", "tournaments", "text", topic="Tournaments, sign-ups and results."
+)
+CHANNEL_LOOKING_FOR_GAME = ChannelSpec(
+    "channel:ranked",
+    "looking-for-game",
+    "text",
+    topic="Find 1v1 sparring and 2v2 partners. Try /looking.",
+)
+CHANNEL_GENERAL = ChannelSpec("channel:general", "general", "text", topic="General chat.")
+CHANNEL_CLIPS = ChannelSpec("channel:clips", "clips", "text", topic="Share your clips.")
+CHANNEL_ACHIEVEMENTS = ChannelSpec(
+    "channel:hall_of_fame", "achievements", "text", topic="Milestones and achievements."
+)
+CHANNEL_BOT_COMMANDS = ChannelSpec(
+    "channel:commands", "bot-commands", "text", topic="Use BRAWLISTAN bot commands here."
+)
+# Where /report and the website's Report Player land, and where moderation
+# actions are logged unless MOD_LOG_CHANNEL_ID points elsewhere. The owner
+# makes it staff-only.
+CHANNEL_REPORT = ChannelSpec(
+    "channel:report", "report", "text", topic="Player reports and moderation log (staff)."
+)
 
 CATEGORIES: tuple[CategorySpec, ...] = (
     CategorySpec(
-        # Deliberately the only ungated category left (docs/DECISIONS.md
-        # ADR-091) — a brand-new Guest sees this and nothing else in the
-        # server until a moderator approves their application or runs
-        # /verify. Ungated by omission (gated defaults to False).
         logical_key="category:start_here",
-        name="🦅 START HERE",
-        channels=(
-            ChannelSpec(
-                "channel:apply",
-                "📝-apply",
-                "text",
-                topic="Apply to join Shaheen — staff review every application. | "
-                "شاہین میں شامل ہونے کے لیے درخواست دیں — اسٹاف ہر درخواست کا جائزہ لیتا ہے۔",
-                # Only the application panel lives here; nobody chats in it.
-                staff_only_send=True,
-            ),
-        ),
+        name="START HERE",
+        channels=(CHANNEL_WELCOME, CHANNEL_RULES, CHANNEL_ANNOUNCEMENTS),
     ),
     CategorySpec(
-        logical_key="category:shaheen_hq",
-        name="🏯 SHAHEEN HQ",
-        gated=True,  # docs/DECISIONS.md ADR-091 — was public; #apply moved out instead
-        channels=(
-            ChannelSpec(
-                "channel:announcements",
-                "📢-announcements",
-                "text",
-                topic="Clan news and updates — staff only to post, everyone can read. | "
-                "کلان کی خبریں اور اپڈیٹس — صرف اسٹاف پوسٹ کر سکتا ہے، سب پڑھ سکتے ہیں۔",
-                staff_only_send=True,
-            ),
-            ChannelSpec(
-                "channel:welcome",
-                "👋-welcome",
-                "text",
-                topic="Start here. | یہاں سے شروع کریں۔",
-            ),
-            ChannelSpec(
-                "channel:rules",
-                "📜-rules",
-                "text",
-                topic="Server rules. | سرور کے قوانین۔",
-            ),
-            ChannelSpec(
-                "channel:roles",
-                "🎭-roles",
-                "text",
-                topic="Ranks and opt-in roles. | درجے اور اختیاری رولز۔",
-            ),
-            ChannelSpec(
-                "channel:clan_info",
-                "🦅-clan-info",
-                "text",
-                topic="About Shaheen. | شاہین کے بارے میں۔",
-            ),
-            ChannelSpec(
-                "channel:suggestions",
-                "💡-suggestions",
-                "text",
-                topic="Suggest anything for the clan — posted anonymously via /suggest. | "
-                "کلان کے لیے کوئی بھی تجویز — /suggest کے ذریعے گمنام طور پر پوسٹ کریں۔",
-            ),
-        ),
+        logical_key="category:brawlistan",
+        name="BRAWLISTAN",
+        channels=(CHANNEL_RANKINGS, CHANNEL_TOURNAMENTS, CHANNEL_LOOKING_FOR_GAME),
     ),
     CategorySpec(
-        logical_key="category:the_nest",
-        name="🪹 THE NEST",
-        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
-        channels=(
-            ChannelSpec(
-                "channel:general",
-                "💬-general",
-                "text",
-                topic="General chat. | عمومی گفتگو۔",
-            ),
-            ChannelSpec(
-                "channel:pakistan_chat",
-                "🇵🇰-pakistan-chat",
-                "text",
-                topic="Chat for Pakistan-based members. | پاکستانی اراکین کے لیے گپ شپ۔",
-            ),
-            ChannelSpec(
-                "channel:memes",
-                "😂-memes",
-                "text",
-                topic="Memes. | میمز۔",
-            ),
-            ChannelSpec(
-                "channel:clips",
-                "🎬-clips",
-                "text",
-                topic="Share your clips. | اپنی کلپس شیئر کریں۔",
-            ),
-        ),
+        logical_key="category:community",
+        name="COMMUNITY",
+        channels=(CHANNEL_GENERAL, CHANNEL_CLIPS, CHANNEL_ACHIEVEMENTS),
     ),
     CategorySpec(
-        logical_key="category:brawlhalla",
-        name="⚔️ BRAWLHALLA",
-        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
-        channels=(
-            ChannelSpec(
-                "channel:brawlhalla",
-                "🎮-brawlhalla",
-                "text",
-                topic="General Brawlhalla talk. | براولہلا پر عمومی گفتگو۔",
-            ),
-            ChannelSpec(
-                "channel:tips_guides",
-                "🧠-tips-guides",
-                "text",
-                topic="Tips and guides. | تجاویز اور گائیڈز۔",
-            ),
-            ChannelSpec(
-                "channel:legend_talk",
-                "🐺-legend-talk",
-                "text",
-                topic="Legend picks and matchups. | لیجنڈ کا انتخاب اور مقابلے۔",
-            ),
-            ChannelSpec(
-                "channel:one_v_one",
-                "⚔️-1v1",
-                "text",
-                topic="Coordinate 1v1s. | ون-وی-ون کوآرڈینیٹ کریں۔",
-            ),
-            ChannelSpec(
-                "channel:two_v_two",
-                "👥-2v2",
-                "text",
-                topic="Coordinate 2v2s. | ٹو-وی-ٹو کوآرڈینیٹ کریں۔",
-            ),
-            ChannelSpec(
-                "channel:ranked",
-                "🏆-ranked",
-                "text",
-                topic="Looking for a spar? Post here. | اسپار ڈھونڈ رہے ہیں؟ یہاں پوسٹ کریں۔",
-            ),
-        ),
-    ),
-    CategorySpec(
-        logical_key="category:shaheen_arena",
-        name="🏟️ SHAHEEN ARENA",
-        restricted=True,  # hidden/disabled from public users until there is a need
-        channels=(
-            ChannelSpec(
-                "channel:scrims",
-                "⚔️-scrims",
-                "text",
-                topic="Scrim announcements. | اسکرم کے اعلانات۔",
-            ),
-            ChannelSpec(
-                "channel:tournaments",
-                "🏆-tournaments",
-                "text",
-                topic="Tournament brackets. | ٹورنامنٹ بریکٹس۔",
-            ),
-        ),
-    ),
-    CategorySpec(
-        # Bot-broadcast channels every verified member can read but nobody
-        # (staff included) types in — docs/DECISIONS.md ADR-091. Split out
-        # of SHAHEEN ARENA, which otherwise stays staff-only.
-        logical_key="category:hall_of_records",
-        name="🏆 HALL OF RECORDS",
-        gated=True,
-        readonly=True,
-        channels=(
-            ChannelSpec(
-                "channel:leaderboard",
-                "📊-leaderboard",
-                "text",
-                topic="Clan standings. | کلان کی درجہ بندی۔",
-            ),
-            ChannelSpec(
-                "channel:hall_of_fame",
-                "🥇-hall-of-fame",
-                "text",
-                topic="Milestones and achievements. | کارنامے اور کامیابیاں۔",
-            ),
-        ),
-    ),
-    CategorySpec(
-        logical_key="category:voice",
-        name="🎙️ VOICE",
-        gated=True,  # hidden until manually verified — docs/DECISIONS.md ADR-069
-        channels=(
-            ChannelSpec("channel:voice_the_nest", "🔊-the-nest", "voice"),
-            ChannelSpec("channel:voice_gaming", "🎮-gaming", "voice"),
-            ChannelSpec("channel:voice_ranked", "⚔️-ranked", "voice"),
-            # A plain voice channel, not a true Discord Stage channel — a
-            # Stage channel is a distinct API type discord.py exposes
-            # separately from VoiceChannel, and ChannelKind/setup_planner/
-            # setup_service assume exactly two kinds throughout; plumbing a
-            # third would be real, disclosed scope of its own (docs/
-            # DECISIONS.md ADR-097), not attempted this round.
-            ChannelSpec("channel:voice_meetings", "🗣️-meetings-and-amas", "voice"),
-            ChannelSpec("channel:voice_afk", "💤-afk", "voice"),
-        ),
-    ),
-    CategorySpec(
-        logical_key="category:moderation",
-        name="🛡️ MODERATION",
-        restricted=True,  # staff-only — ROLES_WITH_STAFF_ACCESS (docs/DECISIONS.md ADR-065)
-        channels=(
-            ChannelSpec(
-                "channel:mod_log",
-                "🛡️-mod-log",
-                "text",
-                topic="Moderation action log — staff only. | نگرانی کا ریکارڈ — صرف اسٹاف کے لیے۔",
-            ),
-            ChannelSpec(
-                "channel:applications",
-                "📥-applications",
-                "text",
-                topic="Join applications awaiting review — staff only. | "
-                "زیرِ جائزہ درخواستیں — صرف اسٹاف کے لیے۔",
-            ),
-        ),
-    ),
-    CategorySpec(
-        logical_key="category:development",
-        name="🛠️ DEVELOPMENT",
-        restricted=True,  # admin-only
-        channels=(
-            ChannelSpec(
-                "channel:bot_testing",
-                "🤖-bot-testing",
-                "text",
-                topic="Test bot commands here. | یہاں بوٹ کمانڈز ٹیسٹ کریں۔",
-            ),
-            ChannelSpec(
-                "channel:website_testing",
-                "🌐-website-testing",
-                "text",
-                topic="Website testing. | ویب سائٹ ٹیسٹنگ۔",
-            ),
-            ChannelSpec(
-                "channel:commands",
-                "🧪-commands",
-                "text",
-                topic="Try out commands. | کمانڈز آزمائیں۔",
-            ),
-            ChannelSpec(
-                "channel:bug_reports",
-                "🐛-bug-reports",
-                "text",
-                topic="Report bugs. | بگز رپورٹ کریں۔",
-            ),
-            ChannelSpec(
-                "channel:development_log",
-                "📝-development-log",
-                "text",
-                topic="Dev changelog. | ڈیو چینج لاگ۔",
-            ),
-        ),
+        logical_key="category:support",
+        name="SUPPORT",
+        channels=(CHANNEL_BOT_COMMANDS, CHANNEL_REPORT),
     ),
 )
+
+
+def spec_keys() -> set[str]:
+    """Every logical key the current spec owns — what /setup restructure keeps."""
+    keys = {role.logical_key for role in ROLES}
+    for category in CATEGORIES:
+        keys.add(category.logical_key)
+        keys.update(channel.logical_key for channel in category.channels)
+    return keys

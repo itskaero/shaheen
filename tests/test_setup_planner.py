@@ -47,14 +47,22 @@ def test_role_is_verified_when_known_mapping_matches_live_state() -> None:
     assert not plan.has_changes
 
 
-def test_role_is_repaired_when_attributes_drift() -> None:
-    live = _live_role_matching(ROLE, id=42, color=0x000000)
+def test_role_is_repaired_when_its_name_drifts() -> None:
+    live = _live_role_matching(ROLE, id=42, name="Leader")
     known = {(ResourceType.ROLE, ROLE.logical_key): 42}
     plan = build_plan((ROLE,), (), known, GuildSnapshot(roles=(live,)))
     (action,) = plan.role_actions
     assert action.type is ActionType.REPAIR
-    assert any("color" in d for d in action.diffs)
+    assert action.diffs == ("name: 'Leader' -> '🧪 TEST ROLE'",)
     assert plan.has_changes
+
+
+def test_role_colour_and_flags_are_the_owners_not_drift() -> None:
+    """ADR-109: only the name is reconciled on an existing role."""
+    live = _live_role_matching(ROLE, id=42, color=0x000000, hoist=False, mentionable=True)
+    known = {(ResourceType.ROLE, ROLE.logical_key): 42}
+    plan = build_plan((ROLE,), (), known, GuildSnapshot(roles=(live,)))
+    assert plan.role_actions[0].type is ActionType.VERIFY
 
 
 def test_role_is_adopted_when_name_matches_but_nothing_is_stored() -> None:
@@ -103,8 +111,9 @@ def test_channel_repaired_on_topic_drift() -> None:
     assert any("topic" in d for d in plan.channel_actions[0].diffs)
 
 
-def test_repair_role_diff_matches_real_discord_permissions_semantics() -> None:
-    # Regression guard: RoleSpec.permissions must compare via .value, not identity.
+def test_role_permissions_are_never_drift() -> None:
+    """ADR-109: the owner sets role permissions by hand; /setup must never
+    plan to change them."""
     role = RoleSpec(
         logical_key="role:perm",
         name="🧪 PERM",
@@ -116,7 +125,7 @@ def test_repair_role_diff_matches_real_discord_permissions_semantics() -> None:
     )
     known = {(ResourceType.ROLE, role.logical_key): 1}
     plan = build_plan((role,), (), known, GuildSnapshot(roles=(live,)))
-    assert plan.role_actions[0].type is ActionType.REPAIR
+    assert plan.role_actions[0].type is ActionType.VERIFY
 
 
 def test_channel_repaired_when_its_category_moved() -> None:

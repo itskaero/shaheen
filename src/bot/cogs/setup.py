@@ -21,31 +21,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.checks.permissions import require_setup_authorized
 from bot.client import ShaheenBot
-from bot.content.application_embeds import build_application_panel_embed
+from bot.constants import (
+    CHANNEL_ACHIEVEMENTS,
+    CHANNEL_ANNOUNCEMENTS,
+    CHANNEL_BOT_COMMANDS,
+    CHANNEL_CLIPS,
+    CHANNEL_GENERAL,
+    CHANNEL_LOOKING_FOR_GAME,
+    CHANNEL_RANKINGS,
+    CHANNEL_REPORT,
+    CHANNEL_RULES,
+    CHANNEL_TOURNAMENTS,
+    CHANNEL_WELCOME,
+)
 from bot.content.channel_intros import (
+    build_achievements_intro_embed,
     build_announcements_intro_embed,
-    build_applications_intro_embed,
-    build_bot_testing_intro_embed,
-    build_brawlhalla_intro_embed,
-    build_bug_reports_intro_embed,
-    build_clan_info_intro_embed,
+    build_bot_commands_intro_embed,
     build_clips_intro_embed,
-    build_commands_intro_embed,
-    build_development_log_intro_embed,
     build_general_intro_embed,
-    build_hall_of_fame_intro_embed,
-    build_leaderboard_intro_embed,
-    build_legend_talk_intro_embed,
-    build_memes_intro_embed,
-    build_mod_log_intro_embed,
-    build_one_v_one_intro_embed,
-    build_pakistan_chat_intro_embed,
-    build_scrims_intro_embed,
-    build_suggestions_intro_embed,
-    build_tips_guides_intro_embed,
+    build_looking_for_game_intro_embed,
+    build_rankings_intro_embed,
+    build_report_intro_embed,
     build_tournaments_intro_embed,
-    build_two_v_two_intro_embed,
-    build_website_testing_intro_embed,
 )
 from bot.content.competition_embeds import build_spar_kiosk_embed
 from bot.content.embeds import (
@@ -53,16 +51,14 @@ from bot.content.embeds import (
     build_report_embed,
     build_reset_report_embed,
     build_reset_warning_embed,
-    build_roles_embed,
+    build_restructure_preview_embed,
+    build_restructure_report_embed,
     build_rules_embed,
-    build_self_assign_roles_embed,
     build_status_embed,
     build_verify_embed,
     build_welcome_embed,
 )
-from bot.views.application import ApplicationPanelView
 from bot.views.confirm import ConfirmView
-from bot.views.roles import SelfAssignRolesView
 from bot.views.spar import SparKioskView
 from core.exceptions import SetupError
 from database.models.provisioned_resource import ResourceType
@@ -79,41 +75,21 @@ REQUIRED_BOT_PERMISSIONS = discord.Permissions(
     manage_roles=True, manage_channels=True, view_channel=True
 )
 
-# Channels that get one or more branded messages deployed in launch mode
-# (see _deploy_launch_messages for what each one gets). Every text channel
-# in bot/constants.py's CATEGORIES gets something (docs/DECISIONS.md
-# ADR-059) except #voice channels (no messages) and #development's admin
-# channels are included too, same as the rest — they're just hidden from
-# regular members by the category's own restricted=True permissions.
+# Channels that get one or more branded messages deployed in launch mode —
+# every text channel in bot/constants.py's CATEGORIES (docs/DECISIONS.md
+# ADR-059, ADR-109).
 _LAUNCH_MESSAGE_CHANNELS: tuple[str, ...] = (
-    "channel:announcements",
-    "channel:welcome",
-    "channel:rules",
-    "channel:apply",
-    "channel:roles",
-    "channel:clan_info",
-    "channel:suggestions",
-    "channel:general",
-    "channel:pakistan_chat",
-    "channel:memes",
-    "channel:clips",
-    "channel:brawlhalla",
-    "channel:tips_guides",
-    "channel:legend_talk",
-    "channel:one_v_one",
-    "channel:two_v_two",
-    "channel:ranked",
-    "channel:scrims",
-    "channel:tournaments",
-    "channel:leaderboard",
-    "channel:hall_of_fame",
-    "channel:bot_testing",
-    "channel:website_testing",
-    "channel:commands",
-    "channel:bug_reports",
-    "channel:development_log",
-    "channel:mod_log",
-    "channel:applications",
+    CHANNEL_WELCOME.logical_key,
+    CHANNEL_RULES.logical_key,
+    CHANNEL_ANNOUNCEMENTS.logical_key,
+    CHANNEL_RANKINGS.logical_key,
+    CHANNEL_TOURNAMENTS.logical_key,
+    CHANNEL_LOOKING_FOR_GAME.logical_key,
+    CHANNEL_GENERAL.logical_key,
+    CHANNEL_CLIPS.logical_key,
+    CHANNEL_ACHIEVEMENTS.logical_key,
+    CHANNEL_BOT_COMMANDS.logical_key,
+    CHANNEL_REPORT.logical_key,
 )
 
 
@@ -122,13 +98,13 @@ class SetupCog(commands.Cog):
         self.bot = bot
 
     setup_group = app_commands.Group(
-        name="setup", description="Provision and verify the Shaheen server"
+        name="setup", description="Provision and verify the BRAWLISTAN server"
     )
 
-    @setup_group.command(name="run", description="Run the interactive Shaheen setup wizard")
-    @app_commands.describe(
-        mode="development keeps public areas restricted; launch opens onboarding"
+    @setup_group.command(
+        name="run", description="Create or reuse the BRAWLISTAN roles and channels"
     )
+    @app_commands.describe(mode="launch also posts the welcome, rules and channel intro messages")
     @require_setup_authorized()
     async def run(
         self,
@@ -137,12 +113,12 @@ class SetupCog(commands.Cog):
     ) -> None:
         guild = interaction.guild
         if guild is None:
-            raise SetupError("This command can only be used inside the Shaheen server.")
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
 
         me = guild.me
         if me is None or not me.guild_permissions.is_superset(REQUIRED_BOT_PERMISSIONS):
             raise SetupError(
-                "Shaheen is missing Manage Roles / Manage Channels permission. "
+                "The bot is missing Manage Roles / Manage Channels permission. "
                 "Grant those to the bot's role and try again."
             )
 
@@ -173,13 +149,13 @@ class SetupCog(commands.Cog):
         await message.edit(content=None, embed=build_report_embed(report), view=None)
 
     @setup_group.command(
-        name="status", description="Show whether Shaheen's expected resources exist"
+        name="status", description="Show whether the BRAWLISTAN roles and channels exist"
     )
     @require_setup_authorized()
     async def status(self, interaction: discord.Interaction) -> None:
         guild = interaction.guild
         if guild is None:
-            raise SetupError("This command can only be used inside the Shaheen server.")
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
 
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
@@ -204,7 +180,7 @@ class SetupCog(commands.Cog):
     async def verify(self, interaction: discord.Interaction) -> None:
         guild = interaction.guild
         if guild is None:
-            raise SetupError("This command can only be used inside the Shaheen server.")
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
 
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
@@ -212,6 +188,69 @@ class SetupCog(commands.Cog):
             plan = await service.plan()
 
         await interaction.followup.send(embed=build_verify_embed(plan), ephemeral=True)
+
+    @setup_group.command(
+        name="roles",
+        description="Create missing BRAWLISTAN roles (never duplicates or grants permissions)",
+    )
+    @require_setup_authorized()
+    async def roles(self, interaction: discord.Interaction) -> None:
+        guild = interaction.guild
+        if guild is None:
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
+        me = guild.me
+        if me is None or not me.guild_permissions.manage_roles:
+            raise SetupError("The bot needs Manage Roles to create roles.")
+
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            report = await SetupService(guild, session).apply_roles()
+        await interaction.followup.send(embed=build_report_embed(report), ephemeral=True)
+
+    @setup_group.command(
+        name="restructure",
+        description="DESTRUCTIVE: delete the old SHAHEEN roles/channels setup created",
+    )
+    @require_setup_authorized()
+    async def restructure(self, interaction: discord.Interaction) -> None:
+        """Lists every ledger-tracked role/category/channel outside the
+        BRAWLISTAN spec, then deletes them after a confirm (docs/DECISIONS.md
+        ADR-109). Ledger-only: nothing the owner made by hand is touched.
+        """
+        guild = interaction.guild
+        if guild is None:
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
+
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            retired = await SetupService(guild, session).retired_resources()
+
+        preview = build_restructure_preview_embed(retired)
+        if not any(r.name is not None for r in retired):
+            if retired:  # only stale ledger rows: forget them without asking
+                async with session_scope(self.bot.session_factory) as session:
+                    await SetupService(guild, session).restructure()
+            await interaction.followup.send(embed=preview, ephemeral=True)
+            return
+
+        view = ConfirmView(author_id=interaction.user.id)
+        message = await interaction.followup.send(
+            embed=preview, view=view, ephemeral=True, wait=True
+        )
+        await view.wait()
+        if not view.confirmed:
+            await message.edit(content="Restructure cancelled.", embed=None, view=None)
+            return
+
+        async with session_scope(self.bot.session_factory) as session:
+            report = await SetupService(guild, session).restructure()
+        logger.info(
+            "Restructure by %s deleted %d resource(s), %d error(s)",
+            interaction.user.id,
+            report.total_deleted,
+            len(report.errors),
+        )
+        await message.edit(content=None, embed=build_restructure_report_embed(report), view=None)
 
     @setup_group.command(
         name="reset",
@@ -228,7 +267,7 @@ class SetupCog(commands.Cog):
         """
         guild = interaction.guild
         if guild is None:
-            raise SetupError("This command can only be used inside the Shaheen server.")
+            raise SetupError("This command can only be used inside the BRAWLISTAN server.")
 
         view = _ResetWarningView(author_id=interaction.user.id, bot=self.bot, guild=guild)
         await interaction.response.send_message(
@@ -285,39 +324,20 @@ def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | 
     attached to the message that was actually sent (ADR-058).
     """
     return {
-        "channel:announcements": [(build_announcements_intro_embed(), None)],
-        "channel:welcome": [(build_welcome_embed(), None)],
-        "channel:rules": [(build_rules_embed(), None)],
-        # The permanent apply panel (docs/DECISIONS.md ADR-089), posted the
-        # same idempotent way as the self-assign role panel below.
-        "channel:apply": [(build_application_panel_embed(), ApplicationPanelView())],
-        "channel:roles": [
-            (build_roles_embed(), None),
-            (build_self_assign_roles_embed(), SelfAssignRolesView()),
+        CHANNEL_WELCOME.logical_key: [(build_welcome_embed(), None)],
+        CHANNEL_RULES.logical_key: [(build_rules_embed(), None)],
+        CHANNEL_ANNOUNCEMENTS.logical_key: [(build_announcements_intro_embed(), None)],
+        CHANNEL_RANKINGS.logical_key: [(build_rankings_intro_embed(), None)],
+        CHANNEL_TOURNAMENTS.logical_key: [(build_tournaments_intro_embed(), None)],
+        CHANNEL_LOOKING_FOR_GAME.logical_key: [
+            (build_looking_for_game_intro_embed(), None),
+            (build_spar_kiosk_embed(), SparKioskView()),
         ],
-        "channel:clan_info": [(build_clan_info_intro_embed(), None)],
-        "channel:suggestions": [(build_suggestions_intro_embed(), None)],
-        "channel:general": [(build_general_intro_embed(), None)],
-        "channel:pakistan_chat": [(build_pakistan_chat_intro_embed(), None)],
-        "channel:memes": [(build_memes_intro_embed(), None)],
-        "channel:clips": [(build_clips_intro_embed(), None)],
-        "channel:brawlhalla": [(build_brawlhalla_intro_embed(), None)],
-        "channel:tips_guides": [(build_tips_guides_intro_embed(), None)],
-        "channel:legend_talk": [(build_legend_talk_intro_embed(), None)],
-        "channel:one_v_one": [(build_one_v_one_intro_embed(), None)],
-        "channel:two_v_two": [(build_two_v_two_intro_embed(), None)],
-        "channel:ranked": [(build_spar_kiosk_embed(), SparKioskView())],
-        "channel:scrims": [(build_scrims_intro_embed(), None)],
-        "channel:tournaments": [(build_tournaments_intro_embed(), None)],
-        "channel:leaderboard": [(build_leaderboard_intro_embed(), None)],
-        "channel:hall_of_fame": [(build_hall_of_fame_intro_embed(), None)],
-        "channel:bot_testing": [(build_bot_testing_intro_embed(), None)],
-        "channel:website_testing": [(build_website_testing_intro_embed(), None)],
-        "channel:commands": [(build_commands_intro_embed(), None)],
-        "channel:bug_reports": [(build_bug_reports_intro_embed(), None)],
-        "channel:development_log": [(build_development_log_intro_embed(), None)],
-        "channel:mod_log": [(build_mod_log_intro_embed(), None)],
-        "channel:applications": [(build_applications_intro_embed(), None)],
+        CHANNEL_GENERAL.logical_key: [(build_general_intro_embed(), None)],
+        CHANNEL_CLIPS.logical_key: [(build_clips_intro_embed(), None)],
+        CHANNEL_ACHIEVEMENTS.logical_key: [(build_achievements_intro_embed(), None)],
+        CHANNEL_BOT_COMMANDS.logical_key: [(build_bot_commands_intro_embed(), None)],
+        CHANNEL_REPORT.logical_key: [(build_report_intro_embed(), None)],
     }
 
 

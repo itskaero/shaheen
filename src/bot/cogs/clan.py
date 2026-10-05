@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import RANK_ROLES, ROLE_MVP, ROLE_PAKISTAN_TOP
+from bot.constants import ROLE_PLAYER, ROLE_VERIFIED, RoleSpec
 from bot.content.clan_embeds import (
     build_achievement_announcement_embed,
     build_achievements_embed,
@@ -41,9 +41,11 @@ from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.guild_settings_repository import GuildSettingsRepository
+from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from database.session import session_scope
+from services.account_roles import RoleDiff, plan_account_roles
 from services.achievement_service import AchievementService
 from services.achievements import evaluate_engagement_achievements
 from services.clan_service import ClanService
@@ -52,7 +54,6 @@ from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import render_milestone_card
 from services.link_service import LinkService
 from services.pakistan_board_service import PakistanBoardService
-from services.rank_roles import plan_rank_roles
 from services.seasons import season_to_announce
 from services.snapshot_service import Announcement, SnapshotService
 
@@ -60,7 +61,8 @@ logger = logging.getLogger(__name__)
 
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
 _ANNOUNCEMENTS_KEY = "channel:announcements"
-_PAKISTAN_CHAT_KEY = "channel:pakistan_chat"
+# #rankings (it reuses the old #leaderboard key, ADR-109).
+_RANKINGS_KEY = "channel:leaderboard"
 _DIGEST_WEEKDAY = 6  # Sunday (Monday=0 .. Sunday=6)
 
 
@@ -129,8 +131,7 @@ class ClanCog(commands.Cog):
             len(result.errors),
             len(result.announcements),
         )
-        await self._sync_rank_roles(guild, result.tiers)
-        await self._sync_pakistan_top_role(guild)
+        await self._sync_account_roles(guild)
         await self._announce_season_start(guild)
 
         for announcement in result.announcements:
@@ -225,16 +226,19 @@ class ClanCog(commands.Cog):
 
         await self._post_weekly_digest(guild, digest)
         if digest.mvp_discord_id is not None:
-            await self._rotate_mvp_role(guild, digest.mvp_discord_id)
+            # Being named MVP is itself an achievement (docs/DECISIONS.md
+            # ADR-081). The MVP of the Week role retired with ADR-109.
+            async with session_scope(self.bot.session_factory) as session:
+                await self._award_mvp_achievement(session, guild.id, digest.mvp_discord_id)
         await self._post_pakistan_weekly(guild, since)
 
     async def _post_pakistan_weekly(self, guild: discord.Guild, since: datetime) -> None:
-        """Pakistan standings to #pakistan-chat (docs/DECISIONS.md ADR-100).
+        """Pakistan standings to #rankings (docs/DECISIONS.md ADR-100, ADR-109).
 
         Claimed climbers get a ping in the message text (embed mentions don't
         notify); unclaimed ones are named with a nudge to join and claim.
         """
-        channel = await resolve_provisioned_channel(self.bot, guild, _PAKISTAN_CHAT_KEY)
+        channel = await resolve_provisioned_channel(self.bot, guild, _RANKINGS_KEY)
         if channel is None:
             return
         async with session_scope(self.bot.session_factory) as session:
@@ -263,7 +267,7 @@ class ClanCog(commands.Cog):
                 content=content, embed=embed, files=attach_season_badge(embed, season)
             )
         except discord.Forbidden:
-            logger.warning("Missing permission to post in pakistan-chat")
+            logger.warning("Missing permission to post in #rankings")
 
     async def _announce_season_start(self, guild: discord.Guild) -> None:
         """Post each new Pakistan season's badge once (docs/DECISIONS.md ADR-102).
@@ -289,34 +293,6 @@ class ClanCog(commands.Cog):
         async with session_scope(self.bot.session_factory) as session:
             await GuildSettingsRepository(session).mark_season_announced(guild.id, current)
         logger.info("Announced Pakistan Season %d (%s)", season.number, season.name)
-
-    async def _sync_pakistan_top_role(self, guild: discord.Guild) -> None:
-        """Claimed top-10 Pakistan players hold ROLE_PAKISTAN_TOP; nobody else
-        does. Best-effort like every other role edit here (ADR-100).
-        """
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=guild.id,
-                resource_type=ResourceType.ROLE,
-                logical_key=ROLE_PAKISTAN_TOP.logical_key,
-            )
-            earners = await PakistanBoardService(session).top_role_earners(guild.id)
-        if resource is None:
-            return
-        role = guild.get_role(resource.discord_id)
-        if role is None:
-            return
-        reason = "Shaheen Pakistan leaderboard top 10"
-        try:
-            for holder in list(role.members):
-                if holder.id not in earners:
-                    await holder.remove_roles(role, reason=reason)
-            for discord_id in earners:
-                member = guild.get_member(discord_id)
-                if member is not None and role not in member.roles:
-                    await member.add_roles(role, reason=reason)
-        except discord.Forbidden:
-            logger.warning("Missing permission to sync the Pakistan Top 10 role")
 
     async def _post_weekly_digest(self, guild: discord.Guild, digest: WeeklyDigest) -> None:
         channel = await resolve_provisioned_channel(self.bot, guild, _ANNOUNCEMENTS_KEY)
@@ -354,90 +330,60 @@ class ClanCog(commands.Cog):
             except discord.Forbidden:
                 logger.warning("Missing permission to post MVP announcement")
 
-    async def _sync_rank_roles(self, guild: discord.Guild, tiers: dict[int, str | None]) -> None:
-        """Mirror each member's Brawlhalla tier onto a Discord rank role.
+    async def _sync_account_roles(self, guild: discord.Guild) -> None:
+        """Player for every linked member, Verified for every staff-verified
+        link, and neither for anyone else (docs/DECISIONS.md ADR-109).
 
-        The bot has recorded every member's tier every six hours since Phase
-        3 and never acted on it (docs/DECISIONS.md ADR-087). Idempotent: the
-        plan is a diff, so a run where nothing changed makes no API calls,
-        and a member is never left holding two rank roles.
-
-        Best-effort like every other role edit here — a missing role (no
-        /setup run yet) or a missing permission is logged and skipped, never
-        raised into the snapshot loop.
+        Idempotent: the plan is a diff, so a tick where nothing changed makes
+        no API calls. Best-effort like every role edit here — a role /setup
+        hasn't created yet or a missing permission is logged and skipped,
+        never raised into the snapshot loop.
         """
-        if not tiers:
-            return
-
         async with session_scope(self.bot.session_factory) as session:
-            repo = ProvisionedResourceRepository(session)
-            role_ids: dict[str, int] = {}
-            for spec in RANK_ROLES:
-                resource = await repo.get(
-                    guild_id=guild.id,
-                    resource_type=ResourceType.ROLE,
-                    logical_key=spec.logical_key,
-                )
-                if resource is not None:
-                    role_ids[spec.logical_key] = resource.discord_id
-
-        if not role_ids:
-            logger.info("Rank roles not provisioned for guild %s — run /setup", guild.id)
+            accounts = await MemberPlayerLinkRepository(session).account_states(guild.id)
+            player_role = await self._provisioned_role(session, guild, ROLE_PLAYER)
+            verified_role = await self._provisioned_role(session, guild, ROLE_VERIFIED)
+        if player_role is None and verified_role is None:
             return
 
-        # Reverse lookup so a member's *current* rank roles can be read off
-        # the member object rather than queried per role.
-        key_by_role_id = {role_id: key for key, role_id in role_ids.items()}
+        plan = plan_account_roles(
+            accounts=accounts,
+            player_holders={m.id for m in player_role.members} if player_role else set(),
+            verified_holders={m.id for m in verified_role.members} if verified_role else set(),
+            present={member_id for member_id in accounts if guild.get_member(member_id)},
+        )
+        if player_role is not None:
+            await self._apply_role_diff(guild, player_role, plan.player)
+        if verified_role is not None:
+            await self._apply_role_diff(guild, verified_role, plan.verified)
 
-        for discord_id, tier in tiers.items():
-            member = guild.get_member(discord_id)
-            if member is None:
-                continue
-            current = {key_by_role_id[r.id] for r in member.roles if r.id in key_by_role_id}
-            plan = plan_rank_roles(tier=tier, current_keys=current)
-            if plan.is_noop:
-                continue
+    async def _provisioned_role(
+        self, session: AsyncSession, guild: discord.Guild, spec: RoleSpec
+    ) -> discord.Role | None:
+        resource = await ProvisionedResourceRepository(session).get(
+            guild_id=guild.id, resource_type=ResourceType.ROLE, logical_key=spec.logical_key
+        )
+        return guild.get_role(resource.discord_id) if resource is not None else None
 
-            reason = f"Shaheen rank sync ({tier or 'unranked'})"
-            try:
-                for key in plan.revoke:
-                    role = guild.get_role(role_ids[key])
-                    if role is not None:
-                        await member.remove_roles(role, reason=reason)
-                if plan.grant is not None:
-                    role = guild.get_role(role_ids[plan.grant])
-                    if role is not None:
-                        await member.add_roles(role, reason=reason)
-            except discord.Forbidden:
-                logger.warning("Missing permission to sync rank roles for %s", discord_id)
-                return
-
-    async def _rotate_mvp_role(self, guild: discord.Guild, mvp_discord_id: int) -> None:
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=guild.id,
-                resource_type=ResourceType.ROLE,
-                logical_key=ROLE_MVP.logical_key,
-            )
-            # Being named MVP is itself an achievement (docs/DECISIONS.md
-            # ADR-081). Awarded from the rotation rather than the digest
-            # post, so it lands even if the announcement can't be sent.
-            await self._award_mvp_achievement(session, guild.id, mvp_discord_id)
-        if resource is None:
+    async def _apply_role_diff(
+        self, guild: discord.Guild, role: discord.Role, diff: RoleDiff
+    ) -> None:
+        if diff.is_noop:
             return
-        role = guild.get_role(resource.discord_id)
-        if role is None:
-            return
-
-        new_mvp = guild.get_member(mvp_discord_id)
+        reason = f"BRAWLISTAN {role.name} role sync"
         try:
-            for previous_holder in list(role.members):
-                if previous_holder.id != mvp_discord_id:
-                    await previous_holder.remove_roles(role, reason="Shaheen weekly digest")
-            if new_mvp is not None and role not in new_mvp.roles:
-                await new_mvp.add_roles(role, reason="Shaheen weekly digest")
+            for discord_id in diff.revoke:
+                member = guild.get_member(discord_id)
+                if member is not None:
+                    await member.remove_roles(role, reason=reason)
+            for discord_id in diff.grant:
+                member = guild.get_member(discord_id)
+                if member is not None:
+                    await member.add_roles(role, reason=reason)
         except discord.Forbidden:
-            logger.warning("Missing permission to rotate MVP of the Week role")
+            logger.warning("Missing permission to sync the %s role", role.name)
+        except discord.HTTPException as exc:
+            logger.warning("Discord error syncing the %s role: %s", role.name, exc)
 
     async def _award_mvp_achievement(
         self, session: AsyncSession, guild_id: int, mvp_discord_id: int

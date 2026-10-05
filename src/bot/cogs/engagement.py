@@ -7,10 +7,10 @@ repositories/chat_activity_repository.py, and Discord-facing card
 rendering reuses services/image_service.py's welcome/goodbye/milestone
 renderers exactly the way bot/cogs/clan.py's _announce reuses
 render_milestone_card. No permission check on /level or /chatboard —
-same "any member" posture as /profile. Role assignment (Guest on join, Core
-Member on crossing the chat-level threshold) is best-effort, same posture as
-bot/cogs/clan.py's rank-role sync — a missing role or permission is logged
-and skipped, never raised.
+same "any member" posture as /profile. Chat levels grant no Discord role
+since BRAWLISTAN (docs/DECISIONS.md ADR-109): the Guest auto-role, Core
+Member and /suggest (its #suggestions channel) retired with the old server
+layout.
 """
 
 from __future__ import annotations
@@ -27,27 +27,21 @@ from discord.ext import commands
 
 from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
-from bot.constants import ROLE_CORE_MEMBER, ROLE_GUEST
 from bot.content.engagement_embeds import (
     build_anthem_embed,
     build_chatboard_embed,
     build_level_embed,
     build_level_up_embed,
-    build_suggestion_confirmation_embed,
-    build_suggestion_embed,
 )
 from core.exceptions import ShaheenError
-from database.models.provisioned_resource import ResourceType
 from database.repositories.chat_activity_repository import ChatActivityRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
-from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
 from database.session import session_scope
 from services.achievement_service import AchievementService
 from services.achievements import evaluate_engagement_achievements
 from services.chat_gamification import (
     MESSAGE_XP_COOLDOWN_SECONDS,
-    earns_core_member_role,
     level_for_xp,
     roll_message_xp,
 )
@@ -57,8 +51,6 @@ logger = logging.getLogger(__name__)
 
 _WELCOME_KEY = "channel:welcome"
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
-_SUGGESTIONS_KEY = "channel:suggestions"
-_SUGGESTION_VOTES = ("👍", "👎")
 
 # GitHub Pages' default project-site URL for this repo (docs/DECISIONS.md
 # ADR-047/054) — same constant as bot/content/profile_embeds.py's, kept
@@ -124,8 +116,6 @@ class EngagementCog(commands.Cog):
 
         if new_level is not None and isinstance(message.author, discord.Member):
             await self._announce_level_up(message.guild, message.author, new_level)
-            if earns_core_member_role(new_level):
-                await self._maybe_assign_core_member_role(message.author, new_level)
 
     async def _announce_level_up(
         self, guild: discord.Guild, member: discord.Member, level: int
@@ -151,7 +141,7 @@ class EngagementCog(commands.Cog):
             else:
                 await channel.send(embed=embed)
         except discord.Forbidden:
-            logger.warning("Missing permission to post in hall-of-fame channel")
+            logger.warning("Missing permission to post in #achievements")
 
     @app_commands.command(name="level", description="Show a member's chat level")
     @app_commands.describe(user="Whose level to show (defaults to you)")
@@ -160,7 +150,7 @@ class EngagementCog(commands.Cog):
     ) -> None:
         member = user or interaction.user
         if not isinstance(member, discord.Member) or interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
 
         async with session_scope(self.bot.session_factory) as session:
@@ -178,7 +168,7 @@ class EngagementCog(commands.Cog):
     @app_commands.command(name="chatboard", description="Show the most active chatters")
     async def chatboard(self, interaction: discord.Interaction) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
 
         async with session_scope(self.bot.session_factory) as session:
@@ -201,81 +191,15 @@ class EngagementCog(commands.Cog):
             ephemeral=True,
         )
 
-    # --- /suggest --------------------------------------------------------------
-
-    @app_commands.command(name="suggest", description="Anonymously suggest something for the clan")
-    @app_commands.describe(text="Your suggestion")
-    async def suggest(self, interaction: discord.Interaction, text: str) -> None:
-        if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
-        await interaction.response.defer(ephemeral=True)
-
-        channel = await resolve_provisioned_channel(self.bot, interaction.guild, _SUGGESTIONS_KEY)
-        if channel is None:
-            raise ShaheenError(
-                "The suggestions channel isn't set up yet — ask staff to run /setup."
-            )
-
-        try:
-            message = await channel.send(embed=build_suggestion_embed(text))
-            for emoji in _SUGGESTION_VOTES:
-                await message.add_reaction(emoji)
-        except discord.Forbidden as exc:
-            raise ShaheenError("Missing permission to post in the suggestions channel.") from exc
-
-        await interaction.followup.send(
-            embed=build_suggestion_confirmation_embed(channel_mention=channel.mention),
-            ephemeral=True,
-        )
-
     # --- welcome / leave -------------------------------------------------------
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        await self._assign_guest_role(member)
         await self._post_arrival_card(member.guild, member=member, joining=True)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
         await self._post_arrival_card(member.guild, member=member, joining=False)
-
-    async def _assign_guest_role(self, member: discord.Member) -> None:
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=member.guild.id,
-                resource_type=ResourceType.ROLE,
-                logical_key=ROLE_GUEST.logical_key,
-            )
-        if resource is None:
-            return
-        role = member.guild.get_role(resource.discord_id)
-        if role is None:
-            return
-        try:
-            await member.add_roles(role, reason="Auto-assigned on join (docs/DECISIONS.md ADR-065)")
-        except discord.Forbidden:
-            logger.warning("Missing permission to assign Guest role to %s", member.id)
-
-    async def _maybe_assign_core_member_role(self, member: discord.Member, level: int) -> None:
-        """Grants Core Member the first time a level-up crosses the
-        threshold (docs/DECISIONS.md ADR-097). Never revoked — chat XP only
-        ever goes up, so there's nothing to demote from.
-        """
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=member.guild.id,
-                resource_type=ResourceType.ROLE,
-                logical_key=ROLE_CORE_MEMBER.logical_key,
-            )
-        if resource is None:
-            return
-        role = member.guild.get_role(resource.discord_id)
-        if role is None or role in member.roles:
-            return
-        try:
-            await member.add_roles(role, reason=f"Reached chat level {level} (Core Member)")
-        except discord.Forbidden:
-            logger.warning("Missing permission to assign Core Member role to %s", member.id)
 
     async def _post_arrival_card(
         self, guild: discord.Guild, *, member: discord.Member | discord.User, joining: bool
@@ -287,9 +211,10 @@ class EngagementCog(commands.Cog):
         renderer = render_welcome_card if joining else render_goodbye_card
         filename = "welcome.png" if joining else "goodbye.png"
         content = (
-            f"{member.mention} just joined — check 📜-rules, then run `/link` to get started!"
+            f"{member.mention} just joined BRAWLISTAN — read #rules, then run `/link` to "
+            "put yourself on the Pakistan rankings!"
             if joining
-            else f"{member.display_name} has left Shaheen."
+            else f"{member.display_name} has left BRAWLISTAN."
         )
 
         file: discord.File | None = None

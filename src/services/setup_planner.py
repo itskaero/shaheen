@@ -122,18 +122,12 @@ def _plan_role(spec: RoleSpec, known: KnownResources, snapshot: GuildSnapshot) -
 
 
 def _role_diffs(spec: RoleSpec, live: LiveRole) -> tuple[str, ...]:
-    diffs = []
+    # Name only. An existing role's permissions, colour, hoist and
+    # mentionable flags belong to the owner and are never "repaired"
+    # (docs/DECISIONS.md ADR-109) — the spec's values apply on creation.
     if live.name != spec.name:
-        diffs.append(f"name: {live.name!r} -> {spec.name!r}")
-    if live.color != spec.color:
-        diffs.append(f"color: {live.color:#08x} -> {spec.color:#08x}")
-    if live.hoist != spec.hoist:
-        diffs.append(f"hoist: {live.hoist} -> {spec.hoist}")
-    if live.mentionable != spec.mentionable:
-        diffs.append(f"mentionable: {live.mentionable} -> {spec.mentionable}")
-    if live.permissions_value != spec.permissions.value:
-        diffs.append(f"permissions: {live.permissions_value} -> {spec.permissions.value}")
-    return tuple(diffs)
+        return (f"name: {live.name!r} -> {spec.name!r}",)
+    return ()
 
 
 def _plan_category(

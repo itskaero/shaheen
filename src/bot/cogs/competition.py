@@ -59,6 +59,12 @@ if TYPE_CHECKING:
     # `from __future__ import annotations` (above) makes every annotation
     # in this file lazy.
     from bot.client import ShaheenBot
+from bot.constants import (
+    CHANNEL_ANNOUNCEMENTS,
+    CHANNEL_LOOKING_FOR_GAME,
+    CHANNEL_REPORT,
+    CHANNEL_TOURNAMENTS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -309,7 +315,9 @@ class CompetitionCog(commands.Cog):
             )
 
         embed = build_tournament_created_embed(tournament=tournament)
-        target_channel = await self._provisioned_channel(member.guild, "channel:tournaments")
+        target_channel = await self._provisioned_channel(
+            member.guild, CHANNEL_TOURNAMENTS.logical_key
+        )
         if target_channel is not None:
             await target_channel.send(embed=embed)
             await interaction.followup.send(
@@ -476,7 +484,19 @@ async def resolve_provisioned_channel(
     """Module-level twin of CompetitionCog._provisioned_channel, callable
     without a cog instance — needed by announce_scrim below, which the
     persistent spar kiosk (bot/views/spar.py) calls with no cog `self`.
+
+    REPORT_CHANNEL_ID / ANNOUNCEMENT_CHANNEL_ID, when set, win over the
+    provisioned #report / #announcements (ADR-109).
     """
+    override_id = {
+        CHANNEL_REPORT.logical_key: bot.settings.report_channel_id,
+        CHANNEL_ANNOUNCEMENTS.logical_key: bot.settings.announcement_channel_id,
+    }.get(logical_key)
+    if override_id is not None:
+        override = guild.get_channel(override_id)
+        if isinstance(override, discord.TextChannel):
+            return override
+        logger.warning("Channel override %s for %s not found", override_id, logical_key)
     async with session_scope(bot.session_factory) as session:
         resource = await ProvisionedResourceRepository(session).get(
             guild_id=guild.id, resource_type=ResourceType.CHANNEL, logical_key=logical_key
@@ -543,7 +563,9 @@ async def announce_scrim(
 
     view = ScrimJoinView(is_team=match_kind is MatchKind.TWO_V_TWO, on_join=on_join)
     embed = build_scrim_embed(creator_name=member.display_name, kind=match_kind, side_counts=(0, 0))
-    target_channel = await resolve_provisioned_channel(bot, member.guild, "channel:scrims")
+    target_channel = await resolve_provisioned_channel(
+        bot, member.guild, CHANNEL_LOOKING_FOR_GAME.logical_key
+    )
     if target_channel is not None:
         await target_channel.send(embed=embed, view=view)
         await interaction.followup.send(
