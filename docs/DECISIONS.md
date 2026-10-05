@@ -5010,3 +5010,30 @@ Verified:
     viewer switch hides tags and is remembered;
   - the Players page shows tags;
   - no console errors, and the other pages' checks still pass.
+
+## ADR-116 — Teams as large slides
+
+**Status:** accepted. Refines ADR-114's Teams page.
+
+**Context.** The owner found the team logos looked cropped or "half". In the small square cards
+(about 100px) the detailed graffiti logos read as squashed, and they asked for wider, taller cards
+"like slides".
+
+**Decision.**
+- **Slides.** `teams.html` is a horizontal slider: one tall slide per team (380px wide, 86% of the screen
+  on phones), snapping to the start.
+  - The top of each slide is the logo, contained at up to 320px and never cropped, lit by the team's
+    own colours (SHAHEEN green/magenta, Delight cyan/purple, emerald for any other team).
+  - Below it: pills, name, team rating and players, best player, and "View team →".
+- **Navigation:** previous/next buttons on desktop, dots, arrow keys on the focused row, and swipe on
+  touch. Reduced motion turns smooth scrolling off.
+- **Team page:** the hero logo is larger (260px desktop, 200px phones), contained.
+
+Files: `web/teams.html`, `web/assets/js/pages/teams.js`, `web/assets/css/brawlistan.css` (the small
+team-card rules are replaced by the slider).
+
+Verified with Playwright at 1440 and 390 px:
+- both logos are drawn whole (`object-fit: contain`) at 320px and 263px, inside their slide;
+- three dots with the first active, and the next arrow moves the row;
+- search, the founding team first, the monogram fallback, the team page, no overflow and no console
+  errors.
