@@ -2,48 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Music — BRAWLISTAN</title>
-  <meta name="description" content="Shaheen's clan anthems — listen to the full-length tracks." />
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <meta name="description" content="The sound of BRAWLISTAN: original tracks — Brawlistan, Urooj and Zarb — plus the SHAHEEN anthems, with visuals that move on the beat." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://itskaero.github.io/shaheen/music.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="Music — BRAWLISTAN" />
+  <meta property="og:description" content="Original tracks from Pakistan's Brawlhalla Network." />
+  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/video/music-loop-poster.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
-<body class="bl" data-page="anthem">
+<body class="bl music-page" data-page="anthem">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="bl-scene" aria-hidden="true"></div>
+
+  <!-- Full-width background: the BRAWLISTAN night loop, pulsing on the beat (ADR-118). -->
+  <div class="music-bg" aria-hidden="true">
+    <video id="music-video" muted loop playsinline preload="metadata" poster="assets/video/music-loop-poster.jpg"></video>
+    <div class="music-bg-veil"></div>
+  </div>
+
   <div class="bl-app">
     <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
+        <div class="bl-page-head music-head">
+          <div>
+            <span class="eyebrow">Music Library</span>
+            <h1>The sound of BRAWLISTAN</h1>
+            <p>Original tracks from Pakistan's Brawlhalla Network. Press play — the whole page moves on the beat.</p>
+          </div>
+        </div>
 
-  <div class="page-banner">
-    <div class="wrap">
-      <h1 class="page-title">Music</h1>
-      <p class="page-subtitle">The clan anthems, full length. Press play — <span lang="ur">بلندیوں کی جانب</span>.</p>
-    </div>
-  </div>
+        <section class="music-player" id="music-player" aria-label="Now playing">
+          <div class="music-art">
+            <div class="music-cover-wrap">
+              <picture>
+                <source id="music-cover-webp" type="image/webp" />
+                <img id="music-cover" src="assets/img/music/brawlistan.jpg" alt="" width="512" height="512" />
+              </picture>
+            </div>
+          </div>
+          <div class="music-info">
+            <div class="music-kicker">
+              <span class="pill pill-live" id="music-state">Ready</span>
+              <span class="pill pill-muted" id="music-bpm">— BPM</span>
+              <span class="music-count" id="music-count"></span>
+            </div>
+            <h2 class="music-title" id="music-title">Brawlistan</h2>
+            <p class="music-subtitle" id="music-subtitle"></p>
+            <canvas class="music-viz" id="music-viz" aria-hidden="true"></canvas>
+            <div class="music-seek">
+              <span class="music-time" id="music-current">0:00</span>
+              <input type="range" id="music-progress" class="music-range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
+              <span class="music-time" id="music-duration">0:00</span>
+            </div>
+            <div class="music-controls">
+              <button type="button" class="music-btn" id="music-prev" aria-label="Previous track">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 6v12l-10-6z"/></svg>
+              </button>
+              <button type="button" class="music-btn music-play" id="music-play" aria-label="Play">
+                <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+                <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+              </button>
+              <button type="button" class="music-btn" id="music-next" aria-label="Next track">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 6v12l10-6z"/></svg>
+              </button>
+              <label class="music-volume">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7l-1.1-1.1a3.4 3.4 0 0 0 0-4.8z"/></svg>
+                <input type="range" id="music-volume" class="music-range" min="0" max="100" value="80" aria-label="Volume" />
+              </label>
+            </div>
+          </div>
+        </section>
 
-  <div class="wrap" style="padding-top: 0">
-    <div class="card music-now-playing" id="music-now-playing"></div>
+        <section class="music-library" aria-labelledby="originals-title">
+          <div class="section-head"><h2 id="originals-title">BRAWLISTAN Originals</h2></div>
+          <ol class="music-list" id="music-originals"></ol>
+        </section>
 
-    <div class="divider"><span>Tracks</span></div>
-    <div class="music-tracks" id="music-tracks"></div>
-  </div>
+        <section class="music-library" aria-labelledby="shaheen-title">
+          <div class="section-head"><h2 id="shaheen-title">From SHAHEEN</h2><span class="muted">The founding team's anthems</span></div>
+          <ol class="music-list" id="music-shaheen"></ol>
+        </section>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
   <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
 
-
-  <script src="assets/js/audio.js"></script>
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shell.js"></script>
   <script src="assets/js/api.js"></script>

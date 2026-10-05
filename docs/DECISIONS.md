@@ -5132,3 +5132,57 @@ Verified:
   - `pagehide` frees the GPU;
   - reduced motion draws once and idles with no tilt;
   - keyboard focus reaches card links.
+
+## ADR-118 — Music library: video background, original tracks, beat-synced visuals
+
+**Status:** accepted. Replaces ADR-095's music player.
+
+**Context.** The owner supplied four original tracks and a 5-second background loop:
+- "Brawlistan";
+- "Urooj";
+- "ضرب!" (Zarb!) in two cuts, 4:33 and 3:20.
+
+They asked for a music page with the video full width behind it, designed in the site's language, and
+"audio synced to the music beats".
+
+**Decision.**
+- **Background video.**
+  - The 5 s clip drifts, so a plain loop jumps. It's re-encoded as a forward-then-reverse ping-pong:
+    10.3 s, seamless.
+  - Sizes: `assets/video/music-loop-1080.mp4` (4.5 MB, from 22 MB) and a 720p version (1.7 MB) for
+    small screens or Save-Data, plus a poster.
+  - It's fixed and fills the whole window behind the app shell, which turns translucent on this page
+    only; muted, so autoplay is allowed.
+  - It pauses with the tab, and stays on its poster under reduced motion.
+- **Tracks.** The four originals are in `assets/audio/{brawlistan,urooj,zarb,zarb-2}.mp3`. The SHAHEEN
+  anthems stay in a "From SHAHEEN" section.
+- **Covers.** The tracks' embedded covers were generic generator art, so the covers are square crops of
+  the video itself (moon, mountains, river city, flag-bearer), keeping the page in one visual world.
+- **Beat sync.** `scripts/beat_map.py` (numpy + ffmpeg, an offline asset tool) writes
+  `<slug>.beats.json` per track:
+  - the tempo, every beat time, a 0–9 strength per beat, the bar-start phase and a 10 Hz loudness
+    curve;
+  - onsets come from bass-weighted spectral flux, tempo from autocorrelation, and beats from Ellis'
+    dynamic-programming tracker.
+- **What moves on the beat.** `pages/music.js` steps through the beat map against
+  `audio.currentTime − outputLatency`, using binary search, so it re-syncs instantly after a seek.
+  - **Variables:** it sets `--beat`, a decaying 0..1 pulse (stronger on bar starts), and `--energy`,
+    the loudness.
+  - **CSS uses them for:** a brightness and scale kick on the video, the cover pulse and its light ring,
+    the glow on the player's border, and the playing row's mini equaliser.
+  - **Live spectrum:** a Web Audio analyser still draws the mirrored live spectrum, brightened on beats.
+  - **When it runs:** only while playing and visible. Reduced motion keeps the colour and light changes
+    but no scaling.
+- **Player.** Previous, play/pause and next; seek and volume; auto-advance; Media Session metadata and
+  lock-screen controls; Urdu titles shown beside the English. The page no longer loads the site-wide
+  background anthem (`audio.js`), which would play over it. The nav item is renamed Music.
+
+**Verification.**
+- **Beat maps:** onset strength on the beats is 2.0–5.9× that between beats for the four originals
+  (1.3× for the busier SHAHEEN anthems). Grid spread is 10–17 ms; Urooj, 48 ms.
+- **Playwright (Chrome):**
+  - six tracks, with tempo and length from the maps;
+  - the right video size per viewport, and playing;
+  - in 4 s of playback, 7 beat pulses against the map's 6.9;
+  - seek, next and pause; no overflow; no console errors at 1440 and 390 px;
+  - reduced motion leaves the video unloaded.
