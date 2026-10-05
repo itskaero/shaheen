@@ -16,6 +16,7 @@ from database.models.match import Match, MatchKind, MatchParticipant, MatchSide,
 from database.models.member_achievement import MemberAchievement
 from database.models.member_player_link import MemberPlayerLink
 from database.models.pakistan_board_entry import PakistanBoardEntry
+from database.models.player_report import PlayerReport
 from database.models.provisioned_resource import ProvisionedResource, ResourceType
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
@@ -53,6 +54,7 @@ __all__ = [
     "MemberAchievement",
     "MemberPlayerLink",
     "PakistanBoardEntry",
+    "PlayerReport",
     "ProvisionedResource",
     "RankingSnapshot",
     "ResourceType",

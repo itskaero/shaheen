@@ -23,7 +23,7 @@
     const top = (entries || []).filter((e) => e.rating != null).slice(0, 10);
     if (!top.length) {
       setHtml("top10", UNAVAILABLE);
-      setHtml("featured", UNAVAILABLE);
+      if (!staffPick) setHtml("featured", UNAVAILABLE);
       return;
     }
     setHtml(
@@ -47,17 +47,30 @@
       </table></div>`
     );
 
-    // No staff pick exists yet (/feature lands with the bot stage), so the
-    // featured slot says plainly why this player is in it.
-    const first = top[0];
+    topFirst = top[0];
+    paintFeatured();
+  }
+
+  // ---- featured player: staff's /feature pick (ADR-111), else Pakistan #1 ----
+  let staffPick = null;
+  let topFirst = null;
+
+  function paintFeatured() {
+    const pick = staffPick || topFirst;
+    if (!pick) return;
+    const why = staffPick
+      ? escapeHtml(staffPick.note || "Picked by BRAWLISTAN staff")
+      : `Pakistan #1 this season &middot; ${formatNumber(pick.rating)}`;
     setHtml(
       "featured",
-      `<a class="featured" href="${profileHref(first)}">
-        ${avatarHtml(first.player_name, 52)}
+      `<a class="featured" href="${profileHref(pick)}">
+        ${avatarHtml(pick.player_name, 52)}
         <span>
-          <strong>${escapeHtml(first.player_name)}</strong>
-          <span class="muted">Pakistan #1 this season &middot; ${formatNumber(first.rating)}</span>
-          <span style="display:block;margin-top:6px">${tierBadge(first.tier)}</span>
+          <strong>${escapeHtml(pick.player_name)}</strong>
+          <span class="muted">${why}</span>
+          <span style="display:block;margin-top:6px">${tierBadge(pick.tier)}${
+            staffPick && pick.rating != null ? ` <span class="num muted">${formatNumber(pick.rating)}</span>` : ""
+          }</span>
         </span>
       </a>`
     );
@@ -199,6 +212,10 @@
       renderClanNumbers(clan);
     })
   );
+  ShaheenAPI.withSnapshot("featured", () => ShaheenAPI.getFeatured(), (pick) => {
+    staffPick = pick && pick.player_name ? pick : null;
+    paintFeatured();
+  }).catch(() => {});
   guard(["rising"], ShaheenAPI.withSnapshot("rising", () => ShaheenAPI.getPakistanRising(7, 10), renderRising));
   guard(
     ["legend-meta"],

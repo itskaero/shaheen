@@ -114,7 +114,11 @@ class EngagementCog(commands.Cog):
                             extra={"chat_level": computed_level},
                         )
 
-        if new_level is not None and isinstance(message.author, discord.Member):
+        if (
+            new_level is not None
+            and isinstance(message.author, discord.Member)
+            and self.bot.settings.announce_level_ups  # off by default (ADR-111)
+        ):
             await self._announce_level_up(message.guild, message.author, new_level)
 
     async def _announce_level_up(

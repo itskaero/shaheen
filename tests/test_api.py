@@ -733,3 +733,27 @@ def test_link_claim_is_rate_limited(client: TestClient) -> None:
     assert statuses[:10] == [400] * 10
     assert statuses[10] == 429
     claim_limiter.reset()
+
+
+async def test_featured_player_is_404_until_staff_pick_one(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    assert client.get("/featured").status_code == 404
+
+    from services.featured_service import FeaturedService
+
+    async with session_factory() as session:
+        await BrawlhallaPlayerRepository(session).upsert(
+            brawlhalla_player_id=77, player_name="Star", region=None
+        )
+        await FeaturedService(session).set(
+            guild_id=GUILD_ID, brawlhalla_id=77, note="MVP", staff_discord_id=1
+        )
+        await session.commit()
+
+    body = client.get("/featured").json()
+    assert body["brawlhalla_id"] == 77
+    assert body["player_name"] == "Star"
+    assert body["note"] == "MVP"
+    assert body["rating"] is None  # no snapshot yet: no number invented
+    assert "discord_id" not in str(body)  # ADR-040

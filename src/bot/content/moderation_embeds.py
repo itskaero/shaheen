@@ -3,7 +3,7 @@ ADR-090 for the visual pass).
 
 Two shared, parameterized builders (`build_mod_confirm_embed`/
 `build_mod_log_embed`) cover /kick, /ban, /timeout, /unban, /untimeout,
-/lock, /unlock, /slowmode, /nickname, /purge, and /clearwarnings — they're
+/lock, /unlock, /slowmode, /nickname, /clear, and /clearwarnings — they're
 all structurally the same "confirm this destructive action" / "log what
 happened" shape. /warn gets its own functions since it has a genuinely
 different audience (a DM to the warned member) and shape (a running

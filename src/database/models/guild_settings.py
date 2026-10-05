@@ -23,6 +23,11 @@ class GuildSettings(TimestampMixin, Base):
     last_setup_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # The Brawlhalla season whose start the bot last announced (ADR-102).
     announced_season: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Staff's /feature pick for the website's Featured Player (ADR-111): a
+    # Brawlhalla account id, never a Discord id, so the API can expose it.
+    featured_brawlhalla_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    featured_note: Mapped[str | None] = mapped_column(String(140), nullable=True)
+    featured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"GuildSettings(guild_id={self.guild_id}, setup_mode={self.setup_mode!r})"

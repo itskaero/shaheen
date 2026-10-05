@@ -18,6 +18,7 @@ from api.routers import (
     achievements,
     clan,
     community,
+    featured,
     leaderboard,
     legends,
     link,
@@ -80,6 +81,7 @@ app.include_router(leaderboard.router)
 app.include_router(roster.router)
 app.include_router(pakistan.router)
 app.include_router(legends.router)
+app.include_router(featured.router)
 app.include_router(rankings.router)
 app.include_router(link.router)
 app.include_router(achievements.router)

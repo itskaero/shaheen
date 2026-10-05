@@ -110,3 +110,11 @@ class RankingsService:
         legends = await self._legends.list_latest_per_legend(player_id)
         best = max(legends, key=lambda legend: legend.games, default=None)
         return best.legend_name_key if best and best.games > 0 else None
+
+
+def ranked_rows(board: RankingsBoard, bracket: str = "1v1") -> list[RankingRow]:
+    """The rows a bracket ranks, best first: placed players only (ADR-101)."""
+    if bracket == "2v2":
+        rows = [row for row in board.rows if row.snapshot.rating_2v2 is not None]
+        return sorted(rows, key=lambda row: row.snapshot.rating_2v2 or 0, reverse=True)
+    return [row for row in board.rows if row.snapshot.rating is not None]

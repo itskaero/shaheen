@@ -76,6 +76,7 @@ jobs:
           snapshot legend-meta "/legends/meta?limit=10"
           snapshot rankings /rankings/pakistan
           snapshot players /players
+          snapshot featured /featured
 
       - name: Generate per-player pages
         # Static web/player/<slug>/index.html pages with each player's own

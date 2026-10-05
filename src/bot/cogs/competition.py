@@ -1,4 +1,4 @@
-"""/challenge, /scrim, /match, /report, /matches, /tournament.
+"""/challenge, /scrim, /match (incl. /match report), /matches, /tournament.
 
 Stays thin (docs/ARCHITECTURE.md): all persistence/state-machine logic
 lives in services/match_service.py and services/tournament_service.py.
@@ -130,9 +130,12 @@ class CompetitionCog(commands.Cog):
             self.bot, interaction, member, match_kind, ephemeral_confirmation=False
         )
 
-    # --- /report ------------------------------------------------------------
+    # --- /match report ------------------------------------------------------
+    # Was /report until ADR-111 gave /report to player reports.
 
-    @app_commands.command(name="report", description="Report a match result")
+    match_group = app_commands.Group(name="match", description="Create or inspect a match")
+
+    @match_group.command(name="report", description="Report a match result")
     @app_commands.describe(match_id="The match ID", result="Did you win or lose?")
     async def report(
         self, interaction: discord.Interaction, match_id: int, result: Literal["win", "loss"]
@@ -237,8 +240,6 @@ class CompetitionCog(commands.Cog):
 
     # --- /match -----------------------------------------------------------
 
-    match_group = app_commands.Group(name="match", description="Create or inspect a match")
-
     @match_group.command(name="create", description="Log a match directly between named players")
     @app_commands.describe(
         kind="1v1 or 2v2",
@@ -268,7 +269,7 @@ class CompetitionCog(commands.Cog):
             )
 
         await interaction.followup.send(
-            f"Match #{match.id} created. Report it with `/report match_id:{match.id}`.",
+            f"Match #{match.id} created. Report it with `/match report match_id:{match.id}`.",
             ephemeral=True,
         )
 

@@ -1,4 +1,5 @@
-"""Persistence for GuildSettings — setup mode and the last announced season."""
+"""Persistence for GuildSettings — setup mode, the last announced season and
+the featured player."""
 
 from __future__ import annotations
 
@@ -29,15 +30,29 @@ class GuildSettingsRepository:
         await self._session.flush()
         return settings
 
+    async def _get_or_create(self, guild_id: int) -> GuildSettings:
+        settings = await self.get(guild_id)
+        if settings is None:
+            settings = GuildSettings(guild_id=guild_id, setup_mode="development")
+            self._session.add(settings)
+        return settings
+
+    async def set_featured(
+        self, guild_id: int, *, brawlhalla_id: int | None, note: str | None, at: datetime | None
+    ) -> None:
+        """Set or (with brawlhalla_id=None) clear the featured player (ADR-111)."""
+        settings = await self._get_or_create(guild_id)
+        settings.featured_brawlhalla_id = brawlhalla_id
+        settings.featured_note = note
+        settings.featured_at = at
+        await self._session.flush()
+
     async def mark_season_announced(self, guild_id: int, brawlhalla_season: int) -> None:
         """Remember the season-start post (docs/DECISIONS.md ADR-102).
 
         A guild that has never run /setup has no row yet; it gets one in
         development mode, the same default /setup itself starts from.
         """
-        settings = await self.get(guild_id)
-        if settings is None:
-            settings = GuildSettings(guild_id=guild_id, setup_mode="development")
-            self._session.add(settings)
+        settings = await self._get_or_create(guild_id)
         settings.announced_season = brawlhalla_season
         await self._session.flush()
