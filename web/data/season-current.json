@@ -1,9 +1,8 @@
 {
   "captured_at": "2026-10-05T05:33:02Z",
-  "source": "/rankings/pakistan",
+  "source": "/seasons/current",
   "data": {
-    "season": 42,
-    "pakistan_season": {
+    "season": {
       "number": 1,
       "brawlhalla_season": 42,
       "name": "Markhor",
@@ -12,11 +11,9 @@
       "starts_at": "2026-09-23T00:00:00Z",
       "ends_at": "2026-12-23T00:00:00Z"
     },
-    "seasons": [
-      42,
-      41
-    ],
-    "rows": [
+    "status": "current",
+    "has_data": true,
+    "top": [
       {
         "brawlhalla_id": 5734378,
         "player_name": "kaero.",
@@ -64,31 +61,15 @@
         "partner_2v2": null,
         "trend": 42,
         "main_legend": "mordex"
-      },
-      {
-        "brawlhalla_id": 122163744,
-        "player_name": "Anjaan_Admi",
-        "country": "PK",
-        "team": null,
-        "team_slug": null,
-        "team_tag": null,
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "none",
-        "rating": null,
-        "peak_rating": null,
-        "tier": null,
-        "wins": 0,
-        "games": 0,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": null,
-        "peak_rating_2v2": null,
-        "tier_2v2": null,
-        "partner_2v2": null,
-        "trend": null,
-        "main_legend": "mirage"
       }
-    ]
+    ],
+    "rising": null,
+    "legend": {
+      "legend_name_key": "mordex",
+      "games": 114,
+      "win_rate": 60.5,
+      "players": 2
+    },
+    "tournaments": []
   }
 }

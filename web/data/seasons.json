@@ -1,0 +1,188 @@
+{
+  "captured_at": "2026-10-05T05:33:02Z",
+  "source": "/seasons",
+  "data": [
+    {
+      "season": {
+        "number": 1,
+        "brawlhalla_season": 42,
+        "name": "Markhor",
+        "name_urdu": "مارخور",
+        "badge": "01",
+        "starts_at": "2026-09-23T00:00:00Z",
+        "ends_at": "2026-12-23T00:00:00Z"
+      },
+      "status": "current",
+      "has_data": true,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 2,
+        "brawlhalla_season": 43,
+        "name": "Zarb-e-Shaheen",
+        "name_urdu": "ضربِ شاہین",
+        "badge": "02",
+        "starts_at": "2026-12-23T00:00:00Z",
+        "ends_at": "2027-03-24T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 3,
+        "brawlhalla_season": 44,
+        "name": "Sarfaroshi",
+        "name_urdu": "سرفروشی",
+        "badge": "03",
+        "starts_at": "2027-03-24T00:00:00Z",
+        "ends_at": "2027-06-23T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 4,
+        "brawlhalla_season": 45,
+        "name": "Chogori",
+        "name_urdu": "چوگوری",
+        "badge": "04",
+        "starts_at": "2027-06-23T00:00:00Z",
+        "ends_at": "2027-09-22T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 5,
+        "brawlhalla_season": 46,
+        "name": "Sindhu Dhaara",
+        "name_urdu": "سندھ دھارا",
+        "badge": "05",
+        "starts_at": "2027-09-22T00:00:00Z",
+        "ends_at": "2027-12-22T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 6,
+        "brawlhalla_season": 47,
+        "name": "Panchnad",
+        "name_urdu": "پنجند",
+        "badge": "06",
+        "starts_at": "2027-12-22T00:00:00Z",
+        "ends_at": "2028-03-22T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 7,
+        "brawlhalla_season": 48,
+        "name": "Shimsal",
+        "name_urdu": "شمشال",
+        "badge": "07",
+        "starts_at": "2028-03-22T00:00:00Z",
+        "ends_at": "2028-06-21T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 8,
+        "brawlhalla_season": 49,
+        "name": "Rang-e-Thar",
+        "name_urdu": "رنگِ تھر",
+        "badge": "08",
+        "starts_at": "2028-06-21T00:00:00Z",
+        "ends_at": "2028-09-20T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 9,
+        "brawlhalla_season": 50,
+        "name": "Gwadar",
+        "name_urdu": "گوادر",
+        "badge": "09",
+        "starts_at": "2028-09-20T00:00:00Z",
+        "ends_at": "2028-12-20T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 10,
+        "brawlhalla_season": 51,
+        "name": "Namak Koh",
+        "name_urdu": "نمک کوہ",
+        "badge": "10",
+        "starts_at": "2028-12-20T00:00:00Z",
+        "ends_at": "2029-03-21T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 11,
+        "brawlhalla_season": 52,
+        "name": "Baad-e-Saawan",
+        "name_urdu": "بادِ ساون",
+        "badge": "11",
+        "starts_at": "2029-03-21T00:00:00Z",
+        "ends_at": "2029-06-20T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 12,
+        "brawlhalla_season": 53,
+        "name": "Margallah",
+        "name_urdu": "مارگلہ",
+        "badge": "12",
+        "starts_at": "2029-06-20T00:00:00Z",
+        "ends_at": "2029-09-19T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    },
+    {
+      "season": {
+        "number": 13,
+        "brawlhalla_season": 54,
+        "name": "Nayi Subah",
+        "name_urdu": "نئی صبح",
+        "badge": "13",
+        "starts_at": "2029-09-19T00:00:00Z",
+        "ends_at": "2029-12-19T00:00:00Z"
+      },
+      "status": "upcoming",
+      "has_data": false,
+      "champion": null
+    }
+  ]
+}

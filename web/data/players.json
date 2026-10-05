@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-04T21:20:07Z",
+  "captured_at": "2026-10-05T05:33:02Z",
   "source": "/players",
   "data": [
     {
@@ -8,6 +8,8 @@
       "player_name": "kaero.",
       "country": "PK",
       "team": "SHAHEEN",
+      "team_slug": "shaheen",
+      "team_tag": "SHN",
       "is_claimed": true,
       "is_verified": false,
       "on_pakistan_board": true,
@@ -23,6 +25,8 @@
       "player_name": "Roykhan",
       "country": "PK",
       "team": null,
+      "team_slug": null,
+      "team_tag": null,
       "is_claimed": false,
       "is_verified": false,
       "on_pakistan_board": true,
@@ -38,6 +42,8 @@
       "player_name": "Anjaan_Admi",
       "country": "PK",
       "team": null,
+      "team_slug": null,
+      "team_tag": null,
       "is_claimed": false,
       "is_verified": false,
       "on_pakistan_board": true,

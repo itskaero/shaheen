@@ -1,0 +1,39 @@
+{
+  "captured_at": "2026-10-05T05:33:02Z",
+  "source": "/teams",
+  "data": [
+    {
+      "slug": "shaheen",
+      "name": "SHAHEEN",
+      "tag": "SHN",
+      "country": "PK",
+      "logo": "shaheen",
+      "description": "The clan BRAWLISTAN grew out of. Pakistan's founding team.",
+      "is_founding": true,
+      "members": 1,
+      "rating": 1855,
+      "best": {
+        "brawlhalla_id": 5734378,
+        "player_name": "kaero.",
+        "slug": "kaero-5734378",
+        "role": "player",
+        "rating": 1855,
+        "peak_rating": 1924,
+        "tier": "Platinum 3",
+        "main_legend": "koji"
+      }
+    },
+    {
+      "slug": "delight-esports",
+      "name": "Delight Esports",
+      "tag": "DE",
+      "country": "PK",
+      "logo": "delight-esports",
+      "description": null,
+      "is_founding": false,
+      "members": 0,
+      "rating": null,
+      "best": null
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 {
-  "captured_at": "2026-10-04T21:20:07Z",
+  "captured_at": "2026-10-05T05:33:02Z",
   "source": "/pakistan/rising?days=7&limit=10",
-  "data": []
+  "data": [
+    {
+      "brawlhalla_id": 37628417,
+      "player_name": "Roykhan",
+      "rating": 1801,
+      "rating_gain": 42,
+      "is_claimed": false
+    }
+  ]
 }
