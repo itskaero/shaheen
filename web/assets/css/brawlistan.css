@@ -2369,3 +2369,205 @@ body.bl table td {
     grid-auto-columns: 112px;
   }
 }
+
+/* ---------- Teams (ADR-114) ---------- */
+
+.pill-founding {
+  border: 1px solid rgba(242, 193, 78, 0.4);
+  background: rgba(242, 193, 78, 0.12);
+  color: var(--gold);
+}
+
+a.pill-team:hover {
+  filter: brightness(1.2);
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.team-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 18px 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  color: var(--text);
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-card:hover,
+.team-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+}
+
+.team-card.is-founding {
+  border-color: rgba(242, 193, 78, 0.35);
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(242, 193, 78, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+}
+
+.team-card-logo {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+}
+
+.team-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55));
+}
+
+.team-card-logo .team-logo {
+  width: 112px;
+}
+
+.team-monogram {
+  display: grid;
+  place-items: center;
+  width: var(--size, 112px);
+  height: var(--size, 112px);
+  border: 1px solid var(--border-strong);
+  border-radius: 28%;
+  background: radial-gradient(circle at 30% 20%, rgba(61, 242, 110, 0.25), rgba(255, 255, 255, 0.04));
+  color: var(--text);
+  font-size: calc(var(--size, 112px) * 0.3);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.team-card-name strong {
+  display: block;
+  font-size: 18px;
+}
+
+.team-card-name span {
+  font-size: 13px;
+}
+
+.team-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.team-card-stats div,
+.team-hero-stats div {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.team-card-stats strong,
+.team-hero-stats strong {
+  font-size: 20px;
+}
+
+.team-card-stats span,
+.team-hero-stats span {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+.team-card-best {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.team-best {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+/* Team page */
+.team-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 16px;
+  padding: 28px 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(60% 120% at 0% 50%, rgba(88, 101, 242, 0.14), transparent 60%),
+    radial-gradient(50% 100% at 100% 0%, rgba(240, 22, 140, 0.08), transparent 60%),
+    var(--surface-glass);
+}
+
+.team-hero-logo {
+  width: 200px;
+  animation: bl-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.team-hero-logo .team-logo {
+  filter: drop-shadow(0 0 30px rgba(120, 140, 255, 0.35)) drop-shadow(0 18px 40px rgba(0, 0, 0, 0.6));
+}
+
+.team-hero-logo.is-founding .team-logo {
+  filter: drop-shadow(0 0 30px rgba(242, 193, 78, 0.3)) drop-shadow(0 18px 40px rgba(0, 0, 0, 0.6));
+}
+
+.team-hero-copy h1 {
+  margin: 8px 0 6px;
+  font-size: clamp(28px, 3.6vw, 46px);
+  line-height: 1.05;
+}
+
+.team-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 150px));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+@media (max-width: 860px) {
+  .team-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 22px 18px;
+    text-align: center;
+  }
+
+  .team-hero-logo {
+    width: 160px;
+  }
+
+  .team-hero-pills {
+    justify-content: center;
+  }
+
+  .team-hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

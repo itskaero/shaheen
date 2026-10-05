@@ -405,8 +405,31 @@ is off. Audit-logged.
 Re-sync the bot's slash commands to the server, for example after a deploy
 added commands.
 
-### /team
-Arrives with Teams (Stage 7).
+### /team info [name]
+A team's roster (captain marked 👑), player count, team rating and logo,
+with a **Team page** button. Shows your own team when no name is given.
+Team rating is the average current-season rating of the team's best three
+placed players; with nobody placed it says "Data unavailable".
+
+### /team leave
+Leave your team. Your history on it is kept.
+
+### /team add <name> [user] [brawlhalla_id] · /team remove … *(staff or that team's captain)*
+Add a player to a team, or remove one. The player is a linked member or a
+tracked Brawlhalla account. A player is on at most one team at a time:
+someone on another team has to leave (or be removed) first. Rosters hold up
+to 20 players. Audit-logged.
+
+### /team create <name> <tag> [description] *(staff)*
+Create a team. Tags are 2–6 letters or digits and names must be unique. A
+team's logo is added to the website by the site owner (docs/DECISIONS.md
+ADR-114: `scripts/team_logos.py`).
+
+### /team captain <name> [user] [brawlhalla_id] *(staff)*
+Name a team's captain, who must already be on the roster; the previous
+captain becomes a player. A captain can add and remove their own team's
+players. This doesn't grant the Team Captain Discord role, which staff give
+by hand.
 
 ## Automatic posts
 

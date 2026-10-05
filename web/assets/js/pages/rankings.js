@@ -47,7 +47,7 @@
   }
 
   function teamCell(row) {
-    return row.team ? `<span class="pill pill-team">${escapeHtml(row.team)}</span>` : '<span class="muted">—</span>';
+    return row.team ? teamPillHtml(row.team, row.team_slug) : '<span class="muted">—</span>';
   }
 
   function trendCell(trend) {

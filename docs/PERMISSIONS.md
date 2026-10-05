@@ -50,8 +50,11 @@ them.
   `/slowmode`, `/nickname`, `/verify`, `/spotlight`, `/emoji *`,
   `/pakistan add|remove`, tournament management): the same fallback, or
   Founder/Admin/Moderator.
-- **Everything else** (`/link`, `/profile`, `/level`, `/help` and so on): any
-  member.
+- **Team rosters** (`/team add`, `/team remove`): staff, or the captain of
+  that team (the member whose linked Brawlhalla account is the team's
+  captain, ADR-114). `/team create` and `/team captain` are staff only.
+- **Everything else** (`/link`, `/profile`, `/level`, `/help`, `/team info`,
+  `/team leave` and so on): any member.
 
 The checks decide who can *invoke* a command; they never grant the bot a
 Discord permission it lacks. `/kick` still fails with a clear error if the

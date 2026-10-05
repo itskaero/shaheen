@@ -21,6 +21,7 @@ from database.models.provisioned_resource import ProvisionedResource, ResourceTy
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
 from database.models.shaheen_member import ShaheenMember
+from database.models.team import Team, TeamMember
 from database.models.tournament import (
     Tournament,
     TournamentEntrant,
@@ -62,6 +63,8 @@ __all__ = [
     "ScrimSignup",
     "ScrimStatus",
     "ShaheenMember",
+    "Team",
+    "TeamMember",
     "Tournament",
     "TournamentEntrant",
     "TournamentEntrantMember",

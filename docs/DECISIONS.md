@@ -4869,3 +4869,93 @@ Verified:
   - Seasons in both navs, and a five-item bottom nav;
   - no overflow and no console errors;
   - the landing checks (ADR-110) still pass.
+
+## ADR-114 — Teams: SHAHEEN as the founding team, Delight Esports, captains run rosters
+
+**Status:** accepted. Stage 7 of the BRAWLISTAN migration.
+
+**Context.**
+- Until now "team" was a hardcoded label: `FOUNDING_TEAM = "SHAHEEN"` tagged every player with an active
+  clan link.
+- The brief asks for teams with a logo, roster, ranking, achievements and season results.
+- The owner's decisions:
+  - SHAHEEN stays as the **founding team**, the first team with a permanent badge and its existing
+    roster;
+  - **Delight Esports** is a separate team (the owner supplied its logo);
+  - staff create teams and name captains, and **captains manage their own rosters**.
+
+**Decision.**
+- **Data (migration 0020).**
+  - `teams`: slug unique per guild, name, tag, country, logo stem, description, `is_founding`.
+  - `team_members`: a Brawlhalla player (not a Discord member, so outsiders can be on a team) with role
+    captain or player, `joined_at` and `left_at`.
+  - A partial unique index allows **one active team per player**. Leaving closes the row; nothing is
+    deleted.
+  - The migration seeds every known guild with SHAHEEN (founding; roster = every currently linked player,
+    i.e. exactly who the site called SHAHEEN before) and Delight Esports (empty roster).
+- **`services/team_service.py`** (no Discord):
+  - create: validated name, tag and slug, with no duplicates;
+  - add, remove, leave, and set captain (one captain; the previous one becomes a player), with every
+    action audit-logged;
+  - `can_manage`: staff, or the member whose linked account is that team's captain;
+  - overview: founding team first, then by **team rating**, the average current-season rating of the
+    best 3 placed players, or None when nobody is placed;
+  - detail: the roster (captain first), achievements of linked members, and season results (best and
+    average final rating per season).
+- **Teams now come from rosters everywhere.** `RankingsService` and `PlayersService` read the active team
+  (name and slug), so the Rankings and Players team filters and pills show real teams and link to them.
+  Linking an account no longer puts anyone on SHAHEEN; staff or a captain add players.
+- **API:** `GET /teams` and `GET /teams/{slug}`, Brawlhalla identity only. `teams` is added to the
+  cold-start snapshots.
+- **Bot:** a `/team` group (`info`, `leave`, `add`, `remove`, `create`, `captain`). `info` shows the logo
+  from the site and a Team page button. Teams create no Discord roles; the Team Captain role stays
+  manual (ADR-109).
+- **Logos:** `scripts/team_logos.py` cuts every `docs/brand/teams/<slug>-master.png` into a 512px
+  transparent square at `web/assets/img/teams/<slug>.{webp,png}`.
+  - It reuses `brand_assets.colour_to_alpha` for art on black, so the Delight neon keeps its glow.
+  - SHAHEEN's emblem, already transparent, is used as is.
+  - A team without a logo shows a monogram of its tag.
+- **Website:**
+  - `teams.html`: card grid with the founding badge, team rating, players and best player, plus search;
+  - `team.html?t=<slug>`: logo hero, roster with the 👑 captain, season results linking to the Seasons
+    page, and achievements; an invalid or unknown slug shows "Team not found";
+  - Teams is switched on in the sidebar;
+  - team pills link to team pages, and the home Top 10 drops its hardcoded "SHAHEEN" pill.
+
+Files:
+- **new:**
+  - `alembic/versions/0020_teams.py`, `src/database/models/team.py`,
+    `src/database/repositories/team_repository.py`, `src/services/team_service.py`,
+    `src/api/routers/teams.py`;
+  - `src/bot/cogs/teams.py`, `src/bot/content/team_embeds.py`, `scripts/team_logos.py`;
+  - `docs/brand/teams/{delight-esports,shaheen}-master.png`, `web/assets/img/teams/*`,
+    `web/{teams,team}.html`, `web/assets/js/pages/{teams,team}.js`;
+  - tests.
+- **changed:**
+  - `services/{rankings,players}_service.py`, `api/{app,schemas}.py`, `api/routers/{players,rankings}.py`;
+  - `bot/client.py`, `bot/content/help_embeds.py`;
+  - `web/assets/js/{api,theme,shell}.js`, `pages/{home,player,players,rankings}.js`, `web/clan.html`,
+    `brawlistan.css`, `snapshot.yml`;
+  - the docs.
+
+Verified:
+- **Service tests:**
+  - slug and team rating (best three, None with nobody placed);
+  - create validation and duplicates, including an over-long tag being rejected, not truncated;
+  - one team at a time, with history kept and audit rows written;
+  - captains manage only their own team, with a single captain;
+  - leave;
+  - overview ordering and ratings;
+  - detail roster order and season results.
+- **Embed tests:** the 👑 captain, logo URL, team-page link, the founding author, and an empty roster.
+- **Rankings and directory tests:** team name and slug come from rosters.
+- **API:** 200 and 404, no Discord ids.
+- **Migration 0020:** upgrade with seed data (SHAHEEN founding with the linked player, Delight empty),
+  then downgrade and upgrade again.
+- **Checks:** ruff, mypy and the full suite pass; all 82 slash commands load.
+- **Playwright** at 1440 and 390 px (mocked API):
+  - the founding team first, the Delight logo, the monogram fallback, no invented rating, and search;
+  - the team hero, roster with captain, season results and achievements;
+  - a bad slug shows "not found";
+  - no overflow and no console errors;
+  - the Seasons, landing, Players and Rankings checks still pass.

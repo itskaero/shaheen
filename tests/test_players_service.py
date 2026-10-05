@@ -7,12 +7,14 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.ranking_snapshot import RankingSnapshot
+from database.models.team import Team
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
 from database.repositories.member_player_link_repository import MemberPlayerLinkRepository
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.shaheen_member_repository import ShaheenMemberRepository
+from database.repositories.team_repository import TeamRepository
 from services.players_service import PlayersService, brawlhalla_id_from_slug, player_slug
 
 GUILD_ID = 1
@@ -72,6 +74,13 @@ async def test_directory_merges_board_and_linked_players_once(session: AsyncSess
         )
     await _reading(session, board_only, 1900)
     await _reading(session, both, 1500)
+    # Teams come from rosters (ADR-114): only "Both" is on SHAHEEN.
+    shaheen = await TeamRepository(session).add(
+        Team(guild_id=GUILD_ID, slug="shaheen", name="SHAHEEN", tag="SHN", is_founding=True)
+    )
+    await TeamRepository(session).add_member(
+        team_id=shaheen.id, player_id=both, role="player", joined_at=datetime.now(UTC)
+    )
 
     entries = await PlayersService(session).directory(GUILD_ID)
 
@@ -82,7 +91,9 @@ async def test_directory_merges_board_and_linked_players_once(session: AsyncSess
         "SHAHEEN",
         True,  # linked counts as claimed even with no board owner
     )
+    assert by_name["Both"].team_slug == "shaheen"
     assert (by_name["Board"].is_claimed, by_name["Board"].team) == (False, None)
+    assert by_name["Linked"].team is None  # linked but on no roster
     assert (by_name["Linked"].country, by_name["Linked"].on_pakistan_board) == (None, False)
     assert by_name["Linked"].snapshot is None
     assert by_name["Board"].slug == "board-20"

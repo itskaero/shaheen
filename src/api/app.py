@@ -27,6 +27,7 @@ from api.routers import (
     rankings,
     roster,
     seasons,
+    teams,
     tournaments,
 )
 from core.config import load_settings
@@ -85,6 +86,7 @@ app.include_router(legends.router)
 app.include_router(featured.router)
 app.include_router(rankings.router)
 app.include_router(seasons.router)
+app.include_router(teams.router)
 app.include_router(link.router)
 app.include_router(achievements.router)
 app.include_router(players.router)

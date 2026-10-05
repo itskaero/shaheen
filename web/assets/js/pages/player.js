@@ -266,7 +266,7 @@
             ${profile.region ? `<span aria-hidden="true">·</span><span>${escapeHtml(profile.region)}</span>` : ""}
           </div>
           <div class="profile-meta">
-            ${entry.team ? `<span class="pill pill-team">${escapeHtml(entry.team)}</span>` : ""}
+            ${teamPillHtml(entry.team, entry.team_slug)}
             ${claimText}
             ${(profile.playstyle_tags || []).map((t) => `<span class="pill">${escapeHtml(t)}</span>`).join("")}
           </div>
