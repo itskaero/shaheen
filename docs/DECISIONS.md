@@ -5341,3 +5341,36 @@ commands. Then:
 **Verified.** Tests check that members never see staff pages, that every page fits Discord's limits and
 carries its page number, that the overview matches the pages, that buttons stop at the ends, that only
 the author can page, and that a requested category opens with the menu in step.
+
+## ADR-122 — BRAWLISTAN welcome and goodbye banners
+
+**Status:** accepted. Replaces ADR-091's arrival-card artwork and typography; ADR-065's flow is unchanged.
+
+**Context.** The owner supplied new welcome and goodbye artwork: two wide banners with a hooded mascot,
+the Pakistan night skyline, a tilted "Welcome to BRAWLISTAN" / "Goodbye — See you soon!" title and an
+empty neon name plate. The spec for the username: Inter ExtraBold (Space Grotesk Bold as the
+alternative), always horizontal even though the title is tilted, with a 0° gradient: `#FFFFFF → #A7FFF0`,
+or `#FFFFFF → #42FFD2 → #C084FC` for the energetic version.
+
+**Decision.**
+- **Templates.** The stacked composite is kept as `docs/brand/welcome-goodbye-master.png`. It is split at
+  its white divider into `src/assets/img/{welcome,goodbye}_template.png`, both 1942×402 (the old ones were
+  768×1024). Each has its own measured name-plate box, inset clear of the frame and the diamond
+  ornaments.
+- **Name.**
+  - Font: Inter ExtraBold, bundled as `src/assets/fonts/Inter-ExtraBold.ttf` (Inter 4.1, SIL OFL; the
+    licence is beside it as `Inter-OFL.txt`).
+  - Gradient: left to right across the name itself, so even a short name shows every stop. Welcome
+    uses the energetic three-stop gradient, matching its green-to-magenta art; goodbye uses the calmer
+    white-to-mint one.
+  - Effects: a soft dark shadow and a faint glow in the gradient's middle colour. There is no gold bevel
+    any more, since the gold treatment belonged to the old SHAHEEN cards.
+  - Size and position: shrinks from 46 px down to 18 px to fit the plate (less a 16 px margin), and is
+    centred on cap height so descenders don't lift it.
+  - Very long names: one still too wide at 18 px (Discord's 32-character limit in its widest letters) is
+    condensed horizontally rather than shrunk further.
+- `render_welcome_card` / `render_goodbye_card` keep their signatures, so the engagement cog doesn't change.
+
+**Verified.** Tests check that short, descender-heavy, very long and 32×"W" names all land inside each
+card's plate and nowhere else on the banner; that an empty name leaves the banner untouched; and that the
+font ships inside `src/` for the Docker image. pytest 550, ruff, mypy. Sample renders were checked by eye.

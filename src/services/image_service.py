@@ -58,13 +58,30 @@ CARD_HEIGHT = 941
 _CUTOUT_BOX = (330, 355, 1345, 745)
 _CUTOUT_TEXT_MARGIN = 60  # keeps long strings clear of the gold frame edges
 
-# welcome_template.png / goodbye_template.png (owner-supplied, split from one
-# side-by-side composite — docs/DECISIONS.md ADR-065, redesigned in ADR-091)
-# share this same empty-rectangle geometry; both are 768x1024.
-WELCOME_CARD_WIDTH = 768
-WELCOME_CARD_HEIGHT = 1024
-_WELCOME_CUTOUT_BOX = (205, 688, 562, 742)
-_WELCOME_CUTOUT_TEXT_MARGIN = 20
+# welcome_template.png / goodbye_template.png: the owner's BRAWLISTAN banners,
+# split from one stacked composite (docs/brand/welcome-goodbye-master.png,
+# docs/DECISIONS.md ADR-122). Both are 1942x402; each has its own empty
+# name plate, measured against the artwork, inset clear of the neon frame and
+# the diamond ornaments top and bottom centre.
+WELCOME_CARD_WIDTH = 1942
+WELCOME_CARD_HEIGHT = 402
+_WELCOME_NAME_BOX = (760, 268, 1185, 334)
+_GOODBYE_NAME_BOX = (760, 234, 1185, 308)
+_NAME_MARGIN = 16  # keeps a long name's glow off the plate's slanted ends
+
+# The username: Inter ExtraBold, always horizontal, with a left-to-right (0°)
+# gradient across the name. Welcome takes the energetic version; goodbye the
+# calmer one.
+_NAME_FONT_PATH = _ASSETS_DIR / "fonts" / "Inter-ExtraBold.ttf"
+_WELCOME_NAME_STOPS: list[tuple[float, tuple[int, int, int]]] = [
+    (0.0, (0xFF, 0xFF, 0xFF)),
+    (0.5, (0x42, 0xFF, 0xD2)),
+    (1.0, (0xC0, 0x84, 0xFC)),
+]
+_GOODBYE_NAME_STOPS: list[tuple[float, tuple[int, int, int]]] = [
+    (0.0, (0xFF, 0xFF, 0xFF)),
+    (1.0, (0xA7, 0xFF, 0xF0)),
+]
 
 # --- Brand colors -----------------------------------------------------------
 
@@ -84,6 +101,17 @@ def _lerp_rgb(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tup
     return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))  # type: ignore[return-value]
 
 
+def _stop_colour(t: float, stops: list[tuple[float, tuple[int, int, int]]]) -> tuple[int, int, int]:
+    lo, hi = stops[0], stops[-1]
+    for i in range(len(stops) - 1):
+        if stops[i][0] <= t <= stops[i + 1][0]:
+            lo, hi = stops[i], stops[i + 1]
+            break
+    span = hi[0] - lo[0]
+    local_t = 0.0 if span <= 0 else (t - lo[0]) / span
+    return _lerp_rgb(lo[1], hi[1], local_t)
+
+
 def _vertical_gradient_multi(
     width: int, height: int, stops: list[tuple[float, tuple[int, int, int]]]
 ) -> Image.Image:
@@ -91,19 +119,17 @@ def _vertical_gradient_multi(
     rgb) stops — a gold-to-bronze metallic fill rather than a flat color.
     """
     column = Image.new("RGB", (1, max(1, height)))
-    pixels = []
-    for y in range(max(1, height)):
-        t = y / max(1, height - 1)
-        lo, hi = stops[0], stops[-1]
-        for i in range(len(stops) - 1):
-            if stops[i][0] <= t <= stops[i + 1][0]:
-                lo, hi = stops[i], stops[i + 1]
-                break
-        span = hi[0] - lo[0]
-        local_t = 0.0 if span <= 0 else (t - lo[0]) / span
-        pixels.append(_lerp_rgb(lo[1], hi[1], local_t))
-    column.putdata(pixels)
+    column.putdata([_stop_colour(y / max(1, height - 1), stops) for y in range(max(1, height))])
     return column.resize((max(1, width), max(1, height)))
+
+
+def _horizontal_gradient_multi(
+    width: int, height: int, stops: list[tuple[float, tuple[int, int, int]]]
+) -> Image.Image:
+    """The same, left to right (a 0° gradient)."""
+    row = Image.new("RGB", (max(1, width), 1))
+    row.putdata([_stop_colour(x / max(1, width - 1), stops) for x in range(max(1, width))])
+    return row.resize((max(1, width), max(1, height)))
 
 
 # --- Font fitting -----------------------------------------------------------
@@ -350,40 +376,61 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
     return buffer.getvalue()
 
 
-def _render_arrival_card(template_path: Path, *, member_name: str) -> bytes:
+def _render_arrival_card(
+    template_path: Path,
+    *,
+    member_name: str,
+    box: tuple[int, int, int, int],
+    stops: list[tuple[float, tuple[int, int, int]]],
+) -> bytes:
     """Shared renderer for the welcome/goodbye cards (docs/DECISIONS.md
-    ADR-065, redesigned ADR-091) — same "bevel & highlight" text treatment
-    as render_milestone_card, but a single centered line (the member's
-    name) set into the template's own empty cutout rectangle, since these
-    templates carry their own "WELCOME"/"GOODBYE" headline baked into the
-    artwork already.
+    ADR-122). The banners carry their own tilted "Welcome to BRAWLISTAN" /
+    "Goodbye" titles; this sets one dynamic string, the member's name,
+    horizontally into the template's empty name plate.
 
-    Rajdhani SemiBold, not Orbitron — the owner's spec for the dynamically-
-    rendered username (docs/DECISIONS.md ADR-091). Orbitron stays reserved
-    for render_milestone_card's headline; the small-label typography and
-    the Urdu tagline visible on the template are already baked into the
-    artwork itself, not rendered here.
+    The name is Inter ExtraBold with a left-to-right gradient spanning the
+    name itself (so a short name still shows every stop), over a soft dark
+    shadow and a faint glow in the gradient's middle colour. Capitals are
+    centred on the plate's middle, so names with descenders don't sit high.
     """
-    template = Image.open(template_path).convert("RGBA")
-    image = template.copy()
+    image = Image.open(template_path).convert("RGBA")
 
-    x0, y0, x1, y1 = _WELCOME_CUTOUT_BOX
+    x0, y0, x1, y1 = box
     center_x = (x0 + x1) // 2
     center_y = (y0 + y1) // 2
-    max_text_width = (x1 - x0) - _WELCOME_CUTOUT_TEXT_MARGIN * 2
 
-    name_font = _fit_font(
+    max_width = (x1 - x0) - _NAME_MARGIN * 2
+    font = _fit_font(
         member_name,
-        _SUBTITLE_FONT_PATH,
+        _NAME_FONT_PATH,
         variation=None,
-        max_width=max_text_width,
-        initial_size=40,
-        min_size=16,
+        max_width=max_width,
+        initial_size=46,
+        min_size=18,
+        step=2,
     )
-    name_layer = _trim(_render_styled_text(member_name, name_font, padding=20))
+    cap_height = -font.getbbox("H", anchor="ls")[1]
+    baseline = center_y + round(cap_height / 2)
 
-    dest = (center_x - name_layer.width // 2, center_y - name_layer.height // 2)
-    image.alpha_composite(name_layer, dest=dest)
+    mask = Image.new("L", image.size, 0)
+    ImageDraw.Draw(mask).text((center_x, baseline), member_name, font=font, fill=255, anchor="ms")
+    ink = mask.getbbox()
+    if ink is not None and ink[2] - ink[0] > max_width:
+        # Still too wide at the smallest readable size (a 32-character name of
+        # wide letters): condense it horizontally rather than shrink it further.
+        glyphs = mask.crop(ink).resize((max_width, ink[3] - ink[1]), Image.Resampling.LANCZOS)
+        mask = Image.new("L", image.size, 0)
+        mask.paste(glyphs, (center_x - max_width // 2, ink[1]))
+        ink = mask.getbbox()
+    if ink is not None:
+        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        shadow.putalpha(mask.filter(ImageFilter.GaussianBlur(4)).point(lambda a: int(a * 0.8)))
+        image.alpha_composite(shadow, dest=(0, 2))
+        image.alpha_composite(_glow(mask, _stop_colour(0.5, stops), blur_radius=10, boost=0.5))
+
+        fill = _horizontal_gradient_multi(ink[2] - ink[0], ink[3] - ink[1], stops).convert("RGBA")
+        fill.putalpha(mask.crop(ink))
+        image.alpha_composite(fill, dest=(ink[0], ink[1]))
 
     buffer = io.BytesIO()
     image.convert("RGB").save(buffer, format="PNG")
@@ -391,12 +438,20 @@ def _render_arrival_card(template_path: Path, *, member_name: str) -> bytes:
 
 
 def render_welcome_card(*, member_name: str) -> bytes:
-    """A branded welcome card for a new member, using the owner-supplied
-    welcome_template.png (docs/DECISIONS.md ADR-065)."""
-    return _render_arrival_card(_WELCOME_TEMPLATE_PATH, member_name=member_name)
+    """A branded welcome card for a new member (docs/DECISIONS.md ADR-122)."""
+    return _render_arrival_card(
+        _WELCOME_TEMPLATE_PATH,
+        member_name=member_name,
+        box=_WELCOME_NAME_BOX,
+        stops=_WELCOME_NAME_STOPS,
+    )
 
 
 def render_goodbye_card(*, member_name: str) -> bytes:
-    """A branded goodbye card for a departing member, using the owner-
-    supplied goodbye_template.png (docs/DECISIONS.md ADR-065)."""
-    return _render_arrival_card(_GOODBYE_TEMPLATE_PATH, member_name=member_name)
+    """A branded goodbye card for a departing member (docs/DECISIONS.md ADR-122)."""
+    return _render_arrival_card(
+        _GOODBYE_TEMPLATE_PATH,
+        member_name=member_name,
+        box=_GOODBYE_NAME_BOX,
+        stops=_GOODBYE_NAME_STOPS,
+    )
