@@ -484,6 +484,12 @@ Each can be switched off in the environment: `ANNOUNCE_SEASON_START`,
 (rank-ups and milestones in #achievements), `ANNOUNCE_FEATURED`, and
 `ANNOUNCE_LEVEL_UPS`, which is **off by default** to keep the server quiet.
 
+An unlocked achievement is posted as the BRAWLISTAN achievement card (the
+achievement's badge, its name and the member's name) with a line that pings
+the member: "🎉 Congratulations @member! You've unlocked **Champion**. Won a
+clan tournament." There's no embed (ADR-124). Peak-rating, tier-change and
+level-up posts are unchanged.
+
 ## Weekly digest (standing job, not a command)
 
 `ClanCog`'s second scheduled loop (alongside the ranking-snapshot loop,

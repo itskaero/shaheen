@@ -66,8 +66,9 @@ def role_problem(
         return f"{role.mention} belongs to an integration or bot, so it can't be handed out."
     if role.id in bot_managed:
         return (
-            f"{role.mention} is managed by the bot's link sync and would be taken back. "
-            "Pick a role of your own."
+            f"{role.mention} is handed out by the bot: only members with a linked "
+            "Brawlhalla account keep it, so anyone approved without a link would lose it "
+            "on the next sync. Create a separate role (for example Member) for approval."
         )
     elevated = [name for name in _ELEVATED_PERMISSIONS if getattr(role.permissions, name, False)]
     if elevated:

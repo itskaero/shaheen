@@ -22,7 +22,7 @@ from bot.cogs.competition import resolve_provisioned_channel
 from bot.cogs.moderation import post_player_report
 from bot.constants import ROLE_PLAYER, ROLE_VERIFIED, RoleSpec
 from bot.content.clan_embeds import (
-    build_achievement_announcement_embed,
+    build_achievement_congrats,
     build_achievements_embed,
     build_clan_stats_embed,
     build_history_embed,
@@ -48,11 +48,15 @@ from database.repositories.shaheen_member_repository import ShaheenMemberReposit
 from database.session import session_scope
 from services.account_roles import RoleDiff, plan_account_roles
 from services.achievement_service import AchievementService
-from services.achievements import evaluate_engagement_achievements
+from services.achievements import AchievementDef, evaluate_engagement_achievements
 from services.clan_service import ClanService
 from services.digest_service import WeeklyDigest, WeeklyDigestService
 from services.guild_snapshot_service import GuildSnapshotService
-from services.image_service import render_milestone_card
+from services.image_service import (
+    achievement_icon_path,
+    render_achievement_card,
+    render_milestone_card,
+)
 from services.link_service import LinkService
 from services.pakistan_board_service import PakistanBoardService
 from services.report_service import ReportService
@@ -152,11 +156,11 @@ class ClanCog(commands.Cog):
         display_name = member.display_name if member else announcement.player.player_name
 
         if announcement.achievement is not None:
-            embed = build_achievement_announcement_embed(
-                display_name=display_name, achievement=announcement.achievement
+            await self._announce_achievement(
+                channel, member, display_name, announcement.achievement
             )
-            subtitle = f"🏅 {announcement.achievement.name}"
-        elif announcement.new_peak_rating is not None:
+            return
+        if announcement.new_peak_rating is not None:
             embed = build_milestone_announcement_embed(
                 display_name=display_name,
                 player_name=announcement.player.player_name,
@@ -201,6 +205,40 @@ class ClanCog(commands.Cog):
                 await channel.send(embed=embed, file=file)
             else:
                 await channel.send(embed=embed)
+        except discord.Forbidden:
+            logger.warning("Missing permission to post in hall-of-fame channel")
+
+    async def _announce_achievement(
+        self,
+        channel: discord.TextChannel,
+        member: discord.Member | None,
+        display_name: str,
+        achievement: AchievementDef,
+    ) -> None:
+        """The BRAWLISTAN achievement card with a congratulations line that
+        pings the member, and no embed (docs/DECISIONS.md ADR-124). If the
+        card fails to render, the line still goes out on its own."""
+        content = build_achievement_congrats(
+            who=member.mention if member else f"**{display_name}**", achievement=achievement
+        )
+        file: discord.File | None = None
+        try:
+            png_bytes = await asyncio.to_thread(
+                render_achievement_card,
+                achievement_icon=achievement_icon_path(achievement.key),
+                achievement_name=achievement.name,
+                username=display_name,
+            )
+            file = discord.File(io.BytesIO(png_bytes), filename="achievement.png")
+        except Exception:
+            logger.exception("Failed to render achievement card for %s", display_name)
+
+        mentions = discord.AllowedMentions(everyone=False, roles=False, users=True)
+        try:
+            if file is not None:
+                await channel.send(content=content, file=file, allowed_mentions=mentions)
+            else:
+                await channel.send(content=content, allowed_mentions=mentions)
         except discord.Forbidden:
             logger.warning("Missing permission to post in hall-of-fame channel")
 

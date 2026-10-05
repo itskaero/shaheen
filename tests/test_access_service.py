@@ -132,7 +132,8 @@ def test_an_ordinary_member_role_is_allowed() -> None:
 def test_roles_that_must_never_be_handed_out() -> None:
     assert "everyone" in (_problem(_Role(id=GUILD, position=0, default=True)) or "")
     assert "integration" in (_problem(_Role(id=51, position=3, managed=True)) or "")
-    assert "link sync" in (_problem(_Role(id=52, position=3), managed=frozenset({52})) or "")
+    bot_managed = _problem(_Role(id=52, position=3), managed=frozenset({52}))
+    assert "linked Brawlhalla account" in (bot_managed or "")
     admin = _Role(id=53, position=3, permissions=discord.Permissions(administrator=True))
     assert "staff permissions" in (_problem(admin) or "")
     kick = _Role(id=54, position=3, permissions=discord.Permissions(kick_members=True))
