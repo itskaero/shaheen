@@ -2,7 +2,8 @@
 
 Stays thin (docs/ARCHITECTURE.md): board rules live in
 services/pakistan_board_service.py, identifier resolution reuses /link's
-LinkService.resolve_candidate. /link still only ever feeds the clan board.
+LinkService.resolve_candidate. Since ADR-125, /link also puts a member on this
+board, and `/pakistan join` / `/pakistan leave` are the member's toggle.
 """
 
 from __future__ import annotations
@@ -74,57 +75,65 @@ class PakistanCog(commands.Cog):
         except BrawlhallaAPIError as exc:
             logger.warning("Initial Pakistan-board snapshot failed for %s: %s", player.id, exc)
 
-    @pakistan_group.command(name="join", description="Add yourself to the Pakistan leaderboard")
-    @app_commands.describe(identifier="Your Brawlhalla player ID or Steam64 ID")
-    async def join(self, interaction: discord.Interaction, identifier: str) -> None:
+    @pakistan_group.command(name="join", description="Put yourself on the Pakistan rankings")
+    @app_commands.describe(
+        identifier="Your Brawlhalla or Steam64 ID (leave empty to use your linked account)"
+    )
+    async def join(self, interaction: discord.Interaction, identifier: str | None = None) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
 
-        candidate = await self._resolve(identifier)
-        message = await self._confirm(
-            interaction,
-            candidate,
-            "For Pakistan-based players. Being on this board doesn't make you a Shaheen member "
-            "— that's `/apply`.",
-        )
-        if message is None:
-            return
-
-        async with session_scope(self.bot.session_factory) as session:
-            outcome = await PakistanBoardService(session).join(
-                guild_id=interaction.guild.id,
-                discord_id=interaction.user.id,
-                candidate=candidate,
+        message: discord.WebhookMessage | None = None
+        if identifier is None:
+            # Your own linked account: nothing to confirm (ADR-125).
+            async with session_scope(self.bot.session_factory) as session:
+                outcome = await PakistanBoardService(session).join_linked(
+                    guild_id=interaction.guild.id, discord_id=interaction.user.id
+                )
+        else:
+            candidate = await self._resolve(identifier)
+            message = await self._confirm(
+                interaction,
+                candidate,
+                "For players from Pakistan. `/pakistan leave` takes you off any time.",
             )
+            if message is None:
+                return
+            async with session_scope(self.bot.session_factory) as session:
+                outcome = await PakistanBoardService(session).join(
+                    guild_id=interaction.guild.id,
+                    discord_id=interaction.user.id,
+                    candidate=candidate,
+                )
         await self._initial_snapshot(outcome.player)
 
-        description = f"**{outcome.player.player_name}** is on the Pakistan leaderboard."
+        description = f"🇵🇰 **{outcome.player.player_name}** is on the Pakistan rankings."
         if outcome.replaced_player_name:
             description += f"\n\nReplaced your previous entry, **{outcome.replaced_player_name}**."
-        await message.edit(
-            content=None,
-            embed=build_pakistan_board_embed(title="✅ Added", description=description),
-            view=None,
-        )
+        embed = build_pakistan_board_embed(title="✅ Added", description=description)
+        if message is not None:
+            await message.edit(content=None, embed=embed, view=None)
+        else:
+            await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @pakistan_group.command(name="leave", description="Take yourself off the Pakistan leaderboard")
+    @pakistan_group.command(name="leave", description="Take yourself off the Pakistan rankings")
     async def leave(self, interaction: discord.Interaction) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
             player = await PakistanBoardService(session).leave(
                 guild_id=interaction.guild.id, discord_id=interaction.user.id
             )
         if player is None:
-            await interaction.followup.send(
-                "You're not on the Pakistan leaderboard.", ephemeral=True
-            )
+            await interaction.followup.send("You're not on the Pakistan rankings.", ephemeral=True)
             return
         await interaction.followup.send(
             embed=build_pakistan_board_embed(
-                title="Removed", description=f"**{player.player_name}** is off the board."
+                title="Removed",
+                description=f"**{player.player_name}** is off the Pakistan rankings, and won't "
+                "be added back automatically. `/pakistan join` puts you back.",
             ),
             ephemeral=True,
         )
@@ -136,7 +145,7 @@ class PakistanCog(commands.Cog):
     @require_staff_authorized()
     async def add(self, interaction: discord.Interaction, identifier: str) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
 
         candidate = await self._resolve(identifier)
@@ -171,7 +180,7 @@ class PakistanCog(commands.Cog):
     @require_staff_authorized()
     async def remove(self, interaction: discord.Interaction, brawlhalla_id: int) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
             player = await PakistanBoardService(session).remove(
@@ -181,7 +190,9 @@ class PakistanCog(commands.Cog):
             raise ShaheenError(f"Brawlhalla ID `{brawlhalla_id}` isn't on the Pakistan board.")
         await interaction.followup.send(
             embed=build_pakistan_board_embed(
-                title="Removed", description=f"**{player.player_name}** is off the board."
+                title="Removed",
+                description=f"**{player.player_name}** is off the board. Team rosters won't "
+                "add them back; `/pakistan add` or their own `/pakistan join` can.",
             ),
             ephemeral=True,
         )
@@ -189,7 +200,7 @@ class PakistanCog(commands.Cog):
     @pakistan_group.command(name="leaderboard", description="Show the Pakistan leaderboard")
     async def leaderboard(self, interaction: discord.Interaction) -> None:
         if interaction.guild is None:
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
             service = PakistanBoardService(session)

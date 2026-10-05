@@ -30,6 +30,7 @@ from database.models.shaheen_member import ShaheenMember
 from database.session import session_scope
 from integrations.brawlhalla.models import PlayerStatsResponse
 from services.link_service import LinkService
+from services.pakistan_board_service import PakistanBoardService
 from services.profile_service import ProfileService
 from services.snapshot_service import SnapshotService
 
@@ -66,6 +67,9 @@ class ProfileCog(commands.Cog):
                 guild_id=member.guild.id, discord_id=member.id
             )
             achievements = await service.get_achievements(shaheen_member.id)
+            on_pakistan_board = await PakistanBoardService(session).is_on_board(
+                guild_id=member.guild.id, player_id=player.id
+            )
 
         top_role = member.top_role if member.top_role.name != "@everyone" else None
         embed = build_profile_embed(
@@ -80,6 +84,7 @@ class ProfileCog(commands.Cog):
             clan_role=top_role.name if top_role else None,
             discord_created_at=member.created_at,
             discord_joined_at=member.joined_at,
+            on_pakistan_board=on_pakistan_board,
         )
         files = await attach_legend_strip(embed, _top_legend_keys(stats, 3))
         # VIEW PROFILE opens the player's page on the website (ADR-111).

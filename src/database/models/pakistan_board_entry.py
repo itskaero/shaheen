@@ -10,12 +10,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, String, false, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.models.base import Base, TimestampMixin
 
 _ACTIVE_ONLY = text("removed_at IS NULL")
+
+SOURCE_SELF = "self"
+SOURCE_STAFF = "staff"
+SOURCE_TEAM = "team"
 
 
 class PakistanBoardEntry(TimestampMixin, Base):
@@ -41,3 +45,13 @@ class PakistanBoardEntry(TimestampMixin, Base):
     added_by_discord_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # ADR-125: "self" (/link, /pakistan join), "staff" (/pakistan add) or
+    # "team" (on a Pakistani team's roster; the team sync removes only these).
+    source: Mapped[str] = mapped_column(
+        String(8), nullable=False, default=SOURCE_STAFF, server_default=SOURCE_STAFF
+    )
+    # Removed by the player (/pakistan leave) or staff: neither the team sync
+    # nor /link adds this player back on their own.
+    excluded: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )

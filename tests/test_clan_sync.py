@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.team import Team, TeamMember
 from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
+from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.team_repository import TeamRepository
 from integrations.brawlhalla.client import RateLimiter
 from integrations.brawlhalla.models import ClanResponse, PlayerRankedResponse, PlayerStatsResponse
@@ -214,3 +215,8 @@ async def test_snapshot_tick_syncs_clans_and_rates_their_players(session: AsyncS
     assert sorted(ratings) == [1531, 1532]
     summary = next(s for s in await TeamService(session).overview(GUILD) if s.team.id == team.id)
     assert (summary.members, summary.rating) == (2, 1532)
+    # A Pakistani team's roster lands on the Pakistan rankings (ADR-125),
+    # snapshotted once (not again as board players).
+    assert result.board_sync.added == 2
+    board = await PakistanBoardRepository(session).list_active(GUILD)
+    assert sorted(player.brawlhalla_player_id for _e, player in board) == [31, 32]

@@ -36,8 +36,19 @@ def build_link_preview_embed(
     return discord.Embed(title="🦅 Confirm Brawlhalla Link", description=description, colour=GOLD)
 
 
-def build_link_success_embed(*, player_name: str, role_name: str | None = None) -> discord.Embed:
-    description = f"Linked to **{player_name}** — you're on the BRAWLISTAN Pakistan rankings."
+def build_link_success_embed(
+    *, player_name: str, role_name: str | None = None, on_pakistan_board: bool = True
+) -> discord.Embed:
+    if on_pakistan_board:
+        description = (
+            f"Linked to **{player_name}**. 🇵🇰 You're on the BRAWLISTAN Pakistan rankings.\n"
+            "-# Not from Pakistan? `/pakistan leave` takes you off."
+        )
+    else:
+        description = (
+            f"Linked to **{player_name}**. You left the Pakistan rankings earlier, so you're "
+            "not on them; `/pakistan join` puts you back."
+        )
     if role_name:
         description += f"\n\n🎯 You now hold the **{role_name}** role."
     return discord.Embed(title="✅ Brawlhalla Linked", description=description, colour=FOREST_GREEN)
@@ -114,6 +125,7 @@ def build_profile_embed(
     clan_role: str | None = None,
     discord_created_at: datetime | None = None,
     discord_joined_at: datetime | None = None,
+    on_pakistan_board: bool | None = None,
 ) -> discord.Embed:
     """The one-look profile card — folds in what /rank, /stats, and /legends
     each show separately (win rate, tier/rating/peak, global/region rank)
@@ -188,6 +200,16 @@ def build_profile_embed(
         if discord_joined_at is not None:
             parts.append(f"This server: {discord_joined_at.strftime('%b %Y')}")
         embed.add_field(name="Discord", value=" · ".join(parts), inline=True)
+
+    if on_pakistan_board is not None:
+        # ADR-125: where the member stands on the Pakistan rankings, and how to change it.
+        embed.add_field(
+            name="Pakistan Rankings",
+            value="🇵🇰 On the board · `/pakistan leave`"
+            if on_pakistan_board
+            else "Not on the board · `/pakistan join`",
+            inline=True,
+        )
 
     if achievements:
         latest_names = ", ".join(a.name for a, _ in achievements[-3:])

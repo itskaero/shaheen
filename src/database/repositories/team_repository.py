@@ -108,13 +108,16 @@ class TeamRepository:
         await self._session.flush()
         return member
 
-    async def active_player_ids(self, guild_id: int) -> set[int]:
-        """Internal player ids on any team in this guild: tracked players (ADR-120)."""
+    async def active_player_ids(self, guild_id: int, *, country: str | None = None) -> set[int]:
+        """Internal player ids on any team in this guild: tracked players
+        (ADR-120). `country` keeps only teams from that country (ADR-125)."""
         stmt = (
             select(TeamMember.brawlhalla_player_id)
             .join(Team, Team.id == TeamMember.team_id)
             .where(Team.guild_id == guild_id, TeamMember.left_at.is_(None))
         )
+        if country is not None:
+            stmt = stmt.where(Team.country == country)
         return set((await self._session.execute(stmt)).scalars().all())
 
     async def with_clans(self, guild_id: int) -> list[Team]:

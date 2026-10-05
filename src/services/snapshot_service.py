@@ -35,6 +35,7 @@ from services.achievements import (
     evaluate_tenure_achievements,
     tier_index,
 )
+from services.pakistan_board_service import PakistanBoardService, TeamBoardSync
 from services.team_service import ClanSyncResult, TeamService
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,8 @@ class SnapshotRunResult:
     players_processed: int = 0
     # In-game clan syncs this run made (ADR-120).
     clan_syncs: list[ClanSyncResult] = field(default_factory=list)
+    # Team rosters added to / taken off the Pakistan board (ADR-125).
+    board_sync: TeamBoardSync = field(default_factory=TeamBoardSync)
     errors: list[str] = field(default_factory=list)
     announcements: list[Announcement] = field(default_factory=list)
     # discord_id -> the tier this run saw, None when unranked. Recorded so
@@ -176,6 +179,9 @@ class SnapshotService:
                 result.errors.append(f"{team.name}: clan sync failed")
                 continue
             result.clan_syncs.append(await teams.sync_clan(team, clan))
+        # Pakistani teams' rosters are on the Pakistan board (ADR-125). Their
+        # ratings come from the roster pass just below.
+        result.board_sync = await PakistanBoardService(self._session).sync_team_rosters(guild_id)
         for player_id in sorted(await self._teams.active_player_ids(guild_id) - covered):
             rostered = await self._players.get_by_id(player_id)
             if rostered is None:
