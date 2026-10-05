@@ -43,8 +43,6 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="start",
         title="🦅 Getting Started",
         commands=(
-            CommandHelp("/apply", "Apply for the clan roster — approval makes you Trial Shaheen."),
-            CommandHelp("/application", "Check the status of your application."),
             CommandHelp(
                 "/link",
                 "Link your Brawlhalla account by ID, or get a code to claim your website profile.",
@@ -110,7 +108,6 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="community",
         title="💬 Community",
         commands=(
-            CommandHelp("/suggest", "Anonymously suggest something for the clan."),
             CommandHelp("/anthem", "Link to Shaheen's Music Library on the website."),
             CommandHelp("/help", "This list."),
         ),
@@ -119,7 +116,6 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="staff",
         title="🛡️ Staff — Moderation",
         commands=(
-            CommandHelp("/applications", "The queue of applications awaiting review.", True),
             CommandHelp("/warn", "Issue a warning.", True),
             CommandHelp("/warnings", "List a member's active warnings.", True),
             CommandHelp("/clearwarnings", "Clear a member's active warnings.", True),
@@ -145,8 +141,12 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
             CommandHelp("/pakistan add", "Add any Pakistani player to that leaderboard.", True),
             CommandHelp("/pakistan remove", "Remove a player from the Pakistan board.", True),
-            CommandHelp("/setup run", "Provision the server structure.", True),
+            CommandHelp("/setup run", "Create or reuse the BRAWLISTAN roles and channels.", True),
+            CommandHelp(
+                "/setup roles", "Create missing roles only; never grants permissions.", True
+            ),
             CommandHelp("/setup status", "Show whether expected resources exist.", True),
+            CommandHelp("/setup restructure", "Delete the old SHAHEEN roles/channels.", True),
             CommandHelp("/setup verify", "Non-destructive validation report.", True),
             CommandHelp("/setup reset", "Tear provisioned resources back down.", True),
         ),

@@ -6,96 +6,53 @@ from __future__ import annotations
 
 import discord
 
-from bot.constants import (
-    ROLE_ALLY,
-    ROLE_ELITE,
-    ROLE_GUEST,
-    ROLE_LEADER,
-    ROLE_MODERATOR,
-    ROLE_SHAHEEN,
-    ROLE_TRIAL,
-)
-from bot.palette import EMERALD, FOREST_GREEN, GOLD
-from core.brand import MOTTO, TAGLINE
+from bot.constants import ROLE_ADMIN, ROLE_FOUNDER, ROLE_MODERATOR
+from bot.palette import FOREST_GREEN, GOLD
+from database.models.provisioned_resource import ResourceType
 from services.setup_planner import ActionType, CategoryAction, ChannelAction, RoleAction, SetupPlan
-from services.setup_service import ActionSummary, ResetReport, SetupReport
+from services.setup_service import ActionSummary, ResetReport, RetiredResource, SetupReport
+
+_DANGER = 0xB00020
 
 
 def build_welcome_embed() -> discord.Embed:
-    embed = discord.Embed(
-        title="🦅 Welcome to Shaheen",
+    return discord.Embed(
+        title="Welcome to BRAWLISTAN",
         description=(
-            f"**{MOTTO}**\n{TAGLINE}\n\n"
-            "Shaheen is a Pakistan-based Brawlhalla clan built around ambition, "
-            "skill, discipline, and rising above.\n\n"
-            "Start in 📜-rules, then check 🎭-roles to get set up."
+            "**Pakistan's Brawlhalla Network.**\n"
+            "Track the scene. Find the players. Climb the rankings.\n\n"
+            "1. Read #rules.\n"
+            "2. Run `/link` in #bot-commands to put your Brawlhalla account on the Pakistan "
+            "rankings — you'll get the **Player** role.\n"
+            "3. Find a game in #looking-for-game.\n\n"
+            "BRAWLISTAN grew out of SHAHEEN, its founding team."
         ),
         colour=FOREST_GREEN,
     )
-    return embed
 
 
 def build_rules_embed() -> discord.Embed:
-    embed = discord.Embed(
-        title="📜 Shaheen Rules",
+    return discord.Embed(
+        title="📜 Rules",
         description=(
-            "1. Respect every member — no harassment, hate speech, or discrimination.\n"
-            "2. Keep channels on-topic; use 💬-general or 🇵🇰-pakistan-chat for casual chat.\n"
-            "3. No spam, self-promotion, or unsolicited links.\n"
-            "4. Follow Discord's Terms of Service and Community Guidelines.\n"
-            f"5. Staff decisions are final; DM a **{ROLE_MODERATOR.name}** or "
-            f"**{ROLE_LEADER.name}** with concerns."
+            "1. Respect every player — no harassment, hate speech or discrimination.\n"
+            "2. Keep channels on-topic; casual chat goes in #general.\n"
+            "3. No spam, self-promotion or unsolicited links.\n"
+            "4. Don't impersonate players or claim an account that isn't yours.\n"
+            "5. Follow Discord's Terms of Service and Community Guidelines.\n"
+            "6. Report problems with `/report` — don't call people out in public.\n"
+            f"7. Staff decisions are final; DM a **{ROLE_MODERATOR.name}**, "
+            f"**{ROLE_ADMIN.name}** or the **{ROLE_FOUNDER.name}** with concerns."
         ),
         colour=FOREST_GREEN,
     )
-    return embed
-
-
-def build_roles_embed() -> discord.Embed:
-    """Role names come from bot.constants, not hardcoded here — a previous
-    version duplicated them as literal strings and drifted out of sync when
-    the roles were renamed (docs/DECISIONS.md ADR-060).
-    """
-    embed = discord.Embed(
-        title="🎭 Shaheen Roles",
-        description=(
-            f"**{ROLE_LEADER.name}** — clan leadership\n"
-            f"**{ROLE_MODERATOR.name}** — community moderation\n"
-            f"**{ROLE_ELITE.name}** — top competitive members\n"
-            f"**{ROLE_SHAHEEN.name}** — full clan members\n"
-            f"**{ROLE_TRIAL.name}** — members under evaluation\n"
-            f"**{ROLE_ALLY.name}** — friends of the clan\n"
-            f"**{ROLE_GUEST.name}** — everyone else\n\n"
-            "Ranks above are assigned by staff. Grab your own opt-in roles below ⬇️"
-        ),
-        colour=GOLD,
-    )
-    return embed
-
-
-def build_self_assign_roles_embed() -> discord.Embed:
-    """Posted alongside build_roles_embed(), with SelfAssignRolesView's
-    toggle buttons attached (bot/cogs/setup.py, docs/DECISIONS.md ADR-058).
-    """
-    embed = discord.Embed(
-        title="🎯 Opt-in Roles",
-        description=(
-            "Click a button to add or remove a role — click again to take it off.\n\n"
-            "🔔 **Tournament Alerts** — pinged when a tournament is announced\n"
-            "📣 **Scrim Alerts** — pinged when a scrim is announced\n"
-            "🇵🇰 **Pakistan** / 🌍 **International** — where you're playing from\n"
-            "🥊 **1v1 Player** / 👥 **2v2 Player** — your preferred mode"
-        ),
-        colour=EMERALD,
-    )
-    return embed
 
 
 def build_plan_embed(plan: SetupPlan, mode: str) -> discord.Embed:
     """Preview embed shown before /setup run applies anything."""
     counts = _tally(plan)
     embed = discord.Embed(
-        title="🦅 Shaheen Setup — Preview",
+        title="BRAWLISTAN Setup — Preview",
         description=f"Mode: **{mode}**\nReview the planned changes, then confirm.",
         colour=GOLD,
     )
@@ -120,14 +77,15 @@ def build_plan_embed(plan: SetupPlan, mode: str) -> discord.Embed:
             value="Everything already matches — this run will only verify.",
             inline=False,
         )
+    embed.set_footer(text="Setup never changes role or channel permissions — you set those.")
     return embed
 
 
 def build_report_embed(report: SetupReport) -> discord.Embed:
     embed = discord.Embed(
-        title="🦅 Shaheen Setup — Report",
-        description=f"Mode: **{report.mode}**",
-        colour=GOLD if not report.errors else 0xB00020,
+        title="BRAWLISTAN Setup — Report",
+        description=f"Mode: **{report.mode}**" if report.mode else "Roles only.",
+        colour=GOLD if not report.errors else _DANGER,
     )
     embed.add_field(name="Roles", value=_summary_line(report.roles), inline=True)
     embed.add_field(name="Categories", value=_summary_line(report.categories), inline=True)
@@ -152,7 +110,7 @@ def build_reset_warning_embed() -> discord.Embed:
     safe /setup run flow.
     """
     return discord.Embed(
-        title="⚠️ Reset Shaheen's Server Structure?",
+        title="⚠️ Reset the server structure?",
         description=(
             "This permanently **deletes every role, category, and channel** "
             "`/setup` has ever created — including all messages in them. "
@@ -162,15 +120,15 @@ def build_reset_warning_embed() -> discord.Embed:
             "This is a separate, deliberately destructive command — `/setup run` "
             "remains safe to re-run any time and never deletes anything."
         ),
-        colour=0xB00020,
+        colour=_DANGER,
     )
 
 
 def build_reset_report_embed(report: ResetReport) -> discord.Embed:
     embed = discord.Embed(
-        title="🗑️ Shaheen Setup — Reset Complete",
+        title="🗑️ BRAWLISTAN Setup — Reset Complete",
         description=f"Deleted **{report.total_deleted}** resource(s).",
-        colour=GOLD if not report.errors else 0xB00020,
+        colour=GOLD if not report.errors else _DANGER,
     )
     embed.add_field(name="Roles deleted", value=str(report.roles_deleted), inline=True)
     embed.add_field(name="Categories deleted", value=str(report.categories_deleted), inline=True)
@@ -187,7 +145,7 @@ def build_reset_report_embed(report: ResetReport) -> discord.Embed:
 
 def build_verify_embed(plan: SetupPlan) -> discord.Embed:
     """Itemized discrepancy report for /setup verify."""
-    embed = discord.Embed(title="🦅 Shaheen Setup — Verification", colour=GOLD)
+    embed = discord.Embed(title="BRAWLISTAN Setup — Verification", colour=GOLD)
     discrepancies: list[RoleAction | CategoryAction | ChannelAction] = [
         a for a in plan.role_actions if a.type is not ActionType.VERIFY
     ]
@@ -195,7 +153,7 @@ def build_verify_embed(plan: SetupPlan) -> discord.Embed:
     discrepancies += [a for a in plan.channel_actions if a.type is not ActionType.VERIFY]
 
     if not discrepancies:
-        embed.description = "✅ Everything matches the expected Shaheen structure."
+        embed.description = "✅ Everything matches the expected BRAWLISTAN structure."
         return embed
 
     noun = "discrepancy" if len(discrepancies) == 1 else "discrepancies"
@@ -216,7 +174,7 @@ def build_status_embed(
 ) -> discord.Embed:
     counts = _tally(plan)
     embed = discord.Embed(
-        title="🦅 Shaheen Setup — Status",
+        title="BRAWLISTAN Setup — Status",
         colour=FOREST_GREEN,
     )
     embed.add_field(name="Current mode", value=mode or "not run yet", inline=True)
@@ -259,3 +217,67 @@ def _summary_line(summary: ActionSummary) -> str:
         f"🔧 {len(summary.repaired)} repaired\n"
         f"🔗 {len(summary.adopted)} adopted"
     )
+
+
+_KIND_LABEL = {
+    ResourceType.ROLE: "Role",
+    ResourceType.CATEGORY: "Category",
+    ResourceType.CHANNEL: "Channel",
+}
+
+
+def build_restructure_preview_embed(retired: list[RetiredResource]) -> discord.Embed:
+    """What /setup restructure would delete (docs/DECISIONS.md ADR-109)."""
+    if not retired:
+        return discord.Embed(
+            title="BRAWLISTAN Setup — Restructure",
+            description="✅ Nothing to remove: every resource setup created is in the "
+            "BRAWLISTAN layout.",
+            colour=FOREST_GREEN,
+        )
+    present = [r for r in retired if r.name is not None]
+    lines = [f"**{_KIND_LABEL[r.resource_type]}** — {r.name}" for r in present[:25]]
+    if len(present) > 25:
+        lines.append(f"…and {len(present) - 25} more.")
+    gone = len(retired) - len(present)
+    embed = discord.Embed(
+        title="⚠️ Remove the old SHAHEEN structure?",
+        description=(
+            f"Deletes **{len(present)}** role(s)/channel(s) that `/setup` created for the old "
+            "SHAHEEN layout and that BRAWLISTAN no longer uses — including every message in "
+            "those channels. This cannot be undone.\n\n"
+            "Only resources setup itself created are listed; anything you made by hand is "
+            "never touched. Stored player, ranking and match data is not affected."
+        ),
+        colour=_DANGER,
+    )
+    embed.add_field(name="Will be deleted", value="\n".join(lines) or "—", inline=False)
+    embed.add_field(
+        name="Afterwards",
+        value=(
+            "Channels carried over from SHAHEEN (#rankings, #looking-for-game, "
+            "#achievements, #bot-commands and others) keep their old permission "
+            "settings, and setup won't change them. Check each one, or use "
+            "**Sync Now** with its category."
+        ),
+        inline=False,
+    )
+    if gone:
+        embed.set_footer(text=f"{gone} already deleted by hand; they'll just be forgotten.")
+    return embed
+
+
+def build_restructure_report_embed(report: ResetReport) -> discord.Embed:
+    embed = discord.Embed(
+        title="🗑️ BRAWLISTAN Setup — Restructure Complete",
+        description=f"Deleted **{report.total_deleted}** old resource(s).",
+        colour=GOLD if not report.errors else _DANGER,
+    )
+    embed.add_field(name="Roles", value=str(report.roles_deleted), inline=True)
+    embed.add_field(name="Categories", value=str(report.categories_deleted), inline=True)
+    embed.add_field(name="Channels", value=str(report.channels_deleted), inline=True)
+    if report.errors:
+        embed.add_field(
+            name="❌ Errors", value="\n".join(f"- {e}" for e in report.errors[:10]), inline=False
+        )
+    return embed

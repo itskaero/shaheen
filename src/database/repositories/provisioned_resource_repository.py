@@ -38,6 +38,12 @@ class ProvisionedResourceRepository:
             delete(ProvisionedResource).where(ProvisionedResource.guild_id == guild_id)
         )
 
+    async def delete(self, resource: ProvisionedResource) -> None:
+        """Forgets one ledger row — /setup restructure (docs/DECISIONS.md
+        ADR-109) after deleting the Discord resource it tracked."""
+        await self._session.delete(resource)
+        await self._session.flush()
+
     async def upsert(
         self,
         *,

@@ -4500,3 +4500,111 @@ at Season 14), the bot attaches the JPEG card, and footers and the API carry the
 and Alembic round-trip pass. All 13 crops were checked on a contact sheet. Playwright shows the banner
 hero, sidebar season card and Current Season panel at 1440px and 390px with no overflow and no console
 errors.
+
+## ADR-109 — BRAWLISTAN Discord restructure: 7 roles, 12 channels, no automatic permissions
+
+**Status:** accepted. Supersedes the SHAHEEN server layout and permission automation of ADR-058,
+ADR-060, ADR-065, ADR-069, ADR-072, ADR-087 (rank roles), ADR-089/090/092 (applications and promotion),
+ADR-091, ADR-097 (Core Member, Rising Shaheen) and ADR-100's Top 10 role.
+
+**Context.** The brief asks for a small server, "Do not create rank-specific Discord roles", and "The
+owner will manually configure channel permissions. DO NOT automatically change channel permission
+matrices." The owner chose a full restructure, with the old bot-created roles and channels deleted
+behind a confirm.
+
+**The spec (`bot/constants.py`).**
+- **Roles:** Founder, Admin, Moderator, Team Captain, Contributor, Verified, Player. Each is created
+  with `Permissions.none()`.
+- **Categories:**
+  - START HERE: #welcome, #rules, #announcements;
+  - BRAWLISTAN: #rankings, #tournaments, #looking-for-game;
+  - COMMUNITY: #general, #clips, #achievements;
+  - SUPPORT: #bot-commands, #report.
+- **Reused setup keys**, so the existing resource carries over instead of being deleted and recreated:
+  - Founder reuses the Leader role key (`role:shaheen_leader`), keeping its holders and whatever
+    permissions the owner gave it;
+  - #rankings reuses #leaderboard, #looking-for-game reuses #ranked, #achievements reuses #hall-of-fame,
+    and #bot-commands reuses #commands.
+- **`spec_keys()`** is the set of keys the spec owns.
+
+**/setup never touches permissions.**
+- **On creation:** no overwrites for categories or channels, and roles get none.
+- **On later runs:** no overwrite reconciliation. ADR-069's "always reconcile, even an empty dict" is
+  reversed.
+- **Repairs:** role repair only renames. `setup_planner._role_diffs` compares names only, so a role's
+  colour, flags and permissions are the owner's. Channel repair still covers name, topic and parent
+  category.
+
+**New commands.**
+- **`/setup roles`:** roles only (create, adopt by name, rename). It never duplicates a role and never
+  grants a permission.
+- **`/setup restructure`:**
+  - **Scope:** it lists ledger rows whose key isn't in `spec_keys()`, so only resources setup itself
+    created or adopted.
+  - **Deletion:** after a confirm it deletes them (channels, then categories, then roles) and forgets
+    each row.
+  - **Failures:** a failed deletion keeps its row for a retry, and an already-deleted resource is just
+    forgotten.
+  - **Untouched:** stored data.
+  - **Warning:** channels carried over from SHAHEEN keep their old overwrites, and setup won't change
+    them, so the owner should review them (or use Sync Now). Old overwrites for roles that are
+    deleted disappear with the role, but an `@everyone` deny from the old gated categories stays.
+
+**Bot-managed roles.** Only Player (an active link) and Verified (a staff-verified link) are bot-managed:
+- **Rule:** `services/account_roles.plan_account_roles` is a pure diff, and
+  `MemberPlayerLinkRepository.account_states` is the source.
+- **Sync:** `ClanCog._sync_account_roles` applies it on every snapshot tick, both ways. `/link`, `/unlink`
+  and `/verify` also apply it immediately.
+- **Everything else is manual.**
+
+**Retired.**
+- **Rank roles:** rank-role sync (`services/rank_roles.py`).
+- **Top 10 and MVP:** the Pakistan Top 10 role (`top_role_earners`) and the MVP of the Week role. MVP
+  still earns its achievement.
+- **Join and chat roles:** Core Member and the Guest auto-role on join.
+- **Applications:** the `/apply` / `/application` / `/applications` flow (cog, views, service and
+  repository). The `applications` table and model stay, so history is kept.
+- **Panels and commands:** the self-assign roles panel, `/suggest` (its channel is gone) and
+  `bot/membership.py`.
+
+**Channel remaps.**
+- **Pakistan weekly post:** to #rankings.
+- **Scrims:** to #looking-for-game.
+- **Moderation log:** to `MOD_LOG_CHANNEL_ID`, otherwise #report.
+- **Overrides:** `REPORT_CHANNEL_ID` and `ANNOUNCEMENT_CHANNEL_ID` override #report and #announcements in
+  `resolve_provisioned_channel`.
+
+**Settings.**
+- **Aliases:** `DISCORD_GUILD_ID` is accepted as an alias of `GUILD_ID`.
+- **New variables:** `DISCORD_CLIENT_ID`, `BOT_OWNER_ID`, `BRAWLHALLA_API_BASE_URL` and the three channel
+  overrides.
+- **Empty values:** `env_ignore_empty` means `.env.example`'s `NAME=` lines count as unset.
+
+**Authorization.**
+- **Setup:** Founder/Admin, the guild owner, `BOT_OWNER_ID` or Administrator can run `/setup`.
+- **Staff commands:** Founder/Admin/Moderator, plus the same fallback.
+
+Files:
+- **new:** `src/services/account_roles.py`, `tests/test_account_roles.py`.
+- **removed:**
+  - `src/services/rank_roles.py`, `src/bot/membership.py`;
+  - `src/bot/views/{roles,application}.py`, `src/bot/cogs/application.py`,
+    `src/bot/content/application_embeds.py`;
+  - `src/services/application_service.py`, `src/database/repositories/application_repository.py`;
+  - their tests.
+- **changed:** `bot/constants.py`, `services/setup_{planner,service}.py`, `bot/cogs/{setup,clan,link,engagement,moderation,competition}.py`,
+  `bot/checks/permissions.py`, `bot/content/{embeds,channel_intros,help_embeds,profile_embeds,engagement_embeds}.py`,
+  `core/config.py`, `.env.example`, `docs/{PERMISSIONS,DISCORD_SPEC,COMMANDS,BRAWLISTAN_MIGRATION}.md`.
+
+Verified:
+- **Spec tests:** they assert the exact role and channel lists, zero-permission roles, no rank roles and
+  `spec_keys()`.
+- **Setup tests:**
+  - setup never edits or creates overwrites, and role repair passes only `name`;
+  - restructure deletes only out-of-spec ledger rows, keeps owner-made channels and retries failures.
+- **Other tests:** the role-mirror diff, the settings aliases and empty values, and the `BOT_OWNER_ID`
+  checks.
+- **Checks:** ruff, mypy and the full suite pass.
+
+**Before deleting in the live server:** run `/setup run`, then `/setup restructure` and read the list
+before confirming.

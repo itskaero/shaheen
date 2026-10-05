@@ -2,7 +2,7 @@
 
 Stays thin (docs/ARCHITECTURE.md): all persistence/Brawlhalla orchestration
 lives in services/link_service.py; this cog only handles the Discord-side
-flow (confirmation, role promotion) described in docs/COMMANDS.md.
+flow (confirmation, the Player/Verified roles) described in docs/COMMANDS.md.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from discord.ext import commands
 
 from bot.checks.permissions import require_staff_authorized
 from bot.client import ShaheenBot
-from bot.constants import FULL_MEMBER_ROLES, ROLE_ALLY, ROLE_TRIAL
+from bot.constants import ROLE_PLAYER, ROLE_VERIFIED, RoleSpec
 from bot.content.profile_embeds import (
     build_link_code_embed,
     build_link_preview_embed,
@@ -119,15 +119,20 @@ class LinkCog(commands.Cog):
         except BrawlhallaAPIError as exc:
             logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)
 
-        promoted = await self._maybe_promote(member)
-        embed = build_link_success_embed(player_name=outcome.player.player_name, promoted=promoted)
+        # Granted now rather than on the next snapshot tick, which mirrors
+        # the same rule for anyone this misses (ADR-109).
+        granted = await self._set_role(member, ROLE_PLAYER, present=True)
+        embed = build_link_success_embed(
+            player_name=outcome.player.player_name,
+            role_name=ROLE_PLAYER.name if granted else None,
+        )
         await message.edit(content=None, embed=embed, view=None)
 
     @app_commands.command(name="unlink", description="Remove your active Brawlhalla link")
     async def unlink(self, interaction: discord.Interaction) -> None:
         member = interaction.user
         if not isinstance(member, discord.Member):
-            raise ShaheenError("This command can only be used inside the Shaheen server.")
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
 
         await interaction.response.defer(ephemeral=True)
 
@@ -156,6 +161,8 @@ class LinkCog(commands.Cog):
         async with session_scope(self.bot.session_factory) as session:
             link_service = LinkService(session, self.bot.brawlhalla)
             await link_service.unlink(guild_id=member.guild.id, discord_id=member.id)
+        for spec in (ROLE_PLAYER, ROLE_VERIFIED):
+            await self._set_role(member, spec, present=False)
 
         await message.edit(content=None, embed=build_unlink_success_embed(player_name), view=None)
 
@@ -192,54 +199,34 @@ class LinkCog(commands.Cog):
                 actor_discord_id=interaction.user.id,
                 subject=f"{player.player_name} ({player.brawlhalla_player_id})",
             )
-            role_resource = await ProvisionedResourceRepository(session).get(
-                guild_id=guild.id, resource_type=ResourceType.ROLE, logical_key="role:verified"
-            )
-        role = guild.get_role(role_resource.discord_id) if role_resource else None
-        if role is not None:
-            try:
-                if revoke:
-                    await user.remove_roles(role, reason="BRAWLISTAN /verify revoke")
-                else:
-                    await user.add_roles(role, reason="BRAWLISTAN /verify")
-            except discord.Forbidden:
-                logger.warning("Missing permission to change the Verified role on %s", user.id)
+        await self._set_role(user, ROLE_VERIFIED, present=not revoke)
         await interaction.followup.send(
             embed=build_verify_embed(player_name=player.player_name, verified=not revoke),
             ephemeral=True,
         )
 
-    async def _maybe_promote(self, member: discord.Member) -> bool:
-        """Promote ALLY -> TRIAL SHAHEEN on link (docs/DECISIONS.md ADR-090,
-        superseding ADR-026).
+    async def _set_role(self, member: discord.Member, spec: RoleSpec, *, present: bool) -> bool:
+        """Add or remove one of the provisioned account roles (ADR-109).
 
-        ADR-026 promoted straight from Guest, which let anyone skip the
-        approval flow (docs/DECISIONS.md ADR-089) entirely by simply
-        running /link before ever applying. Only an already-approved Ally
-        gets promoted here now; a Guest who links stays Guest until they
-        apply and staff approves them. Members who already hold Trial or
-        any higher rank role are left unchanged — promotion beyond Trial
-        stays a manual staff decision.
+        Best-effort: a role /setup hasn't created yet or a missing
+        permission is logged and returns False, never fails the command.
         """
-        member_role_names = {role.name for role in member.roles}
-        full_member_role_names = {role.name for role in FULL_MEMBER_ROLES}
-        if member_role_names & full_member_role_names:
-            return False  # already Trial or above — nothing to do
-        if ROLE_ALLY.name not in member_role_names:
-            return False  # not yet approved — /link alone doesn't grant access
-
-        guild = member.guild
-        ally_role = discord.utils.get(guild.roles, name=ROLE_ALLY.name)
-        trial_role = discord.utils.get(guild.roles, name=ROLE_TRIAL.name)
-        if trial_role is None:
-            return False  # /setup hasn't run yet; nothing to assign.
-
+        async with session_scope(self.bot.session_factory) as session:
+            resource = await ProvisionedResourceRepository(session).get(
+                guild_id=member.guild.id,
+                resource_type=ResourceType.ROLE,
+                logical_key=spec.logical_key,
+            )
+        role = member.guild.get_role(resource.discord_id) if resource is not None else None
+        if role is None or (role in member.roles) == present:
+            return False
         try:
-            if ally_role is not None and ally_role in member.roles:
-                await member.remove_roles(ally_role, reason="Shaheen /link")
-            await member.add_roles(trial_role, reason="Shaheen /link")
-        except discord.Forbidden:
-            logger.warning("Missing permission to promote %s after /link", member.id)
+            if present:
+                await member.add_roles(role, reason=f"BRAWLISTAN {spec.name} role")
+            else:
+                await member.remove_roles(role, reason=f"BRAWLISTAN {spec.name} role")
+        except discord.HTTPException as exc:
+            logger.warning("Could not update the %s role on %s: %s", spec.name, member.id, exc)
             return False
         return True
 

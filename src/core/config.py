@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SetupMode = Literal["development", "launch"]
@@ -44,14 +44,23 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        # .env.example lists optional ids as `NAME=`; an empty value means unset.
+        env_ignore_empty=True,
     )
 
     discord_token: SecretStr
-    guild_id: int
+    # GUILD_ID or, per the BRAWLISTAN brief, DISCORD_GUILD_ID.
+    guild_id: int = Field(validation_alias=AliasChoices("guild_id", "discord_guild_id"))
+    # The Discord application id (for the invite link in the docs); optional.
+    discord_client_id: int | None = None
+    # Bot owner's Discord user id: always passes staff/setup checks, even
+    # before any role exists (bot/checks/permissions.py). Optional.
+    bot_owner_id: int | None = None
     database_url: str
     setup_mode: SetupMode = "development"
     log_level: str = Field(default="INFO")
     brawlhalla_api_key: SecretStr
+    brawlhalla_api_base_url: str = "https://api.brawlhalla.com/"
     snapshot_interval_hours: float = Field(default=6.0, gt=0)
     # Brawlhalla wipes ranked ratings at the start of each season, and its
     # API does not say which season a response belongs to, so every snapshot
@@ -63,6 +72,12 @@ class Settings(BaseSettings):
     brawlhalla_season: int | None = Field(default=None, ge=1)
     # The public website, for links the bot posts (ADR-107).
     site_url: str = "https://itskaero.github.io/shaheen"
+    # Optional channel overrides (ADR-109). Unset, the bot posts to the
+    # channels /setup provisioned: reports and the moderation log to
+    # #report, announcements to #announcements.
+    report_channel_id: int | None = None
+    mod_log_channel_id: int | None = None
+    announcement_channel_id: int | None = None
 
     @field_validator("database_url")
     @classmethod

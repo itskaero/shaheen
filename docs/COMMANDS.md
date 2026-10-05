@@ -2,22 +2,37 @@
 
 ## Phase 1 — Setup
 
-### /setup
-Interactive server setup wizard.
+### /setup run [mode]
+Creates or reuses the BRAWLISTAN roles and channels (docs/DECISIONS.md
+ADR-109): 7 roles, 4 categories, 12 text channels. Idempotent, with a
+preview and confirm. It **never sets permissions**: roles are created with
+none, channels get no overwrites, and existing roles and channels keep
+whatever permissions the owner gave them (role repair only renames). With
+`mode:launch` it also posts the welcome, rules and channel intro messages,
+once each.
 
-Requirements:
-- administrator/leader permission
-- preflight permission checks
-- development or launch mode
-- confirmation before destructive changes
-- idempotent
-- final verification report
+Requirements: guild owner, `BOT_OWNER_ID`, Administrator, or the Founder or
+Admin role; the bot needs Manage Roles and Manage Channels.
+
+### /setup roles
+Roles only: creates missing roles and reuses existing ones (by the setup
+ledger, then by exact name). It never duplicates a role and never grants a
+permission. Channels and the setup mode are left alone.
 
 ### /setup status
-Show whether expected Shaheen resources exist and whether permissions match.
+Show whether the expected BRAWLISTAN roles and channels exist.
 
 ### /setup verify
 Run non-destructive validation and report discrepancies.
+
+### /setup restructure
+**Destructive** (ADR-109). Lists every role, category and channel `/setup`
+created for the old SHAHEEN layout that BRAWLISTAN no longer uses, then
+deletes them after a confirm. Ledger-only: anything the owner made by hand
+is never listed or touched, and stored player, ranking and match data is
+unaffected. A resource that fails to delete stays listed for the next run.
+Channels carried over from SHAHEEN keep their old permission overwrites;
+review them afterwards.
 
 ### /setup reset
 **Destructive** (docs/DECISIONS.md ADR-060) — permanently deletes every
@@ -28,20 +43,6 @@ on purpose: `run` stays safe to re-run any time. Two-step confirmation —
 a warning screen, then a modal requiring the exact text `DELETE`.
 
 ## Phase 2 — Identity and Brawlhalla
-
-### /apply
-Apply to join the **clan roster**. Opens a five-field form (Brawlhalla/Steam
-ID, region, current rank, why Shaheen, optional referrer) and files it for
-staff review (docs/DECISIONS.md ADR-089). The same form opens from the
-button in #📝-apply. One open application at a time; declined applicants can
-reapply after 14 days. An approved application promotes straight to **Trial
-Shaheen**, skipping Ally entirely — this is a different, stricter outcome
-than `/verify` below (docs/DECISIONS.md ADR-092). Blocked for anyone who
-already holds Trial Shaheen or above; an Ally (let in via `/verify`, not
-clan membership) can still apply.
-
-### /application
-Check the status of your own application, including any staff note.
 
 ### /link [identifier]
 Two ways to link (docs/DECISIONS.md ADR-107):
@@ -276,10 +277,9 @@ optionally filtered to one user's messages.
 
 ### /lock [channel] [reason]
 Set `send_messages=False` for `@everyone` on a channel (defaults to the
-current one). A stopgap for raids/incidents, not a `/setup`-managed state —
-the next `/setup run` reconciles the channel's overwrites back to its
-normal spec and clears the lock (docs/PERMISSIONS.md), so staff should
-`/unlock` when done rather than relying on that.
+current one). A stopgap for raids/incidents that staff run by hand;
+`/setup` never touches channel permissions (ADR-109), so `/unlock` when
+done.
 
 ### /unlock [channel]
 Undo a `/lock` — clears the `send_messages` overwrite for `@everyone`
@@ -305,11 +305,6 @@ level. Defaults to the invoking member.
 Show the top 10 most active chatters in the server by chat XP (Discord
 -only ranking — the public website's Community Activity section is
 privacy-filtered to actively-linked members only, see ADR-065).
-
-### /suggest <text>
-Anonymously post a clan suggestion to `#suggestions`, with 👍/👎 reactions
-added automatically for voting (docs/DECISIONS.md ADR-070). No permission
-check, same "any member" posture as `/level`.
 
 ### /anthem
 Link to Shaheen's Music Library page on the website (docs/DECISIONS.md
@@ -352,9 +347,16 @@ Cannot be undone; the pack itself can be restored afterward with
 docs/DECISIONS.md ADR-028) checks daily and posts every Sunday to
 `#announcements`: top 3 rating gains this week, top 3 chatters by weekly XP,
 and matches played. It also picks an MVP of the Week — biggest rating gain,
-falling back to the top chatter in a quiet ranked week — and rotates the
-🌟 MVP of the Week role onto them, removing it from last week's holder
-(docs/DECISIONS.md ADR-070).
+falling back to the top chatter in a quiet ranked week — and awards them
+the MVP achievement (docs/DECISIONS.md ADR-070; the MVP role retired with
+ADR-109). The same loop posts the Pakistan weekly standings to #rankings.
+
+## Account roles (standing job, not a command)
+
+Every snapshot tick mirrors two roles from the database (ADR-109): **Player**
+for every member with an active Brawlhalla link, **Verified** for every link
+staff confirmed with `/verify`. Members who no longer qualify lose them.
+`/link`, `/unlink` and `/verify` also update them immediately.
 
 ## Standing panels
 
@@ -363,10 +365,9 @@ mode:launch` posts once and that keep working across bot restarts
 (docs/DECISIONS.md ADR-058). See docs/DISCORD_SPEC.md's "Standing panels"
 section for which channel gets what.
 
-- **Opt-in role panel** (🎭 roles) — toggle buttons for opt-in pings/tags.
-  No slash command equivalent; members click to add/remove.
-- **Spar kiosk** (🏆 ranked) — 🥊 1v1 / 👥 2v2 buttons that run the exact
-  same flow as `/scrim`, just without typing the command.
+- **Spar kiosk** (#looking-for-game) — 🥊 1v1 / 👥 2v2 buttons that run the
+  exact same flow as `/scrim`, just without typing the command. (The opt-in
+  role panel retired with ADR-109.)
 
 Every other text channel also gets a short static intro embed in launch
 mode (docs/DECISIONS.md ADR-059) — see docs/DISCORD_SPEC.md's "Standing

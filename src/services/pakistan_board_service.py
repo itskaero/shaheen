@@ -29,11 +29,6 @@ from integrations.brawlhalla.models import SearchResult
 # clan's own; the cap keeps a staff bulk-add from eating the API quota.
 MAX_PAKISTAN_BOARD = 150
 
-# The top-N places whose *claimed* holders get ROLE_PAKISTAN_TOP (ADR-100).
-# An unclaimed player (staff-added, not in the server) still takes the place
-# on the board but earns nothing — that gap is the reason to join.
-PAKISTAN_TOP_ROLE_SIZE = 10
-
 
 @dataclass
 class PakistanJoinOutcome:
@@ -192,11 +187,6 @@ class PakistanBoardService:
                 )
         rows.sort(key=lambda row: row.snapshot.rating or 0, reverse=True)
         return rows[:limit]
-
-    async def top_role_earners(self, guild_id: int) -> set[int]:
-        """Discord ids that should hold the Pakistan Top role right now."""
-        rows = await self.leaderboard(guild_id, limit=PAKISTAN_TOP_ROLE_SIZE)
-        return {row.owner_discord_id for row in rows if row.owner_discord_id is not None}
 
     async def climbers(
         self, guild_id: int, *, since: datetime, limit: int = 5

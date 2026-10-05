@@ -73,6 +73,19 @@ class MemberPlayerLinkRepository:
         result = await self._session.execute(stmt)
         return [(member, player, discord_id) for member, player, discord_id in result]
 
+    async def account_states(self, guild_id: int) -> dict[int, bool]:
+        """Discord id -> verified? for every member of this guild with an
+        active link — what the Player and Verified roles mirror (ADR-109).
+        """
+        stmt = (
+            select(DiscordUser.discord_id, MemberPlayerLink.verified_at)
+            .join(ShaheenMember, ShaheenMember.discord_user_id == DiscordUser.id)
+            .join(MemberPlayerLink, MemberPlayerLink.shaheen_member_id == ShaheenMember.id)
+            .where(ShaheenMember.guild_id == guild_id, MemberPlayerLink.unlinked_at.is_(None))
+        )
+        result = await self._session.execute(stmt)
+        return {discord_id: verified_at is not None for discord_id, verified_at in result}
+
     async def verified_player_ids(self) -> set[int]:
         """Internal BrawlhallaPlayer ids whose active link staff have verified
         (/verify, ADR-107).

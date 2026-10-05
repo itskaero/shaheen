@@ -6,7 +6,6 @@ from datetime import datetime
 
 import discord
 
-from bot.constants import ROLE_TRIAL
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
 from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
@@ -37,10 +36,10 @@ def build_link_preview_embed(
     return discord.Embed(title="🦅 Confirm Brawlhalla Link", description=description, colour=GOLD)
 
 
-def build_link_success_embed(*, player_name: str, promoted: bool) -> discord.Embed:
-    description = f"Linked to **{player_name}**."
-    if promoted:
-        description += f"\n\n🎯 You've been promoted to **{ROLE_TRIAL.name}**. Welcome in!"
+def build_link_success_embed(*, player_name: str, role_name: str | None = None) -> discord.Embed:
+    description = f"Linked to **{player_name}** — you're on the BRAWLISTAN Pakistan rankings."
+    if role_name:
+        description += f"\n\n🎯 You now hold the **{role_name}** role."
     return discord.Embed(title="✅ Brawlhalla Linked", description=description, colour=FOREST_GREEN)
 
 

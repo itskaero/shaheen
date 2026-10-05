@@ -16,8 +16,6 @@ from discord import app_commands
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from bot.views.application import ApplicationPanelView, ApplicationReviewView
-from bot.views.roles import SelfAssignRolesView
 from bot.views.spar import SparKioskView
 from core.config import Settings
 from core.exceptions import ShaheenError
@@ -34,7 +32,6 @@ INTENTS = discord.Intents.all()
 
 STARTUP_EXTENSIONS = (
     "bot.cogs.help",
-    "bot.cogs.application",
     "bot.cogs.setup",
     "bot.cogs.link",
     "bot.cogs.profile",
@@ -56,7 +53,10 @@ class ShaheenBot(commands.Bot):
         self.settings = settings
         self.session_factory = session_factory
         self.brawlhalla = BrawlhallaService(
-            BrawlhallaClient(settings.brawlhalla_api_key.get_secret_value())
+            BrawlhallaClient(
+                settings.brawlhalla_api_key.get_secret_value(),
+                base_url=settings.brawlhalla_api_base_url,
+            )
         )
         # discord.py's documented way to override the tree's default error handler.
         self.tree.on_error = self._on_app_command_error  # type: ignore[method-assign]
@@ -72,14 +72,9 @@ class ShaheenBot(commands.Bot):
         # which message it's actually attached to, but only while a view
         # with that custom_id has been added here. Unlike the cogs below,
         # these aren't tied to any specific message and survive restarts.
-        self.add_view(SelfAssignRolesView())
+        # The spar kiosk in #looking-for-game. The self-assign roles panel
+        # and the clan application views retired with ADR-109.
         self.add_view(SparKioskView())
-        # The apply panel and every application card ever posted route
-        # through these two (docs/DECISIONS.md ADR-089); the review view
-        # finds its application from the message it is attached to, so a
-        # single registration serves all cards.
-        self.add_view(ApplicationPanelView())
-        self.add_view(ApplicationReviewView())
 
         for extension in STARTUP_EXTENSIONS:
             await self.load_extension(extension)
@@ -94,7 +89,7 @@ class ShaheenBot(commands.Bot):
         )
 
     async def on_ready(self) -> None:
-        logger.info("Shaheen Bot ready as %s (guild=%s)", self.user, self.settings.guild_id)
+        logger.info("BRAWLISTAN bot ready as %s (guild=%s)", self.user, self.settings.guild_id)
 
     async def close(self) -> None:
         await self.brawlhalla.aclose()
@@ -111,7 +106,7 @@ class ShaheenBot(commands.Bot):
             message = f"⚠️ {error}" if str(error) else "⚠️ You can't run this command."
         else:
             logger.exception("Unhandled application command error", exc_info=original)
-            message = "⚠️ Something went wrong on Shaheen's side. This has been logged."
+            message = "⚠️ Something went wrong on BRAWLISTAN's side. This has been logged."
 
         if interaction.response.is_done():
             await interaction.followup.send(message, ephemeral=True)

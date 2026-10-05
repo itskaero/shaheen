@@ -1,14 +1,10 @@
-"""SetupService permission-overwrite computation and reconciliation.
+"""SetupService against the BRAWLISTAN contract (docs/DECISIONS.md ADR-109).
 
-docs/DECISIONS.md ADR-069: a `gated` category is hidden from @everyone AND
-Guest, visible to VERIFIED_ROLES; and overwrites are now always reconciled
-(even an empty dict) instead of being skipped, which is what actually clears
-a stray manual overwrite left on a channel outside the bot's management.
-
-docs/DECISIONS.md ADR-072: every channel now also carries an explicit copy
-of its parent category's restricted/gated overwrite, rather than being
-created with zero overwrites of its own and relying on Discord to cascade
-the category's overwrite down to it.
+- /setup never touches permissions: no overwrites on create, no overwrite
+  reconciliation on later runs, roles created with none, and role repair
+  only renames.
+- /setup restructure deletes only ledger-tracked resources outside the
+  spec, and never anything the owner made by hand.
 """
 
 from __future__ import annotations
@@ -16,90 +12,47 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import discord
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.constants import (
-    CATEGORIES,
-    ROLE_ALLY,
-    ROLE_GUEST,
-    ROLE_LEADER,
-    ROLE_MODERATOR,
-    ROLE_TRIAL,
-    CategorySpec,
-    ChannelSpec,
-)
-from services.setup_planner import ActionType, CategoryAction, ChannelAction
+from bot.constants import ROLE_FOUNDER, ROLE_PLAYER, CategorySpec, ChannelSpec
+from database.models.provisioned_resource import ResourceType
+from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
+from services.setup_planner import ActionType, CategoryAction, ChannelAction, RoleAction
 from services.setup_service import SetupReport, SetupService
 
-_EVERYONE = object()
-_GUEST = object()
-_LEADER = object()
-_MODERATOR = object()
-_ALLY = object()
-_TRIAL = object()
-
-_ROLE_BY_KEY = {
-    ROLE_GUEST.logical_key: _GUEST,
-    ROLE_LEADER.logical_key: _LEADER,
-    ROLE_MODERATOR.logical_key: _MODERATOR,
-    ROLE_ALLY.logical_key: _ALLY,
-    ROLE_TRIAL.logical_key: _TRIAL,
-}
+GUILD_ID = 1
 
 
-def _service() -> SetupService:
-    guild = Mock()
-    guild.default_role = _EVERYONE
-    return SetupService(guild, session=None)  # type: ignore[arg-type]
+def _service(guild: Mock | None = None, session: AsyncSession | None = None) -> SetupService:
+    guild = guild or Mock()
+    guild.id = GUILD_ID
+    service = SetupService(guild, session=session)  # type: ignore[arg-type]
+    return service
 
 
-def test_ungated_unrestricted_category_has_no_overwrites() -> None:
-    spec = CategorySpec(logical_key="category:test", name="TEST", channels=())
-    assert _service()._category_overwrites(spec, _ROLE_BY_KEY) == {}
+# --- no permissions, ever ----------------------------------------------------
 
 
-def test_restricted_category_hides_from_everyone_grants_staff() -> None:
-    spec = CategorySpec(logical_key="category:test", name="TEST", channels=(), restricted=True)
-    overwrites = _service()._category_overwrites(spec, _ROLE_BY_KEY)
-    assert overwrites[_EVERYONE].view_channel is False
-    assert overwrites[_LEADER].view_channel is True
-    assert _GUEST not in overwrites  # unaffected — restricted is a staff concept, not a gate
-
-
-def test_gated_category_hides_from_everyone_and_guest_grants_verified_roles() -> None:
-    spec = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    overwrites = _service()._category_overwrites(spec, _ROLE_BY_KEY)
-    assert overwrites[_EVERYONE].view_channel is False
-    assert overwrites[_GUEST].view_channel is False
-    assert overwrites[_LEADER].view_channel is True
-    assert overwrites[_ALLY].view_channel is True
-
-
-async def test_apply_categories_edits_overwrites_even_when_empty() -> None:
-    """Regression: the `if overwrites:` guard used to skip .edit() entirely
-    for non-special categories, so a stray manual overwrite (e.g. one added
-    directly in Discord's UI) could never be cleared by /setup run.
-    """
+async def test_existing_category_is_not_re_permissioned() -> None:
     service = _service()
     service._remember = AsyncMock()  # type: ignore[method-assign]
-
     category = Mock(spec=discord.CategoryChannel)
     category.id = 1
     category.edit = AsyncMock()
     service._guild.get_channel = Mock(return_value=category)
 
     spec = CategorySpec(logical_key="category:test", name="TEST", channels=())
-    action = CategoryAction(type=ActionType.VERIFY, spec=spec, existing_id=1)
-    report = SetupReport(mode="launch")
+    await service._apply_categories(
+        (CategoryAction(type=ActionType.VERIFY, spec=spec, existing_id=1),),
+        SetupReport(mode="launch"),
+    )
 
-    await service._apply_categories((action,), {}, report)
-
-    category.edit.assert_awaited_once_with(overwrites={}, reason="Shaheen /setup")
+    category.edit.assert_not_awaited()
 
 
-async def test_apply_channels_edits_overwrites_even_when_empty() -> None:
+async def test_existing_channel_is_not_re_permissioned() -> None:
     service = _service()
     service._remember = AsyncMock()  # type: ignore[method-assign]
-
     channel = Mock(spec=discord.TextChannel)
     channel.id = 2
     channel.edit = AsyncMock()
@@ -109,199 +62,214 @@ async def test_apply_channels_edits_overwrites_even_when_empty() -> None:
     action = ChannelAction(
         type=ActionType.VERIFY, spec=spec, category_logical_key="category:test", existing_id=2
     )
-    report = SetupReport(mode="launch")
+    await service._apply_channels((action,), {}, SetupReport(mode="launch"))
 
-    await service._apply_channels((action,), {}, {}, report)
-
-    channel.edit.assert_awaited_once_with(overwrites={}, reason="Shaheen /setup")
+    channel.edit.assert_not_awaited()
 
 
-# ---------- ADR-072: channels carry an explicit copy of the parent's gate ----------
-
-
-def test_channel_overwrites_copies_gated_parent() -> None:
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_EVERYONE].view_channel is False
-    assert overwrites[_GUEST].view_channel is False
-    assert overwrites[_ALLY].view_channel is True
-
-
-def test_channel_overwrites_copies_restricted_parent() -> None:
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), restricted=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_EVERYONE].view_channel is False
-    assert overwrites[_LEADER].view_channel is True
-
-
-def test_channel_overwrites_no_parent_and_not_staff_only_send_is_empty() -> None:
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-    assert _service()._channel_overwrites(spec, None, _ROLE_BY_KEY) == {}
-
-
-def test_channel_overwrites_staff_only_send_layers_over_gated_parent() -> None:
-    """A channel that's both in a gated category AND staff_only_send
-    should keep the parent's view_channel grants while adding its own
-    send_messages restriction on top, not replace one with the other.
-    """
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text", staff_only_send=True)
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_EVERYONE].view_channel is False  # from the gated parent
-    assert overwrites[_EVERYONE].send_messages is False  # from staff_only_send
-    assert overwrites[_ALLY].view_channel is True  # verified role still granted view
-    assert overwrites[_MODERATOR].send_messages is True  # staff granted send
-
-
-def test_channel_overwrites_mutating_a_copy_does_not_leak_into_category_overwrites() -> None:
-    """The channel-level dict must be independent PermissionOverwrite
-    instances, not the same objects _category_overwrites returns — else
-    layering staff_only_send on top of a copy would corrupt the category's
-    own overwrite the next time it's computed.
-    """
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text", staff_only_send=True)
-    service = _service()
-
-    service._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-    category_overwrites = service._category_overwrites(parent, _ROLE_BY_KEY)
-
-    assert category_overwrites[_EVERYONE].send_messages is None  # untouched by the channel copy
-
-
-async def test_apply_channels_applies_parent_gate_to_a_real_gated_channel() -> None:
-    """End-to-end regression for the actual reported bug: a brand-new
-    channel created inside THE NEST (gated=True in bot/constants.py) must
-    get the gate's overwrite on creation, not zero overwrites relying on
-    Discord to cascade it down from the category.
-    """
-    the_nest = next(c for c in CATEGORIES if c.logical_key == "category:the_nest")
-    general_spec = next(ch for ch in the_nest.channels if ch.logical_key == "channel:general")
-    assert the_nest.gated is True
-
+async def test_repaired_channel_edit_carries_no_overwrites() -> None:
     service = _service()
     service._remember = AsyncMock()  # type: ignore[method-assign]
-    guild_channel = Mock(spec=discord.TextChannel)
-    guild_channel.id = 42
-    guild_channel.edit = AsyncMock()
-    service._guild.get_channel = Mock(return_value=guild_channel)
+    channel = Mock(spec=discord.TextChannel)
+    channel.id = 2
+    channel.edit = AsyncMock()
+    service._guild.get_channel = Mock(return_value=channel)
 
-    role_by_key = {
-        ROLE_GUEST.logical_key: _GUEST,
-        ROLE_ALLY.logical_key: _ALLY,
-    }
+    spec = ChannelSpec(logical_key="channel:test", name="rankings", kind="text", topic="t")
     action = ChannelAction(
-        type=ActionType.VERIFY,
-        spec=general_spec,
-        category_logical_key="category:the_nest",
-        existing_id=42,
+        type=ActionType.REPAIR,
+        spec=spec,
+        category_logical_key="category:test",
+        existing_id=2,
+        diffs=("name: 'leaderboard' -> 'rankings'",),
     )
-    report = SetupReport(mode="launch")
+    await service._apply_channels((action,), {}, SetupReport(mode="launch"))
 
-    await service._apply_channels((action,), {}, role_by_key, report)
-
-    guild_channel.edit.assert_awaited_once()
-    applied = guild_channel.edit.await_args.kwargs["overwrites"]
-    assert applied[_EVERYONE].view_channel is False
-    assert applied[_GUEST].view_channel is False
-    assert applied[_ALLY].view_channel is True
+    channel.edit.assert_awaited_once()
+    assert "overwrites" not in channel.edit.await_args.kwargs
 
 
-# --- ADR-091: approval grants full read+write; `readonly` gates broadcasts -
+async def test_new_channel_and_category_are_created_without_overwrites() -> None:
+    guild = Mock()
+    category = Mock(spec=discord.CategoryChannel)
+    category.id = 10
+    guild.create_category = AsyncMock(return_value=category)
+    channel = Mock(spec=discord.TextChannel)
+    channel.id = 11
+    guild.create_text_channel = AsyncMock(return_value=channel)
+    service = _service(guild)
+    service._remember = AsyncMock()  # type: ignore[method-assign]
 
-
-def test_plain_gated_text_channel_grants_no_participation_overwrite() -> None:
-    """A member of any VERIFIED_ROLE gets full read+write on approval —
-    view_channel from the gate, and nothing touches send_messages at all
-    (so it's simply allowed by whatever the base permissions already say).
-    Ally is not singled out here; this superseded ADR-090's read-only tier.
-    """
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_ALLY].view_channel is True
-    assert overwrites[_ALLY].send_messages is None
-    assert overwrites[_TRIAL].send_messages is None
-
-
-def test_plain_gated_voice_channel_grants_no_participation_overwrite() -> None:
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), gated=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="voice")
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_ALLY].view_channel is True
-    assert overwrites[_ALLY].speak is None
-    assert overwrites[_TRIAL].speak is None
-
-
-def test_readonly_gated_text_channel_denies_send_to_every_verified_role() -> None:
-    """hall-of-fame/leaderboard-style broadcast channels: everyone in
-    VERIFIED_ROLES can read, nobody — not even Trial Shaheen and up — can
-    send. Staff aren't exempted either.
-    """
-    parent = CategorySpec(
-        logical_key="category:test", name="TEST", channels=(), gated=True, readonly=True
+    cat_spec = CategorySpec(logical_key="category:test", name="TEST", channels=())
+    by_key = await service._apply_categories(
+        (CategoryAction(type=ActionType.CREATE, spec=cat_spec),), SetupReport(mode="launch")
     )
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_ALLY].view_channel is True
-    assert overwrites[_ALLY].send_messages is False
-    assert overwrites[_TRIAL].view_channel is True
-    assert overwrites[_TRIAL].send_messages is False
-    assert overwrites[_LEADER].send_messages is False
-    assert overwrites[_MODERATOR].send_messages is False
-
-
-def test_readonly_gated_voice_channel_denies_speak_to_every_verified_role() -> None:
-    parent = CategorySpec(
-        logical_key="category:test", name="TEST", channels=(), gated=True, readonly=True
+    chan_spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
+    await service._apply_channels(
+        (
+            ChannelAction(
+                type=ActionType.CREATE, spec=chan_spec, category_logical_key="category:test"
+            ),
+        ),
+        by_key,
+        SetupReport(mode="launch"),
     )
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="voice")
 
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert overwrites[_ALLY].view_channel is True
-    assert overwrites[_ALLY].speak is False
-    assert overwrites[_TRIAL].speak is False
-    # send_messages is a text-only permission — untouched for a voice channel.
-    assert overwrites[_ALLY].send_messages is None
+    assert "overwrites" not in guild.create_category.await_args.kwargs
+    assert "overwrites" not in guild.create_text_channel.await_args.kwargs
 
 
-def test_readonly_without_gated_is_a_no_op() -> None:
-    """`readonly` only means anything combined with `gated=True` — a
-    restricted (staff-only) category setting it should change nothing.
-    """
-    parent = CategorySpec(
-        logical_key="category:test", name="TEST", channels=(), restricted=True, readonly=True
+async def test_new_role_is_created_with_no_permissions() -> None:
+    guild = Mock()
+    role = Mock(spec=discord.Role)
+    role.id = 5
+    guild.create_role = AsyncMock(return_value=role)
+    service = _service(guild)
+    service._remember = AsyncMock()  # type: ignore[method-assign]
+
+    await service._apply_roles(
+        (RoleAction(type=ActionType.CREATE, spec=ROLE_PLAYER),), SetupReport(mode=None)
     )
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
 
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-
-    assert _ALLY not in overwrites
+    assert guild.create_role.await_args.kwargs["permissions"].value == 0
 
 
-def test_ungated_channel_has_no_readonly_overwrites() -> None:
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-    overwrites = _service()._channel_overwrites(spec, None, _ROLE_BY_KEY)
-    assert _ALLY not in overwrites
+async def test_role_repair_only_renames() -> None:
+    """The old Leader role becomes Founder, keeping whatever permissions,
+    colour and members the owner gave it."""
+    guild = Mock()
+    role = Mock(spec=discord.Role)
+    role.id = 5
+    role.edit = AsyncMock()
+    guild.get_role = Mock(return_value=role)
+    service = _service(guild)
+    service._remember = AsyncMock()  # type: ignore[method-assign]
+
+    action = RoleAction(
+        type=ActionType.REPAIR,
+        spec=ROLE_FOUNDER,
+        existing_id=5,
+        diffs=("name: 'Leader' -> 'Founder'",),
+    )
+    report = SetupReport(mode=None)
+    await service._apply_roles((action,), report)
+
+    role.edit.assert_awaited_once()
+    assert set(role.edit.await_args.kwargs) == {"name", "reason"}
+    assert role.edit.await_args.kwargs["name"] == "Founder"
+    assert report.roles.repaired == ["Founder"]
 
 
-def test_restricted_channel_has_no_readonly_overwrites() -> None:
-    parent = CategorySpec(logical_key="category:test", name="TEST", channels=(), restricted=True)
-    spec = ChannelSpec(logical_key="channel:test", name="test", kind="text")
-    overwrites = _service()._channel_overwrites(spec, parent, _ROLE_BY_KEY)
-    assert _ALLY not in overwrites
+# --- /setup restructure ------------------------------------------------------
+
+
+def _live(obj_id: int, name: str) -> Mock:
+    obj = Mock()
+    obj.id = obj_id
+    obj.name = name
+    obj.delete = AsyncMock()
+    return obj
+
+
+async def _seed(session: AsyncSession, rows: list[tuple[ResourceType, str, int]]) -> None:
+    repo = ProvisionedResourceRepository(session)
+    for resource_type, key, discord_id in rows:
+        await repo.upsert(
+            guild_id=GUILD_ID, resource_type=resource_type, logical_key=key, discord_id=discord_id
+        )
+
+
+async def test_restructure_deletes_only_ledger_resources_outside_the_spec(
+    session: AsyncSession,
+) -> None:
+    await _seed(
+        session,
+        [
+            (ResourceType.ROLE, "role:shaheen_leader", 100),  # Founder: kept
+            (ResourceType.ROLE, "role:guest", 101),  # retired
+            (ResourceType.CHANNEL, "channel:leaderboard", 200),  # #rankings: kept
+            (ResourceType.CHANNEL, "channel:mod_log", 201),  # retired
+            (ResourceType.CATEGORY, "category:development", 300),  # retired
+        ],
+    )
+    live = {
+        100: _live(100, "Founder"),
+        101: _live(101, "Guest"),
+        200: _live(200, "rankings"),
+        201: _live(201, "mod-log"),
+        300: _live(300, "DEVELOPMENT"),
+        # A channel the owner made by hand, never in the ledger.
+        999: _live(999, "owner-made"),
+    }
+    guild = Mock()
+    guild.get_role = Mock(side_effect=live.get)
+    guild.get_channel = Mock(side_effect=live.get)
+    service = _service(guild, session)
+
+    retired = await service.retired_resources()
+    assert [(r.logical_key, r.name) for r in retired] == [
+        ("channel:mod_log", "mod-log"),
+        ("category:development", "DEVELOPMENT"),
+        ("role:guest", "Guest"),
+    ]
+
+    report = await service.restructure()
+
+    assert (report.channels_deleted, report.categories_deleted, report.roles_deleted) == (1, 1, 1)
+    for kept in (100, 200, 999):
+        live[kept].delete.assert_not_awaited()
+    for gone in (101, 201, 300):
+        live[gone].delete.assert_awaited_once()
+    remaining = {
+        r.logical_key for r in await ProvisionedResourceRepository(session).list_for_guild(GUILD_ID)
+    }
+    assert remaining == {"role:shaheen_leader", "channel:leaderboard"}
+
+
+async def test_restructure_keeps_a_row_it_could_not_delete_and_forgets_vanished_ones(
+    session: AsyncSession,
+) -> None:
+    await _seed(
+        session,
+        [
+            (ResourceType.ROLE, "role:guest", 101),
+            (ResourceType.ROLE, "role:mvp", 102),  # already deleted by hand
+        ],
+    )
+    guest = _live(101, "Guest")
+    guest.delete = AsyncMock(side_effect=discord.Forbidden(Mock(status=403), "no"))
+    guild = Mock()
+    guild.get_role = Mock(side_effect={101: guest}.get)
+    service = _service(guild, session)
+
+    report = await service.restructure()
+
+    assert report.roles_deleted == 0
+    assert len(report.errors) == 1
+    remaining = {
+        r.logical_key for r in await ProvisionedResourceRepository(session).list_for_guild(GUILD_ID)
+    }
+    assert remaining == {"role:guest"}  # retried next run; role:mvp forgotten
+
+
+def test_restructure_preview_lists_only_live_resources_and_warns() -> None:
+    from bot.content.embeds import build_restructure_preview_embed
+    from services.setup_service import RetiredResource
+
+    embed = build_restructure_preview_embed(
+        [
+            RetiredResource(ResourceType.CHANNEL, "channel:mod_log", 1, "mod-log"),
+            RetiredResource(ResourceType.ROLE, "role:mvp", 2, None),
+        ]
+    )
+    deleted = embed.fields[0].value
+    assert "mod-log" in deleted
+    assert "mvp" not in deleted
+    assert "1 already deleted" in (embed.footer.text or "")
+
+
+def test_restructure_preview_with_nothing_to_remove() -> None:
+    from bot.content.embeds import build_restructure_preview_embed
+
+    embed = build_restructure_preview_embed([])
+    assert "Nothing to remove" in (embed.description or "")
