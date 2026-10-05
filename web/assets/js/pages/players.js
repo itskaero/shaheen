@@ -32,7 +32,9 @@
   }
 
   function rolePill(p) {
-    if (p.team) return teamPillHtml(p.team, p.team_slug, "card-pill");
+    // The grid card is itself a link, so its team pill must not be one (a
+    // link inside a link splits the card apart). The list view links it.
+    if (p.team) return teamPillHtml(p.team, null, "card-pill");
     if (p.is_verified) return '<span class="pill pill-verified card-pill">✓ Verified</span>';
     if (p.is_claimed) return '<span class="pill pill-muted card-pill">Claimed</span>';
     return '<span class="pill pill-muted card-pill">Unclaimed</span>';

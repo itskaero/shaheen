@@ -1,192 +1,33 @@
-(async function () {
-  const el = document.getElementById("clan-content");
-
-  // The page skeleton is rendered up front, before any fetch, so the parts
-  // that need no API — the Discord invite and the live badge — appear
-  // immediately and survive an API failure (ADR-082). Previously all of
-  // this lived inside the getClan() try, so a cold Render instance (up to
-  // a 50s spin-up) or any API error took the whole "Join the Community"
-  // strip down with it, badge included.
-  const inviteLink =
-    typeof DISCORD_INVITE_URL !== "undefined" && DISCORD_INVITE_URL
-      ? `<a class="btn" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener">Join Discord</a>`
-      : "";
-
-  el.innerHTML = `
-    <div id="clan-info">
-      <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
-    </div>
-    <div class="divider"><span>Recent Matches</span></div>
-    <div id="clan-matches">
-      <p class="state-msg">Loading recent matches…</p>
-    </div>
-    <div class="divider"><span>Community Activity</span></div>
-    <div id="community-activity">
-      <p class="state-msg">Loading community activity…</p>
-    </div>
-    <div class="divider"><span>Join the Community</span></div>
-    <div class="community-cta">
-      ${inviteLink}
-      <span class="discord-widget" data-discord-widget hidden></span>
-    </div>
-  `;
-
-  // This third badge didn't exist when api.js's own DOMContentLoaded
-  // handler ran wireDiscordWidgets() — re-run it now that its target is in
-  // the DOM (harmless no-op if DISCORD_GUILD_ID isn't set).
-  if (typeof wireDiscordWidgets === "function") {
-    wireDiscordWidgets();
-  }
-
-  const infoEl = document.getElementById("clan-info");
-
-  // Snapshot-first (docs/DECISIONS.md ADR-087): web/data/clan.json ships
-  // with the site, so this renders instantly instead of waiting out a
-  // Render cold start, then re-renders from the live API.
-  function renderClan(clan, meta) {
-    // Linked Members always shows; the two Discord-sourced tiles are
-    // guild-wide numbers captured by the bot's snapshot tick (never
-    // per-member identity — docs/DECISIONS.md) and only render once a
-    // snapshot actually exists, so a fresh deploy degrades to just the
-    // one tile instead of showing "0"/misleading placeholders.
-    const statTiles = [
-      `<div class="stat"><span class="value">${formatNumber(clan.member_count)}</span><span class="label">Linked Members</span></div>`,
-    ];
-    if (clan.discord_member_count != null) {
-      statTiles.push(
-        `<div class="stat"><span class="value">${formatNumber(clan.discord_member_count)}</span><span class="label">Discord Members</span></div>`
-      );
-    }
-    // Pakistan Season when there is one (ADR-102), else the plain number.
-    if (clan.pakistan_season) {
-      statTiles.push(
-        `<div class="stat"><span class="value">Season ${clan.pakistan_season.number}</span><span class="label">Pakistan Season &middot; ${escapeHtml(clan.pakistan_season.name)}</span></div>`
-      );
-    } else if (clan.season != null) {
-      statTiles.push(
-        `<div class="stat"><span class="value">${clan.season}</span><span class="label">Brawlhalla Season</span></div>`
-      );
-    }
-    if (clan.discord_boost_tier) {
-      statTiles.push(
-        `<div class="stat"><span class="value">Level ${clan.discord_boost_tier}</span><span class="label">Server Boost</span></div>`
-      );
-    }
-
-    infoEl.innerHTML = `
-      <div class="card clan-reveal">
-        <p class="motto motto-centered">${clan.motto}</p>
-        <p class="tagline tagline-centered">${clan.tagline}</p>
-      </div>
-      <div class="stat-grid">${statTiles.join("")}</div>
-    `;
-
-    // The clan-reveal wipe (style.css's .clan-reveal.in-view) is normally
-    // triggered by scroll.js's IntersectionObserver, but this card is
-    // injected into the DOM well after DOMContentLoaded (once the fetch
-    // resolves) so that observer never sees it. Two rAFs so the browser
-    // paints the closed clip-path first, then the transition to .in-view
-    // actually animates instead of snapping to its end state in one frame.
-    const revealCard = infoEl.querySelector(".clan-reveal");
-    if (revealCard) {
-      requestAnimationFrame(() => requestAnimationFrame(() => revealCard.classList.add("in-view")));
-    }
-
-    if (meta && !meta.live && meta.capturedAt) {
-      infoEl.insertAdjacentHTML(
-        "beforeend",
-        `<p class="snapshot-note">Showing the last saved copy from ${formatDate(meta.capturedAt)} — refreshing…</p>`
-      );
-    }
-  }
-
-  try {
-    await ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), renderClan);
-  } catch (err) {
-    infoEl.innerHTML = `<p class="state-msg error">Couldn't load clan info: ${err.message}</p>`;
-  }
-
-  // Recent confirmed clan matches (docs/DECISIONS.md ADR-088). The whole
-  // competition subsystem — challenges, scrims, matches — has run since
-  // Phase 4 with no public surface; this is the first one. Its own try, so
-  // it can't take down the clan info above.
-  const matchesEl = document.getElementById("clan-matches");
-  try {
-    const matches = await ShaheenAPI.getClanMatches(8);
-    if (!matches || matches.length === 0) {
-      matchesEl.innerHTML =
-        '<p class="state-msg">No confirmed matches yet — settle one with /challenge in Discord.</p>';
-    } else {
-      matchesEl.innerHTML = `
-        <ul class="match-list">
-          ${matches
-            .map(
-              (m) => `
-            <li class="match-win">
-              <span class="match-result">${escapeHtml(m.kind.toUpperCase())}</span>
-              <span class="match-opponents">
-                <strong>${m.winners.length ? escapeHtml(m.winners.join(" & ")) : "Unknown"}</strong>
-                beat ${m.losers.length ? escapeHtml(m.losers.join(" & ")) : "Unknown"}
-              </span>
-              <span class="match-date">${formatDate(m.confirmed_at)}</span>
-            </li>`
-            )
-            .join("")}
-        </ul>`;
-    }
-  } catch (err) {
-    matchesEl.innerHTML = `<p class="state-msg error">Couldn't load recent matches: ${err.message}</p>`;
-  }
-
-  // A separate fetch/try so a community-activity failure can't take down
-  // the clan info + explore links above, which already rendered fine.
-  const activityEl = document.getElementById("community-activity");
-  try {
-    const entries = await ShaheenAPI.getCommunityActivity(10);
-
-    if (!entries || entries.length === 0) {
-      activityEl.innerHTML =
-        '<p class="state-msg">No chat activity yet — link your account with /link and start chatting in Discord!</p>';
-      return;
-    }
-
-    const rows = entries
-      .map((entry, i) => {
-        const currentThreshold = xpForLevel(entry.level);
-        const nextThreshold = xpForLevel(entry.level + 1);
-        const span = Math.max(1, nextThreshold - currentThreshold);
-        const progressPct = Math.min(100, Math.max(4, Math.round(((entry.xp - currentThreshold) / span) * 100)));
-        return `
-        <li class="chat-activity-row">
-          ${rankHtml(i + 1)}
-          <span class="chat-activity-name">${escapeHtml(entry.player_name)}</span>
-          ${chatRankBadge(entry.rank_title)}
-          <div class="chat-activity-progress">
-            <div class="legend-bar-track"><div class="legend-bar-fill" style="width: ${progressPct}%"></div></div>
-            <span class="legend-meta">Level ${formatNumber(entry.level)} &middot; ${formatNumber(entry.xp)} XP</span>
-          </div>
-        </li>`;
-      })
-      .join("");
-
-    activityEl.innerHTML = `<ul class="chat-activity-list">${rows}</ul>`;
-  } catch (err) {
-    activityEl.innerHTML = `<p class="state-msg error">Couldn't load community activity: ${err.message}</p>`;
-  }
-})();
-
-// Founding Team roster (docs/DECISIONS.md ADR-105): every SHAHEEN member
-// who linked a Brawlhalla account, this season's rating first. This was the
-// Rankings page's "Shaheen Clan" tab before BRAWLISTAN made that page
-// Pakistan-wide; it lives with the team now.
+// Founding Team page (docs/DECISIONS.md ADR-085, redesigned ADR-119): the
+// SHAHEEN story in the site's own components. The data parts — the team's
+// holographic card, clan numbers, the founding roster, recent matches and
+// chat activity — each load on their own, snapshot first, and say "Data
+// unavailable" rather than guessing if their source fails.
 (function () {
-  const el = document.getElementById("roster-content");
-  if (!el) return;
-  function render(entries) {
-    if (!entries || !entries.length) {
-      el.innerHTML = '<p class="unavailable">Data unavailable</p>';
-      return;
-    }
+  const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
+  const setHtml = (id, html) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  };
+
+  // ---- the SHAHEEN holographic card, from the teams list ----
+  ShaheenAPI.withSnapshot("teams", () => ShaheenAPI.getTeams(), (teams) => {
+    const shaheen = (Array.isArray(teams) ? teams : []).find((t) => t.slug === "shaheen");
+    if (shaheen) setHtml("founding-card", holoTeamCardHtml(shaheen, { dpr: 2, ambient: 0.32 }));
+  }).catch(() => {}); // the static logo stays
+
+  // ---- numbers ----
+  ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), (clan) => {
+    const stats = [];
+    if (clan && typeof clan.member_count === "number") stats.push([formatNumber(clan.member_count), "Linked members"]);
+    if (clan && typeof clan.discord_member_count === "number") stats.push([formatNumber(clan.discord_member_count), "In the Discord"]);
+    if (clan && clan.pakistan_season) stats.push([`S${clan.pakistan_season.number}`, clan.pakistan_season.name]);
+    setHtml("founding-stats", stats.map(([v, l]) => `<div><strong>${escapeHtml(v)}</strong><span>${escapeHtml(l)}</span></div>`).join(""));
+  }).catch(() => {});
+
+  // ---- founding roster: every SHAHEEN member with a linked account ----
+  ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), (entries) => {
+    if (!entries || !entries.length) return setHtml("roster-content", UNAVAILABLE);
     const rows = entries
       .map(
         (e, i) => `<tr>
@@ -198,11 +39,57 @@
         </tr>`
       )
       .join("");
-    el.innerHTML = `<div class="bl-table-wrap"><table class="bl-table">
-      <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="hide-sm">Tier</th><th scope="col" class="right">Rating</th><th scope="col" class="right hide-sm">Member since</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>`;
-  }
-  ShaheenAPI.withSnapshot("roster", () => ShaheenAPI.getRoster(), render).catch(() => {
-    if (el.textContent.trim() === "Loading…") el.innerHTML = '<p class="unavailable">Data unavailable</p>';
-  });
+    setHtml(
+      "roster-content",
+      `<div class="bl-table-wrap"><table class="bl-table">
+        <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="hide-sm">Tier</th><th scope="col" class="right">Rating</th><th scope="col" class="right hide-sm">Member since</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`
+    );
+  }).catch(() => setHtml("roster-content", UNAVAILABLE));
+
+  // ---- recent confirmed matches (ADR-088) ----
+  ShaheenAPI.getClanMatches(8)
+    .then((matches) => {
+      if (!matches || !matches.length) {
+        return setHtml("clan-matches", '<p class="unavailable">No confirmed matches yet — settle one with /challenge in Discord.</p>');
+      }
+      setHtml(
+        "clan-matches",
+        `<ul class="list-rows">${matches
+          .map(
+            (m) => `<li>
+              <span><span class="pill pill-muted">${escapeHtml(m.kind.toUpperCase())}</span>
+                <strong>${m.winners.length ? escapeHtml(m.winners.join(" & ")) : "Unknown"}</strong>
+                <span class="muted">beat ${m.losers.length ? escapeHtml(m.losers.join(" & ")) : "Unknown"}</span></span>
+              <span class="muted">${formatDate(m.confirmed_at)}</span>
+            </li>`
+          )
+          .join("")}</ul>`
+      );
+    })
+    .catch(() => setHtml("clan-matches", UNAVAILABLE));
+
+  // ---- chat activity (ADR-065): linked members only ----
+  ShaheenAPI.getCommunityActivity(8)
+    .then((entries) => {
+      if (!entries || !entries.length) {
+        return setHtml("community-activity", '<p class="unavailable">No chat activity yet.</p>');
+      }
+      setHtml(
+        "community-activity",
+        `<ul class="list-rows">${entries
+          .map((e, i) => {
+            const from = xpForLevel(e.level);
+            const span = Math.max(1, xpForLevel(e.level + 1) - from);
+            const pct = Math.min(100, Math.max(4, Math.round(((e.xp - from) / span) * 100)));
+            return `<li class="activity-row">
+              ${rankHtml(i + 1)}
+              <span class="activity-name"><strong>${escapeHtml(e.player_name)}</strong><span class="meter"><span style="width:${pct}%"></span></span></span>
+              <span class="muted num">Lv ${formatNumber(e.level)}</span>
+            </li>`;
+          })
+          .join("")}</ul>`
+      );
+    })
+    .catch(() => setHtml("community-activity", UNAVAILABLE));
 })();

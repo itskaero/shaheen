@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clan — BRAWLISTAN</title>
-  <meta name="description" content="Shaheen clan overview: member count and identity." />
-  <link rel="icon" type="image/png" href="assets/img/favicon-32.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SHAHEEN — Founding Team | BRAWLISTAN</title>
+  <meta name="description" content="SHAHEEN, the Pakistani Brawlhalla clan BRAWLISTAN grew out of: its story, its five pillars, its Legends and its founding roster." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://itskaero.github.io/shaheen/clan.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="SHAHEEN — Founding Team | BRAWLISTAN" />
+  <meta property="og:description" content="Pakistan's founding Brawlhalla team on BRAWLISTAN." />
+  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/img/teams/shaheen.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
 </head>
 <body class="bl" data-page="shaheen">
@@ -22,208 +28,116 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
+        <!-- The founding team, in the site's own components (ADR-119). -->
+        <section class="founding-hero" aria-labelledby="founding-title">
+          <div class="founding-hero-copy">
+            <span class="eyebrow">Founding Team · Where BRAWLISTAN began</span>
+            <h1 id="founding-title">SHAHEEN</h1>
+            <p class="founding-urdu" lang="ur">بلندیوں کی جانب</p>
+            <p class="founding-lede">
+              Before BRAWLISTAN was a network, it was a clan. SHAHEEN built the bot, the rankings and
+              the first roster this site was made for, and every name on that roster earned its spot
+              on the record, not the highlight reel.
+            </p>
+            <div class="founding-actions">
+              <a class="btn btn-brand" href="teams/shaheen/">Team page</a>
+              <a class="btn btn-ghost" data-discord-invite href="join.html" target="_blank" rel="noopener">Join the Discord</a>
+            </div>
+            <div class="founding-stats" id="founding-stats" aria-live="polite"></div>
+          </div>
+          <div class="founding-hero-card" id="founding-card">
+            <picture>
+              <source srcset="assets/img/teams/shaheen.webp" type="image/webp" />
+              <img class="founding-logo" src="assets/img/teams/shaheen.png" alt="SHAHEEN logo" width="512" height="512" />
+            </picture>
+          </div>
+        </section>
 
-  <!-- Clan page rebuilt in docs/DECISIONS.md ADR-085. The previous version
-       stacked five 100vh "hero" panels, each wallpapered with a
-       story/0X-*.jpg — files that turned out to be screenshots of the
-       original design mockup (baked-in nav bars, duplicate wordmarks,
-       half-cut headlines), so the page printed its own copy on top of a
-       picture of that same copy. Those files are deleted. This is the same
-       story told with the site's own chrome, cards and dividers; the weight
-       comes from type scale and section rhythm, not five full-screen
-       photos. Motion is the site-wide .reveal observer (assets/js/scroll.js)
-       — no page-specific JS. -->
-  <section class="clan-overture">
-    <img
-      class="clan-overture-eagle"
-      src="assets/img/story/eagle_perched.png"
-      alt=""
-      aria-hidden="true"
-    />
-    <div class="clan-overture-inner">
-      <div class="clan-overture-copy">
-        <p class="clan-eyebrow">Pakistan&rsquo;s Competitive Brawlhalla Clan</p>
-        <h1>The <em>Clan</em></h1>
-        <p class="clan-urdu" lang="ur">بلندیوں کی جانب</p>
-        <p class="clan-lede">
-          No filler roster. Every name here earned its spot &mdash; and every
-          rating, match and tournament placement on this site is pulled from
-          the record, not the highlight reel.
-        </p>
-        <div class="clan-overture-actions">
-          <a class="btn btn-primary" href="join.html">Join the Clan</a>
-          <a class="btn btn-ghost" href="rankings.html">See the Rankings</a>
+        <div class="home-grid founding-grid">
+          <section class="panel panel-pad span-12 founding-spirit" aria-labelledby="spirit-title">
+            <div class="founding-spirit-copy">
+              <span class="eyebrow">Where the name comes from</span>
+              <h2 id="spirit-title">A bird, and an instruction</h2>
+              <p class="muted">
+                Iqbal never wrote the shaheen as an ornament. He wrote it as a standard to be held to:
+                a bird defined by where it is willing to go next, not by where it already sits.
+              </p>
+              <figure class="couplet">
+                <blockquote lang="ur">تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</blockquote>
+                <figcaption>You are a Shaheen — flight is your work. There are yet more skies before you. <cite>Allama Iqbal</cite></figcaption>
+              </figure>
+              <figure class="couplet">
+                <blockquote lang="ur">نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی چٹانوں میں</blockquote>
+                <figcaption>Your dwelling is not upon the dome of the royal palace; make your home upon the mountain rocks. <cite>Allama Iqbal · Bal-e-Jibril</cite></figcaption>
+              </figure>
+            </div>
+            <img class="founding-spirit-art" src="assets/img/story/eagle_flying.png" alt="A shaheen in flight" loading="lazy" />
+          </section>
+
+          <section class="panel panel-pad span-12" aria-labelledby="pillars-title">
+            <div class="section-head"><h2 id="pillars-title">Five pillars · one sky</h2><span class="muted">What every member is measured against</span></div>
+            <ol class="pillars">
+              <li><span class="pillar-num num">01</span><strong>Ambition</strong><span class="muted">We always aim higher. There is always another sky.</span></li>
+              <li><span class="pillar-num num">02</span><strong>Competition</strong><span class="muted">We play to win. Every match is a step forward.</span></li>
+              <li><span class="pillar-num num">03</span><strong>Improvement</strong><span class="muted">We learn, adapt and get better every day.</span></li>
+              <li><span class="pillar-num num">04</span><strong>Brotherhood</strong><span class="muted">We rise together, and push each other.</span></li>
+              <li><span class="pillar-num num">05</span><strong>Integrity</strong><span class="muted">No toxicity. No excuses. Only growth.</span></li>
+            </ol>
+          </section>
+
+          <section class="panel panel-pad span-8" aria-labelledby="roster-title">
+            <div class="section-head">
+              <h2 id="roster-title">Founding roster</h2>
+              <a href="teams/shaheen/">Team page &rarr;</a>
+            </div>
+            <div id="roster-content"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-4" aria-labelledby="legends-title">
+            <div class="section-head"><h2 id="legends-title">Our Legends</h2></div>
+            <p class="muted founding-small">Five Legends, five qualities the clan runs on.</p>
+            <ul class="founding-legends">
+              <li><img src="assets/img/legends/mordex.png" alt="" loading="lazy" /><span><strong>Mordex</strong><span class="muted">Relentless</span></span></li>
+              <li><img src="assets/img/legends/brynn.png" alt="" loading="lazy" /><span><strong>Brynn</strong><span class="muted">Strength</span></span></li>
+              <li><img src="assets/img/legends/tezca.png" alt="" loading="lazy" /><span><strong>Tezca</strong><span class="muted">Power</span></span></li>
+              <li><img src="assets/img/legends/nix.png" alt="" loading="lazy" /><span><strong>Nix</strong><span class="muted">Adaptability</span></span></li>
+              <li><img src="assets/img/legends/jaeyun.png" alt="" loading="lazy" /><span><strong>Jaeyun</strong><span class="muted">Resolve</span></span></li>
+            </ul>
+          </section>
+
+          <section class="panel panel-pad span-6" aria-labelledby="matches-title">
+            <div class="section-head"><h2 id="matches-title">Recent matches</h2></div>
+            <div id="clan-matches"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-6" aria-labelledby="activity-title">
+            <div class="section-head"><h2 id="activity-title">Most active</h2><span class="muted">Chat level in the Discord</span></div>
+            <div id="community-activity"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="panel panel-pad span-12 founding-close" aria-labelledby="close-title">
+            <div>
+              <span class="eyebrow">Ranked · Scrims · Tournaments · Achievements</span>
+              <h2 id="close-title">Fly high. Fight hard. Leave a legacy.</h2>
+              <p class="founding-urdu" lang="ur">بلندیوں کی جانب</p>
+            </div>
+            <div class="founding-actions">
+              <a class="btn btn-brand" href="rankings.html">Pakistan rankings</a>
+              <a class="btn btn-ghost" href="teams.html">All teams</a>
+            </div>
+          </section>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="clan-page" style="padding-top: 0">
-    <section class="clan-section reveal" id="spirit">
-      <div class="divider"><span>The Spirit of Shaheen</span></div>
-      <div class="clan-split">
-        <div>
-          <p class="clan-eyebrow">Where the name comes from</p>
-          <h2>A Bird, and an <em>Instruction</em></h2>
-          <p class="clan-section-intro">
-            Iqbal never wrote the shaheen as an ornament. He wrote it as a
-            standard to be held to &mdash; a bird defined by where it is
-            willing to go next, not by where it already sits.
-          </p>
-
-          <blockquote class="clan-couplet" style="margin-top: 1.75rem">
-            <span class="clan-urdu" lang="ur"
-              >تو شاہیں ہے، پرواز ہے کام تیرا<br />ترے سامنے آسماں اور بھی ہیں</span
-            >
-            <span class="clan-couplet-gloss"
-              >You are a Shaheen &mdash; flight is your work. There are yet more
-              skies before you.</span
-            >
-            <cite>Allama Iqbal</cite>
-          </blockquote>
-
-          <blockquote class="clan-couplet">
-            <span class="clan-urdu" lang="ur"
-              >نہیں تیرا نشیمن قصرِ سلطانی کے گنبد پر<br />تو شاہیں ہے بسیرا کر پہاڑوں کی
-              چٹانوں میں</span
-            >
-            <span class="clan-couplet-gloss"
-              >Your dwelling is not upon the dome of the royal palace; you are a
-              Shaheen &mdash; make your home upon the mountain rocks.</span
-            >
-            <cite>Allama Iqbal &middot; Bal-e-Jibril</cite>
-          </blockquote>
-        </div>
-
-        <figure class="clan-art-frame" style="margin: 0">
-          <img src="assets/img/story/eagle_flying.png" alt="A shaheen in flight" loading="lazy" />
-        </figure>
-      </div>
-    </section>
-
-    <section class="clan-section reveal" id="pillars">
-      <div class="divider"><span>Five Pillars &middot; One Sky</span></div>
-      <p class="clan-eyebrow">What we stand for</p>
-      <h2>The Standard We <em>Hold</em></h2>
-      <p class="clan-section-intro">
-        Five things every member is measured against &mdash; by each other, not
-        by a rulebook nobody reads.
-      </p>
-
-      <div class="clan-pillars">
-        <article class="card clan-pillar">
-          <span class="clan-pillar-index">01 / 05</span>
-          <h3>Ambition</h3>
-          <span class="clan-eyebrow">A higher aim</span>
-          <p>We always aim higher. There is always another sky.</p>
-        </article>
-        <article class="card clan-pillar">
-          <span class="clan-pillar-index">02 / 05</span>
-          <h3>Competition</h3>
-          <span class="clan-eyebrow">Sharpens us</span>
-          <p>We play to win. Every match is a step forward.</p>
-        </article>
-        <article class="card clan-pillar">
-          <span class="clan-pillar-index">03 / 05</span>
-          <h3>Improvement</h3>
-          <span class="clan-eyebrow">Never settle</span>
-          <p>We learn, adapt and become better every day.</p>
-        </article>
-        <article class="card clan-pillar">
-          <span class="clan-pillar-index">04 / 05</span>
-          <h3>Brotherhood</h3>
-          <span class="clan-eyebrow">Stronger together</span>
-          <p>We rise together. We support, respect and push each other.</p>
-        </article>
-        <article class="card clan-pillar">
-          <span class="clan-pillar-index">05 / 05</span>
-          <h3>Integrity</h3>
-          <span class="clan-eyebrow">Stays with us</span>
-          <p>No toxicity. No excuses. Only growth.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="clan-legends" id="legends">
-      <div class="clan-section reveal" style="text-align: center">
-        <div class="divider"><span>Our Legends</span></div>
-        <p class="clan-eyebrow">Not just characters we play</p>
-        <h2>Different Legends. <em>One Sky.</em></h2>
-        <p class="clan-section-intro" style="margin-left: auto; margin-right: auto">
-          Five Legends, five qualities the clan actually runs on.
-        </p>
-
-        <div class="clan-legend-strip">
-          <article class="clan-legend">
-            <span class="clan-legend-frame"><img src="assets/img/legends/mordex.png" alt="Mordex" loading="lazy" /></span>
-            <span class="clan-legend-name">Mordex</span>
-            <span class="clan-legend-trait">Relentless</span>
-          </article>
-          <article class="clan-legend">
-            <span class="clan-legend-frame"><img src="assets/img/legends/brynn.png" alt="Brynn" loading="lazy" /></span>
-            <span class="clan-legend-name">Brynn</span>
-            <span class="clan-legend-trait">Strength</span>
-          </article>
-          <article class="clan-legend">
-            <span class="clan-legend-frame"><img src="assets/img/legends/tezca.png" alt="Tezca" loading="lazy" /></span>
-            <span class="clan-legend-name">Tezca</span>
-            <span class="clan-legend-trait">Power</span>
-          </article>
-          <article class="clan-legend">
-            <span class="clan-legend-frame"><img src="assets/img/legends/nix.png" alt="Nix" loading="lazy" /></span>
-            <span class="clan-legend-name">Nix</span>
-            <span class="clan-legend-trait">Adaptability</span>
-          </article>
-          <article class="clan-legend">
-            <span class="clan-legend-frame"><img src="assets/img/legends/jaeyun.png" alt="Jaeyun" loading="lazy" /></span>
-            <span class="clan-legend-name">Jaeyun</span>
-            <span class="clan-legend-trait">Resolve</span>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="clan-section clan-legacy reveal" id="legacy">
-      <p class="clan-legacy-features">
-        Ranked &middot; Scrims &middot; Tournaments &middot; Achievements &middot; Leaderboards
-        &middot; Community
-      </p>
-      <h2>Fly High.<br />Fight Hard.<br />Leave a <em>Legacy</em>.</h2>
-      <p class="clan-urdu" lang="ur">بلندیوں کی جانب</p>
-      <p class="clan-eyebrow">Higher Together</p>
-      <div class="clan-legacy-actions">
-        <a class="btn btn-primary" href="join.html">Join the journey &rarr;</a>
-        <a class="btn btn-ghost" href="rankings.html">Meet the roster</a>
-      </div>
-    </section>
-
-    <div class="divider-truck wrap" aria-hidden="true"></div>
-
-    <div class="wrap">
-      <section class="panel panel-pad" id="founding-roster" aria-labelledby="roster-title" style="margin-bottom: 24px">
-        <div class="section-head">
-          <h2 id="roster-title">Founding Team roster</h2>
-          <a href="teams/shaheen/">SHAHEEN team page &rarr;</a>
-        </div>
-        <div id="roster-content"><p class="unavailable">Loading…</p></div>
-      </section>
-      <div id="clan-content">
-        <p class="state-msg">Loading clan info… (first load can take up to a minute)</p>
-      </div>
-    </div>
-  </div>
       </main>
       <footer class="bl-footer" data-shell="footer"></footer>
     </div>
   </div>
   <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
 
-
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shell.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
-  <script src="assets/js/scroll.js"></script>
   <script src="assets/js/pages/clan.js"></script>
+  <script type="module" src="assets/js/holo.js"></script>
 </body>
 </html>

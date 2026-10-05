@@ -5186,3 +5186,64 @@ They asked for a music page with the video full width behind it, designed in the
   - in 4 s of playback, 7 beat pulses against the map's 6.9;
   - seek, next and pause; no overflow; no console errors at 1440 and 390 px;
   - reduced motion leaves the video unloaded.
+
+## ADR-119 — Music page redesign (tempo-locked video), sharp landing scene, founding team page, players card fix
+
+**Status:** accepted. Revises ADR-118 (music) and ADR-117 (landing background). Replaces ADR-085's
+founding team (clan) page design.
+
+**Context.** The owner reported four problems and sent two references:
+- **Players page:** the first card rendered broken.
+- **Landing:** the background was blurred.
+- **Music:** the player didn't sync with the background animation.
+- **Founding Team page:** it looked unlike the rest of the site.
+
+The references were a full-bleed landing layout (centred title framed by thin vertical lines, two
+buttons) for the music page, and a sheet of four song covers (Urooj, Zarb, Pakistan, Brawlistan).
+
+**Decision.**
+- **Players page.** The grid card is a single link, and since ADR-115 its team pill was a link too. A
+  link inside a link makes the browser split the card, which is why only the first card (the one on a
+  team) broke. The grid pill is now plain text; the list view still links to the team.
+- **Music page (full-bleed, after the reference).**
+  - **Layout:** no app frame. The night loop fills the window, sharp, with only its edges darkened.
+    There's a quiet header (links, BRAWLISTAN mark, Discord and GitHub icons), and a centred track
+    title, with its Urdu name, between two thin vertical lines. At the foot: a description, the seek
+    bar, and Choose track / Play.
+  - **Picker:** below the fold, the four covers as large, uncropped landscape cards, plus the SHAHEEN
+    anthems as a shelf. Phones keep the bottom nav.
+  - **Tempo-locked video:** the playback rate is set so one pass of the 10.3 s loop lasts a whole
+    number of bars (Brawlistan at 103.4 BPM: 4 bars, ×1.108). Its position is phase-locked to the beat
+    grid: it starts each pass on a bar's first beat and is re-seeked when it drifts more than 120 ms,
+    including after a seek.
+  - **Smooth seeks:** the loop is re-encoded with a keyframe every 12 frames (8.5 MB at 1080p,
+    3.8 MB at 720p).
+  - **Beat effects:** every beat kicks the video's zoom and light, a flash in the track's own colour
+    (stronger on bar starts), the vertical lines, the title glow, and the playing cover's ring and
+    equaliser.
+  - **When idle:** paused, the scene drifts at 0.6×. Reduced motion keeps the poster and changes light
+    only.
+  - **Covers:** the four covers are cut from the owner's sheet (`img/music/cover-*.{jpg,webp}`), and
+    the earlier video-crop covers are removed.
+  - **Track mapping:** both remaining uploads were tagged ضرب!, so the 3:20 file is shown as
+    "Pakistan", matching the owner's four covers. This is one line in `music.js` if it should be the
+    other file.
+- **Landing.** The hero background is a sharp still of the same night scene
+  (`img/brawlistan/hero-scene*`, 1920 and 1280 px), not the blurred banner. It's darkened only behind
+  the text column and at the foot.
+- **Founding Team page (`clan.html`).** Rebuilt in BRAWLISTAN components, with no legacy stylesheet:
+  - **Hero:** SHAHEEN's name, the Urdu line, the story, actions and live numbers, with the SHAHEEN
+    holographic card (the static logo until the teams data loads).
+  - **Panels:** the Iqbal couplets with the eagle art; the five pillars; the founding roster beside
+    the five Legends; recent matches and chat activity; a closing call to action.
+
+Verified with Playwright (Chrome, WebGPU and no-adapter Chromium):
+- **Players page:** three aligned grid cards, no nested links.
+- **Music page:**
+  - four covers and two anthems;
+  - playback rate locked to the tempo;
+  - choosing a cover plays it and sets its colour;
+  - paused drift.
+- **Landing, Founding Team, Teams and team page:** render with no overflow and no console errors at
+  1440 and 390 px.
+- **Earlier checks:** the holographic lifecycle checks (ADR-117) still pass.
