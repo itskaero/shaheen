@@ -33,28 +33,41 @@
     <div class="bl-main">
       <header class="bl-topbar" data-shell="topbar"></header>
       <main id="main">
-        <section class="hero hero-banner" aria-labelledby="hero-title">
+        <section class="hero hero-banner hero-immersive" aria-labelledby="hero-title">
+          <div class="hero-bg" aria-hidden="true">
+            <img src="assets/img/brawlistan/banner.jpg" alt="" width="1600" height="640" />
+          </div>
           <picture class="hero-art">
             <source srcset="assets/img/brawlistan/banner.webp" type="image/webp" />
             <img src="assets/img/brawlistan/banner.jpg" alt="BRAWLISTAN — Pakistan's Brawlhalla Network" width="1600" height="640" fetchpriority="high" />
           </picture>
           <div class="hero-body">
-            <div>
-              <span class="eyebrow">Pakistan's Brawlhalla Network</span>
+            <div class="hero-copy">
+              <span class="eyebrow hero-live"><span class="dot" aria-hidden="true"></span>Pakistan's Brawlhalla Network</span>
               <h1 id="hero-title"><span>Track the scene.</span><span>Find the players.</span><span>Climb the rankings.</span></h1>
               <span class="urdu" lang="ur">بلندیوں کی جانب</span>
             </div>
             <div class="hero-side">
               <div class="hero-actions">
-                <a class="btn btn-brand" href="rankings.html">View rankings</a>
-                <a class="btn btn-ghost" data-discord-invite href="join.html" target="_blank" rel="noopener">Join Discord</a>
+                <a class="btn btn-current" href="rankings.html">
+                  <span>View rankings</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </a>
+                <a class="btn btn-glass" data-discord-invite href="join.html" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 5.3A16.4 16.4 0 0 0 15.5 4l-.5 1a15 15 0 0 0-6 0l-.5-1a16.4 16.4 0 0 0-4.1 1.3C1.8 9.2 1.1 13 1.4 16.7a16.6 16.6 0 0 0 5 2.5l1.1-1.7c-.6-.2-1.2-.5-1.7-.8l.4-.3a11.8 11.8 0 0 0 11.6 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.5 16.5 0 0 0 5-2.5c.4-4.3-.6-8-2.6-11.4ZM8.5 14.4c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm7 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
+                  <span>Join Discord</span>
+                </a>
               </div>
               <div class="hero-stats" id="hero-stats" aria-live="polite"></div>
             </div>
           </div>
+          <a class="hero-scroll" href="#home-sections" aria-label="Scroll to the rankings">
+            <span>Scroll</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
         </section>
 
-        <div class="home-grid" style="margin-top: 16px">
+        <div class="home-grid" id="home-sections" style="margin-top: 16px; scroll-margin-top: 80px">
           <section class="panel panel-pad span-8" aria-labelledby="top10-title">
             <div class="section-head">
               <h2 id="top10-title">Pakistan Top 10</h2>

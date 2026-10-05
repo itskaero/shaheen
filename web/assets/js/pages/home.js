@@ -100,12 +100,44 @@
   }
 
   // ---- hero stats + community, from /clan ----
+  // ---- hero stat tiles: numbers count up once (ADR-112) ----
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const shown = new Map(); // label -> last value painted, so a refresh doesn't replay
+
+  function countUp(el, to, from) {
+    if (reduceMotion || to === from) {
+      el.textContent = to.toLocaleString();
+      return;
+    }
+    const start = performance.now();
+    const duration = 1100;
+    (function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(from + (to - from) * eased).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+    })(start);
+  }
+
+  function renderHeroStats(stats) {
+    const box = document.getElementById("hero-stats");
+    if (!box) return;
+    box.innerHTML = stats
+      .map(([v, l]) => `<div><strong>${typeof v === "number" ? "0" : escapeHtml(v)}</strong><span>${escapeHtml(l)}</span></div>`)
+      .join("");
+    stats.forEach(([v, l], i) => {
+      if (typeof v !== "number") return;
+      countUp(box.children[i].querySelector("strong"), v, shown.has(l) ? shown.get(l) : 0);
+      shown.set(l, v);
+    });
+  }
+
   function renderClanNumbers(clan) {
     const stats = [];
     if (clan && clan.pakistan_season) stats.push([`S${clan.pakistan_season.number}`, clan.pakistan_season.name]);
-    if (clan && typeof clan.discord_member_count === "number") stats.push([clan.discord_member_count.toLocaleString(), "in the Discord"]);
-    if (clan && typeof clan.member_count === "number") stats.push([clan.member_count.toLocaleString(), "linked players"]);
-    setHtml("hero-stats", stats.map(([v, l]) => `<div><strong>${escapeHtml(v)}</strong><span>${escapeHtml(l)}</span></div>`).join(""));
+    if (clan && typeof clan.discord_member_count === "number") stats.push([clan.discord_member_count, "in the Discord"]);
+    if (clan && typeof clan.member_count === "number") stats.push([clan.member_count, "linked players"]);
+    renderHeroStats(stats);
 
     if (!clan || typeof clan.discord_member_count !== "number") {
       setHtml("community", UNAVAILABLE);

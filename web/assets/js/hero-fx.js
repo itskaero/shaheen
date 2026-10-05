@@ -22,6 +22,9 @@
   hero.appendChild(canvas);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The full-screen landing (ADR-112): the art is the top of a taller hero,
+  // so fireflies roam the whole thing and the current runs along its foot.
+  const immersive = hero.classList.contains("hero-immersive");
   const debug = /[?&]fx-debug\b/.test(location.search);
 
   const GREEN = [61, 242, 110];
@@ -80,7 +83,7 @@
 
     const artRect = art.getBoundingClientRect();
     const artTop = artRect.top - rect.top;
-    bannerBottom = artTop + artRect.height;
+    bannerBottom = immersive ? height - 1 : artTop + artRect.height;
     unit = Math.max(0.55, Math.min(1.3, width / 1200));
 
     // The night sky above the skyline, right of the logo. On a narrow
@@ -125,14 +128,18 @@
   // --- fireflies --------------------------------------------------------------
   const flies = [];
   function resetFlies() {
-    const count = width < 720 ? 22 : 46;
+    const count = width < 720 ? 26 : immersive ? 64 : 46;
     flies.length = 0;
     for (let i = 0; i < count; i++) {
       const roll = Math.random();
       flies.push({
         x: Math.random() * width,
         // Most live over the art; a few drift down over the text.
-        y: Math.random() < 0.55 ? Math.random() * bannerBottom : bannerBottom + Math.random() * (height - bannerBottom),
+        y: immersive
+          ? Math.random() * height
+          : Math.random() < 0.55
+            ? Math.random() * bannerBottom
+            : bannerBottom + Math.random() * (height - bannerBottom),
         size: 12 + Math.random() * 14,
         img: roll < 0.55 ? SPRITES.green : roll < 0.85 ? SPRITES.cream : SPRITES.gold,
         a: Math.random() * 1000,
