@@ -1,11 +1,11 @@
 {
-  "captured_at": "2026-10-05T05:33:02Z",
+  "captured_at": "2026-10-05T14:29:52Z",
   "source": "/clan",
   "data": {
     "name": "Shaheen",
     "motto": "بلندیوں کی جانب — Higher Together",
     "tagline": "From Pakistan to the Arena.",
-    "member_count": 1,
+    "member_count": 3,
     "season": 42,
     "pakistan_season": {
       "number": 1,
@@ -16,7 +16,7 @@
       "starts_at": "2026-09-23T00:00:00Z",
       "ends_at": "2026-12-23T00:00:00Z"
     },
-    "discord_member_count": 12,
+    "discord_member_count": 14,
     "discord_boost_tier": 0,
     "discord_boost_count": 0
   }

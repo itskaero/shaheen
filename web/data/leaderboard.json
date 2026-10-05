@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-05T05:33:02Z",
+  "captured_at": "2026-10-05T14:29:52Z",
   "source": "/leaderboard?limit=25",
   "data": [
     {
@@ -9,6 +9,14 @@
       "rating": 1855,
       "peak_rating": 1924,
       "tier": "Platinum 3"
+    },
+    {
+      "brawlhalla_id": 104869463,
+      "player_name": "JavelskyMobile",
+      "region": null,
+      "rating": null,
+      "peak_rating": null,
+      "tier": null
     }
   ]
 }

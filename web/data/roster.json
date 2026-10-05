@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-05T05:33:02Z",
+  "captured_at": "2026-10-05T14:29:52Z",
   "source": "/roster",
   "data": [
     {
@@ -10,6 +10,15 @@
       "peak_rating": 1924,
       "tier": "Platinum 3",
       "member_since": "2026-09-07T17:12:06.145000Z"
+    },
+    {
+      "brawlhalla_id": 104869463,
+      "player_name": "JavelskyMobile",
+      "region": null,
+      "rating": null,
+      "peak_rating": null,
+      "tier": null,
+      "member_since": "2026-09-20T15:24:16.449000Z"
     }
   ]
 }

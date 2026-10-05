@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-05T05:33:02Z",
+  "captured_at": "2026-10-05T14:29:52Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -34,11 +34,11 @@
         "games": 19,
         "global_rank": null,
         "region_rank": null,
-        "rating_2v2": null,
-        "peak_rating_2v2": null,
-        "tier_2v2": null,
-        "partner_2v2": null,
-        "trend": -4,
+        "rating_2v2": 1073,
+        "peak_rating_2v2": 1073,
+        "tier_2v2": "Bronze 4",
+        "partner_2v2": "x11dave",
+        "trend": 0,
         "main_legend": "koji"
       },
       {
@@ -58,10 +58,10 @@
         "games": 39,
         "global_rank": null,
         "region_rank": null,
-        "rating_2v2": null,
-        "peak_rating_2v2": null,
-        "tier_2v2": null,
-        "partner_2v2": null,
+        "rating_2v2": 1319,
+        "peak_rating_2v2": 1319,
+        "tier_2v2": "Silver 4",
+        "partner_2v2": "Ravix",
         "trend": 42,
         "main_legend": "mordex"
       },

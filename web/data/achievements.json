@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-05T05:33:02Z",
+  "captured_at": "2026-10-05T14:29:52Z",
   "source": "/achievements",
   "data": [
     {
@@ -7,8 +7,8 @@
       "name": "First Contact",
       "description": "Linked a Brawlhalla account to Shaheen.",
       "category": "onboarding",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -16,6 +16,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-10T14:59:28.816536Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T10:57:41.875559Z"
         }
       ]
     },
@@ -24,8 +29,8 @@
       "name": "Centurion",
       "description": "Played 100 games.",
       "category": "milestone",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -33,6 +38,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-10T18:52:55.474899Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T12:46:12.021177Z"
         }
       ]
     },
@@ -41,8 +51,8 @@
       "name": "Battle-Hardened",
       "description": "Played 500 games.",
       "category": "milestone",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -50,6 +60,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-10T18:52:55.971890Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T12:46:12.675749Z"
         }
       ]
     },
@@ -59,8 +74,8 @@
       "description": "Reached Platinum tier in ranked.",
       "category": "ranked",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -76,8 +91,8 @@
       "description": "Reached Diamond tier or higher in ranked.",
       "category": "ranked",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -92,8 +107,8 @@
       "name": "Veteran of a Thousand",
       "description": "Played 1,000 games.",
       "category": "milestone",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -101,6 +116,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-18T12:27:28.788778Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T12:46:13.164958Z"
         }
       ]
     },
@@ -109,8 +129,8 @@
       "name": "Relentless",
       "description": "Played 2,500 games.",
       "category": "milestone",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -118,6 +138,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-18T12:27:29.498731Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T12:46:13.655579Z"
         }
       ]
     },
@@ -126,8 +151,8 @@
       "name": "Unbroken",
       "description": "Played 5,000 games.",
       "category": "milestone",
-      "holder_count": 1,
-      "total_members": 1,
+      "holder_count": 2,
+      "total_members": 2,
       "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
@@ -135,6 +160,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-09-18T12:27:30.017094Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-05T12:46:14.144040Z"
         }
       ]
     },
@@ -144,8 +174,8 @@
       "description": "Reached Gold tier in ranked.",
       "category": "ranked",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -161,7 +191,7 @@
       "description": "Reached Valhallan — the top of the ladder.",
       "category": "ranked",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -172,8 +202,8 @@
       "description": "Hit a peak rating of 1500.",
       "category": "ranked",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -189,8 +219,8 @@
       "description": "Hit a peak rating of 1800.",
       "category": "ranked",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -206,7 +236,7 @@
       "description": "Hit a peak rating of 2000.",
       "category": "ranked",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -217,7 +247,7 @@
       "description": "Ranked inside the global top 1,000.",
       "category": "ranked",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -228,7 +258,7 @@
       "description": "Held a 60% ranked win rate over 50+ ranked games.",
       "category": "ranked",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -239,7 +269,7 @@
       "description": "Won your first clan match.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -250,7 +280,7 @@
       "description": "Won 10 clan matches.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -261,7 +291,7 @@
       "description": "Won 50 clan matches.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -272,7 +302,7 @@
       "description": "Entered your first clan tournament.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -283,7 +313,7 @@
       "description": "Reached a clan tournament final.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -294,7 +324,7 @@
       "description": "Won a clan tournament.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -305,7 +335,7 @@
       "description": "Joined 10 clan scrims.",
       "category": "competition",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -316,7 +346,7 @@
       "description": "Reached chat level 10.",
       "category": "community",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -327,7 +357,7 @@
       "description": "Reached chat level 25.",
       "category": "community",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -338,7 +368,7 @@
       "description": "Reached chat level 50.",
       "category": "community",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -349,8 +379,8 @@
       "description": "Named MVP in a weekly digest.",
       "category": "community",
       "holder_count": 1,
-      "total_members": 1,
-      "completion_pct": 100.0,
+      "total_members": 2,
+      "completion_pct": 50.0,
       "rarity": "Common",
       "holders": [
         {
@@ -366,7 +396,7 @@
       "description": "30 days with Shaheen.",
       "category": "tenure",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -377,7 +407,7 @@
       "description": "180 days with Shaheen.",
       "category": "tenure",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -388,7 +418,7 @@
       "description": "365 days with Shaheen.",
       "category": "tenure",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
@@ -399,7 +429,7 @@
       "description": "Ranked inside the top 100 of your Brawlhalla server region's 1v1 ladder (e.g. SEA).",
       "category": "ranked",
       "holder_count": 0,
-      "total_members": 1,
+      "total_members": 2,
       "completion_pct": 0.0,
       "rarity": "Unclaimed",
       "holders": []
