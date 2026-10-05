@@ -132,13 +132,13 @@ def build_achievements_embed(
     return embed
 
 
-def build_achievement_announcement_embed(
-    *, display_name: str, achievement: AchievementDef
-) -> discord.Embed:
-    return discord.Embed(
-        title="🥇 New Achievement!",
-        description=f"**{display_name}** earned **{achievement.name}** — {achievement.description}",
-        colour=GOLD,
+def build_achievement_congrats(*, who: str, achievement: AchievementDef) -> str:
+    """The message posted with an achievement card (docs/DECISIONS.md
+    ADR-124): `who` is the member's mention, so they're notified, or their
+    bolded name if they've left the server."""
+    return (
+        f"🎉 Congratulations {who}! You've unlocked **{achievement.name}**. "
+        f"{achievement.description}"
     )
 
 

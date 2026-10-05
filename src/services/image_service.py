@@ -376,6 +376,80 @@ def render_milestone_card(*, title: str, subtitle: str) -> bytes:
     return buffer.getvalue()
 
 
+def _draw_gradient_text(
+    image: Image.Image,
+    text: str,
+    *,
+    box: tuple[int, int, int, int],
+    font_path: Path,
+    stops: list[tuple[float, tuple[int, int, int]]],
+    initial_size: int,
+    min_size: int,
+    margin: int = _NAME_MARGIN,
+    stroke: int = 0,
+) -> None:
+    """Set one horizontal line of text into `box` on `image`, in place
+    (docs/DECISIONS.md ADR-122, ADR-124).
+
+    The text gets a left-to-right gradient spanning the text itself (so a
+    short string still shows every stop), over a soft dark shadow and a faint
+    glow in the gradient's middle colour. It shrinks to fit, is centred on
+    cap height (so descenders don't lift it), and anything still too wide at
+    `min_size` is condensed horizontally rather than shrunk further.
+    `stroke` thickens the glyphs (a bolder cut of a single-weight font).
+    """
+    x0, y0, x1, y1 = box
+    center_x = (x0 + x1) // 2
+    center_y = (y0 + y1) // 2
+
+    max_width = (x1 - x0) - margin * 2
+    font = _fit_font(
+        text,
+        font_path,
+        variation=None,
+        max_width=max_width - stroke * 2,
+        initial_size=initial_size,
+        min_size=min_size,
+        step=2,
+    )
+    cap_height = -font.getbbox("H", anchor="ls")[1]
+    baseline = center_y + round(cap_height / 2)
+
+    mask = Image.new("L", image.size, 0)
+    ImageDraw.Draw(mask).text(
+        (center_x, baseline),
+        text,
+        font=font,
+        fill=255,
+        anchor="ms",
+        stroke_width=stroke,
+        stroke_fill=255,
+    )
+    ink = mask.getbbox()
+    if ink is not None and ink[2] - ink[0] > max_width:
+        glyphs = mask.crop(ink).resize((max_width, ink[3] - ink[1]), Image.Resampling.LANCZOS)
+        mask = Image.new("L", image.size, 0)
+        mask.paste(glyphs, (center_x - max_width // 2, ink[1]))
+        ink = mask.getbbox()
+    if ink is None:
+        return
+
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    shadow.putalpha(mask.filter(ImageFilter.GaussianBlur(4)).point(lambda a: int(a * 0.8)))
+    image.alpha_composite(shadow, dest=(0, 2))
+    image.alpha_composite(_glow(mask, _stop_colour(0.5, stops), blur_radius=10, boost=0.5))
+
+    fill = _horizontal_gradient_multi(ink[2] - ink[0], ink[3] - ink[1], stops).convert("RGBA")
+    fill.putalpha(mask.crop(ink))
+    image.alpha_composite(fill, dest=(ink[0], ink[1]))
+
+
+def _png(image: Image.Image) -> bytes:
+    buffer = io.BytesIO()
+    image.convert("RGB").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def _render_arrival_card(
     template_path: Path,
     *,
@@ -385,56 +459,20 @@ def _render_arrival_card(
 ) -> bytes:
     """Shared renderer for the welcome/goodbye cards (docs/DECISIONS.md
     ADR-122). The banners carry their own tilted "Welcome to BRAWLISTAN" /
-    "Goodbye" titles; this sets one dynamic string, the member's name,
-    horizontally into the template's empty name plate.
-
-    The name is Inter ExtraBold with a left-to-right gradient spanning the
-    name itself (so a short name still shows every stop), over a soft dark
-    shadow and a faint glow in the gradient's middle colour. Capitals are
-    centred on the plate's middle, so names with descenders don't sit high.
+    "Goodbye" titles; this sets one dynamic string, the member's name
+    (Inter ExtraBold), horizontally into the template's empty name plate.
     """
     image = Image.open(template_path).convert("RGBA")
-
-    x0, y0, x1, y1 = box
-    center_x = (x0 + x1) // 2
-    center_y = (y0 + y1) // 2
-
-    max_width = (x1 - x0) - _NAME_MARGIN * 2
-    font = _fit_font(
+    _draw_gradient_text(
+        image,
         member_name,
-        _NAME_FONT_PATH,
-        variation=None,
-        max_width=max_width,
+        box=box,
+        font_path=_NAME_FONT_PATH,
+        stops=stops,
         initial_size=46,
         min_size=18,
-        step=2,
     )
-    cap_height = -font.getbbox("H", anchor="ls")[1]
-    baseline = center_y + round(cap_height / 2)
-
-    mask = Image.new("L", image.size, 0)
-    ImageDraw.Draw(mask).text((center_x, baseline), member_name, font=font, fill=255, anchor="ms")
-    ink = mask.getbbox()
-    if ink is not None and ink[2] - ink[0] > max_width:
-        # Still too wide at the smallest readable size (a 32-character name of
-        # wide letters): condense it horizontally rather than shrink it further.
-        glyphs = mask.crop(ink).resize((max_width, ink[3] - ink[1]), Image.Resampling.LANCZOS)
-        mask = Image.new("L", image.size, 0)
-        mask.paste(glyphs, (center_x - max_width // 2, ink[1]))
-        ink = mask.getbbox()
-    if ink is not None:
-        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
-        shadow.putalpha(mask.filter(ImageFilter.GaussianBlur(4)).point(lambda a: int(a * 0.8)))
-        image.alpha_composite(shadow, dest=(0, 2))
-        image.alpha_composite(_glow(mask, _stop_colour(0.5, stops), blur_radius=10, boost=0.5))
-
-        fill = _horizontal_gradient_multi(ink[2] - ink[0], ink[3] - ink[1], stops).convert("RGBA")
-        fill.putalpha(mask.crop(ink))
-        image.alpha_composite(fill, dest=(ink[0], ink[1]))
-
-    buffer = io.BytesIO()
-    image.convert("RGB").save(buffer, format="PNG")
-    return buffer.getvalue()
+    return _png(image)
 
 
 def render_welcome_card(*, member_name: str) -> bytes:
@@ -455,3 +493,148 @@ def render_goodbye_card(*, member_name: str) -> bytes:
         box=_GOODBYE_NAME_BOX,
         stops=_GOODBYE_NAME_STOPS,
     )
+
+
+# --- Achievement card (docs/DECISIONS.md ADR-124) ----------------------------
+
+# The owner's BRAWLISTAN achievement artwork (docs/brand/achievement-card-
+# master.png). Everything on it is static except three things: the badge in
+# the circle, the achievement name in the middle plate, and the username in
+# the bottom plate (right of the printed avatar glyph). Measured against the
+# artwork; the circle's lower edge sits behind the name plate, so the badge
+# is centred on the circle's visible part.
+_ACHIEVEMENT_CARD_PATH = _ASSETS_DIR / "img" / "achievement_card_template.png"
+_ACHIEVEMENT_ICONS_DIR = _ASSETS_DIR / "achievement_icons"
+_ACHIEVEMENT_NAME_FONT_PATH = _ASSETS_DIR / "fonts" / "Bangers-Regular.ttf"
+ACHIEVEMENT_CARD_WIDTH = 1672
+ACHIEVEMENT_CARD_HEIGHT = 941
+_BADGE_CENTER = (836, 484)
+_BADGE_RING_RADIUS = 112
+_BADGE_RING_WIDTH = 10
+_BADGE_ICON_SIZE = 150
+_ACHIEVEMENT_NAME_BOX = (640, 626, 1032, 686)
+_ACHIEVEMENT_USER_BOX = (662, 748, 1118, 814)
+
+_EMERALD_RGB = (0x00, 0xE6, 0x76)
+_ACHIEVEMENT_NAME_STOPS: list[tuple[float, tuple[int, int, int]]] = [
+    (0.0, (0xFF, 0xFF, 0xFF)),
+    (0.5, (0x42, 0xFF, 0xD2)),
+    (1.0, (0xD9, 0x46, 0xEF)),
+]
+_BADGE_RING_STOPS: list[tuple[float, tuple[int, int, int]]] = [
+    (0.0, (0xD9, 0x46, 0xEF)),
+    (0.5, (0x42, 0xFF, 0xD2)),
+    (1.0, (0xD6, 0xA8, 0x4F)),
+]
+
+
+def achievement_icon_path(achievement_key: str) -> Path:
+    """The bundled badge for an achievement (scripts/achievement_icons.py),
+    or the default medal for one without its own."""
+    path = _ACHIEVEMENT_ICONS_DIR / f"{achievement_key}.png"
+    return path if path.is_file() else _ACHIEVEMENT_ICONS_DIR / "_default.png"
+
+
+def _diagonal_gradient(size: int, stops: list[tuple[float, tuple[int, int, int]]]) -> Image.Image:
+    """A square 135-degree gradient: the first stop top-left, the last bottom-right."""
+    small = 64
+    grid = Image.new("RGB", (small, small))
+    grid.putdata(
+        [
+            _stop_colour((x + y) / (2 * (small - 1)), stops)
+            for y in range(small)
+            for x in range(small)
+        ]
+    )
+    return grid.resize((size, size), Image.Resampling.BICUBIC)
+
+
+def _ring_mask(size: int, *, radius: int, width: int) -> Image.Image:
+    """An anti-aliased ring, drawn 4x and scaled down."""
+    scale = 4
+    big = Image.new("L", (size * scale, size * scale), 0)
+    draw = ImageDraw.Draw(big)
+    c = size * scale // 2
+    outer, inner = radius * scale, (radius - width) * scale
+    draw.ellipse((c - outer, c - outer, c + outer, c + outer), fill=255)
+    draw.ellipse((c - inner, c - inner, c + inner, c + inner), fill=0)
+    return big.resize((size, size), Image.Resampling.LANCZOS)
+
+
+def _draw_badge(image: Image.Image, icon: Image.Image | None) -> None:
+    cx, cy = _BADGE_CENTER
+    size = (_BADGE_RING_RADIUS + 40) * 2
+    origin = (cx - size // 2, cy - size // 2)
+
+    # Emerald energy behind the badge, then the gradient ring with its own glow.
+    halo = Image.new("L", (size, size), 0)
+    r = _BADGE_RING_RADIUS - 10
+    ImageDraw.Draw(halo).ellipse((size // 2 - r, size // 2 - r, size // 2 + r, size // 2 + r), 90)
+    halo_layer = Image.new("RGBA", (size, size), (*_EMERALD_RGB, 0))
+    halo_layer.putalpha(halo.filter(ImageFilter.GaussianBlur(28)))
+    image.alpha_composite(halo_layer, dest=origin)
+
+    ring = _ring_mask(size, radius=_BADGE_RING_RADIUS, width=_BADGE_RING_WIDTH)
+    gradient = _diagonal_gradient(size, _BADGE_RING_STOPS).convert("RGBA")
+    glow = gradient.copy()
+    glow.putalpha(ring.filter(ImageFilter.GaussianBlur(8)).point(lambda a: int(a * 1.2)))
+    image.alpha_composite(glow, dest=origin)
+    gradient.putalpha(ring)
+    image.alpha_composite(gradient, dest=origin)
+
+    if icon is None:
+        return
+    badge = icon.convert("RGBA")
+    badge.thumbnail((_BADGE_ICON_SIZE, _BADGE_ICON_SIZE), Image.Resampling.LANCZOS)
+    shadow = Image.new("RGBA", badge.size, (0, 0, 0, 0))
+    shadow.putalpha(
+        badge.getchannel("A").filter(ImageFilter.GaussianBlur(6)).point(lambda a: a // 2)
+    )
+    dest = (cx - badge.width // 2, cy - badge.height // 2)
+    image.alpha_composite(shadow, dest=(dest[0], dest[1] + 5))
+    image.alpha_composite(badge, dest=dest)
+
+
+def render_achievement_card(
+    *, achievement_icon: Path | Image.Image | None, achievement_name: str, username: str
+) -> bytes:
+    """The BRAWLISTAN achievement card (docs/DECISIONS.md ADR-124).
+
+    `achievement_icon` is a badge image (or its path; see
+    `achievement_icon_path`), drawn inside a 135-degree magenta-cyan-gold
+    ring. `achievement_name` is set in Bangers with a white-cyan-magenta
+    gradient, and `username` in Inter ExtraBold, white to mint. Everything
+    else is the artwork's own.
+    """
+    image = Image.open(_ACHIEVEMENT_CARD_PATH).convert("RGBA")
+
+    icon: Image.Image | None
+    if isinstance(achievement_icon, Path):
+        try:
+            icon = Image.open(achievement_icon)
+        except OSError:
+            icon = None
+    else:
+        icon = achievement_icon
+    _draw_badge(image, icon)
+
+    _draw_gradient_text(
+        image,
+        achievement_name,
+        box=_ACHIEVEMENT_NAME_BOX,
+        font_path=_ACHIEVEMENT_NAME_FONT_PATH,
+        stops=_ACHIEVEMENT_NAME_STOPS,
+        initial_size=56,
+        min_size=24,
+        stroke=1,
+    )
+    _draw_gradient_text(
+        image,
+        username,
+        box=_ACHIEVEMENT_USER_BOX,
+        font_path=_NAME_FONT_PATH,
+        stops=_GOODBYE_NAME_STOPS,
+        initial_size=44,
+        min_size=18,
+    )
+    return _png(image)

@@ -5445,3 +5445,63 @@ In the same message, `/profile` was failing for one player, with "Something went
 - **Migration 0024:** round trip.
 - **Checks:** pytest 560, ruff, mypy, and all commands load, including `access roles|approval|status` and
   `approval`.
+
+## ADR-124 — BRAWLISTAN achievement card; achievements ping the member
+
+**Status:** accepted. Replaces the embed and the SHAHEEN gold card for achievement announcements only.
+
+**Context.** The owner supplied new achievement artwork, with a hooded mascot, the Pakistan skyline, the
+BRAWLISTAN logo, an "ACHIEVEMENT" heading, a gold laurel circle and two plates. The brief:
+- **Dynamic fields only:** the badge in the circle, the achievement name (Bangers, white → #42FFD2 →
+  #D946EF) and the username (Inter ExtraBold, white → #A7FFF0). The badge ring is 135° #D946EF → #42FFD2 →
+  #D6A84F.
+- **Nothing else:** no date, rank, description or rarity.
+- **Reusable:** the generator takes the achievement icon, the achievement name and the username.
+- **Posting:** tag the member with a congratulations line instead of sending an embed.
+
+**Decision.**
+- **Renderer.** `services/image_service.render_achievement_card(achievement_icon, achievement_name,
+  username)`:
+  - `achievement_icon` is a path or a PIL image.
+  - Template: `src/assets/img/achievement_card_template.png`, 1672×941. The master is
+    `docs/brand/achievement-card-master.png`.
+  - Fields: each dynamic field has a measured box. The circle's lower edge sits behind the name plate, so
+    the badge is centred on the circle's visible part.
+  - Badge: an emerald halo, then the 135° gradient ring with a soft glow, then the icon with a drop shadow.
+  - Name and username: drawn by `_draw_gradient_text`, which was extracted from ADR-122's arrival-card code
+    so both cards share it. It fits the text, centres it on cap height, condenses past the minimum size, and
+    adds a shadow, a glow and the gradient. Bangers comes in one weight, so a 1 px stroke stands in for
+    "bold".
+- **Badges.**
+  - Achievements had no icons; the website shows 🏅 for all of them. Each of the 30 now has one Noto Emoji
+    image chosen to fit (🏆 Champion, 💎 Diamond Shaheen, 👑 Valhallan, 🦅 Skyborne, 🌙 One Moon and so on),
+    plus a 🏅 `_default` for future achievements.
+  - Source: Google's Noto Emoji (Apache-2.0 / CC BY 4.0), fetched at 512 px from Google's font CDN by
+    `scripts/achievement_icons.py`, which holds the mapping.
+  - Storage: saved at 256 px under `src/assets/achievement_icons/<key>.png`, about 0.9 MB in all.
+  - `achievement_icon_path(key)` falls back to the default.
+- **Fonts.** Bangers (SIL OFL) is bundled at `src/assets/fonts/Bangers-Regular.ttf`, with its licence beside
+  it. Inter ExtraBold comes from ADR-122.
+- **Announcement (`ClanCog._announce_achievement`).**
+  - It posts the card with "🎉 Congratulations @member! You've unlocked **Name**. Description." and no embed.
+  - Allowed mentions are users only.
+  - A member who has left is named in bold instead.
+  - If rendering fails, the line still goes out alone.
+  - `build_achievement_announcement_embed` is replaced by `build_achievement_congrats`.
+- **Not changed.** Peak-rating, tier-change and level-up posts keep their embed and the older milestone card:
+  the new artwork says "ACHIEVEMENT", and a demotion isn't one.
+
+**Verified.**
+- **Tests:**
+  - the PNG is the artwork's size;
+  - each dynamic field changes pixels only in its own place (the ring and badge inside the circle, the
+    name inside the middle plate, and the username inside the bottom plate, including 40×"W" and 32×"W");
+  - every catalog achievement has its own badge, and unknown keys fall back;
+  - a missing icon file still renders;
+  - the assets ship inside `src/`;
+  - the congratulations line pings and names the achievement.
+- **Checks:** pytest 566, ruff, mypy. Sample cards were checked by eye.
+
+**Also in this change (ADR-123 follow-up).** `/access roles` refused Player as the approved role, which is
+correct: the link sync revokes Player from anyone without a linked account, so approved members would lose
+access on the next tick. The refusal now explains that and suggests a separate role such as Member.
