@@ -1757,3 +1757,395 @@ body.bl table td {
     padding: 22px 10px 12px;
   }
 }
+
+/* ---------- immersive landing hero (ADR-112) ----------
+   Fills the visible window inside the app frame. The banner is never
+   cropped into a near-square (that blows up and blurs the logo): a blurred,
+   darkened copy fills the hero, and the sharp banner sits on top with its
+   edges fading into it. hero-fx.js draws the network and fireflies over
+   both, under the text. */
+
+.hero.hero-immersive {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: max(600px, calc(100svh - 150px));
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #050807;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: -60px;
+  z-index: 0;
+}
+
+.hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(30px) saturate(1.35) brightness(0.42);
+  transform: scale(1.08);
+}
+
+.hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 70% at 50% 100%, rgba(5, 8, 7, 0.92) 30%, transparent 75%),
+    linear-gradient(180deg, transparent 40%, rgba(5, 8, 7, 0.7));
+}
+
+/* Explicit layers: Chromium otherwise paints the blurred copy over the art. */
+.hero-immersive .hero-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 100%),
+    linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(180deg, #000 58%, transparent 100%),
+    linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+
+.hero-immersive .hero-fx {
+  z-index: 2;
+}
+
+.hero-immersive .hero-body {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+  align-items: end;
+  gap: 22px 40px;
+  /* The art is 40cqw tall (5:2); the text starts in its faded foot. */
+  margin-top: 31cqw;
+  padding: 0 44px 64px;
+}
+
+.hero-immersive h1 {
+  margin: 12px 0 12px;
+  font-size: clamp(30px, 4.4cqw, 56px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.hero-immersive h1 span {
+  display: block;
+  animation: bl-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.hero-immersive h1 span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.hero-immersive h1 span:nth-child(3) {
+  animation-delay: 0.24s;
+  filter: drop-shadow(0 0 22px rgba(61, 242, 110, 0.35));
+}
+
+.hero-immersive .urdu {
+  margin-bottom: 0;
+  animation: bl-rise 0.8s 0.36s both;
+}
+
+.hero-immersive .hero-side {
+  animation: bl-rise 0.8s 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes bl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid rgba(61, 242, 110, 0.28);
+  border-radius: 999px;
+  background: rgba(5, 12, 9, 0.55);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.hero-live .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: bl-blink 2.4s ease-in-out infinite;
+}
+
+@keyframes bl-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Buttons with current running round the border. */
+@property --bl-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.hero-immersive .hero-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-current,
+.btn-glass {
+  position: relative;
+  isolation: isolate;
+  padding: 14px 18px;
+  white-space: nowrap;
+  font-size: 15.5px;
+  letter-spacing: 0.01em;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.btn-current svg,
+.btn-glass svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s ease;
+}
+
+.btn-current {
+  background: linear-gradient(120deg, var(--green), var(--emerald));
+  color: #03110a !important;
+  box-shadow: 0 0 0 1px rgba(61, 242, 110, 0.45), 0 14px 40px -12px rgba(61, 242, 110, 0.75);
+}
+
+.btn-current::before,
+.btn-glass::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--bl-angle),
+    transparent 0 64%,
+    rgba(251, 249, 216, 0.95) 74%,
+    var(--green) 82%,
+    transparent 90%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: bl-current 2.8s linear infinite;
+}
+
+@keyframes bl-current {
+  to {
+    --bl-angle: 360deg;
+  }
+}
+
+.btn-current:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(61, 242, 110, 0.7), 0 18px 50px -10px rgba(61, 242, 110, 0.95);
+}
+
+.btn-current:hover svg {
+  transform: translateX(4px);
+}
+
+.btn-glass {
+  border-color: rgba(236, 238, 234, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+/* The glass button only carries current while it's being pointed at. */
+.btn-glass::before {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.btn-glass:hover,
+.btn-glass:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(88, 101, 242, 0.18);
+  box-shadow: 0 14px 40px -14px rgba(88, 101, 242, 0.9);
+}
+
+.btn-glass:hover::before,
+.btn-glass:focus-visible::before {
+  opacity: 1;
+}
+
+/* Stat tiles; numbers count up (home.js). */
+.hero-immersive .hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.hero-immersive .hero-stats div {
+  position: relative;
+  padding: 14px 14px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(236, 238, 234, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.hero-immersive .hero-stats div::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  animation: bl-sweep 4.5s ease-in-out infinite;
+}
+
+.hero-immersive .hero-stats div:nth-child(2)::before {
+  animation-delay: 1.5s;
+}
+
+.hero-immersive .hero-stats div:nth-child(3)::before {
+  animation-delay: 3s;
+}
+
+@keyframes bl-sweep {
+  0% {
+    left: -40%;
+  }
+  60%,
+  100% {
+    left: 110%;
+  }
+}
+
+.hero-immersive .hero-stats strong {
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.1;
+}
+
+.hero-immersive .hero-stats span {
+  margin-top: 4px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.hero-scroll svg {
+  width: 20px;
+  height: 20px;
+  animation: bl-bob 1.8s ease-in-out infinite;
+}
+
+.hero-scroll:hover {
+  color: var(--text);
+}
+
+@keyframes bl-bob {
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .hero-immersive .hero-body {
+    grid-template-columns: 1fr;
+    align-items: start;
+    margin-top: 30cqw;
+    padding: 0 32px 64px;
+  }
+}
+
+@media (max-width: 860px) {
+  .hero.hero-immersive {
+    min-height: max(520px, calc(100svh - 58px - 76px - 28px));
+    text-align: center;
+  }
+
+  .hero-immersive .hero-art img {
+    aspect-ratio: 4 / 3;
+  }
+
+  .hero-immersive .hero-body {
+    margin-top: 56cqw; /* the art is 75cqw tall at 4:3 */
+    padding: 0 18px 58px;
+    gap: 18px;
+  }
+
+  .hero-immersive .hero-actions {
+    justify-content: center;
+  }
+
+  .hero-immersive .btn-current,
+  .hero-immersive .btn-glass {
+    padding: 13px 10px;
+    font-size: 14.5px;
+  }
+
+  /* The logo's own ribbon already says it, right above. */
+  .hero-immersive .hero-live {
+    display: none;
+  }
+
+  .hero-immersive .hero-stats {
+    margin-top: 16px;
+  }
+
+  .hero-immersive .hero-stats div {
+    padding: 11px 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-current::before {
+    animation: none;
+    opacity: 0;
+  }
+
+  .hero-immersive .hero-stats div::before {
+    display: none;
+  }
+}

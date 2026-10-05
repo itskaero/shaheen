@@ -4739,3 +4739,54 @@ Verified:
     field limit (setup commands split into their own section).
 - **Migration:** Alembic upgrade, downgrade and upgrade for 0019.
 - **Checks:** ruff, mypy and the full suite pass.
+
+## ADR-112 — Full-screen immersive landing hero
+
+**Status:** accepted. Builds on ADR-110 (the canvas effect).
+
+**Context.** The owner asked for the landing page to fill the screen, with immersive buttons and
+stats.
+
+**Decision.**
+- **Scope:** the home hero (`.hero-immersive`) fills the visible window inside the app frame:
+  `max(600px, 100svh - 150px)` on desktop, and the space between the top bar and bottom nav on phones.
+  The sidebar and frame stay, so it remains part of the same site.
+- **Banner art:** cropping the 5:2 banner to cover a near-square box would enlarge and blur the logo,
+  so the hero is layered instead:
+  - a blurred, darkened, colour-boosted copy of the banner fills it;
+  - the sharp banner sits at the top at its own ratio (4:3 crop on phones), its foot and sides masked
+    into the blur;
+  - the canvas (fireflies and city network) sits above that;
+  - the text is on top.
+  - The layers carry explicit z-indexes, because Chromium painted the blurred copy over the art when
+    both were z-index 0.
+- **Container units:** the hero is a size container. The text starts at 31cqw, inside the art's faded
+  foot (the art is 40cqw tall), and the headline scales with the hero rather than the window, so
+  nothing collides at any width.
+- **Buttons:**
+  - **View rankings:** a green gradient with current running round its border (a conic-gradient ring
+    animated through a registered `@property` angle), a glow, and an arrow that slides on hover.
+  - **Join Discord:** glass, with Discord-blurple glow, and the same current only while hovered or
+    focused.
+- **Stats:** glass tiles with a light sweep along the top edge. The numbers count up once with an ease;
+  a live refresh counts from the shown value, not from 0.
+- **Entrance:** the headline lines rise in turn, followed by the Urdu line and the actions.
+- **Extras:** a pulsing live dot on the eyebrow (hidden on phones, where the logo's ribbon says the
+  same), and a bobbing scroll cue to `#home-sections`.
+- **Canvas changes (ADR-110):** fireflies roam the whole hero (64 on desktop) and the current runs
+  along its foot.
+- **Reduced motion:** rings, sweeps, count-ups and the canvas loop are all off, and the global rule
+  zeroes the entrance animations.
+
+Files:
+- changed: `web/index.html`, `web/assets/css/brawlistan.css` (an immersive block at the end),
+  `web/assets/js/pages/home.js` (`renderHeroStats`, `countUp`), `web/assets/js/hero-fx.js`.
+
+Verified with Playwright at 1440×900 and 390×844:
+- **Layout:** the hero fits the first screen (750px tall from y=116; 682px on the phone, above the
+  bottom nav), with no horizontal overflow and no console errors.
+- **Stats:** they count up to the API values (48, 7).
+- **ADR-110 checks:** still pass (animates, pauses off-screen, still under reduced motion, absent on
+  other pages).
+- **Featured slot (ADR-111):** shows the staff pick with its note, and falls back to "Pakistan #1"
+  with none.
