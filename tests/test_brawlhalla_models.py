@@ -154,3 +154,30 @@ def test_player_ranked_without_2v2_has_no_best_team() -> None:
     ranked = PlayerRankedResponse.model_validate({"brawlhalla_id": 7, "name": "Solo"})
     assert ranked.teams_2v2 == []
     assert ranked.best_2v2 is None
+
+
+def test_a_numeric_2v2_region_does_not_break_parsing() -> None:
+    """Seen live (ADR-123): a 2v2 team's region came back as 10, not "SEA",
+    and /profile and the snapshot tick failed for that player."""
+    ranked = PlayerRankedResponse.model_validate(
+        {
+            "brawlhalla_id": 5734378,
+            "name": "kaero",
+            "region": "SEA",
+            "rating": 1500,
+            "tier": "Gold 3",
+            "2v2": [
+                {
+                    "brawlhalla_id_one": 5734378,
+                    "brawlhalla_id_two": 2,
+                    "teamname": "kaero+mate",
+                    "region": 10,
+                    "rating": 1400,
+                    "tier": "Gold 1",
+                }
+            ],
+        }
+    )
+    assert ranked.region == "SEA"
+    assert ranked.teams_2v2[0].region == "10"
+    assert ranked.best_2v2 is not None

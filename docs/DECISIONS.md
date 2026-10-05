@@ -5374,3 +5374,74 @@ or `#FFFFFF → #42FFD2 → #C084FC` for the energetic version.
 **Verified.** Tests check that short, descender-heavy, very long and 32×"W" names all land inside each
 card's plate and nowhere else on the banner; that an empty name leaves the banner untouched; and that the
 font ships inside `src/` for the Docker image. pytest 550, ruff, mypy. Sample renders were checked by eye.
+
+## ADR-123 — Join access: join role, approved role, approval switch; /profile region fix; API key out of the logs
+
+**Status:** accepted. Brings back a join gate that ADR-109 retired (the Guest auto-role and `/apply`), now
+configured by staff instead of hard-coded.
+
+**Context.** The owner asked for a command to set an auto-join role and an approval role, and for a switch:
+- **Off:** a member gets the approval role on join.
+- **On:** a member gets a "not approved" role on join, and `/approval` gives them the role that grants
+  access.
+
+In the same message, `/profile` was failing for one player, with "Something went wrong".
+
+**Decision: join access.**
+- **Data (migration 0024).** `guild_settings` gains `join_role_id`, `approved_role_id` and
+  `approval_enabled`. Approval defaults to off and both roles start unset, so nothing changes on deploy.
+  These are internal ids and never reach the API.
+- **Rules (`services/access_service.py`).** These are pure functions, so the website can reuse them:
+  - `AccessConfig.role_on_join()` is the join role when approval is on, and the approved role when it's off.
+  - `warnings()` lists what the current mode is missing.
+  - `plan_approval()` adds the approved role and removes the join role, skipping either if already done.
+  - `AccessService` stores the settings and audit-logs every change.
+  - It refuses one role for both jobs, turning approval on without both roles, and clearing a role while
+    approval is on.
+- **Commands (`bot/cogs/access.py`).**
+  - `/access roles|approval|status` are setup-level (Founder/Admin, owner, Administrator).
+  - `/approval <member>` is staff, so Moderators can let people in.
+- **Safety: roles refused.** A role is handed out automatically, so a join or approved role is refused if it
+  is any of these:
+  - @everyone;
+  - an integration-managed role;
+  - Player or Verified, since the link sync would take them back;
+  - a role with any staff permission (administrator, manage_*, kick, ban, moderate, mention everyone);
+  - a role at or above the bot's highest role;
+  - for anyone but the server owner, a role at or above the invoker's own highest role, so nobody can hand
+    out more than they hold.
+- **Safety: what the bot never does.** It never edits channel permissions (ADR-109); what each role can see
+  is the owner's setup.
+- **On join.** The role is given on `on_member_join`. If Discord's rules screening is on, it is given when
+  the member passes screening instead (`on_member_update`, pending → not pending). Bots are skipped.
+  Failures are logged as warnings and never block the welcome card.
+- **Turning approval off** doesn't move members who are already waiting. Staff `/approval` them, and
+  `/access status` shows how many are waiting.
+
+**Fix: `/profile` and the snapshot tick.**
+- **The failure:** the Brawlhalla API returned a 2v2 team's `region` as a number (`10`) where the model
+  expected text. The whole ranked response failed to parse, so `/profile` errored and the snapshot tick
+  stopped at that player.
+- **The fix:** `region` (player and 2v2 team) now accepts a number and keeps it as text. Nothing depends on a
+  team's region.
+
+**Fix: the API key was in the logs.**
+- **The cause:** httpx logs every request URL at INFO, and Brawlhalla takes its key as `?api_key=`, so the key
+  sat in plain text in the Fly logs.
+- **Quiet loggers:** the `httpx` and `httpcore` loggers are now WARNING. The client logs its own failures.
+- **Redaction:** `core/logging.redact` strips `api_key=…` (and Discord-token shapes) from every log line as a
+  backstop.
+- **Owner action:** **rotate the Brawlhalla API key**, since the old one has been in the logs.
+
+**Verified.**
+- **Tests:**
+  - role on join in both modes, the warnings, and the approval swap (including already approved and
+    half-done);
+  - the service's refusals and audit entries;
+  - role safety: @everyone, managed, bot-managed, staff permissions, the bot's position, and the invoker's
+    position with the owner exception;
+  - a numeric 2v2 region parses;
+  - redaction, and that httpx is quiet at INFO.
+- **Migration 0024:** round trip.
+- **Checks:** pytest 560, ruff, mypy, and all commands load, including `access roles|approval|status` and
+  `approval`.

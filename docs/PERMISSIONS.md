@@ -45,10 +45,11 @@ them.
 
 - **`/setup` (run, roles, status, verify, restructure, reset):** guild owner,
   `BOT_OWNER_ID`, the native Administrator permission, or Founder/Admin.
+  `/access roles|approval|status` and `/sync` use the same check.
 - **Staff commands** (`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`,
   `/unban`, `/timeout`, `/untimeout`, `/purge`, `/lock`, `/unlock`,
   `/slowmode`, `/nickname`, `/verify`, `/spotlight`, `/emoji *`,
-  `/pakistan add|remove`, tournament management): the same fallback, or
+  `/pakistan add|remove`, `/approval`, tournament management): the same fallback, or
   Founder/Admin/Moderator.
 - **Team rosters** (`/team add`, `/team remove`): staff, or the captain of
   that team (the member whose linked Brawlhalla account is the team's
@@ -66,7 +67,7 @@ Never Administrator. Invite the bot with only:
 
 | Permission | Used by |
 |---|---|
-| Manage Roles | `/setup` (create/rename roles), Player/Verified sync |
+| Manage Roles | `/setup` (create/rename roles), Player/Verified sync, join role and `/approval` (ADR-123) |
 | Manage Channels | `/setup` (create/rename/move channels), `/lock`, `/slowmode`, `/setup restructure` |
 | View Channels, Send Messages, Embed Links, Attach Files, Read Message History | Posts, cards, launch messages |
 | Add Reactions | Reaction-based flows |

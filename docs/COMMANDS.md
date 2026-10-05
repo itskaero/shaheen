@@ -401,6 +401,32 @@ home page shows it (`GET /featured`) and falls back to the Pakistan #1 when
 nobody is featured. Announced in #announcements unless `ANNOUNCE_FEATURED`
 is off. Audit-logged.
 
+### /access roles [join_role] [approved_role] [clear] *(Founder/Admin)*
+Join access (ADR-123). The **approved role** lets a member into the server;
+the **join role** is where new members wait while approval is on. Set either
+or both; `clear:True` unsets both (only while approval is off). What each
+role can see is your channel setup; the bot never changes permissions.
+Refused: @everyone, integration roles, the bot-managed Player/Verified
+roles, any role with staff permissions, and roles above the bot's or your
+own highest role.
+
+### /access approval <enabled> *(Founder/Admin)*
+- **Off** (the default): a new member gets the approved role straight away.
+- **On:** a new member gets the join role, and staff let them in with
+  `/approval`. Needs both roles set.
+
+Members get their role on join, or once they pass Discord's rules screening
+if the server uses it. Turning approval off doesn't move anyone already
+waiting; `/approval` them. Audit-logged.
+
+### /access status *(Founder/Admin)*
+Both roles, the switch, how many members are waiting, and anything missing
+(an unset or deleted role, or the bot lacking Manage Roles).
+
+### /approval <member> *(staff)*
+Give a member the approved role and take away the join role. Says so if
+they're already approved. Audit-logged.
+
 ### /sync *(Founder/Admin)*
 Re-sync the bot's slash commands to the server, for example after a deploy
 added commands.
