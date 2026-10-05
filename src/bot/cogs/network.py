@@ -26,6 +26,7 @@ from bot.content.network_embeds import (
     build_season_embed,
     build_site_embed,
     build_tournaments_embed,
+    season_view,
     site_view,
 )
 from bot.content.season_embeds import attach_season_badge
@@ -99,7 +100,8 @@ class NetworkCog(commands.Cog):
             raise ShaheenError("Pakistan seasons start with Brawlhalla Season 42.")
         embed = build_season_embed(season, now=datetime.now(UTC))
         files = attach_season_badge(embed, current)
-        await interaction.response.send_message(embed=embed, files=files, ephemeral=True)
+        view = season_view(self.bot.settings.site_url, current)
+        await interaction.response.send_message(embed=embed, files=files, view=view, ephemeral=True)
 
     @app_commands.command(name="legend", description="How a Legend is played across Pakistan")
     @app_commands.describe(name="The Legend")

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,5 +44,22 @@ class LegendSnapshotRepository:
             )
             .where(LegendSnapshot.brawlhalla_player_id == brawlhalla_player_id)
             .order_by(LegendSnapshot.games.desc())
+        )
+        return list((await self._session.execute(stmt)).scalars().all())
+
+    async def list_between(
+        self, brawlhalla_player_id: int, start: datetime, end: datetime
+    ) -> list[LegendSnapshot]:
+        """A player's per-Legend readings inside [start, end), oldest first.
+        LegendSnapshot carries no season, so a season is read as its date
+        window (ADR-113)."""
+        stmt = (
+            select(LegendSnapshot)
+            .where(
+                LegendSnapshot.brawlhalla_player_id == brawlhalla_player_id,
+                LegendSnapshot.captured_at >= start,
+                LegendSnapshot.captured_at < end,
+            )
+            .order_by(LegendSnapshot.captured_at.asc())
         )
         return list((await self._session.execute(stmt)).scalars().all())

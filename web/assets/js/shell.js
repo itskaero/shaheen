@@ -46,8 +46,8 @@
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield", ready: false },
     { key: "legends", label: "Legends", href: "legends.html", icon: "swords", ready: false },
-    { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true, ready: false },
-    { key: "tournaments", label: "Tournaments", href: "tournaments.html", icon: "flag", mobile: true },
+    { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true },
+    { key: "tournaments", label: "Tournaments", href: "tournaments.html", icon: "flag" },
     { key: "statistics", label: "Statistics", href: "statistics.html", icon: "chart", ready: false },
     { key: "discord", label: "Discord", href: "join.html", icon: "discord", mobile: true },
   ];
@@ -165,7 +165,7 @@
       <ul class="bl-nav">${visible.map(navLink).join("")}</ul>
       <div>
         <div class="bl-nav-group-label">Season</div>
-        <a class="bl-season-mini" href="rankings.html" data-shell="season" hidden></a>
+        <a class="bl-season-mini" href="seasons.html" data-shell="season" hidden></a>
       </div>
       <div>
         <div class="bl-nav-group-label">Community</div>

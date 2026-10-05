@@ -361,7 +361,8 @@ unavailable".
 
 ### /season
 The current Pakistan season: number, name (English and Urdu), Brawlhalla
-season, dates and days left, with its card.
+season, dates and days left, with its card and a **Season page** button to
+`seasons.html` (ADR-113).
 
 ### /legend <name>
 How a Legend is played across every tracked Pakistani player: players,

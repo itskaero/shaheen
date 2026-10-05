@@ -4790,3 +4790,82 @@ Verified with Playwright at 1440×900 and 390×844:
   other pages).
 - **Featured slot (ADR-111):** shows the staff pick with its note, and falls back to "Pakistan #1"
   with none.
+
+## ADR-113 — The Seasons page
+
+**Status:** accepted. Stage 6 of the BRAWLISTAN migration.
+
+**Context.** The brief asks for a Seasons page:
+- all 13 season cards, with the current one highlighted;
+- per season: the leaderboard, champion, top 10, rising player, Legend of the season and tournaments;
+- numbers only for seasons with data.
+
+Every ranking snapshot already carries its Brawlhalla season (ADR-088), and `services/seasons.py`
+names and dates each one (ADR-102/108).
+
+**Decision.**
+- **`services/seasons_service.py`** has no Discord in it, so the website and bot share it.
+  - **`overview()`:** a card for each Pakistan season 1..max(13, current), with its status (past,
+    current or upcoming, from the 13-week dates), whether readings exist, and the champion for
+    finished seasons with data.
+  - **`detail()`:**
+    - the top 10 from `RankingsService.pakistan(season=…)` (final readings for a past season, so claims,
+      verification and the founding team carry over unchanged);
+    - the champion, called "Leader so far" while the season is live;
+    - the **rising player**: the biggest first-to-last rating gain within that season's readings;
+    - the **Legend of the season**: the most games *played inside the season's window*. Legend
+      snapshots are lifetime totals with no season column, so it's the last reading minus the first
+      per player and Legend, summed across tracked players, with the win rate over those games;
+    - tournaments that started (or were created) inside the window.
+  - Upcoming seasons return only the card. A season with too few readings shows no number at all,
+    never zero or a guess.
+- **API:** `GET /seasons`, `GET /seasons/current` (honours `BRAWLHALLA_SEASON`), and
+  `GET /seasons/{n}` (validated from 42 up; 422 below). Brawlhalla identity only. `seasons` and
+  `season-current` are added to the cold-start snapshots.
+  - The ranking-row conversion moves into `api/routers/rankings.ranking_row_response`, now shared.
+- **`web/seasons.html` + `pages/seasons.js`:**
+  - **Hero:** the big season card, "Season of <name>" with the Urdu name, a status pill and dates,
+    plus a progress bar with days left for a live season or a countdown for an upcoming one.
+  - **Strip:** all 13 cards as keyboard buttons (`aria-pressed`). The live card glows, upcoming ones
+    are greyed, and finished ones show their champion. Selecting a card sets `?s=<season>` and loads
+    that season.
+  - **Panels:** Champion, Rising player, Legend of the season, Top 10, Tournaments. Each says "Data
+    unavailable" or "Upcoming season" when it has nothing real.
+- **Navigation:**
+  - Seasons is switched on in the sidebar and the mobile bottom nav.
+  - The bottom nav is now exactly the brief's five: Home, Rankings, Players, Seasons, Discord.
+    Tournaments stays in the sidebar.
+  - The sidebar season card and the home page's Current Season panel link to the page.
+- **Related changes:**
+  - Rankings accepts `?season=<n>`, so "Full rankings" on a past season opens that season.
+  - `/season` gains a **Season page** button.
+
+No migration: everything reads existing tables.
+
+Files:
+- **new:** `src/services/seasons_service.py`, `src/api/routers/seasons.py`, `web/seasons.html`,
+  `web/assets/js/pages/seasons.js`, `tests/test_seasons_service.py`.
+- **changed:**
+  - repositories: `ranking_snapshot_repository.list_for_season`,
+    `legend_snapshot_repository.list_between`;
+  - `api/{app,schemas}.py`, `api/routers/rankings.py`, `bot/cogs/network.py`,
+    `bot/content/network_embeds.py`;
+  - `web/assets/js/{api,shell,pages/rankings}.js`, `web/index.html`, `web/assets/css/brawlistan.css`,
+    `.github/workflows/snapshot.yml`, and the docs.
+
+Verified:
+- **Pure helpers:** status follows the calendar; Legend of the season counts in-window games only
+  (lifetime totals don't win) and is None without play.
+- **Service tests on SQLite:** 13 cards with past, current and upcoming statuses and the champion; a
+  past season's top, champion, riser (scoped to its season), Legend and in-window tournaments;
+  upcoming seasons and those before S42; a current season with no data stays empty.
+- **API:** 200 and 422 cases, with no Discord ids.
+- **Checks:** ruff, mypy and the full suite pass.
+- **Playwright** at 1440 and 390 px (mocked API):
+  - 13 cards, one live and selected, with the hero, progress bar, leader, riser, Legend, top 10 and
+    tournament;
+  - selecting a card updates the URL and shows the upcoming state;
+  - "Data unavailable" with no data;
+  - Seasons in both navs, and a five-item bottom nav;
+  - no overflow and no console errors;
+  - the landing checks (ADR-110) still pass.
