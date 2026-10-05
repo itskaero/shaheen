@@ -870,6 +870,22 @@ body.bl main {
   background: var(--surface-glass);
 }
 
+/* Landing animation (ADR-110, assets/js/hero-fx.js): fireflies and current
+   through the Pakistan network, drawn over the art and under the text. */
+.hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-banner .hero-body {
+  position: relative;
+  z-index: 2;
+}
+
 .hero-art img {
   display: block;
   width: 100%;

@@ -4608,3 +4608,54 @@ Verified:
 
 **Before deleting in the live server:** run `/setup run`, then `/setup restructure` and read the list
 before confirming.
+
+## ADR-110 — Animated landing hero: fireflies and current through the Pakistan network
+
+**Status:** accepted.
+
+**Context.** The owner asked for a livelier landing page, with fireflies or current passing through a
+structure. They chose a Pakistan network as the structure, with the effect on the landing hero only.
+
+**Decision.** `web/assets/js/hero-fx.js` draws on one `<canvas class="hero-fx">` over the home hero:
+the banner art plus the text panel, under the text.
+
+- **Network:**
+  - 11 cities (Gilgit, Peshawar, Islamabad, Lahore, Faisalabad, Multan, Quetta, Sukkur, Hyderabad,
+    Karachi, Gwadar) are projected from real latitude and longitude into the night sky right of the
+    logo, joined by 16 neighbour links.
+  - A soft dark radial veil lets the constellation read over the neon art.
+  - Every 0.6–1.4 s a pulse of current (green, sometimes gold) runs a random 2–4 hop path, with a
+    fading tail; each node it reaches flares. At most 6 pulses run at once.
+- **Seam:** a current line along the edge between banner and text, swept by a pulse every ~5 s.
+- **Fireflies:** 46 (22 on phones) glowing dots in cream, green and gold:
+  - they wander on layered sines with an upward drift and flicker independently;
+  - about half drift over the dark text panel, where they show best;
+  - they lean towards the pointer, and a node the pointer comes near fires a pulse.
+- **Cheap to run:**
+  - glows are pre-rendered sprites drawn with `lighter` compositing;
+  - device pixel ratio is capped at 2;
+  - a `ResizeObserver` re-lays out the canvas;
+  - frame timing uses delta time;
+  - the loop pauses when the hero is off-screen (`IntersectionObserver`) or the tab is hidden.
+- **Accessible:**
+  - the canvas is `aria-hidden` and ignores the pointer;
+  - `prefers-reduced-motion` draws one still frame of the network and never starts the loop;
+  - without JS or canvas the banner shows exactly as before.
+
+**Landing only.** Other pages keep the calm background drift (ADR-104). Data pages stay quiet, per the
+brief's "calm product, electric brand".
+
+No new assets or dependencies; the site stays static on GitHub Pages.
+
+Files:
+- new: `web/assets/js/hero-fx.js`;
+- changed: `web/index.html` (script), `web/assets/css/brawlistan.css` (`.hero-fx`, hero-body
+  stacking).
+
+Verified with Playwright at 1440px and 390px:
+- **Visible animation:** a single canvas, and the hero changes between frames.
+- **Frame counter** (`?fx-debug` exposes `window.__heroFxFrames`): it advances while the hero is
+  visible and stops once it scrolls away.
+- **Reduced motion:** a still frame and zero animation frames.
+- **Layout:** no horizontal overflow, and no canvas on other pages.
+- **Console:** no errors.
