@@ -9,7 +9,7 @@ const API_BASE_URL = "https://shaheen-api-6a6o.onrender.com";
 
 // Optional: your Discord invite link (e.g. "https://discord.gg/xxxxxxx").
 // Leave empty to hide the header's "Join Discord" button.
-const DISCORD_INVITE_URL = "https://discord.gg/mtPCYypYzF";
+const DISCORD_INVITE_URL = "https://discord.gg/UXVDWxBzy";
 
 // Optional: your Discord server's numeric guild ID, used only to fetch the
 // public, unauthenticated widget endpoint (discord.com/api/guilds/{id}/
