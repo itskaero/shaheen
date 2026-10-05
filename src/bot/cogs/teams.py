@@ -191,7 +191,13 @@ class TeamsCog(commands.Cog):
     # --- staff -------------------------------------------------------------------
 
     @team.command(name="create", description="Create a team (staff)")
-    @app_commands.describe(name="Team name", tag="2–6 letter tag, e.g. DE", description="One line")
+    @app_commands.describe(
+        name="Team name",
+        tag="2–6 letter tag, e.g. DE",
+        description="One line",
+        colour="Main colour for the team card, e.g. #2ad4ff",
+        colour2="Second colour, e.g. #9b3cff",
+    )
     @require_staff_authorized()
     async def create(
         self,
@@ -199,11 +205,15 @@ class TeamsCog(commands.Cog):
         name: app_commands.Range[str, 2, 40],
         tag: app_commands.Range[str, 2, 6],
         description: app_commands.Range[str, 1, 280] | None = None,
+        colour: app_commands.Range[str, 6, 7] | None = None,
+        colour2: app_commands.Range[str, 6, 7] | None = None,
     ) -> None:
         member = _member(interaction)
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
             team = await TeamService(session).create(
+                accent=colour,
+                accent_secondary=colour2,
                 guild_id=member.guild.id,
                 name=name,
                 tag=tag,

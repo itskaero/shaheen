@@ -16,6 +16,9 @@
       document.write('<base href="' + root + '" />');
       var match = location.pathname.match(/\/player\/([a-z0-9-]{1,64})\/?$/);
       if (match) location.replace(root + "player.html?p=" + match[1]);
+      // Same for a team page that hasn't been generated yet (ADR-117).
+      var team = location.pathname.match(/\/teams\/([a-z0-9-]{1,48})\/?$/);
+      if (team) location.replace(root + "team.html?t=" + team[1]);
     })();
   </script>
   <title>Not found — BRAWLISTAN</title>

@@ -88,6 +88,8 @@ class RankingSnapshotRepository:
         )
         summaries: list[tuple[int, int | None, int | None, int]] = []
         for season, peak, last_at, readings in (await self._session.execute(grouped)).all():
+            if season is None:  # excluded by the query; narrows the type
+                continue
             final = await self._session.execute(
                 select(RankingSnapshot.rating).where(
                     RankingSnapshot.brawlhalla_player_id == player_id,

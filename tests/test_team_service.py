@@ -223,3 +223,31 @@ async def test_players_choose_whether_to_wear_their_tag(session: AsyncSession) -
     )
     with pytest.raises(NotFoundError):
         await service.set_show_tag(guild_id=GUILD, player=other, show=True, actor_discord_id=8)
+
+
+async def test_team_colours_and_rank(session: AsyncSession) -> None:
+    from services.team_service import hex_colour
+
+    assert hex_colour("2AD4FF") == "#2ad4ff"
+    assert hex_colour(" #9b3cff ") == "#9b3cff"
+    assert hex_colour(None) is None
+    with pytest.raises(ShaheenError):
+        hex_colour("blue")
+
+    service = TeamService(session)
+    strong = await service.create(
+        guild_id=GUILD, name="Strong", tag="ST", actor_discord_id=STAFF, accent="#2ad4ff"
+    )
+    weak = await _team(service, "Weak", "WK")
+    unrated = await _team(service, "Unrated", "UR")
+    assert (strong.accent, strong.accent_secondary) == ("#2ad4ff", None)
+    await _player(session, 10, 2000)
+    await _player(session, 20, 1500)
+    await service.add_member(strong, brawlhalla_id=10, actor_discord_id=STAFF, is_staff=True)
+    await service.add_member(weak, brawlhalla_id=20, actor_discord_id=STAFF, is_staff=True)
+
+    ranks = {s.team.slug: s.rank for s in await service.overview(GUILD)}
+    assert ranks == {"strong": 1, "weak": 2, "unrated": None}
+    detail = await service.detail(GUILD, "weak")
+    assert detail is not None and detail.summary.rank == 2
+    assert unrated.accent is None

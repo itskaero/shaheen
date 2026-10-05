@@ -367,6 +367,11 @@ class TeamSummaryResponse(BaseModel):
     logo: str | None
     description: str | None
     is_founding: bool
+    # #rrggbb or null (the BRAWLISTAN defaults); they tint the holographic card.
+    accent: str | None = None
+    accent_secondary: str | None = None
+    # Position among teams with a team rating; null when the team has none.
+    rank: int | None = None
     members: int
     # Average of the best 3 placed players; null when nobody's placed.
     rating: int | None

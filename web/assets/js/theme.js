@@ -161,7 +161,7 @@ function teamPillHtml(name, slug, extraClass = "") {
   if (!name) return "";
   const cls = `pill pill-team${extraClass ? ` ${extraClass}` : ""}`;
   return slug
-    ? `<a class="${cls}" href="team.html?t=${encodeURIComponent(slug)}">${escapeHtml(name)}</a>`
+    ? `<a class="${cls}" href="${teamHref(slug)}">${escapeHtml(name)}</a>`
     : `<span class="${cls}">${escapeHtml(name)}</span>`;
 }
 
@@ -169,4 +169,55 @@ function teamPillHtml(name, slug, extraClass = "") {
 // The Rankings page can hide every tag (body.hide-tags).
 function tagChipHtml(tag) {
   return tag ? `<span class="clan-tag" title="Team tag">[${escapeHtml(tag)}]</span> ` : "";
+}
+
+// A team's page: the pre-rendered teams/<slug>/ (scripts/team_pages.py, ADR-117).
+function teamHref(slug) {
+  return `teams/${encodeURIComponent(slug)}/`;
+}
+
+const HOLO_DEFAULT_ACCENTS = ["#3df26e", "#f0168c"];
+
+function hexToRgbList(hex, fallback) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  const v = m ? m[1] : fallback.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16)).join(", ");
+}
+
+// HolographicTeamCard (ADR-117): the WebGPU card from assets/js/holo.js with
+// the team's logo and colours; every word on it is this HTML. `link` makes
+// the whole card one link (nothing inside may then be a link).
+function holoTeamCardHtml(team, { link = true, dpr = 1.5, ambient = 0.28, cta = "View team" } = {}) {
+  const [a1, a2] = [team.accent || HOLO_DEFAULT_ACCENTS[0], team.accent_secondary || HOLO_DEFAULT_ACCENTS[1]];
+  const art = team.logo ? `assets/img/teams/${encodeURIComponent(team.logo)}.webp` : "";
+  const fallbackArt = team.logo
+    ? `<img class="holo-fallback-art" src="assets/img/teams/${encodeURIComponent(team.logo)}.webp" alt="" loading="lazy" />`
+    : `<span class="holo-fallback-art team-monogram" aria-hidden="true">${escapeHtml(team.tag)}</span>`;
+  const position = team.rank ? `#${team.rank}` : "";
+  const rank = team.is_founding ? `${position} Founding`.trim() : position ? `${position} team` : "Unranked";
+  const country = team.country === "PK" ? "🇵🇰 Pakistan" : escapeHtml(team.country || "");
+  const tag = link ? "a" : "div";
+  const attrs = link
+    ? `href="${teamHref(team.slug)}" aria-label="${escapeHtml(team.name)}, ${escapeHtml(rank)}, view team"`
+    : `aria-label="${escapeHtml(team.name)} team card"`;
+  return `<${tag} class="holo-card team-holo${team.is_founding ? " is-founding" : ""}" ${attrs}
+      data-holo ${art ? `data-holo-art="${art}"` : ""} data-holo-accent="${a1}" data-holo-accent2="${a2}"
+      data-holo-ambient="${ambient}" data-holo-dpr="${dpr}"
+      style="--accent: ${hexToRgbList(a1, HOLO_DEFAULT_ACCENTS[0])}; --accent-2: ${hexToRgbList(a2, HOLO_DEFAULT_ACCENTS[1])}">
+    <div class="holo-stage">
+      <canvas class="holo-canvas" aria-hidden="true"></canvas>
+      <div class="holo-face">
+        <div class="holo-fallback" aria-hidden="true">${fallbackArt}</div>
+        <div class="holo-content">
+          <p class="holo-meta"><span class="holo-tag">[${escapeHtml(team.tag)}]</span><span>${country}</span><span>${escapeHtml(rank)}</span></p>
+          <h3 class="holo-title">${escapeHtml(team.name)}</h3>
+          <div class="holo-stats">
+            <div><strong>${team.rating != null ? formatNumber(team.rating) : "—"}</strong><span>Power</span></div>
+            <div><strong>${formatNumber(team.members)}</strong><span>Players</span></div>
+          </div>
+          ${link && cta ? `<span class="holo-cta">${escapeHtml(cta)} &rarr;</span>` : ""}
+        </div>
+      </div>
+    </div>
+  </${tag}>`;
 }

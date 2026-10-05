@@ -35,6 +35,17 @@ TEAM_RATING_SIZE = 3  # a team's rating is the average of its best 3 placed play
 MAX_ROSTER = 20
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
 _TAG = re.compile(r"^[A-Z0-9]{2,6}$")
+_HEX = re.compile(r"^#?([0-9a-fA-F]{6})$")
+
+
+def hex_colour(value: str | None) -> str | None:
+    """'3DF26E' or '#3df26e' -> '#3df26e'; None stays None; anything else is rejected."""
+    if value is None or not value.strip():
+        return None
+    match = _HEX.match(value.strip())
+    if match is None:
+        raise ShaheenError("Colours are hex codes like #3df26e.")
+    return "#" + match.group(1).lower()
 
 
 def team_slug(name: str) -> str:
@@ -66,6 +77,8 @@ class TeamSummary:
     members: int
     rating: int | None
     best: RosterEntry | None
+    # Position among teams with a team rating, best first; None when unrated.
+    rank: int | None = None
 
 
 @dataclass
@@ -122,6 +135,8 @@ class TeamService:
         tag: str,
         actor_discord_id: int,
         description: str | None = None,
+        accent: str | None = None,
+        accent_secondary: str | None = None,
     ) -> Team:
         clean_name = clean_text(name, limit=40)
         clean_tag = clean_text(tag, limit=16).upper().replace(" ", "")  # validated below
@@ -142,6 +157,8 @@ class TeamService:
                 name=clean_name,
                 tag=clean_tag,
                 description=clean_text(description, limit=280) if description else None,
+                accent=hex_colour(accent),
+                accent_secondary=hex_colour(accent_secondary),
             )
         )
         await self._log(guild_id, "team.create", actor_discord_id, f"{team.name} ({team.tag})")
@@ -272,6 +289,11 @@ class TeamService:
         summaries.sort(
             key=lambda s: (not s.team.is_founding, -(s.rating or 0), s.team.name.lower())
         )
+        rated = sorted(
+            (s for s in summaries if s.rating is not None), key=lambda s: -(s.rating or 0)
+        )
+        for position, summary in enumerate(rated, start=1):
+            summary.rank = position
         return summaries
 
     async def detail(self, guild_id: int, slug: str) -> TeamDetail | None:
@@ -279,7 +301,11 @@ class TeamService:
         if team is None:
             return None
         roster = await self._roster(team)
-        detail = TeamDetail(summary=await self._summary(team, roster), roster=roster)
+        summary = await self._summary(team, roster)
+        summary.rank = next(
+            (s.rank for s in await self.overview(guild_id) if s.team.id == team.id), None
+        )
+        detail = TeamDetail(summary=summary, roster=roster)
 
         members_by_player = {
             player.id: member

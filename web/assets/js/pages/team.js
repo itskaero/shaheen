@@ -1,23 +1,14 @@
-// One team (docs/DECISIONS.md ADR-114): logo, roster with the captain,
-// season results and achievements. Brawlhalla identity only.
+// One team (docs/DECISIONS.md ADR-114, ADR-117): the holographic team card
+// as its identity, roster with the captain, season results, tournament
+// results and achievements. Brawlhalla identity only. The slug comes from
+// ?t=<slug>, or from the pre-rendered teams/<slug>/ page (data-team-slug).
 (function () {
   const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
-  const slug = (new URLSearchParams(location.search).get("t") || "").toLowerCase();
+  const slug = (new URLSearchParams(location.search).get("t") || document.body.dataset.teamSlug || "").toLowerCase();
 
   function setHtml(id, html) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
-  }
-
-  function logoHtml(team, size) {
-    if (!team.logo) {
-      return `<span class="team-monogram" style="--size:${size}px" aria-hidden="true">${escapeHtml(team.tag)}</span>`;
-    }
-    const stem = `assets/img/teams/${encodeURIComponent(team.logo)}`;
-    return `<picture>
-      <source srcset="${stem}.webp" type="image/webp" />
-      <img class="team-logo" src="${stem}.png" alt="${escapeHtml(team.name)} logo" width="${size}" height="${size}" />
-    </picture>`;
   }
 
   function notFound() {
@@ -25,7 +16,7 @@
       "team-hero",
       `<div><h1>Team not found</h1><p class="muted">No team at this address. <a href="teams.html">See all teams &rarr;</a></p></div>`
     );
-    ["team-roster", "team-seasons", "team-achievements"].forEach((id) => setHtml(id, ""));
+    ["team-roster", "team-seasons", "team-achievements", "team-tournaments"].forEach((id) => setHtml(id, ""));
   }
 
   function render(t) {
@@ -34,7 +25,7 @@
     const captain = t.roster.find((p) => p.role === "captain");
     setHtml(
       "team-hero",
-      `<div class="team-hero-logo${t.is_founding ? " is-founding" : ""}">${logoHtml(t, 200)}</div>
+      `<div class="team-hero-card">${holoTeamCardHtml(t, { link: false, dpr: 2, ambient: 0.32 })}</div>
       <div class="team-hero-copy">
         <div class="team-hero-pills">
           ${t.is_founding ? '<span class="pill pill-founding">Founding team</span>' : ""}
@@ -44,7 +35,8 @@
         <h1>${escapeHtml(t.name)}</h1>
         ${t.description ? `<p class="muted">${escapeHtml(t.description)}</p>` : ""}
         <div class="team-hero-stats">
-          <div><strong class="num">${t.rating != null ? formatNumber(t.rating) : "—"}</strong><span>Team rating</span></div>
+          <div><strong class="num">${t.rank ? `#${t.rank}` : "—"}</strong><span>Ranking</span></div>
+          <div><strong class="num">${t.rating != null ? formatNumber(t.rating) : "—"}</strong><span>Power rating</span></div>
           <div><strong class="num">${t.members}</strong><span>Players</span></div>
           <div><strong>${captain ? escapeHtml(captain.player_name) : "—"}</strong><span>Captain</span></div>
         </div>
