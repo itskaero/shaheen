@@ -4959,3 +4959,54 @@ Verified:
   - a bad slug shows "not found";
   - no overflow and no console errors;
   - the Seasons, landing, Players and Rankings checks still pass.
+
+## ADR-115 — Team tags before player names; new SHAHEEN logo
+
+**Status:** accepted. Builds on ADR-114.
+
+**Context.** The owner asked for clan tags shown next to players on the rankings, which players can
+toggle. They also supplied the final team logos: a new graffiti SHAHEEN logo (falcon, crescent and star,
+Minar-e-Pakistan) in the BRAWLISTAN palette, and the Delight Esports logo.
+
+**Decision.**
+- **The player's choice.** `team_members.show_tag` (migration 0021, on by default) records whether the
+  player wears their team's tag.
+  - Set it with `/team tag show:<true|false>` (`TeamService.set_show_tag`, audit-logged).
+  - Hiding the tag keeps the player on the team, and the Team column still shows it.
+- **Where tags appear.** `RankingsService` and `PlayersService` expose `team_tag`: the tag when the player
+  wears it, otherwise null. It's resolved in one query by `TeamRepository.memberships_of`, with
+  `rankings_service.shown_tag` as the one rule. It appears in:
+  - the API rows (`/rankings/pakistan`, `/players`);
+  - "[SHN] kaero." on the Rankings table, Players grid and list, and player profile, via the
+    `tagChipHtml` helper in theme.js;
+  - Discord's `/rankings` embed.
+- **The viewer's choice.** The Rankings page has a "Team tags" switch that hides all tags
+  (`body.hide-tags`), remembered in localStorage and wrapped in try/catch so it is safe when storage is
+  blocked.
+- **Logos.** `docs/brand/teams/shaheen-master.png` is replaced by the owner's new SHAHEEN logo, and
+  `scripts/team_logos.py` re-cuts both teams. The new logo is on black, so it's keyed with
+  colour-to-alpha like the Delight logo.
+
+Files:
+- **new:** `alembic/versions/0021_team_tag_toggle.py`.
+- **changed:**
+  - `database/models/team.py`, `database/repositories/team_repository.py`;
+  - `services/{rankings,players,team}_service.py`, `api/schemas.py`, `api/routers/{players,rankings}.py`;
+  - `bot/cogs/teams.py`, `bot/content/{network_embeds,help_embeds}.py`;
+  - `web/assets/js/{theme,pages/rankings,pages/players,pages/player}.js`, `web/rankings.html`,
+    `brawlistan.css`;
+  - `docs/brand/teams/shaheen-master.png`, `web/assets/img/teams/shaheen.*`;
+  - the docs.
+
+Verified:
+- **Tests:**
+  - tag on by default, hidden and shown again, the team kept while hidden, and no tag without a team;
+  - the API exposes `team_tag`;
+  - the embed renders "🥇 [SHN] **kaero.**".
+- **Migration 0021:** upgrade, downgrade and upgrade.
+- **Checks:** ruff, mypy and the full suite pass.
+- **Playwright:**
+  - the tag sits before the name, a player's hidden tag stays hidden while the team still shows, and the
+    viewer switch hides tags and is remembered;
+  - the Players page shows tags;
+  - no console errors, and the other pages' checks still pass.

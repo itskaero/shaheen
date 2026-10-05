@@ -83,6 +83,7 @@ class RankingRowResponse(BaseModel):
     country: str
     team: str | None
     team_slug: str | None = None
+    team_tag: str | None = None
     is_claimed: bool
     # Staff confirmed the account owner (/verify, ADR-107). A boolean only.
     is_verified: bool
@@ -118,6 +119,7 @@ class PlayerDirectoryEntryResponse(BaseModel):
     country: str | None
     team: str | None
     team_slug: str | None = None
+    team_tag: str | None = None
     is_claimed: bool
     is_verified: bool
     on_pakistan_board: bool

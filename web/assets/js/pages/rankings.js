@@ -43,7 +43,7 @@
       : row.is_claimed
         ? '<span class="pill pill-team" title="Claimed by its player in our Discord">Claimed</span>'
         : '<span class="pill pill-muted" title="Added by staff; not yet claimed">Unclaimed</span>';
-    return `<a class="bl-player" href="${profileHref(row)}">${avatarHtml(row.player_name, 28)}<span class="bl-player-name">${escapeHtml(row.player_name)}</span></a> ${claimed}`;
+    return `<a class="bl-player" href="${profileHref(row)}">${avatarHtml(row.player_name, 28)}<span class="bl-player-name">${tagChipHtml(row.team_tag)}${escapeHtml(row.player_name)}</span></a> ${claimed}`;
   }
 
   function teamCell(row) {
@@ -308,6 +308,24 @@
     const open = form.classList.toggle("is-open");
     event.currentTarget.setAttribute("aria-expanded", open ? "true" : "false");
   });
+  // Viewer's choice to show team tags before names (ADR-115); remembered.
+  const tagsBox = document.getElementById("f-tags");
+  try {
+    if (localStorage.getItem("bl-hide-tags") === "1") tagsBox.checked = false;
+  } catch {
+    /* storage blocked: tags stay on */
+  }
+  const applyTags = () => {
+    document.body.classList.toggle("hide-tags", !tagsBox.checked);
+    try {
+      localStorage.setItem("bl-hide-tags", tagsBox.checked ? "0" : "1");
+    } catch {
+      /* not remembered, still applied */
+    }
+  };
+  tagsBox.addEventListener("change", applyTags);
+  applyTags();
+
   seasonSelect.addEventListener("change", () => {
     board.innerHTML = '<p class="unavailable">Loading…</p>';
     ShaheenAPI.getRankings(seasonSelect.value)

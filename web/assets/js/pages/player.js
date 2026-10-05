@@ -259,7 +259,7 @@
       <section class="panel profile-head" aria-label="Player">
         ${avatarHtml(profile.player_name, 72)}
         <div>
-          <h1>${escapeHtml(profile.player_name)}</h1>
+          <h1>${tagChipHtml(entry.team_tag)}${escapeHtml(profile.player_name)}</h1>
           <div class="profile-meta">
             <span>${country}</span><span aria-hidden="true">·</span>
             <span>Brawlhalla ID ${escapeHtml(String(profile.brawlhalla_id))}</span>

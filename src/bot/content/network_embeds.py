@@ -109,7 +109,8 @@ def build_rankings_embed(
         rating = snap.rating_2v2 if bracket == "2v2" else snap.rating
         tier = (snap.tier_2v2 if bracket == "2v2" else snap.tier) or "Unranked"
         marks = " ✓" if row.is_verified else ""
-        lines.append(f"{_place(i)} **{row.player.player_name}**{marks} — {rating} · {tier}")
+        tag = f"[{row.team_tag}] " if row.team_tag else ""
+        lines.append(f"{_place(i)} {tag}**{row.player.player_name}**{marks} — {rating} · {tier}")
     embed.description = "\n".join(lines) if lines else "Data unavailable — nobody is placed yet."
     embed.set_footer(text=season_label(season) or FOOTER)
     return embed

@@ -227,6 +227,23 @@ class TeamService:
         )
         return team
 
+    async def set_show_tag(
+        self, *, guild_id: int, player: BrawlhallaPlayer, show: bool, actor_discord_id: int
+    ) -> Team:
+        """A player's own choice to wear their team tag (ADR-115)."""
+        membership = await self._teams.active_membership(player.id)
+        if membership is None or membership[1].guild_id != guild_id:
+            raise NotFoundError("You're not on a team, so there's no tag to show.")
+        member, team = membership
+        member.show_tag = show
+        await self._log(
+            guild_id,
+            "team.tag",
+            actor_discord_id,
+            f"{player.player_name} [{team.tag}] {'on' if show else 'off'}",
+        )
+        return team
+
     async def set_captain(
         self, team: Team, *, brawlhalla_id: int, actor_discord_id: int
     ) -> BrawlhallaPlayer:

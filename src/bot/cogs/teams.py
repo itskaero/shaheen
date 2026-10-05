@@ -113,6 +113,29 @@ class TeamsCog(commands.Cog):
             name = left.name
         await interaction.followup.send(f"You've left **{name}**.", ephemeral=True)
 
+    @team.command(name="tag", description="Show or hide your team tag next to your name")
+    @app_commands.describe(show="On: [TAG] appears before your name on the rankings and site")
+    async def tag(self, interaction: discord.Interaction, show: bool) -> None:
+        member = _member(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            link = await LinkService(session, self.bot.brawlhalla).get_active_link(
+                guild_id=member.guild.id, discord_id=member.id
+            )
+            if link is None:
+                raise ShaheenError("Link your Brawlhalla account first (/link).")
+            team = await TeamService(session).set_show_tag(
+                guild_id=member.guild.id, player=link[1], show=show, actor_discord_id=member.id
+            )
+            message = (
+                f"**[{team.tag}]** now shows before your name."
+                if show
+                else f"Your **[{team.tag}]** tag is hidden. You're still on {team.name}."
+            )
+        await interaction.followup.send(
+            message + " The website updates within a few minutes.", ephemeral=True
+        )
+
     # --- staff or captain --------------------------------------------------------
 
     @team.command(name="add", description="Add a player to a team (staff or its captain)")

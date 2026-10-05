@@ -60,11 +60,20 @@ class TeamRepository:
 
     async def teams_of(self, guild_id: int, player_ids: Iterable[int]) -> dict[int, Team]:
         """Internal player id -> active team, for every player that has one."""
+        return {
+            pid: team
+            for pid, (team, _member) in (await self.memberships_of(guild_id, player_ids)).items()
+        }
+
+    async def memberships_of(
+        self, guild_id: int, player_ids: Iterable[int]
+    ) -> dict[int, tuple[Team, TeamMember]]:
+        """Internal player id -> (active team, membership), one query."""
         ids = list(player_ids)
         if not ids:
             return {}
         stmt = (
-            select(TeamMember.brawlhalla_player_id, Team)
+            select(TeamMember, Team)
             .join(Team, Team.id == TeamMember.team_id)
             .where(
                 Team.guild_id == guild_id,
@@ -72,7 +81,10 @@ class TeamRepository:
                 TeamMember.brawlhalla_player_id.in_(ids),
             )
         )
-        return {pid: team for pid, team in (await self._session.execute(stmt)).all()}
+        return {
+            member.brawlhalla_player_id: (team, member)
+            for member, team in (await self._session.execute(stmt)).all()
+        }
 
     async def add_member(
         self, *, team_id: int, player_id: int, role: str, joined_at: datetime

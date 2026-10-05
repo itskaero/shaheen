@@ -22,11 +22,18 @@ SITE = "https://example.test/brawlistan/"
 
 
 def _row(
-    name: str, rating: int | None, rating_2v2: int | None = None, verified: bool = False
+    name: str,
+    rating: int | None,
+    rating_2v2: int | None = None,
+    verified: bool = False,
+    tag: str | None = None,
 ) -> SimpleNamespace:
     snapshot = SimpleNamespace(rating=rating, tier="Gold", rating_2v2=rating_2v2, tier_2v2="Silver")
     return SimpleNamespace(
-        player=SimpleNamespace(player_name=name), snapshot=snapshot, is_verified=verified
+        player=SimpleNamespace(player_name=name),
+        snapshot=snapshot,
+        is_verified=verified,
+        team_tag=tag,
     )
 
 
@@ -120,3 +127,15 @@ def test_season_view_links_to_the_season_page() -> None:
 
     (button,) = season_view(SITE, 43).children
     assert button.url == "https://example.test/brawlistan/seasons.html?s=43"
+
+
+def test_rankings_show_a_worn_team_tag() -> None:
+    embed = build_rankings_embed(
+        rows=[_row("kaero.", 2100, tag="SHN"), _row("Solo", 1900)],  # type: ignore[list-item]
+        bracket="1v1",
+        season=42,
+        site_url=SITE,
+    )
+    lines = (embed.description or "").splitlines()
+    assert lines[0] == "🥇 [SHN] **kaero.** — 2100 · Gold"
+    assert lines[1].startswith("🥈 **Solo**")
