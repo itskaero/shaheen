@@ -125,6 +125,7 @@ class LinkCog(commands.Cog):
         embed = build_link_success_embed(
             player_name=outcome.player.player_name,
             role_name=ROLE_PLAYER.name if granted else None,
+            on_pakistan_board=outcome.on_pakistan_board,
         )
         await message.edit(content=None, embed=embed, view=None)
 

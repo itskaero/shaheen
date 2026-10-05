@@ -26,6 +26,7 @@ from integrations.brawlhalla.models import SearchResult
 from integrations.brawlhalla.service import BrawlhallaService
 from services.achievement_service import AchievementService
 from services.achievements import FIRST_LINK
+from services.pakistan_board_service import PakistanBoardService
 
 
 @dataclass
@@ -34,6 +35,8 @@ class LinkOutcome:
     player: BrawlhallaPlayer
     previous_player_name: str | None
     first_link_awarded: bool = False
+    # Linking puts you on the Pakistan rankings unless you opted out (ADR-125).
+    on_pakistan_board: bool = False
 
 
 class LinkService:
@@ -45,6 +48,7 @@ class LinkService:
         self._players = BrawlhallaPlayerRepository(session)
         self._links = MemberPlayerLinkRepository(session)
         self._board = PakistanBoardRepository(session)
+        self._pakistan = PakistanBoardService(session)
         self._achievement_service = AchievementService(session)
 
     async def resolve_candidate(self, identifier: str) -> SearchResult:
@@ -113,6 +117,9 @@ class LinkService:
             player=player,
             previous_player_name=previous_player_name,
             first_link_awarded=first_link_awarded,
+            on_pakistan_board=await self._pakistan.is_on_board(
+                guild_id=guild_id, player_id=player.id
+            ),
         )
 
     async def attach(
@@ -144,8 +151,8 @@ class LinkService:
             )
         if holder is None:
             await self._links.link(shaheen_member_id=member.id, brawlhalla_player_id=player.id)
-        if board_entry is not None and board_entry.owner_discord_id is None:
-            board_entry.owner_discord_id = discord_id  # linking claims the board spot too
+        # Linking claims the board spot, or puts you on the board (ADR-125).
+        await self._pakistan.on_link(guild_id=guild_id, discord_id=discord_id, player=player)
         return await self._award_first_link(member, player)
 
     async def set_verified(

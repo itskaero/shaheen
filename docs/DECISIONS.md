@@ -5505,3 +5505,74 @@ BRAWLISTAN logo, an "ACHIEVEMENT" heading, a gold laurel circle and two plates. 
 **Also in this change (ADR-123 follow-up).** `/access roles` refused Player as the approved role, which is
 correct: the link sync revokes Player from anyone without a linked account, so approved members would lose
 access on the next tick. The refusal now explains that and suggests a separate role such as Member.
+
+## ADR-125 — Who's on the Pakistan rankings: /link, a join/leave toggle, Pakistani team rosters
+
+**Status:** accepted. Amends ADR-099/100 (opt-in only) and ADR-120 (rosters never joined the board).
+
+**Context.** The Players page showed 90 players and the Rankings page 3. The owner asked why, and how
+linked and verified players could toggle their country themselves, then asked for both fixes:
+- a bot toggle;
+- counting the network's Pakistani teams.
+
+It also turned out that `/link` never put anyone on the board, although the welcome message, the
+announcement and the `/link` reply all said it did.
+
+**Decision.** A player is on the Pakistan rankings when any of these is true:
+- they linked;
+- they joined;
+- staff added them;
+- they're on the roster of a team whose country is PK (every current team).
+
+Leaving, or a staff removal, sticks.
+
+- **Data (migration 0025).** `pakistan_board_entries` gains two columns:
+  - `source`: `self` (`/link` or `/pakistan join`), `staff` or `team`. Existing owned rows become `self`.
+  - `excluded`: a deliberate removal. Existing removed rows count as excluded, since each was a leave, a
+    replacement or a staff removal.
+- **`/link` and the website claim** (`LinkService.attach` → `PakistanBoardService.on_link`):
+  - The player goes on the board, or claims their unowned spot.
+  - Relinking another account moves the member's own spot.
+  - An excluded player isn't re-added, and the reply says so and points to `/pakistan join`.
+  - Otherwise the reply confirms "🇵🇰 You're on the BRAWLISTAN Pakistan rankings", with a note that
+    `/pakistan leave` takes them off.
+- **The toggle.**
+  - `/pakistan join` with no ID uses the linked account (no confirm step). With an ID it works as before,
+    with a confirm.
+  - `/pakistan leave` removes the member's own entry, or their linked account's entry if a roster put it
+    there, and marks it excluded.
+  - `/pakistan remove` (staff) also marks it excluded.
+  - `/profile` gains a "Pakistan Rankings" field: on the board or not, with the command to change it.
+- **Team rosters.** `PakistanBoardService.sync_team_rosters` runs in the snapshot tick, right after the
+  in-game clan sync, so it's idempotent and reported in `SnapshotRunResult.board_sync`.
+  - It adds every player on a PK team who isn't on the board and isn't excluded, as `source=team` with no
+    owner.
+  - It removes the `team` entries it added, still unowned, once the player is off every PK team.
+  - It never touches entries from `/link`, `/pakistan join` or staff, or a team entry a player has since
+    claimed.
+  - Those players' ratings come from the roster pass that follows, so team entries cost no extra API
+    calls and don't count towards the 150-entry cap (`count_active` skips them).
+- **Wording.** `/pakistan` no longer says "Shaheen server" or mentions the retired `/apply`.
+  `docs/COMMANDS.md` and the website's join steps now match: `/link` gets you ranked, and
+  `/pakistan leave` opts out.
+
+**Why rosters count.** BRAWLISTAN is Pakistan's network, and its teams are seeded and created as Pakistani
+(`teams.country = PK`). A team can be given another country to keep its roster off the board. A foreign
+player on a PK team can opt out, or staff can remove them, and either sticks.
+
+**Not done: a toggle on the website.** The static site has no sign-in, and adding Discord login, sessions
+and a write API is a larger, separate piece.
+
+**Verified.**
+- **Tests:**
+  - `/link` puts you on the board, leaving is remembered across a relink, and `/pakistan join` with no ID
+    brings you back;
+  - join without a link explains itself;
+  - relinking another account moves your spot;
+  - a PK roster fills the board idempotently, a non-PK team doesn't, and leaving the team removes the
+    sync's entry but not a claimed one;
+  - opt-outs and staff removals survive the sync;
+  - team entries don't count towards the cap;
+  - the snapshot tick puts a synced clan's roster on the board.
+- **Migration 0025:** round trip.
+- **Checks:** pytest 573, ruff, mypy.

@@ -51,7 +51,10 @@ Two ways to link (docs/DECISIONS.md ADR-107):
   website, choose **Claim this profile** and enter it.
 - **`/link <Brawlhalla or Steam64 ID>`** links straight from Discord, as before.
 
-Either way, an account already linked to (or claimed on the Pakistan board by)
+Either way, linking puts you on the Pakistan rankings (ADR-125), unless you
+left them earlier with `/pakistan leave`; `/pakistan join` turns them back on.
+
+An account already linked to (or claimed on the Pakistan board by)
 another member is refused: linking is never a takeover. Linking proves you own
 the Discord account; staff `/verify` confirms you own the Brawlhalla account.
 
@@ -133,23 +136,31 @@ a new one starts every 13 weeks. The bot announces each new season once in
 The Pakistan leaderboard (docs/DECISIONS.md ADR-099): Pakistan's ranked
 players, clan or not, current season only. 🦅 marks Shaheen members.
 
-### /pakistan join <identifier>
-Put your own Brawlhalla account (Brawlhalla or Steam64 ID) on the Pakistan
-leaderboard, with a confirm step. One entry per member — joining with a
-different account replaces the old one. Opt-in only, clan members included:
-Brawlhalla reports a server region, never a country, so nothing is assumed.
-Doesn't make you a clan member — that's `/apply`.
+**Who's on the board (ADR-125):** members who linked (`/link`) or joined
+(`/pakistan join`), players staff added, and everyone on a Pakistani team's
+roster (teams with country PK; the snapshot tick syncs it). Brawlhalla
+reports a server region, never a country, so these are the only signals.
+
+### /pakistan join [identifier]
+Your toggle, on. With no identifier it uses your linked account, with no
+confirm step. With a Brawlhalla or Steam64 ID it puts that account on, after
+a confirm. One entry per member: joining with a different account replaces
+the old one. A spot staff or a team roster made for you becomes yours.
 
 ### /pakistan leave
-Take your own entry off the Pakistan leaderboard.
+Your toggle, off: takes off your entry, or your linked account's entry if a
+team roster put it there. It's remembered, so neither `/link` nor the team
+sync adds you back; `/pakistan join` does.
 
 ### /pakistan add <identifier> *(staff)*
 Add any Pakistani player — no Discord membership needed. If they join the
 server later, `/pakistan join` with the same ID makes the entry theirs.
-The board is capped at 150 players (API quota).
+Staff-added and self-joined entries are capped at 150 (API quota); team-roster
+entries don't count, since their players are snapshotted as roster players anyway.
 
 ### /pakistan remove <brawlhalla_id> *(staff)*
-Remove a player from the Pakistan leaderboard.
+Remove a player from the Pakistan leaderboard. Like `/pakistan leave`, it
+sticks: the team sync won't add them back.
 
 **Claimed spots (ADR-100).** An entry someone `/pakistan join`ed is
 *claimed*; a staff-added one is *unclaimed* until its player joins and
