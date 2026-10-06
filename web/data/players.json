@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T00:00:28Z",
+  "captured_at": "2026-10-06T06:15:20Z",
   "source": "/players",
   "data": [
     {
@@ -99,7 +99,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1753,
+      "rating": 1758,
       "peak_rating": 1817,
       "tier": "Platinum 2",
       "main_legend": "mordex"
@@ -184,9 +184,9 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "US-E",
-      "rating": 1408,
+      "rating": 1520,
       "peak_rating": 1559,
-      "tier": "Gold 1",
+      "tier": "Gold 3",
       "main_legend": "tezca"
     },
     {

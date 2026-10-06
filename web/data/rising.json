@@ -1,12 +1,26 @@
 {
-  "captured_at": "2026-10-06T00:00:28Z",
+  "captured_at": "2026-10-06T06:15:20Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
+    {
+      "brawlhalla_id": 65526716,
+      "player_name": "Orion",
+      "rating": 1520,
+      "rating_gain": 112,
+      "is_claimed": false
+    },
     {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "rating": 1801,
       "rating_gain": 42,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "rating": 1758,
+      "rating_gain": 5,
       "is_claimed": false
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T00:00:28Z",
+  "captured_at": "2026-10-06T06:15:20Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -144,18 +144,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1753,
+        "rating": 1758,
         "peak_rating": 1817,
         "tier": "Platinum 2",
-        "wins": 83,
-        "games": 162,
+        "wins": 98,
+        "games": 188,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": 0,
+        "trend": 5,
         "main_legend": "mordex"
       },
       {
@@ -255,12 +255,17 @@
         "main_legend": "wu shang"
       }
     ],
-    "rising": null,
+    "rising": {
+      "brawlhalla_id": 65526716,
+      "player_name": "Orion",
+      "rating_gain": 112,
+      "rating": 1520
+    },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 116,
-      "win_rate": 60.3,
-      "players": 3
+      "games": 140,
+      "win_rate": 62.1,
+      "players": 8
     },
     "tournaments": []
   }
