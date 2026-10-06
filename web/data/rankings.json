@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T06:15:20Z",
+  "captured_at": "2026-10-06T13:18:40Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -78,8 +78,8 @@
         "rating": 1810,
         "peak_rating": 1864,
         "tier": "Platinum 3",
-        "wins": 20,
-        "games": 37,
+        "wins": 23,
+        "games": 42,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1529,
@@ -110,7 +110,7 @@
         "peak_rating_2v2": 1319,
         "tier_2v2": "Silver 4",
         "partner_2v2": "Ravix",
-        "trend": 42,
+        "trend": 47,
         "main_legend": "mordex"
       },
       {
