@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-07T05:53:22Z",
+  "captured_at": "2026-10-07T13:15:57Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -144,18 +144,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1787,
+        "rating": 1744,
         "peak_rating": 1858,
         "tier": "Platinum 2",
-        "wins": 29,
-        "games": 54,
+        "wins": 34,
+        "games": 67,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 0,
+        "trend": -43,
         "main_legend": "isaiah"
       },
       {

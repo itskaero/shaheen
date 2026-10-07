@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-07T05:53:22Z",
+  "captured_at": "2026-10-07T13:15:57Z",
   "source": "/players",
   "data": [
     {
@@ -99,7 +99,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1787,
+      "rating": 1744,
       "peak_rating": 1858,
       "tier": "Platinum 2",
       "main_legend": "isaiah"
