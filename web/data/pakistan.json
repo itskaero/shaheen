@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-07T13:15:57Z",
+  "captured_at": "2026-10-07T23:02:41Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -13,6 +13,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "region": "ME",
+      "rating": 1828,
+      "peak_rating": 1924,
+      "tier": "Platinum 3",
+      "is_clan_member": true,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
@@ -20,16 +30,6 @@
       "peak_rating": 1864,
       "tier": "Platinum 2",
       "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
-      "region": "ME",
-      "rating": 1802,
-      "peak_rating": 1924,
-      "tier": "Platinum 2",
-      "is_clan_member": true,
       "is_claimed": false
     },
     {
@@ -43,21 +43,21 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 8488940,
-      "player_name": "Yeetnt",
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1788,
-      "peak_rating": 1822,
+      "rating": 1798,
+      "peak_rating": 1858,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
       "region": "ME",
-      "rating": 1744,
-      "peak_rating": 1858,
+      "rating": 1788,
+      "peak_rating": 1822,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
@@ -96,7 +96,7 @@
       "brawlhalla_id": 115697497,
       "player_name": "Kirito",
       "region": "ME",
-      "rating": 1577,
+      "rating": 1574,
       "peak_rating": 1718,
       "tier": "Gold 4",
       "is_clan_member": false,
