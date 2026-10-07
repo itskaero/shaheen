@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T22:37:58Z",
+  "captured_at": "2026-10-07T05:53:22Z",
   "source": "/teams",
   "data": [
     {
@@ -12,7 +12,7 @@
       "is_founding": true,
       "accent": "#3df26e",
       "accent_secondary": "#f0168c",
-      "rank": 1,
+      "rank": 2,
       "brawlhalla_clan_id": null,
       "members": 1,
       "rating": 1802,
@@ -29,6 +29,32 @@
       }
     },
     {
+      "slug": "delight-esports",
+      "name": "Delight Esports",
+      "tag": "DE",
+      "country": "PK",
+      "logo": "delight-esports",
+      "description": null,
+      "is_founding": false,
+      "accent": "#e9c46a",
+      "accent_secondary": "#1f6f8a",
+      "rank": 1,
+      "brawlhalla_clan_id": 2042085,
+      "members": 28,
+      "rating": 1805,
+      "best": {
+        "brawlhalla_id": 1739958,
+        "player_name": "scoooot!!!",
+        "slug": "scoooot-1739958",
+        "role": "player",
+        "clan_rank": "Recruit",
+        "rating": 2029,
+        "peak_rating": 2056,
+        "tier": "Diamond",
+        "main_legend": "caspian"
+      }
+    },
+    {
       "slug": "sigma-grinders",
       "name": "Sigma Grinders",
       "tag": "SG",
@@ -38,7 +64,7 @@
       "is_founding": false,
       "accent": "#8b3dff",
       "accent_secondary": "#d9d4ff",
-      "rank": 2,
+      "rank": 3,
       "brawlhalla_clan_id": 1777529,
       "members": 11,
       "rating": 1793,
@@ -52,32 +78,6 @@
         "peak_rating": 1864,
         "tier": "Platinum 2",
         "main_legend": "mordex"
-      }
-    },
-    {
-      "slug": "delight-esports",
-      "name": "Delight Esports",
-      "tag": "DE",
-      "country": "PK",
-      "logo": "delight-esports",
-      "description": null,
-      "is_founding": false,
-      "accent": "#e9c46a",
-      "accent_secondary": "#1f6f8a",
-      "rank": 3,
-      "brawlhalla_clan_id": 2042085,
-      "members": 28,
-      "rating": 1777,
-      "best": {
-        "brawlhalla_id": 1739958,
-        "player_name": "scoooot!!!",
-        "slug": "scoooot-1739958",
-        "role": "player",
-        "clan_rank": "Recruit",
-        "rating": 1946,
-        "peak_rating": 2037,
-        "tier": "Diamond",
-        "main_legend": "caspian"
       }
     },
     {

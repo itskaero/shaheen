@@ -1,13 +1,13 @@
 {
-  "captured_at": "2026-10-06T22:37:58Z",
+  "captured_at": "2026-10-07T05:53:22Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "region": "ME",
-      "rating": 1946,
-      "peak_rating": 2037,
+      "rating": 2029,
+      "peak_rating": 2056,
       "tier": "Diamond",
       "is_clan_member": false,
       "is_claimed": false
@@ -106,9 +106,9 @@
       "brawlhalla_id": 65526716,
       "player_name": "Orion",
       "region": "US-E",
-      "rating": 1520,
-      "peak_rating": 1559,
-      "tier": "Gold 3",
+      "rating": 1573,
+      "peak_rating": 1603,
+      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     }

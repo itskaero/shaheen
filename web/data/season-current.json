@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T22:37:58Z",
+  "captured_at": "2026-10-07T05:53:22Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -24,18 +24,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1946,
-        "peak_rating": 2037,
+        "rating": 2029,
+        "peak_rating": 2056,
         "tier": "Diamond",
-        "wins": 40,
-        "games": 72,
+        "wins": 56,
+        "games": 91,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": null,
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 0,
+        "trend": 83,
         "main_legend": "caspian"
       },
       {
@@ -107,7 +107,7 @@
         "peak_rating_2v2": 1319,
         "tier_2v2": "Silver 4",
         "partner_2v2": "Ravix",
-        "trend": 47,
+        "trend": 0,
         "main_legend": "mordex"
       },
       {
@@ -258,13 +258,13 @@
     "rising": {
       "brawlhalla_id": 65526716,
       "player_name": "Orion",
-      "rating_gain": 112,
-      "rating": 1520
+      "rating_gain": 165,
+      "rating": 1573
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 173,
-      "win_rate": 61.8,
+      "games": 180,
+      "win_rate": 61.1,
       "players": 9
     },
     "tournaments": []

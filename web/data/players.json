@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-06T22:37:58Z",
+  "captured_at": "2026-10-07T05:53:22Z",
   "source": "/players",
   "data": [
     {
@@ -14,8 +14,8 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1946,
-      "peak_rating": 2037,
+      "rating": 2029,
+      "peak_rating": 2056,
       "tier": "Diamond",
       "main_legend": "caspian"
     },
@@ -184,9 +184,9 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "US-E",
-      "rating": 1520,
-      "peak_rating": 1559,
-      "tier": "Gold 3",
+      "rating": 1573,
+      "peak_rating": 1603,
+      "tier": "Gold 4",
       "main_legend": "tezca"
     },
     {
