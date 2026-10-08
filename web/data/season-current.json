@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T13:22:30Z",
+  "captured_at": "2026-10-08T23:18:11Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -24,18 +24,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 2029,
+        "rating": 2041,
         "peak_rating": 2056,
         "tier": "Diamond",
-        "wins": 56,
-        "games": 91,
+        "wins": 58,
+        "games": 93,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": null,
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 83,
+        "trend": 95,
         "main_legend": "caspian"
       },
       {
@@ -48,18 +48,18 @@
         "is_claimed": true,
         "is_verified": false,
         "region": "ME",
-        "rating": 1828,
+        "rating": 1840,
         "peak_rating": 1924,
         "tier": "Platinum 3",
-        "wins": 16,
-        "games": 29,
+        "wins": 23,
+        "games": 42,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1073,
         "peak_rating_2v2": 1073,
         "tier_2v2": "Bronze 4",
         "partner_2v2": "x11dave",
-        "trend": -27,
+        "trend": -15,
         "main_legend": "koji"
       },
       {
@@ -263,9 +263,9 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 193,
-      "win_rate": 60.6,
-      "players": 12
+      "games": 203,
+      "win_rate": 60.1,
+      "players": 14
     },
     "tournaments": []
   }

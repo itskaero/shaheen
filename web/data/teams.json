@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T13:22:30Z",
+  "captured_at": "2026-10-08T23:18:11Z",
   "source": "/teams",
   "data": [
     {
@@ -15,14 +15,14 @@
       "rank": 1,
       "brawlhalla_clan_id": null,
       "members": 1,
-      "rating": 1828,
+      "rating": 1840,
       "best": {
         "brawlhalla_id": 5734378,
         "player_name": "kaero.",
         "slug": "kaero-5734378",
         "role": "player",
         "clan_rank": null,
-        "rating": 1828,
+        "rating": 1840,
         "peak_rating": 1924,
         "tier": "Platinum 3",
         "main_legend": "koji"
@@ -41,14 +41,14 @@
       "rank": 2,
       "brawlhalla_clan_id": 2042085,
       "members": 28,
-      "rating": 1805,
+      "rating": 1809,
       "best": {
         "brawlhalla_id": 1739958,
         "player_name": "scoooot!!!",
         "slug": "scoooot-1739958",
         "role": "player",
         "clan_rank": "Recruit",
-        "rating": 2029,
+        "rating": 2041,
         "peak_rating": 2056,
         "tier": "Diamond",
         "main_legend": "caspian"

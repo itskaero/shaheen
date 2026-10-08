@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T13:22:30Z",
+  "captured_at": "2026-10-08T23:18:11Z",
   "source": "/players",
   "data": [
     {
@@ -14,7 +14,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 2029,
+      "rating": 2041,
       "peak_rating": 2056,
       "tier": "Diamond",
       "main_legend": "caspian"
@@ -31,7 +31,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1828,
+      "rating": 1840,
       "peak_rating": 1924,
       "tier": "Platinum 3",
       "main_legend": "koji"
