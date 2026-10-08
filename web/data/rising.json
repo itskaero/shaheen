@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-07T23:02:41Z",
+  "captured_at": "2026-10-08T05:57:26Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -19,8 +19,8 @@
     {
       "brawlhalla_id": 8488940,
       "player_name": "Yeetnt",
-      "rating": 1788,
-      "rating_gain": 35,
+      "rating": 1790,
+      "rating_gain": 37,
       "is_claimed": false
     },
     {
@@ -28,13 +28,6 @@
       "player_name": "Santa",
       "rating": 1584,
       "rating_gain": 23,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "rating": 1798,
-      "rating_gain": 11,
       "is_claimed": false
     }
   ]

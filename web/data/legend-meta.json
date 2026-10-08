@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-07T23:02:41Z",
+  "captured_at": "2026-10-08T05:57:26Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -23,13 +23,13 @@
     {
       "legend_name_key": "orion",
       "player_count": 82,
-      "total_games": 28446,
+      "total_games": 28447,
       "win_rate": 52.3
     },
     {
       "legend_name_key": "artemis",
       "player_count": 83,
-      "total_games": 23971,
+      "total_games": 23972,
       "win_rate": 52.0
     },
     {
