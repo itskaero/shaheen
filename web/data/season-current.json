@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T05:57:26Z",
+  "captured_at": "2026-10-08T13:22:30Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -87,6 +87,30 @@
         "main_legend": "mordex"
       },
       {
+        "brawlhalla_id": 113753082,
+        "player_name": "arman0mobile",
+        "country": "PK",
+        "team": "Sigma Grinders",
+        "team_slug": "sigma-grinders",
+        "team_tag": "SG",
+        "is_claimed": false,
+        "is_verified": false,
+        "region": "ME",
+        "rating": 1803,
+        "peak_rating": 1858,
+        "tier": "Platinum 2",
+        "wins": 49,
+        "games": 91,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": 1535,
+        "peak_rating_2v2": 1592,
+        "tier_2v2": "Gold 3",
+        "partner_2v2": "Yeetnt",
+        "trend": 16,
+        "main_legend": "isaiah"
+      },
+      {
         "brawlhalla_id": 37628417,
         "player_name": "Roykhan",
         "country": "PK",
@@ -133,30 +157,6 @@
         "partner_2v2": "arman0mobile",
         "trend": 37,
         "main_legend": "mordex"
-      },
-      {
-        "brawlhalla_id": 113753082,
-        "player_name": "arman0mobile",
-        "country": "PK",
-        "team": "Sigma Grinders",
-        "team_slug": "sigma-grinders",
-        "team_tag": "SG",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "ME",
-        "rating": 1768,
-        "peak_rating": 1858,
-        "tier": "Platinum 2",
-        "wins": 42,
-        "games": 80,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": 1535,
-        "peak_rating_2v2": 1592,
-        "tier_2v2": "Gold 3",
-        "partner_2v2": "Yeetnt",
-        "trend": -19,
-        "main_legend": "isaiah"
       },
       {
         "brawlhalla_id": 10285200,
@@ -263,8 +263,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 187,
-      "win_rate": 60.4,
+      "games": 193,
+      "win_rate": 60.6,
       "players": 12
     },
     "tournaments": []

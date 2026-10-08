@@ -1,11 +1,11 @@
 {
-  "captured_at": "2026-10-08T05:57:26Z",
+  "captured_at": "2026-10-08T13:22:30Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
       "player_count": 84,
-      "total_games": 72048,
+      "total_games": 72054,
       "win_rate": 52.0
     },
     {

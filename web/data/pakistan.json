@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T05:57:26Z",
+  "captured_at": "2026-10-08T13:22:30Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -33,6 +33,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
+      "region": "ME",
+      "rating": 1803,
+      "peak_rating": 1858,
+      "tier": "Platinum 2",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
@@ -48,16 +58,6 @@
       "region": "ME",
       "rating": 1790,
       "peak_rating": 1822,
-      "tier": "Platinum 2",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1768,
-      "peak_rating": 1858,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
