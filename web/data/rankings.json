@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-09T06:03:32Z",
+  "captured_at": "2026-10-09T13:11:09Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -254,7 +254,7 @@
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": null,
+        "trend": 0,
         "main_legend": "tezca"
       },
       {

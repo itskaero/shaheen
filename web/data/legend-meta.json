@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-09T06:03:32Z",
+  "captured_at": "2026-10-09T13:11:09Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -41,7 +41,7 @@
     {
       "legend_name_key": "wu shang",
       "player_count": 83,
-      "total_games": 22194,
+      "total_games": 22195,
       "win_rate": 52.0
     },
     {
