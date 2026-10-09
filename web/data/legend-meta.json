@@ -1,23 +1,23 @@
 {
-  "captured_at": "2026-10-08T23:18:11Z",
+  "captured_at": "2026-10-09T06:03:32Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
       "player_count": 84,
-      "total_games": 72064,
+      "total_games": 72090,
       "win_rate": 52.0
     },
     {
       "legend_name_key": "nix",
       "player_count": 81,
-      "total_games": 45349,
+      "total_games": 45369,
       "win_rate": 52.4
     },
     {
       "legend_name_key": "tezca",
       "player_count": 80,
-      "total_games": 37471,
+      "total_games": 37473,
       "win_rate": 52.1
     },
     {
@@ -29,25 +29,25 @@
     {
       "legend_name_key": "artemis",
       "player_count": 83,
-      "total_games": 23972,
+      "total_games": 23973,
       "win_rate": 52.0
     },
     {
       "legend_name_key": "teros",
       "player_count": 77,
-      "total_games": 22444,
+      "total_games": 22450,
       "win_rate": 56.5
     },
     {
       "legend_name_key": "wu shang",
       "player_count": 83,
-      "total_games": 22168,
+      "total_games": 22194,
       "win_rate": 52.0
     },
     {
       "legend_name_key": "cassidy",
       "player_count": 81,
-      "total_games": 21577,
+      "total_games": 21578,
       "win_rate": 55.0
     },
     {

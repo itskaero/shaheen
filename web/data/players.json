@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T23:18:11Z",
+  "captured_at": "2026-10-09T06:03:32Z",
   "source": "/players",
   "data": [
     {
@@ -154,6 +154,23 @@
       "peak_rating": 1666,
       "tier": "Gold 4",
       "main_legend": "wu shang"
+    },
+    {
+      "brawlhalla_id": 106237759,
+      "slug": "devil-106237759",
+      "player_name": "DeviL",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "EU",
+      "rating": 1582,
+      "peak_rating": null,
+      "tier": "Gold 5",
+      "main_legend": "tezca"
     },
     {
       "brawlhalla_id": 115697497,
@@ -596,23 +613,6 @@
       "peak_rating": null,
       "tier": null,
       "main_legend": "sir roland"
-    },
-    {
-      "brawlhalla_id": 106237759,
-      "slug": "devil-106237759",
-      "player_name": "DeviL",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "tezca"
     },
     {
       "brawlhalla_id": 136372121,

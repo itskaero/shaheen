@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T23:18:11Z",
+  "captured_at": "2026-10-09T06:03:32Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -89,6 +89,16 @@
       "rating": 1584,
       "peak_rating": 1666,
       "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 106237759,
+      "player_name": "DeviL",
+      "region": "EU",
+      "rating": 1582,
+      "peak_rating": null,
+      "tier": "Gold 5",
       "is_clan_member": false,
       "is_claimed": false
     },

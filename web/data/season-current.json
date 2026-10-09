@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T23:18:11Z",
+  "captured_at": "2026-10-09T06:03:32Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -231,28 +231,28 @@
         "main_legend": "wu shang"
       },
       {
-        "brawlhalla_id": 115697497,
-        "player_name": "Kirito",
+        "brawlhalla_id": 106237759,
+        "player_name": "DeviL",
         "country": "PK",
-        "team": "Revenant Wolf",
-        "team_slug": "revenant-wolf",
-        "team_tag": "RW",
+        "team": "Delight Esports",
+        "team_slug": "delight-esports",
+        "team_tag": "DE",
         "is_claimed": false,
         "is_verified": false,
-        "region": "ME",
-        "rating": 1574,
-        "peak_rating": 1718,
-        "tier": "Gold 4",
-        "wins": 16,
-        "games": 39,
+        "region": "EU",
+        "rating": 1582,
+        "peak_rating": null,
+        "tier": "Gold 5",
+        "wins": 0,
+        "games": 2,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": null,
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": -3,
-        "main_legend": "sidra"
+        "trend": null,
+        "main_legend": "tezca"
       }
     ],
     "rising": {
@@ -263,8 +263,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 203,
-      "win_rate": 60.1,
+      "games": 229,
+      "win_rate": 60.3,
       "players": 14
     },
     "tournaments": []
