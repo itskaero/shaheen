@@ -37,6 +37,12 @@ There are no rank-specific roles. The bot keeps Player and Verified in step
 with the database on every snapshot tick, adding and removing them; every
 other role is manual.
 
+Two roles are yours to create and pick, not part of `/setup`:
+- **The join/approved roles** (`/access roles`, ADR-123), for example Guest.
+  The bot gives them on join and catches up anyone it missed (ADR-126).
+- **The Coach role** (`/coach setup`, ADR-126). You give it by hand; the bot
+  only reads who holds it to build the coach directory.
+
 ## Command authorization
 
 Checks live in `bot/checks/permissions.py` and are by role name plus a
@@ -45,7 +51,7 @@ them.
 
 - **`/setup` (run, roles, status, verify, restructure, reset):** guild owner,
   `BOT_OWNER_ID`, the native Administrator permission, or Founder/Admin.
-  `/access roles|approval|status` and `/sync` use the same check.
+  `/access roles|approval|status|sync`, `/coach setup` and `/sync` use the same check.
 - **Staff commands** (`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`,
   `/unban`, `/timeout`, `/untimeout`, `/purge`, `/lock`, `/unlock`,
   `/slowmode`, `/nickname`, `/verify`, `/spotlight`, `/emoji *`,
@@ -54,8 +60,11 @@ them.
 - **Team rosters** (`/team add`, `/team remove`): staff, or the captain of
   that team (the member whose linked Brawlhalla account is the team's
   captain, ADR-114). `/team create` and `/team captain` are staff only.
+- **Coaching** (`/coach requests`, `/coach profile`): members holding the
+  Coach role set with `/coach setup` (ADR-126). A request's Accept/Decline
+  buttons answer only for the coach asked, or staff.
 - **Everything else** (`/link`, `/profile`, `/level`, `/help`, `/team info`,
-  `/team leave` and so on): any member.
+  `/team leave`, `/coach list`, `/coach request` and so on): any member.
 
 The checks decide who can *invoke* a command; they never grant the bot a
 Discord permission it lacks. `/kick` still fails with a clear error if the

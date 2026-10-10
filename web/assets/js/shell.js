@@ -35,6 +35,7 @@
     award: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     feather: '<path d="M20 4c-6 0-12 4-14 12l-2 4M16 8 6 18M9 15h6"/>',
+    cap: '<path d="M2 9.5 12 5l10 4.5-10 4.5L2 9.5Z"/><path d="M6 11.3V16c1.7 1.6 3.7 2.4 6 2.4s4.3-.8 6-2.4v-4.7M22 9.5V15"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   };
 
@@ -45,6 +46,7 @@
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield" },
+    { key: "coaches", label: "Coaches", href: "coaches.html", icon: "cap" },
     { key: "legends", label: "Legends", href: "legends.html", icon: "swords", ready: false },
     { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true },
     { key: "tournaments", label: "Tournaments", href: "tournaments.html", icon: "flag" },

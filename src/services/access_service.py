@@ -13,6 +13,7 @@ What each role can see is the owner's channel setup, never the bot's
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Set
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,6 +58,47 @@ class ApprovalChange:
     @property
     def is_noop(self) -> bool:
         return self.add is None and self.remove is None
+
+
+@dataclass(frozen=True)
+class MemberRoles:
+    """What the access sync needs to know about one member (ADR-126)."""
+
+    discord_id: int
+    role_ids: frozenset[int]
+    is_bot: bool = False
+    pending: bool = False
+
+
+def members_missing_access(
+    config: AccessConfig,
+    members: Iterable[MemberRoles],
+    *,
+    ignored_role_ids: Set[int] = frozenset(),
+    everyone: bool = False,
+) -> list[int]:
+    """Members who should hold `config.role_on_join()` but hold neither
+    access role (ADR-126): someone who joined while the bot was offline, or
+    whose join-time role edit failed.
+
+    By default only members with no other roles count (besides
+    `ignored_role_ids`, the bot's own Player/Verified mirrors), so the
+    automatic sync never touches staff or anyone given roles by hand.
+    `everyone=True` (/access sync) includes them too. Bots and members
+    still in Discord's rules screening are always skipped.
+    """
+    role_id = config.role_on_join()
+    if role_id is None:
+        return []
+    access = {r for r in (config.join_role_id, config.approved_role_id) if r is not None}
+    missing = []
+    for member in members:
+        if member.is_bot or member.pending or member.role_ids & access:
+            continue
+        if not everyone and member.role_ids - ignored_role_ids:
+            continue
+        missing.append(member.discord_id)
+    return missing
 
 
 def plan_approval(config: AccessConfig, held_role_ids: set[int]) -> ApprovalChange:
@@ -132,6 +174,17 @@ class AccessService:
             subject="approval " + ("on" if enabled else "off"),
         )
         return updated
+
+    async def record_sync(self, guild_id: int, *, given: int, staff_discord_id: int | None) -> None:
+        """Audit a catch-up pass that handed out the join-time role (ADR-126)."""
+        await self._audit.add(
+            guild_id=guild_id,
+            action="access.sync",
+            source="discord",
+            actor_discord_id=staff_discord_id,
+            subject=f"join-time role given to {given} member(s)",
+            detail={"given": given},
+        )
 
     async def record_approval(
         self, guild_id: int, *, member_discord_id: int, staff_discord_id: int

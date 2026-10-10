@@ -402,3 +402,23 @@ class TeamDetailResponse(TeamSummaryResponse):
     roster: list[TeamPlayerResponse]
     achievements: list[TeamAchievementResponse]
     seasons: list[TeamSeasonResponse]
+
+
+class CoachResponse(BaseModel):
+    """A coach in the directory (ADR-126). Brawlhalla identity only (ADR-040):
+    coaches without a linked account aren't listed."""
+
+    brawlhalla_id: int
+    player_name: str
+    slug: str
+    specialty: str | None
+    legends: list[str]
+    availability: str | None
+    bio: str | None
+    accepting: bool
+    sessions: int
+    rating: int | None
+    tier: str | None
+    team: str | None
+    team_slug: str | None
+    team_tag: str | None
