@@ -816,3 +816,28 @@ async def test_teams_endpoints(
     assert client.get("/teams/nope").status_code == 404
     (entry,) = client.get("/players").json()
     assert (entry["team_slug"], entry["team_tag"]) == ("delight-esports", "DE")
+
+
+async def test_coaches_lists_linked_coaches_by_brawlhalla_identity(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from services.coaching_service import CoachingService, RoleHolder
+
+    assert client.get("/coaches").json() == []
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # Discord 1 -> brawlhalla_id=10, "Foo"
+        service = CoachingService(session)
+        await service.sync(GUILD_ID, [RoleHolder(1, "FooDiscord"), RoleHolder(2, "Unlinked")])
+        coach = await service.coach_of(GUILD_ID, 1)
+        assert coach is not None
+        await service.update_profile(coach, specialty="Sword", legends="Hattori")
+        await session.commit()
+
+    (entry,) = client.get("/coaches").json()  # the unlinked coach isn't listed
+    assert (entry["player_name"], entry["slug"], entry["legends"], entry["accepting"]) == (
+        "Foo",
+        "foo-10",
+        ["hattori"],
+        True,
+    )
+    assert "FooDiscord" not in str(entry) and "discord" not in str(entry).lower()

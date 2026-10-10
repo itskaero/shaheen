@@ -430,13 +430,50 @@ Members get their role on join, or once they pass Discord's rules screening
 if the server uses it. Turning approval off doesn't move anyone already
 waiting; `/approval` them. Audit-logged.
 
+Every 10 minutes the bot also catches up members the join handler missed
+(it was restarting, or Discord refused the edit), ADR-126. It only gives
+the join-time role to members with **no other roles** (Player/Verified
+don't count), so staff and hand-picked roles are never touched.
+
 ### /access status *(Founder/Admin)*
-Both roles, the switch, how many members are waiting, and anything missing
-(an unset or deleted role, or the bot lacking Manage Roles).
+Both roles, the switch, how many members are waiting, how many hold
+neither role, and anything missing: an unset or deleted role, a role at or
+above the bot's own (the usual reason members get nothing), or the bot
+lacking Manage Roles.
+
+### /access sync *(Founder/Admin)*
+Give the join-time role (approved role while approval is off, join role
+while it's on) to **every** member who holds neither role, including members
+with other roles. Shows the count and asks to confirm. Audit-logged.
 
 ### /approval <member> *(staff)*
 Give a member the approved role and take away the join role. Says so if
 they're already approved. Audit-logged.
+
+### /coach list
+The coaches (members holding the Coach role, ADR-126), who's taking
+students, their specialty, legends and availability, with a **Coaches page**
+button.
+
+### /coach request <coach> <message>
+Ask a coach for a session (10–280 characters on what you want help with).
+Posts a card in the coaching channel that pings the coach, with
+**Accept**/**Decline** buttons only that coach (or staff) can press. One
+open request per coach, three open at most; unanswered requests lapse after
+7 days. Accepting pings you in the channel; a decline is sent by DM.
+
+### /coach requests *(coaches)*
+Your open requests.
+
+### /coach profile [specialty] [legends] [availability] [bio] [accepting] *(coaches)*
+Edit your coach card. `legends` takes up to three names, comma-separated;
+empty text clears a field; `accepting:False` pauses new requests. You're
+listed on the website once your Brawlhalla account is linked.
+
+### /coach setup <role> <channel> *(Founder/Admin)*
+The role your coaches hold (given by hand; the bot only reads it) and the
+channel requests are posted in. The bot needs Send Messages and Embed Links
+there. Audit-logged.
 
 ### /sync *(Founder/Admin)*
 Re-sync the bot's slash commands to the server, for example after a deploy

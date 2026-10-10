@@ -5576,3 +5576,119 @@ and a write API is a larger, separate piece.
   - the snapshot tick puts a synced clan's roster on the board.
 - **Migration 0025:** round trip.
 - **Checks:** pytest 573, ruff, mypy.
+
+
+## ADR-126 — Guest role catch-up, error reports to staff, and coaching (directory + requests)
+
+**Status:** accepted.
+
+**Context.** The owner reported three things:
+- A command answered "Something went wrong on BRAWLISTAN's side" around `/access`.
+- Some new members weren't getting Guest. Guest is the **approved** role, with approval off, so every
+  new member should get it on join.
+- The server introduced coaching roles, and the owner wants an MVP for the site and the bot. They chose
+  a coach directory plus requests.
+
+**Finding: the error.**
+- Every `/access` path was replayed against a database with mocked Discord objects, and they all worked.
+- So the failure is runtime-only, from Discord or the database, and its traceback is only in the Fly logs.
+  The owner was on mobile and couldn't read those.
+- The fix makes the next one visible from Discord rather than guessing at it (below).
+
+**Finding: missed Guest roles.** `on_member_join` was the only place the role was given, so these
+members were left without it:
+- anyone who joined while the bot was restarting or redeploying (256 MB VM);
+- anyone whose join-time database or Discord call failed, because only `HTTPException` was caught;
+- anyone who joined while the Guest role sat at or above the bot's role.
+
+None of these was retried.
+
+**Decision: access catch-up.**
+- **A sync loop** (every 10 minutes, after `wait_until_ready`) gives `role_on_join()` to members who hold
+  neither access role.
+  - It only touches members with **no other roles**. The bot's own Player/Verified mirrors and
+    integration roles don't count. Staff and hand-picked roles are never changed automatically.
+  - It skips bots and members still in rules screening.
+  - It changes at most 50 members per pass, it is audit-logged (`access.sync`), and it never raises.
+- **The rule is a pure function**, `members_missing_access()` in `services/access_service.py`.
+- **`/access sync`** (setup-level) does the same for **every** member holding neither role, staff
+  included, after showing a count and asking to confirm.
+- **`/access status`** now also shows:
+  - how many members hold neither role;
+  - a configured role at or above the bot's role, with how to fix it.
+- **`/access status` defers first**, so a slow database can't expire the interaction.
+- **The join handler** catches every error and logs it; the sync retries.
+- **`/approval`** turns any Discord HTTP error into a clear message.
+
+**Decision: errors report themselves.**
+- An unhandled command error now gets a 6-character reference.
+  - The member sees it ("Staff have been told (ref `ab12cd`)").
+  - The log line carries it.
+  - A staff copy is posted to `MOD_LOG_CHANNEL_ID`, then `REPORT_CHANNEL_ID`, then the provisioned
+    #report.
+- **The staff copy** holds the command, the member, and the exception type plus its first line, passed
+  through `core.logging.redact` and capped at 300 characters. It never includes the traceback, and it
+  pings nobody.
+- **The error message itself is now best-effort.** It can no longer raise if the interaction has
+  expired.
+
+**Decision: coaching.**
+- **Who coaches is the Coach role**, given by hand. The bot only reads it (no role writes, no permission
+  changes, ADR-109).
+  - `/coach setup <role> <channel>` (setup-level) stores the role and the requests channel in
+    `guild_settings`.
+  - The bot mirrors the role's holders into `coaches`:
+    - on `/coach setup`, when a member's roles change, and every 30 minutes;
+    - new holders are added, and holders who lose the role go inactive, keeping their history;
+    - each coach's linked Brawlhalla account is refreshed.
+- **Profile.** `/coach profile` sets specialty, up to three legends (normalised legend keys), availability,
+  bio and accepting.
+- **Requests.**
+  - `/coach request <coach> <message>` posts a card in the coaching channel pinging the coach.
+  - Rules:
+    - one open request per student per coach, and at most three open;
+    - 10–280 characters, cleaned;
+    - requests lapse after 7 days;
+    - you can't ask yourself or a paused coach.
+  - **Accept/Decline** are `DynamicItem` buttons keyed by the request id, so they work after a restart.
+    Only the coach asked, or staff, can answer, and only once.
+  - Accepting pings the student in the channel; a decline is sent by DM, best-effort.
+  - `/coach requests` lists a coach's open ones. Everything is audit-logged.
+- **Data (migration 0026).**
+  - `coaches`: guild, discord_id (internal), display_name (internal), brawlhalla_player_id, profile
+    fields, accepting, active.
+  - `coaching_requests`: coach, student_discord_id, message, status `open|accepted|declined`, the card's
+    message id, responded_at.
+  - `guild_settings.coach_role_id` and `coaching_channel_id`.
+- **API.** `GET /coaches` lists active coaches **with a linked account**, by Brawlhalla identity only
+  (ADR-040), in this order: accepting first, then sessions, then rating. Fields: name, slug, specialty,
+  legends, availability, bio, accepting, sessions (accepted requests), current-season rating and tier,
+  and team. The snapshot workflow captures it as `web/data/coaches.json`.
+- **Website.** `coaches.html` and the Coaches nav entry:
+  - player-style cards with a "Taking students"/"Full" pill;
+  - the first legend's portrait, team pill, legend chips, bio, rating/tier/sessions, and availability;
+  - search by name, legend, specialty or team;
+  - a "How coaching works" panel with the Discord link.
+  - Sessions are booked in Discord, because the static site has no sign-in.
+
+**Not done.**
+- Booking from the website (needs Discord login).
+- Session scheduling and reviews.
+- Several coach tiers (one Coach role for now).
+- A coach badge on player profiles.
+
+**Verified.**
+- **Tests:**
+  - the catch-up rule: role-less only, ignored mirror roles, bots, pending members, `everyone`, both
+    switch states and unconfigured;
+  - the sync audit;
+  - error report text: redaction, first line only, the cap, and the embed fields;
+  - coaching: legend cleaning, role mirroring with history, profile edits and clearing, every request
+    rule, lapsing, who may answer and only once, directory order and session counts, and the embeds;
+  - `GET /coaches` lists only linked coaches and contains no Discord identity.
+- **Migration 0026:** round trip.
+- **Bot:** every cog loads (57 top-level commands, with `access sync` and `coach *`), and the dynamic
+  button is registered.
+- **Website:** Playwright with a mocked API at 1440 and 390 px: cards, search, nav state, no overflow, no
+  console errors.
+- **Checks:** pytest 590, ruff, mypy.

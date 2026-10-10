@@ -120,6 +120,7 @@ const ShaheenAPI = (() => {
     getFeatured: () => get("/featured"),
     getSeasons: () => get("/seasons"),
     getTeams: () => get("/teams"),
+    getCoaches: () => get("/coaches"),
     getTeam: (slug) => get(`/teams/${encodeURIComponent(slug)}`),
     getCurrentSeason: () => get("/seasons/current"),
     getSeason: (brawlhallaSeason) => get(`/seasons/${encodeURIComponent(brawlhallaSeason)}`),

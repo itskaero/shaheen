@@ -160,6 +160,17 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         ),
     ),
     HelpSection(
+        key="coaching",
+        title="🎓 Coaching",
+        commands=(
+            CommandHelp("/coach list", "The BRAWLISTAN coaches and who's taking students."),
+            CommandHelp("/coach request", "Ask a coach for a session."),
+            CommandHelp("/coach requests", "Coaches: your open requests."),
+            CommandHelp("/coach profile", "Coaches: specialty, legends, availability."),
+            CommandHelp("/coach setup", "Set the Coach role and coaching channel.", True),
+        ),
+    ),
+    HelpSection(
         key="staff_teams",
         title="🛡️ Staff — Teams",
         commands=(
@@ -186,6 +197,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/access roles", "Set the join role and the approved role.", True),
             CommandHelp("/access approval", "Turn member approval on or off.", True),
             CommandHelp("/access status", "Show join roles, approval and who's waiting.", True),
+            CommandHelp("/access sync", "Give the join-time role to members missing it.", True),
             CommandHelp("/setup reset", "Tear provisioned resources back down.", True),
         ),
     ),

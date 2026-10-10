@@ -16,9 +16,14 @@ from discord import app_commands
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from bot.constants import CHANNEL_REPORT
+from bot.content.error_embeds import build_error_report_embed, error_reference
 from bot.views.spar import SparKioskView
 from core.config import Settings
 from core.exceptions import ShaheenError
+from database.models.provisioned_resource import ResourceType
+from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
+from database.session import session_scope
 from integrations.brawlhalla.client import BrawlhallaClient
 from integrations.brawlhalla.service import BrawlhallaService
 from services.seasons import brawlhalla_season_at
@@ -46,6 +51,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.staff",
     "bot.cogs.teams",
     "bot.cogs.access",
+    "bot.cogs.coaching",
 )
 
 
@@ -109,10 +115,71 @@ class ShaheenBot(commands.Bot):
         elif isinstance(error, app_commands.CheckFailure):
             message = f"⚠️ {error}" if str(error) else "⚠️ You can't run this command."
         else:
-            logger.exception("Unhandled application command error", exc_info=original)
-            message = "⚠️ Something went wrong on BRAWLISTAN's side. This has been logged."
+            # A shared reference ties the member's message, the staff copy
+            # and the traceback in the logs together (ADR-126).
+            reference = error_reference()
+            command = interaction.command.qualified_name if interaction.command else "unknown"
+            logger.error(
+                "Unhandled application command error [%s] in /%s",
+                reference,
+                command,
+                exc_info=original,
+            )
+            message = (
+                "⚠️ Something went wrong on BRAWLISTAN's side. Staff have been told "
+                f"(ref `{reference}`)."
+            )
+            await self._report_error(interaction, command, reference, original)
 
-        if interaction.response.is_done():
-            await interaction.followup.send(message, ephemeral=True)
-        else:
-            await interaction.response.send_message(message, ephemeral=True)
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(message, ephemeral=True)
+            else:
+                await interaction.response.send_message(message, ephemeral=True)
+        except discord.HTTPException:
+            # The interaction expired or was deleted; the log has the error.
+            logger.warning("Couldn't send the error message to the member", exc_info=True)
+
+    async def _report_error(
+        self,
+        interaction: discord.Interaction,
+        command: str,
+        reference: str,
+        error: BaseException,
+    ) -> None:
+        """Post a staff copy of an unexpected error to the mod-log channel.
+        Best effort: never raises."""
+        guild = interaction.guild
+        if guild is None:
+            return
+        try:
+            channel = await self._staff_channel(guild)
+            if channel is None:
+                return
+            await channel.send(
+                embed=build_error_report_embed(
+                    command=command,
+                    reference=reference,
+                    error=error,
+                    user_id=interaction.user.id if interaction.user else None,
+                ),
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
+        except Exception:
+            logger.warning("Couldn't post the error report for %s", reference, exc_info=True)
+
+    async def _staff_channel(self, guild: discord.Guild) -> discord.TextChannel | None:
+        """MOD_LOG_CHANNEL_ID, then REPORT_CHANNEL_ID, then the provisioned #report."""
+        for channel_id in (self.settings.mod_log_channel_id, self.settings.report_channel_id):
+            if channel_id is not None:
+                channel = guild.get_channel(channel_id)
+                if isinstance(channel, discord.TextChannel):
+                    return channel
+        async with session_scope(self.session_factory) as session:
+            resource = await ProvisionedResourceRepository(session).get(
+                guild_id=guild.id,
+                resource_type=ResourceType.CHANNEL,
+                logical_key=CHANNEL_REPORT.logical_key,
+            )
+        channel = guild.get_channel(resource.discord_id) if resource else None
+        return channel if isinstance(channel, discord.TextChannel) else None

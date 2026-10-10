@@ -3813,3 +3813,127 @@ body.hide-tags .clan-tag {
     text-align: center;
   }
 }
+
+/* ---------- coaches (ADR-126): the player card, with legends and availability ---------- */
+
+.coach-grid {
+  margin-bottom: 22px;
+}
+
+.coach-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-glass);
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.coach-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.coach-card .card-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.coach-who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.coach-who .legend-avatar,
+.coach-who .avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.coach-who h3 {
+  margin: 12px 0 2px;
+  font-size: 15.5px;
+  font-weight: 650;
+}
+
+.coach-who:hover h3 {
+  text-decoration: underline;
+}
+
+.coach-card .sub {
+  color: var(--text-faint);
+  font-size: 12.5px;
+}
+
+.coach-team {
+  margin-top: 8px;
+}
+
+.coach-legends {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.coach-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.coach-legend .legend-avatar,
+.coach-legend .avatar {
+  border-radius: 50%;
+}
+
+.coach-bio {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.coach-when {
+  margin: 10px 0 0;
+  color: var(--text-faint);
+  font-size: 12.5px;
+}
+
+.coach-how h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.coach-how ol {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+
+.coach-how code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.92em;
+}
+
+@media (max-width: 560px) {
+  .coach-grid .player-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
