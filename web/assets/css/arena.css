@@ -1,15 +1,17 @@
-/* BRAWLISTAN "arena" layer (docs/DECISIONS.md ADR-130).
+/* BRAWLISTAN "arena" layer (docs/DECISIONS.md ADR-130, ADR-132).
 
-   Loaded after brawlistan.css on the entrance (index.html), the home
-   dashboard (home.html) and City Wars (cities.html). It adds:
-   - the fire palette from the warrior key art: blood red, ember, gold, with
-     Pakistan green kept for "up" and live states;
+   Loaded after brawlistan.css on every page. It adds:
+   - the fire palette from the warrior key art: blood red, ember, gold. It
+     re-themes the shared shell (scene, sidebar, top bar, bottom nav) and the
+     shared interactive accents (focus, active tabs, progress bars) on every
+     page. Pakistan green stays where it means something: rating gains,
+     "verified", online, quests done, and team colours;
    - glass cards, chips, change pills, a segmented toggle and a ticker
      (the crypto-dashboard UI kit);
    - the dashboard grid (the esports-dashboard layout);
    - the entrance page (the editorial landing layout).
-   Everything is scoped to .bl-arena / .en / .ar-* so other pages are
-   untouched. */
+   The components are scoped to .en / .ar-*; the shell section applies to
+   every body.bl page. */
 
 :root {
   --fire: #ff2e3a;
@@ -248,8 +250,156 @@ a.ar-chip:hover {
 
 /* ---------- dashboard (home.html, cities.html) ---------- */
 
-body.bl-arena .bl-main {
-  background: rgba(10, 8, 8, 0.72);
+/* ---------- site-wide shell (ADR-132) ----------
+   The sidebar, scene and shared accents in the same fire palette as the
+   content, on every page. */
+
+:root {
+  --accent: var(--ember);
+  --surface: rgba(18, 14, 14, 0.78);
+  --surface-glass: rgba(26, 20, 20, 0.58);
+  --surface-raised: rgba(44, 34, 34, 0.62);
+  --surface-hover: rgba(58, 46, 46, 0.6);
+}
+
+body.bl {
+  background: #080505;
+}
+
+body.bl :focus-visible {
+  outline-color: var(--ember);
+}
+
+.bl-scene {
+  background:
+    radial-gradient(110% 60% at 78% 78%, rgba(255, 46, 58, 0.16), transparent 60%),
+    radial-gradient(80% 55% at 12% 82%, rgba(255, 106, 31, 0.1), transparent 62%),
+    radial-gradient(60% 40% at 50% 0%, rgba(255, 179, 71, 0.05), transparent 70%),
+    linear-gradient(180deg, #070404 0%, #110909 46%, #1a0d0c 70%, #0a0606 100%);
+}
+
+.bl-scene .flight {
+  stroke: rgba(255, 106, 31, 0.24);
+}
+
+.bl-particle {
+  background: rgba(255, 214, 170, 0.6);
+  box-shadow: 0 0 6px rgba(255, 70, 40, 0.55);
+}
+
+.bl-app {
+  background: rgba(14, 9, 9, 0.38);
+}
+
+body.bl .bl-main {
+  background: rgba(12, 8, 8, 0.74);
+}
+
+.bl-sidebar {
+  background: linear-gradient(180deg, rgba(255, 46, 58, 0.035), transparent 30%);
+  border-radius: var(--radius-lg);
+}
+
+.bl-nav a[aria-current="page"] {
+  background: linear-gradient(90deg, rgba(255, 46, 58, 0.16), rgba(255, 255, 255, 0.03) 70%);
+  box-shadow: inset 2px 0 0 var(--fire);
+}
+
+.bl-nav a[aria-current="page"] svg,
+.bl-bottomnav a[aria-current="page"] svg {
+  color: var(--ember);
+}
+
+.bl-search input:focus {
+  border-color: var(--glass-line-hot);
+  outline: none;
+}
+
+.tab[aria-selected="true"] {
+  box-shadow: inset 0 -2px 0 var(--fire);
+}
+
+.meter span,
+.season-progress span,
+.quest-bar span {
+  background: var(--fire-grad);
+}
+
+.season-progress span {
+  box-shadow: 0 0 12px rgba(255, 70, 40, 0.6);
+}
+
+.level-ring {
+  background: conic-gradient(var(--ember) calc(var(--pct) * 1%), rgba(255, 255, 255, 0.07) 0);
+}
+
+.btn-brand,
+.btn-current {
+  background: var(--fire-grad);
+  color: #fff !important;
+}
+
+.btn-current {
+  box-shadow: 0 0 0 1px rgba(255, 90, 50, 0.45), 0 14px 40px -12px rgba(255, 46, 58, 0.75);
+}
+
+.btn-current:hover {
+  box-shadow: 0 0 0 1px rgba(255, 90, 50, 0.7), 0 18px 50px -10px rgba(255, 46, 58, 0.95);
+}
+
+.pill-live {
+  background: rgba(255, 46, 58, 0.14);
+  color: #ff7a6e;
+}
+
+.hero-live {
+  border-color: rgba(255, 90, 60, 0.32);
+}
+
+.hero-live .dot {
+  background: var(--fire);
+  box-shadow: 0 0 10px var(--fire);
+}
+
+.season-chip.is-current {
+  border-color: rgba(255, 90, 60, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 90, 60, 0.25), 0 10px 30px -12px rgba(255, 46, 58, 0.6);
+}
+
+.season-chip.is-current .season-chip-note {
+  color: var(--ember-gold);
+}
+
+.season-chip[aria-pressed="true"] {
+  border-color: var(--ember);
+  background: rgba(255, 106, 31, 0.08);
+}
+
+.check input {
+  accent-color: var(--ember);
+}
+
+.team-monogram {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 70, 50, 0.28), rgba(255, 255, 255, 0.04));
+}
+
+/* Team tags before names ([DE] scoooot!!!), matching the dashboard's .ar-tag. */
+.clan-tag {
+  color: var(--ember-gold);
+}
+
+@media (max-width: 860px) {
+  body.bl .bl-main {
+    background: rgba(10, 7, 7, 0.74);
+  }
+
+  .bl-topbar {
+    background: rgba(10, 7, 7, 0.88);
+  }
+
+  .bl-sidebar {
+    background: none;
+  }
 }
 
 .ar-grid {
@@ -1227,20 +1377,37 @@ body.en main:first-of-type {
   max-width: 860px;
 }
 
+/* A soft dark pool behind the hero text so it reads over the busy art. */
+.en-hero-body::before {
+  content: "";
+  position: absolute;
+  inset: -8% -14% -4%;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(5, 3, 3, 0.86), rgba(5, 3, 3, 0.62) 55%, transparent);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
 .en-hero h1 {
   margin: 22px 0 16px;
   font-family: var(--font-ui);
   font-size: clamp(44px, 7.4vw, 96px);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 8px 40px rgba(0, 0, 0, 0.85);
 }
 
+/* Lighter, warmer accent words with an outline-like shadow: the red-orange
+   gradient alone sank into the red art. */
 .en-hero h1 em {
   padding-right: 0.06em;
   font-size: 1.08em;
   letter-spacing: -0.01em;
+  background: none;
+  color: #ffc283;
+  -webkit-text-fill-color: #ffc283;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.85), 0 0 24px rgba(0, 0, 0, 0.8), 0 0 42px rgba(255, 90, 40, 0.35);
 }
 
 .en-hero p {

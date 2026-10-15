@@ -5985,3 +5985,39 @@ per-team war history pages. They can build on `clan_war_results` later.
   - the migration round trip.
 - **Playwright** with a mocked API at 1440 and 390 px: no overflow, no page errors.
 - **Checks:** ruff, mypy, pytest (627 passed).
+
+## ADR-132 — One palette site-wide; a readable entrance headline
+
+**Status:** accepted. Follows ADR-130.
+
+**Context.** The owner reported two problems after ADR-130:
+- The sidebar no longer matched the content. The shell (scene, sidebar, top bar, bottom nav) was still on
+  ADR-104's green-tinted darks and green active states, while the new pages used the fire palette.
+- The entrance headline was hard to read. The red-orange gradient on "finest" and "brawlers" sank into the
+  red art.
+
+**Decision.**
+- **`arena.css` loads on every page** that loads `brawlistan.css`, including the templates the generated
+  player and team pages copy (they were regenerated).
+- **A site-wide shell section re-themes, on every `body.bl` page:**
+  - warm darks for the surfaces, `--accent` on ember, and an ember focus ring;
+  - a red and ember scene with ember particles and flight line;
+  - the sidebar's active item (fire bar, red wash, ember icon) and the bottom nav's;
+  - active tabs, meters, season and quest progress, the level ring, `.btn-brand` and `.btn-current`;
+  - the live pill and dot, season chips, checkboxes, team monograms, and team tags (ember gold).
+- **Green stays where it carries meaning:** rating gains (▲), "verified", the online dot, finished quests,
+  and each team's own colours on its card.
+- **Headline:**
+  - a blurred dark pool behind the hero text;
+  - heavier white type with a tighter shadow;
+  - the accent words in solid warm amber (`#ffc283`) with a dark shadow and a faint ember glow, instead of
+    the clipped gradient.
+
+**Coaches page (finding, no change).** `GET /coaches` lists only coaches with a linked Brawlhalla account
+(ADR-126 and ADR-040: the site never shows Discord identities). The NAS database is new (ADR-127), so the
+7 synced Coach-role holders had no links yet, and the API returned `[]`. The page already says coaches
+appear once they link; while the API was unreachable it showed "Data unavailable" instead. Each coach runs
+`/link` to be listed.
+
+**Verified.** Playwright at 1440×900 and 390×844 on entrance, home, rankings, players, teams, coaches,
+seasons, Clan Wars and City Wars: no overflow, no page errors.
