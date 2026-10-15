@@ -118,9 +118,22 @@ then serve the `web/` folder with any static file server, e.g.
 
 ## Deploying to production
 
-Four pieces, deployed in this order (each depends on the one before it).
-The bot and the website **share one Postgres database** — that's the
-piece that ties the whole system together.
+BRAWLISTAN runs on a home NAS behind Cloudflare (docs/DECISIONS.md ADR-127):
+
+| Piece | Where | Address |
+|---|---|---|
+| Postgres, API, Discord bot, nightly backups | Docker on the NAS (`deploy/nas/docker-compose.yml`) | internal only |
+| API, published | Cloudflare Tunnel (`cloudflared` in the same stack) | `https://api.brawlistan.rekorex.online` |
+| Website | GitHub Pages, custom domain via Cloudflare DNS | `https://brawlistan.rekorex.online` |
+| App image | GitHub Container Registry, built by `.github/workflows/image.yml` | `ghcr.io/itskaero/shaheen` |
+
+The full walkthrough, from the Cloudflare tunnel to ZimaOS to updates,
+backups and restores, is **[docs/DEPLOY_NAS.md](docs/DEPLOY_NAS.md)**.
+The website keeps working when the NAS is off: it shows the last committed
+snapshots (`web/data/*.json`) with a "data from N hours ago" banner.
+
+`render.yaml` and `fly.toml` are the retired Render/Fly.io setup, kept for
+one release in case of a rollback.
 
 ### 0. Discord + Brawlhalla prerequisites
 
@@ -134,68 +147,21 @@ piece that ties the whole system together.
    Channels, Send Messages, Embed Links, etc. — not Administrator, per
    that doc's own rule). Open the generated URL and invite it to your
    server. Get the server's ID (right-click the server icon → Copy Server
-   ID, with Developer Mode on) — that's `GUILD_ID`.
+   ID, with Developer Mode on) — that's `DISCORD_GUILD_ID`.
 2. **Brawlhalla API key:** request one per `docs/DECISIONS.md` ADR-022
    (`api@brawlhalla.com`, verify current requirements at
    [dev.brawlhalla.com](https://dev.brawlhalla.com/)) — `BRAWLHALLA_API_KEY`.
 
-### 1. Database + API, on Render (free)
+### 1–3. NAS, tunnel and website
 
-In the [Render dashboard](https://dashboard.render.com), New → Blueprint →
-point it at this repo. Render reads `render.yaml` and provisions a free
-web service (the API) plus a free Postgres database. After the first
-deploy:
-
-- Set `DISCORD_TOKEN`, `GUILD_ID`, and `BRAWLHALLA_API_KEY` on the
-  `shaheen-api` service (the API process never reads their values, but
-  `Settings` requires them present — ADR-041; never commit real secrets).
-- Copy the service's public URL (`https://shaheen-api-xxxx.onrender.com`)
-  — the website needs it in step 3.
-- Open the `shaheen-db` database → copy its **External Database URL**
-  (not the internal one — the bot in step 2 connects from outside
-  Render's network). The bot needs this as its `DATABASE_URL`.
-
-The free plan sleeps after 15 minutes idle (first request after that is
-slow, ~30-60s) and its Postgres database expires after 90 days unless
-upgraded — fine for a small clan site, revisit if that stops being true.
-
-### 2. Bot, on Fly.io (free)
-
-The bot holds a persistent connection to Discord, so it can't live on
-Render's free tier the way the API does (that tier is request-driven and
-sleeps without inbound HTTP, which would drop the bot's connection —
-docs/DECISIONS.md ADR-053). Fly.io's free small-VM allowance covers a
-single always-on worker like this comfortably, deploying the same
-`Dockerfile` the API uses via the checked-in `fly.toml`:
-
-```bash
-flyctl auth login
-flyctl apps create shaheen-bot   # or your own name — update fly.toml's `app` to match
-flyctl secrets set \
-  DISCORD_TOKEN=... \
-  GUILD_ID=... \
-  DATABASE_URL=<the Render External Database URL from step 1> \
-  BRAWLHALLA_API_KEY=...
-flyctl deploy
-```
+Follow [docs/DEPLOY_NAS.md](docs/DEPLOY_NAS.md).
 
 The Brawlhalla season every snapshot is stamped with is worked out from the
 date: S42 began 2026-09-23 and a new one starts every 13 weeks
 (docs/DECISIONS.md ADR-102), each shown as a named Pakistan Season. If
-Brawlhalla's real reset lands on a different day, `flyctl secrets set
-BRAWLHALLA_SEASON=<n>` pins it until the calendar catches up; then `flyctl
-secrets unset BRAWLHALLA_SEASON`, or the season stops advancing.
-
-`flyctl deploy` again any time you push changes. `flyctl logs` tails the
-running bot.
-
-### 3. Frontend, on GitHub Pages (free)
-
-One-time setup — repo Settings → Pages → Source: "GitHub Actions". Set
-`web/assets/js/config.js`'s `API_BASE_URL` to the Render URL from step 1
-and push to `main`; `.github/workflows/pages.yml` deploys `web/`
-automatically on every push that touches it (or run it manually from the
-Actions tab).
+Brawlhalla's real reset lands on a different day, set `BRAWLHALLA_SEASON=<n>`
+in the NAS `.env` until the calendar catches up, then remove it, or the
+season stops advancing.
 
 ### 4. First run
 

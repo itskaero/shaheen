@@ -5692,3 +5692,76 @@ None of these was retried.
 - **Website:** Playwright with a mocked API at 1440 and 390 px: cards, search, nav state, no overflow, no
   console errors.
 - **Checks:** pytest 590, ruff, mypy.
+
+## ADR-127 — Hosting moves to the NAS (ZimaOS) behind Cloudflare; brawlistan.rekorex.online
+
+**Status:** accepted. Supersedes the hosting parts of ADR-044, ADR-053 and ADR-054 (Render and Fly.io).
+
+**Context.**
+- Around Oct 9 the free Render Postgres became unreachable.
+  - The bot logged `asyncpg ... SSL/TLS required` on every query.
+  - The Render API, which runs `alembic upgrade head` before it serves, stopped answering, even `/health`.
+  - `snapshot.yml` spent 1.5 hours per run timing out and committed nothing. The site showed old data without
+    saying so.
+- The owner asked to move the database and the bot to their NAS (ZimaOS, Docker, on a UPS) and to serve the
+  site at **brawlistan.rekorex.online** through Cloudflare.
+- They chose a fresh database rather than recovering the old one.
+
+**Decision: hosting.**
+- **One Docker stack on the NAS** (`deploy/nas/docker-compose.yml`):
+  - Postgres, with no published port and data under `/DATA/AppData/brawlistan`;
+  - a one-shot `migrate` that the API and the bot wait for;
+  - the API, with a `/health` healthcheck;
+  - the bot;
+  - `cloudflared`;
+  - nightly `pg_dump` backups (7 daily, 4 weekly, 3 monthly).
+- **Secrets** live only in the NAS `.env`. `DATABASE_URL` is assembled from `POSTGRES_PASSWORD`, so it's
+  written once.
+- **The API is published through a Cloudflare Tunnel** at `api.brawlistan.rekorex.online`. Outbound only: no
+  router ports, works behind CGNAT, and Cloudflare handles TLS.
+- **The website stays static on GitHub Pages** with `web/CNAME` and a Cloudflare DNS CNAME. It stays up when
+  the NAS is off.
+- **The app image** is built for amd64 and arm64 by `.github/workflows/image.yml` and pushed to GHCR as
+  `latest` and `sha-…`. The NAS pulls it instead of building.
+- **Render and Fly** are marked retired. Their config stays for one release.
+
+**Decision: the domain.**
+- `https://itskaero.github.io/shaheen` becomes `https://brawlistan.rekorex.online` in canonical and Open Graph
+  tags, the page generators, `.env.example`, and `core.config.DEFAULT_SITE_URL`.
+- The bot's two private copies of the site address (`engagement.py`, `profile_embeds.py`) now use
+  `settings.site_url`.
+- `config.js` points at the tunnel.
+- Pages and assets were already relative, so nothing else moves.
+
+**Decision: a fresh database works out of the box.**
+- Migrations 0020 and 0023 seeded the starting teams only for guilds already in the database, so a new
+  database had none.
+- `TeamService.ensure_seeded` now creates whichever of SHAHEEN and the four clan teams are missing
+  (`services/team_seeds.py`), on every snapshot tick before the clan sync. It never changes an existing team.
+
+**Decision: outages are visible.**
+- The bot answers a database-connection failure with "BRAWLISTAN's database is unreachable right now" and logs
+  one line instead of a traceback (`is_database_outage`).
+- When the live API fails and the page falls back to a snapshot, the site shows "Live data is unavailable right
+  now — showing data from N hours ago". It is dismissible for the visit.
+
+**Trade-offs.**
+- Uptime now depends on home power and internet. The UPS covers load-shedding, the access catch-up (ADR-126)
+  covers joins missed while the bot was down, and the snapshots keep the site readable.
+- Backups sit on the same NAS until the owner adds an offsite copy (`docs/DEPLOY_NAS.md`).
+
+**Verified.**
+- `docker compose config` is valid.
+- On Docker locally (with a stand-in `.env`):
+  - Postgres reported healthy;
+  - `migrate` ran 0001→0026 on an empty database and exited 0;
+  - the API was healthy and `/health`, `/teams`, `/coaches`, `/rankings/pakistan` and `/seasons/current`
+    returned 200;
+  - Postgres was not published on the host;
+  - the team seed created five teams, then none on the second run;
+  - a manual backup was written and restored into a scratch database (5 teams, revision 0026).
+- Playwright with the live API returning 503: the banner shows the snapshot's age at 1440 and 390 px, with no
+  overflow, and stays dismissed after a reload.
+- **Tests:** outage detection, team seeds (idempotent, never overwrite), and the profile link using
+  `site_url`.
+- **Checks:** pytest 594, ruff, mypy.

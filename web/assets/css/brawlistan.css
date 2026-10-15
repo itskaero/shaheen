@@ -3937,3 +3937,39 @@ body.hide-tags .clan-tag {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- stale-data banner (ADR-127) ---------- */
+
+.bl-stale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: var(--radius);
+  background: rgba(233, 196, 106, 0.08);
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.bl-stale strong {
+  color: #e9c46a;
+}
+
+.bl-stale-close {
+  flex: none;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-faint);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bl-stale-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}

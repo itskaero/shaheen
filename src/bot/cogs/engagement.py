@@ -52,14 +52,6 @@ logger = logging.getLogger(__name__)
 _WELCOME_KEY = "channel:welcome"
 _HALL_OF_FAME_KEY = "channel:hall_of_fame"
 
-# GitHub Pages' default project-site URL for this repo (docs/DECISIONS.md
-# ADR-047/054) — same constant as bot/content/profile_embeds.py's, kept
-# local rather than extracted to a shared setting for the same reason: no
-# WEBSITE_URL setting exists in core/config.py, and there's no custom
-# domain configured. Worth promoting to a shared constant if a third use
-# turns up.
-_WEBSITE_BASE_URL = "https://itskaero.github.io/shaheen"
-
 
 class EngagementCog(commands.Cog):
     def __init__(self, bot: ShaheenBot) -> None:
@@ -191,7 +183,9 @@ class EngagementCog(commands.Cog):
     async def anthem(self, interaction: discord.Interaction) -> None:
         # Ephemeral like every other read-only command here (see /help).
         await interaction.response.send_message(
-            embed=build_anthem_embed(website_url=f"{_WEBSITE_BASE_URL}/music.html"),
+            embed=build_anthem_embed(
+                website_url=f"{self.bot.settings.site_url.rstrip('/')}/music.html"
+            ),
             ephemeral=True,
         )
 

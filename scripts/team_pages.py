@@ -28,7 +28,7 @@ WEB = ROOT / "web"
 TEMPLATE = WEB / "team.html"
 DATA = WEB / "data" / "teams.json"
 OUT = WEB / "teams"
-SITE_URL = "https://itskaero.github.io/shaheen"
+SITE_URL = "https://brawlistan.rekorex.online"
 SLUG = re.compile(r"^[a-z0-9-]{1,48}$")
 COUNTRIES = {"PK": "Pakistan"}
 

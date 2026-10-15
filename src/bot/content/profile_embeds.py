@@ -7,6 +7,7 @@ from datetime import datetime
 import discord
 
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
+from core.config import DEFAULT_SITE_URL
 from database.models.achievement import Achievement
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.chat_activity import ChatActivity
@@ -17,14 +18,6 @@ from services.legend_art import legend_display_name
 from services.playstyle import derive_playstyle_tags
 
 _LEGENDS_SHOWN = 10
-
-# GitHub Pages' default project-site URL for this repo (docs/DECISIONS.md
-# ADR-047/054) — there's no custom domain configured (no CNAME in web/), and
-# no WEBSITE_URL setting exists in core/config.py, so this stays a constant
-# here rather than a new required env var just for a footer link. Update
-# this (or promote it to a real Settings field) if a custom domain is ever
-# set up for the site.
-_WEBSITE_BASE_URL = "https://itskaero.github.io/shaheen"
 
 
 def build_link_preview_embed(
@@ -126,6 +119,7 @@ def build_profile_embed(
     discord_created_at: datetime | None = None,
     discord_joined_at: datetime | None = None,
     on_pakistan_board: bool | None = None,
+    site_url: str = DEFAULT_SITE_URL,
 ) -> discord.Embed:
     """The one-look profile card — folds in what /rank, /stats, and /legends
     each show separately (win rate, tier/rating/peak, global/region rank)
@@ -223,7 +217,7 @@ def build_profile_embed(
     # supports markdown, so the link goes here instead, pointing at what a
     # Discord embed structurally can't show: a rating-history trend chart
     # and full match history (docs/DECISIONS.md ADR-067).
-    website_url = f"{_WEBSITE_BASE_URL}/player.html?id={player.brawlhalla_player_id}"
+    website_url = f"{site_url.rstrip('/')}/player.html?id={player.brawlhalla_player_id}"
     embed.add_field(
         name="Full Profile", value=f"[Rating trend & match history]({website_url})", inline=False
     )

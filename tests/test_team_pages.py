@@ -35,7 +35,7 @@ def test_page_carries_the_teams_own_seo_and_slug() -> None:
     assert "<title>SHAHEEN — Brawlistan Team</title>" in page
     assert "Pakistan&#x27;s founding Brawlhalla team on BRAWLISTAN" in page
     assert (
-        '<link rel="canonical" href="https://itskaero.github.io/shaheen/teams/shaheen/" />' in page
+        '<link rel="canonical" href="https://brawlistan.rekorex.online/teams/shaheen/" />' in page
     )
     assert "assets/img/teams/shaheen.png" in page
     assert 'data-team-slug="shaheen"' in page

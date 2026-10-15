@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
+from sqlalchemy.exc import DBAPIError, InterfaceError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.constants import CHANNEL_REPORT
@@ -53,6 +54,18 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.access",
     "bot.cogs.coaching",
 )
+
+
+def is_database_outage(error: BaseException) -> bool:
+    """The database can't be reached (down, restarting, refusing
+    connections), as opposed to a query or a bug (ADR-127)."""
+    return isinstance(error, (OperationalError, InterfaceError, ConnectionError, OSError)) or (
+        isinstance(error, DBAPIError) and error.connection_invalidated
+    )
+
+
+def _command_name(interaction: discord.Interaction) -> str:
+    return interaction.command.qualified_name if interaction.command else "unknown"
 
 
 class ShaheenBot(commands.Bot):
@@ -112,13 +125,23 @@ class ShaheenBot(commands.Bot):
 
         if isinstance(original, ShaheenError):
             message = f"⚠️ {original}"
+        elif is_database_outage(original):
+            # Not a bug in the command: the database is unreachable (ADR-127).
+            # Logged once per command, without the full traceback.
+            logger.error(
+                "Database unreachable during /%s: %s", _command_name(interaction), original
+            )
+            message = (
+                "⚠️ BRAWLISTAN's database is unreachable right now. "
+                "Please try again in a few minutes."
+            )
         elif isinstance(error, app_commands.CheckFailure):
             message = f"⚠️ {error}" if str(error) else "⚠️ You can't run this command."
         else:
             # A shared reference ties the member's message, the staff copy
             # and the traceback in the logs together (ADR-126).
             reference = error_reference()
-            command = interaction.command.qualified_name if interaction.command else "unknown"
+            command = _command_name(interaction)
             logger.error(
                 "Unhandled application command error [%s] in /%s",
                 reference,

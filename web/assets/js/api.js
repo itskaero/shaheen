@@ -101,6 +101,8 @@ const ShaheenAPI = (() => {
         throw err;
       }
       console.warn(`[shaheen] live refresh of ${name} failed (${err.message}); showing snapshot.`);
+      // shell.js shows one "showing data from N hours ago" banner (ADR-127).
+      window.dispatchEvent(new CustomEvent("bl:stale", { detail: { name, capturedAt: snapshot.captured_at } }));
     }
   }
 

@@ -1,0 +1,102 @@
+# BRAWLISTAN on the NAS (docs/DEPLOY_NAS.md, docs/DECISIONS.md ADR-127).
+#
+# One stack: Postgres, a one-shot migration, the API, the Discord bot,
+# nightly database backups, and a Cloudflare Tunnel that publishes the API at
+# https://api.brawlistan.rekorex.online without opening a port on the router.
+# Postgres is never published: only the containers on this network reach it.
+#
+# Put this file and a filled-in .env (from .env.example) in one folder on the
+# NAS, then:  docker compose pull && docker compose up -d
+# Update after a merge to main:  docker compose pull && docker compose up -d
+
+x-app: &app
+  image: ${BRAWLISTAN_IMAGE:-ghcr.io/itskaero/shaheen:latest}
+  env_file: .env
+  environment:
+    # Built here from POSTGRES_PASSWORD so the password lives in one place.
+    DATABASE_URL: postgresql+asyncpg://brawlistan:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/brawlistan
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: brawlistan
+      POSTGRES_DB: brawlistan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - ${BRAWLISTAN_DATA:-/DATA/AppData/brawlistan}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brawlistan -d brawlistan"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Brings the schema to the latest migration, then exits. The API and the
+  # bot start only after it succeeds.
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["uv", "run", "alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command:
+      ["uv", "run", "uvicorn", "api.app:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  bot:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Publishes the API through Cloudflare. In the Cloudflare dashboard the
+  # tunnel's public hostname api.brawlistan.rekorex.online points at
+  # http://api:8000.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # A pg_dump every night, kept 7 days / 4 weeks, on the NAS disk.
+  backup:
+    image: prodrigestivill/postgres-backup-local:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: brawlistan
+      POSTGRES_USER: brawlistan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: "7"
+      BACKUP_KEEP_WEEKS: "4"
+      BACKUP_KEEP_MONTHS: "3"
+      TZ: Asia/Karachi
+    volumes:
+      - ${BRAWLISTAN_DATA:-/DATA/AppData/brawlistan}/backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
