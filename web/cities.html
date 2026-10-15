@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>City Wars — BRAWLISTAN</title>
+  <meta name="description" content="City Wars: which Pakistani city has the strongest Brawlhalla players? Karachi, Lahore, Islamabad and more, ranked by their best five 1v1 ratings this season." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://brawlistan.rekorex.online/cities.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="City Wars — BRAWLISTAN" />
+  <meta property="og:description" content="Which Pakistani city has the strongest Brawlhalla players? Represent yours." />
+  <meta property="og:image" content="https://brawlistan.rekorex.online/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/brawlistan.css" />
+  <link rel="stylesheet" href="assets/css/arena.css" />
+</head>
+<body class="bl bl-arena" data-page="cities">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="bl-scene" aria-hidden="true"></div>
+  <div class="bl-app">
+    <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
+    <div class="bl-main">
+      <header class="bl-topbar" data-shell="topbar"></header>
+      <main id="main">
+        <header class="ar-page-hero" data-embers="36">
+          <span class="ar-pill">City Wars &middot; <span id="cw-season">this season</span></span>
+          <h1>Which city <em>rules</em> the arena?</h1>
+          <p>Every city's score is the average of its best five placed 1v1 ratings this season, so one star and a big city compete fairly.</p>
+        </header>
+
+        <section class="ar-podium" id="podium" aria-label="Top three cities"></section>
+
+        <div class="ar-grid">
+          <section class="ar-card span-8" aria-labelledby="standings-title">
+            <div class="ar-head">
+              <h2 id="standings-title">Standings</h2>
+              <span class="ar-chip ar-chip-static" id="cw-count"></span>
+            </div>
+            <div id="standings" aria-live="polite"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <section class="ar-card span-4" aria-labelledby="join-title">
+            <div class="ar-head"><h2 id="join-title">Represent your city</h2></div>
+            <ol class="ar-steps">
+              <li><strong>Join the Discord</strong><span>Everything starts in the BRAWLISTAN server.</span></li>
+              <li><strong>Link your account</strong><span>Run <code>/link</code> with your Brawlhalla profile.</span></li>
+              <li><strong>Pick your city</strong><span>Run <code>/city set</code>. You can change it with <code>/city clear</code>.</span></li>
+              <li><strong>Play ranked</strong><span>Once you're placed, your 1v1 rating counts for your city.</span></li>
+            </ol>
+            <a class="ar-btn ar-btn-fire ar-btn-block" data-discord-invite href="join.html" target="_blank" rel="noopener">Join the Discord</a>
+          </section>
+        </div>
+      </main>
+      <footer class="bl-footer" data-shell="footer"></footer>
+    </div>
+  </div>
+  <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/shell.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/theme.js"></script>
+  <script src="assets/js/pages/cities.js"></script>
+  <script src="assets/js/embers.js" defer></script>
+</body>
+</html>

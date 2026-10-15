@@ -123,7 +123,7 @@ BRAWLISTAN runs on a home NAS behind Cloudflare (docs/DECISIONS.md ADR-127):
 | Piece | Where | Address |
 |---|---|---|
 | Postgres, API, Discord bot, nightly backups | Docker on the NAS (`deploy/nas/docker-compose.yml`) | internal only |
-| API, published | Cloudflare Tunnel (`cloudflared` in the same stack) | `https://api.brawlistan.rekorex.online` |
+| API, published | Cloudflare Tunnel (`cloudflared` in the same stack) | `https://api-brawlistan.rekorex.online` |
 | Website | GitHub Pages, custom domain via Cloudflare DNS | `https://brawlistan.rekorex.online` |
 | App image | GitHub Container Registry, built by `.github/workflows/image.yml` | `ghcr.io/itskaero/shaheen` |
 

@@ -494,6 +494,17 @@ there. Audit-logged.
 Re-sync the bot's slash commands to the server, for example after a deploy
 added commands.
 
+### /admin status *(Founder/Admin)*
+A private health check (ADR-129):
+- **Bot:** Discord latency and uptime.
+- **Database:** reachable or not, query time, and the schema revision.
+- **Rankings:** when the last ranking snapshot was taken, the snapshot
+  interval, and how many players are tracked.
+- **Background loops:** ranking snapshot, weekly digest, access catch-up and
+  coaching sync, each running or stopped.
+- **Needs attention:** anything wrong, most serious first. A snapshot older
+  than two intervals usually means a bad Brawlhalla API key.
+
 ### /team info [name]
 A team's roster (captain marked 👑), player count, team rating and logo,
 with a **Team page** button. Shows your own team when no name is given.

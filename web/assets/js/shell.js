@@ -37,13 +37,15 @@
     feather: '<path d="M20 4c-6 0-12 4-14 12l-2 4M16 8 6 18M9 15h6"/>',
     cap: '<path d="M2 9.5 12 5l10 4.5-10 4.5L2 9.5Z"/><path d="M6 11.3V16c1.7 1.6 3.7 2.4 6 2.4s4.3-.8 6-2.4v-4.7M22 9.5V15"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    pin: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
   };
 
   // `ready: false` hides an item until its page ships (BRAWLISTAN_MIGRATION.md
   // stages), so the nav never links to a page that doesn't exist yet.
   const NAV = [
-    { key: "home", label: "Home", href: "index.html", icon: "home", mobile: true },
+    { key: "home", label: "Home", href: "home.html", icon: "home", mobile: true },
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
+    { key: "cities", label: "City Wars", href: "cities.html", icon: "pin" },
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield" },
     { key: "coaches", label: "Coaches", href: "coaches.html", icon: "cap" },

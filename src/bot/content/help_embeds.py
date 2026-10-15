@@ -196,6 +196,9 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="⚙️ Staff — Setup",
         commands=(
             CommandHelp("/sync", "Re-sync the bot's slash commands.", True),
+            CommandHelp(
+                "/admin status", "Bot, database and ranking-snapshot health at a glance.", True
+            ),
             CommandHelp("/setup run", "Create or reuse the BRAWLISTAN roles and channels.", True),
             CommandHelp(
                 "/setup roles", "Create missing roles only; never grants permissions.", True

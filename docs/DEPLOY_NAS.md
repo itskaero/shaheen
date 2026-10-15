@@ -14,7 +14,7 @@ Discord ⇄ bot ─┐
                ├─ db (Postgres, internal only) ── backup (nightly pg_dump)
          api ──┘
           ▲  http://api:8000
-cloudflared ── Cloudflare Tunnel ──▶ https://api.brawlistan.rekorex.online
+cloudflared ── Cloudflare Tunnel ──▶ https://api-brawlistan.rekorex.online
 GitHub Pages ─────────────────────▶ https://brawlistan.rekorex.online
 ```
 
@@ -37,7 +37,8 @@ You need:
 2. On the install screen, choose **Docker** and copy only the token, the long string after `--token`. That's
    `TUNNEL_TOKEN`.
 3. **Public hostnames → Add:**
-   - Subdomain `api.brawlistan`, domain `rekorex.online`.
+   - Subdomain `api-brawlistan`, domain `rekorex.online`. Keep it one level deep: the free Cloudflare
+     certificate covers `*.rekorex.online` only, so `api.brawlistan` fails the HTTPS handshake.
    - Service type `HTTP`, URL `api:8000`.
 
    Cloudflare creates the DNS record itself.
@@ -91,7 +92,7 @@ docker compose ps             # db/api healthy, migrate "exited (0)", bot/cloudf
 
 The old `itskaero.github.io/shaheen` links redirect to the new domain automatically.
 
-**The site talks to the API at `https://api.brawlistan.rekorex.online`** (`web/assets/js/config.js`). Every
+**The site talks to the API at `https://api-brawlistan.rekorex.online`** (`web/assets/js/config.js`). Every
 6 hours, `snapshot.yml` fetches it and commits fresh `web/data/*.json`, so the site loads instantly and still
 works when the NAS is off.
 
@@ -122,7 +123,7 @@ The database is new, so set things up again:
 |---|---|
 | Update after a merge | `docker compose pull && docker compose up -d` |
 | Bot logs | `docker compose logs -f --tail=200 bot` |
-| API health | `curl https://api.brawlistan.rekorex.online/health` |
+| API health | `curl https://api-brawlistan.rekorex.online/health` |
 | Restart one service | `docker compose restart bot` |
 | Backup now | `docker compose exec backup /backup.sh` |
 | Pin a version | set `BRAWLISTAN_IMAGE=ghcr.io/itskaero/shaheen:sha-<commit>` in `.env`, then `up -d` |

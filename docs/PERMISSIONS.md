@@ -51,7 +51,8 @@ them.
 
 - **`/setup` (run, roles, status, verify, restructure, reset):** guild owner,
   `BOT_OWNER_ID`, the native Administrator permission, or Founder/Admin.
-  `/access roles|approval|status|sync`, `/coach setup` and `/sync` use the same check.
+  `/access roles|approval|status|sync`, `/coach setup`, `/sync` and `/admin status` use the same
+  check.
 - **Staff commands** (`/warn`, `/warnings`, `/clearwarnings`, `/kick`, `/ban`,
   `/unban`, `/timeout`, `/untimeout`, `/purge`, `/lock`, `/unlock`,
   `/slowmode`, `/nickname`, `/verify`, `/spotlight`, `/emoji *`,

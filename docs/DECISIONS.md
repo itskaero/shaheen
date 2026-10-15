@@ -5717,7 +5717,7 @@ None of these was retried.
   - nightly `pg_dump` backups (7 daily, 4 weekly, 3 monthly).
 - **Secrets** live only in the NAS `.env`. `DATABASE_URL` is assembled from `POSTGRES_PASSWORD`, so it's
   written once.
-- **The API is published through a Cloudflare Tunnel** at `api.brawlistan.rekorex.online`. Outbound only: no
+- **The API is published through a Cloudflare Tunnel** at `api-brawlistan.rekorex.online`. Outbound only: no
   router ports, works behind CGNAT, and Cloudflare handles TLS.
 - **The website stays static on GitHub Pages** with `web/CNAME` and a Cloudflare DNS CNAME. It stays up when
   the NAS is off.
@@ -5831,3 +5831,101 @@ carry their own preview cards.
 - **Playwright** with a mocked API at 1440 and 390 px: the Cities tab, the profile's level ring, quest bars
   and city pill, WhatsApp links on the profile and team page, no overflow, no page errors.
 - **Checks:** ruff, mypy, pytest.
+
+## ADR-129 — /admin status: a health check instead of a web dashboard
+
+**Status:** accepted.
+
+**Context.** After the API went dark behind a misconfigured tunnel hostname, the owner asked whether a bot
+dashboard would help. A web admin dashboard would need Discord OAuth, sessions and role checks on every write
+endpoint: the first admin-write surface on the public internet, duplicating rules the slash commands already
+enforce, for a handful of admins. What was actually missing was a quick way to see whether things were
+healthy.
+
+**Decision.** `/admin status` (Founder/Admin, the `/setup` check), ephemeral:
+- **Bot:** gateway latency and uptime (`ShaheenBot.started_at`).
+- **Database:** `SELECT 1` and its time, the Alembic revision.
+- **Rankings:** the newest ranking snapshot, the configured interval, and players tracked.
+- **Loops:** ranking snapshot, weekly digest, access catch-up, coaching sync; running or stopped.
+- **Needs attention**, most serious first: database unreachable or slow (over 300 ms), a stopped loop, no
+  snapshot yet, a snapshot older than two intervals (one missed tick can be a restart; two is a fault,
+  usually the Brawlhalla API key), Discord latency over 500 ms.
+
+**Layers.**
+- `database/repositories/system_repository.py`: the read-only queries.
+- `services/status_service.py`: Discord-agnostic. The bot passes its own facts as `BotFacts`; the service
+  adds the database's and decides what needs attention (`SystemStatus.problems()`). An unreachable
+  database is part of the report, never an exception. The log line names only the error type.
+- `bot/content/status_embeds.py`: the embed. The command is in `bot/cogs/staff.py`.
+
+The Brawlhalla API is not called: the snapshot age already shows whether it's working, without spending
+rate limit.
+
+**Verified.** Tests: a healthy report, ordering of problems, the two-interval boundary, no snapshot,
+stopped loops and slow services, `format_age`, the check on an empty database and with readings, an
+unreachable database without raising, the embed's fields. ruff, mypy, pytest (616 passed).
+
+## ADR-130 — Entrance page, arena dashboard, City Wars page
+
+**Status:** accepted.
+
+**Context.** The owner sent four references:
+- an editorial landing page as the entrance to the site;
+- an esports dashboard for layout;
+- a crypto dashboard for UI elements only;
+- new key art (three warriors on red and black, with green and white flag ribbons), for the landing or hero,
+  with red fireflies or fire moving over it.
+
+They also couldn't find City Wars on the site: it was a tab inside Rankings, and the site's snapshots had
+stopped on Oct 9, before City Wars merged, because the API was unreachable.
+
+**Decision.**
+- **`index.html` is now the entrance.** It's standalone, without the app shell:
+  - a floating glass nav;
+  - a full-screen hero on the key art, with rising embers;
+  - a centred headline, sans with serif-italic accent words;
+  - "Enter BRAWLISTAN" and "View rankings";
+  - live stat tiles: season, Discord members, ranked players, cities at war.
+  - Below the hero:
+    - a three-card carousel of the top 10 players, with the centre card glowing;
+    - a three-row legend-portrait mosaic drifting in alternate directions;
+    - "Join the Community", with a rotating circular-text badge;
+    - a two-card footer.
+- **The dashboard moves to `home.html`**, and the shell's Home link points there (the logo still goes to
+  the entrance). The layout follows the esports reference:
+  - a live ticker of the board, with green and red change pills;
+  - a season card with a progress bar, member counts and a Discord button;
+  - a season banner on the key art, with a ticking countdown to the season's end and embers;
+  - Players, Teams and City Wars as ranked lists with numbered boxes, #1 in fire;
+  - Tournaments with an Upcoming/Finished toggle;
+  - Rising, Legend meta and Featured player.
+  - Below 1500 px the grid goes 4/8, the side lists three across, and tournaments full width, so names
+    aren't cut short.
+- **`cities.html`**: City Wars gets its own page and a sidebar link. It has:
+  - a hero;
+  - a podium ordered 2-1-3;
+  - the full standings, each with a score bar;
+  - "Represent your city" steps.
+  The Rankings tab stays.
+- **Look:** `assets/css/arena.css`, scoped to `.bl-arena`, `.en` and `.ar-*` so the other pages are
+  unchanged.
+  - A fire palette from the art: red `#ff2e3a`, ember `#ff6a1f`, gold. Green stays for "up" and live.
+  - Instrument Serif for display accents.
+  - Glass cards, chips, change pills and a segmented control, after the crypto reference.
+- **Embers:** `assets/js/embers.js` fills any `[data-embers]` element with rising embers and blinking red
+  fireflies, plus a rare green one. They part around the pointer.
+  - It's built like `hero-fx.js` (ADR-110): pre-rendered glow sprites, "lighter" compositing, DPR capped at
+    2, and paused off-screen or in a hidden tab.
+  - The count scales with the element's area.
+  - Reduced motion paints a still frame. The ticker, mosaic, badge and hero zoom also stop, and the ticker
+    and mosaic become scrollable.
+- **Art:** `assets/img/brawlistan/warriors{,-1280,-800}.webp` and `warriors.jpg` (1672 px source).
+
+Data comes from the existing snapshots and endpoints (`clan`, `rankings`, `teams`, `cities`, `rising`,
+`legend-meta`, `featured`, `/tournaments`). There are no new endpoints. The `cities` snapshot appears on the
+first `snapshot.yml` run after the API is reachable again.
+
+**Verified.** Playwright with a mocked API at 1440×900 and 390×844, on the entrance, home and City Wars:
+- no horizontal overflow;
+- one embers canvas on each page;
+- no page errors (only the 404s for snapshots not yet generated).

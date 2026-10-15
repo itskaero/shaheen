@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Home — BRAWLISTAN</title>
+  <meta name="description" content="The Pakistani Brawlhalla scene at a glance: the season countdown, top players, teams, City Wars, tournaments and who's rising this week." />
+  <meta name="theme-color" content="#070a09" />
+  <link rel="canonical" href="https://brawlistan.rekorex.online/home.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BRAWLISTAN" />
+  <meta property="og:title" content="BRAWLISTAN — Pakistan's Brawlhalla Network" />
+  <meta property="og:description" content="Track the scene. Find the players. Climb the rankings." />
+  <meta property="og:url" content="https://brawlistan.rekorex.online/home.html" />
+  <meta property="og:image" content="https://brawlistan.rekorex.online/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/brawlistan.css" />
+  <link rel="stylesheet" href="assets/css/arena.css" />
+</head>
+<body class="bl bl-arena" data-page="home">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="bl-scene" aria-hidden="true"></div>
+  <div class="bl-app">
+    <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
+    <div class="bl-main">
+      <header class="bl-topbar" data-shell="topbar"></header>
+      <main id="main">
+        <h1 class="sr-only">BRAWLISTAN home</h1>
+
+        <!-- Live ticker: the top of the Pakistan board, with each player's
+             rating move this week (ADR-130). -->
+        <div class="ar-ticker" aria-label="Top of the Pakistan board">
+          <span class="ar-ticker-label"><span class="ar-live-dot" aria-hidden="true"></span>Live board</span>
+          <div class="ar-ticker-track" id="ticker"><span class="muted">Loading…</span></div>
+        </div>
+
+        <div class="ar-grid">
+          <!-- Season card (left) -->
+          <section class="ar-card ar-season span-3" aria-labelledby="season-title">
+            <div id="season-card"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Season banner with countdown (centre) -->
+          <section class="ar-card ar-event span-6" aria-labelledby="event-title" data-embers="40">
+            <picture class="ar-event-art" aria-hidden="true">
+              <source srcset="assets/img/brawlistan/warriors-800.webp 800w, assets/img/brawlistan/warriors-1280.webp 1280w" sizes="(max-width: 900px) 100vw, 50vw" type="image/webp" />
+              <img src="assets/img/brawlistan/warriors.jpg" alt="" width="1672" height="941" fetchpriority="high" />
+            </picture>
+            <div class="ar-event-body">
+              <span class="ar-eyebrow" id="event-eyebrow">Season ends in</span>
+              <h2 id="event-title">Pakistan Season</h2>
+              <div class="ar-countdown" id="countdown" aria-live="off"></div>
+              <div class="ar-event-actions">
+                <a class="ar-btn ar-btn-fire" href="rankings.html">View rankings</a>
+                <a class="ar-btn ar-btn-glass" href="cities.html">City Wars</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Top players (right) -->
+          <section class="ar-card span-3" aria-labelledby="players-title">
+            <div class="ar-head">
+              <h2 id="players-title">Players</h2>
+              <a class="ar-chip" href="rankings.html">All</a>
+            </div>
+            <div id="top-players"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Teams -->
+          <section class="ar-card span-3" aria-labelledby="teams-title">
+            <div class="ar-head">
+              <h2 id="teams-title">Teams</h2>
+              <a class="ar-chip" href="teams.html">View all</a>
+            </div>
+            <div id="teams"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Tournaments -->
+          <section class="ar-card span-6" aria-labelledby="tournaments-title">
+            <div class="ar-head">
+              <h2 id="tournaments-title">Tournaments</h2>
+              <div class="ar-segment" role="tablist" aria-label="Tournaments">
+                <button type="button" role="tab" aria-selected="true" data-tview="upcoming">Upcoming</button>
+                <button type="button" role="tab" aria-selected="false" data-tview="finished">Finished</button>
+              </div>
+            </div>
+            <div id="tournaments"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- City Wars -->
+          <section class="ar-card span-3" aria-labelledby="cities-title">
+            <div class="ar-head">
+              <h2 id="cities-title">City Wars</h2>
+              <a class="ar-chip" href="cities.html">Standings</a>
+            </div>
+            <div id="cities"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Rising -->
+          <section class="ar-card span-4" aria-labelledby="rising-title">
+            <div class="ar-head">
+              <h2 id="rising-title">Rising</h2>
+              <span class="ar-chip ar-chip-static">7 days</span>
+            </div>
+            <div id="rising"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Legend meta -->
+          <section class="ar-card span-4" aria-labelledby="meta-title">
+            <div class="ar-head">
+              <h2 id="meta-title">Legend meta</h2>
+              <span class="ar-chip ar-chip-static">Most played</span>
+            </div>
+            <div id="legend-meta"><p class="unavailable">Loading…</p></div>
+          </section>
+
+          <!-- Featured player -->
+          <section class="ar-card span-4" aria-labelledby="featured-title">
+            <div class="ar-head"><h2 id="featured-title">Featured player</h2></div>
+            <div id="featured"><p class="unavailable">Loading…</p></div>
+          </section>
+        </div>
+      </main>
+      <footer class="bl-footer" data-shell="footer"></footer>
+    </div>
+  </div>
+  <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/shell.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/theme.js"></script>
+  <script src="assets/js/pages/home.js"></script>
+  <script src="assets/js/embers.js" defer></script>
+</body>
+</html>

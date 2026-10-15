@@ -3,7 +3,7 @@
 // Where the FastAPI backend (src/api/app.py) is reachable: the NAS behind a
 // Cloudflare Tunnel (docs/DEPLOY_NAS.md, ADR-127). For local development
 // point it at http://localhost:8000 (`uv run uvicorn api.app:app --reload`).
-const API_BASE_URL = "https://api.brawlistan.rekorex.online";
+const API_BASE_URL = "https://api-brawlistan.rekorex.online";
 
 // Optional: your Discord invite link (e.g. "https://discord.gg/xxxxxxx").
 // Leave empty to hide the header's "Join Discord" button.

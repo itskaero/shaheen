@@ -75,6 +75,8 @@ class ShaheenBot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned, intents=INTENTS)
         self.settings = settings
         self.session_factory = session_factory
+        # For /admin status (ADR-129).
+        self.started_at = datetime.now(UTC)
         self.brawlhalla = BrawlhallaService(
             BrawlhallaClient(
                 settings.brawlhalla_api_key.get_secret_value(),
