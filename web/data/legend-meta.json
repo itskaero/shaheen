@@ -1,66 +1,66 @@
 {
-  "captured_at": "2026-10-09T13:11:09Z",
+  "captured_at": "2026-10-15T21:19:06Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
-      "player_count": 84,
-      "total_games": 72090,
-      "win_rate": 52.0
+      "player_count": 83,
+      "total_games": 78127,
+      "win_rate": 53.0
     },
     {
       "legend_name_key": "nix",
-      "player_count": 81,
-      "total_games": 45369,
-      "win_rate": 52.4
+      "player_count": 80,
+      "total_games": 45351,
+      "win_rate": 52.7
     },
     {
       "legend_name_key": "tezca",
-      "player_count": 80,
-      "total_games": 37473,
-      "win_rate": 52.1
+      "player_count": 79,
+      "total_games": 37719,
+      "win_rate": 52.2
     },
     {
       "legend_name_key": "orion",
       "player_count": 82,
-      "total_games": 28448,
-      "win_rate": 52.3
-    },
-    {
-      "legend_name_key": "artemis",
-      "player_count": 83,
-      "total_games": 23973,
-      "win_rate": 52.0
-    },
-    {
-      "legend_name_key": "teros",
-      "player_count": 77,
-      "total_games": 22450,
-      "win_rate": 56.5
+      "total_games": 28533,
+      "win_rate": 52.4
     },
     {
       "legend_name_key": "wu shang",
-      "player_count": 83,
-      "total_games": 22195,
-      "win_rate": 52.0
+      "player_count": 82,
+      "total_games": 24954,
+      "win_rate": 53.2
+    },
+    {
+      "legend_name_key": "artemis",
+      "player_count": 82,
+      "total_games": 24234,
+      "win_rate": 52.2
+    },
+    {
+      "legend_name_key": "teros",
+      "player_count": 76,
+      "total_games": 23780,
+      "win_rate": 57.4
     },
     {
       "legend_name_key": "cassidy",
-      "player_count": 81,
-      "total_games": 21578,
-      "win_rate": 55.0
+      "player_count": 80,
+      "total_games": 21792,
+      "win_rate": 55.1
+    },
+    {
+      "legend_name_key": "mirage",
+      "player_count": 82,
+      "total_games": 21167,
+      "win_rate": 51.7
     },
     {
       "legend_name_key": "koji",
       "player_count": 80,
-      "total_games": 20977,
-      "win_rate": 50.2
-    },
-    {
-      "legend_name_key": "mirage",
-      "player_count": 83,
-      "total_games": 19922,
-      "win_rate": 50.2
+      "total_games": 21051,
+      "win_rate": 50.3
     }
   ]
 }

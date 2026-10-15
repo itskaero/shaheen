@@ -1,0 +1,72 @@
+{
+  "captured_at": "2026-10-15T21:19:06Z",
+  "source": "/clan-wars",
+  "data": {
+    "season": 42,
+    "week_start": "2026-10-12",
+    "ends_at": "2026-10-18T19:00:00Z",
+    "win_points": 10,
+    "top_n": 5,
+    "standings": [
+      {
+        "slug": "delight-esports",
+        "name": "Delight Esports",
+        "tag": "DE",
+        "logo": "delight-esports",
+        "accent": "#e9c46a",
+        "place": 1,
+        "points": 63,
+        "scorers": [
+          {
+            "brawlhalla_id": 1739958,
+            "player_name": "scoooot!!!",
+            "slug": "scoooot-1739958",
+            "points": 63
+          }
+        ]
+      },
+      {
+        "slug": "clan-monke",
+        "name": "Clan Monke",
+        "tag": "MONKE",
+        "logo": "clan-monke",
+        "accent": "#e8b923",
+        "place": 2,
+        "points": 0,
+        "scorers": []
+      },
+      {
+        "slug": "revenant-wolf",
+        "name": "Revenant Wolf",
+        "tag": "RW",
+        "logo": "revenant-wolf",
+        "accent": "#e3122d",
+        "place": 3,
+        "points": 0,
+        "scorers": []
+      },
+      {
+        "slug": "shaheen",
+        "name": "SHAHEEN",
+        "tag": "SHN",
+        "logo": "shaheen",
+        "accent": "#3df26e",
+        "place": 4,
+        "points": 0,
+        "scorers": []
+      },
+      {
+        "slug": "sigma-grinders",
+        "name": "Sigma Grinders",
+        "tag": "SG",
+        "logo": "sigma-grinders",
+        "accent": "#8b3dff",
+        "place": 5,
+        "points": 0,
+        "scorers": []
+      }
+    ],
+    "season_table": [],
+    "last_winner": null
+  }
+}

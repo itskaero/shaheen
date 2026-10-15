@@ -1,0 +1,22 @@
+{
+  "captured_at": "2026-10-15T21:19:06Z",
+  "source": "/coaches",
+  "data": [
+    {
+      "brawlhalla_id": 84939075,
+      "player_name": "Pumpkin Man <3",
+      "slug": "pumpkin-man-3-84939075",
+      "specialty": null,
+      "legends": [],
+      "availability": null,
+      "bio": null,
+      "accepting": true,
+      "sessions": 0,
+      "rating": 1921,
+      "tier": "Platinum 4",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null
+    }
+  ]
+}

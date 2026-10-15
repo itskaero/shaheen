@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-10-15T21:19:06Z",
+  "source": "/rankings/cities",
+  "data": {
+    "season": 42,
+    "top_n": 5,
+    "cities": [
+      {
+        "key": "bahawalpur",
+        "label": "Bahawalpur",
+        "rating": 1680,
+        "players": 1,
+        "top": [
+          "kaero."
+        ]
+      }
+    ]
+  }
+}

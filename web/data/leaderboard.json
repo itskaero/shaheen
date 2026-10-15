@@ -1,22 +1,22 @@
 {
-  "captured_at": "2026-10-09T13:11:09Z",
+  "captured_at": "2026-10-15T21:19:06Z",
   "source": "/leaderboard?limit=25",
   "data": [
+    {
+      "brawlhalla_id": 84939075,
+      "player_name": "Pumpkin Man <3",
+      "region": "ME",
+      "rating": 1921,
+      "peak_rating": 1921,
+      "tier": "Platinum 4"
+    },
     {
       "brawlhalla_id": 5734378,
       "player_name": "kaero.",
       "region": "ME",
-      "rating": 1840,
+      "rating": 1680,
       "peak_rating": 1924,
-      "tier": "Platinum 3"
-    },
-    {
-      "brawlhalla_id": 104869463,
-      "player_name": "JavelskyMobile",
-      "region": null,
-      "rating": null,
-      "peak_rating": null,
-      "tier": null
+      "tier": "Platinum 1"
     }
   ]
 }
