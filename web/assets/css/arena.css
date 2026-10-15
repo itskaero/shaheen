@@ -1949,3 +1949,161 @@ body.en main:first-of-type {
     overflow-x: auto;
   }
 }
+
+/* ---------- background music, beat-synced (ADR-133) ----------
+   site-music.js sets --bl-beat (a pulse, 1 on a beat, decaying) and
+   --bl-bass (loudness, 0..1) on <html>. Both are 0 when the music is off,
+   so everything below rests at its normal look. Light changes always;
+   movement only without prefers-reduced-motion. */
+
+:root {
+  --bl-beat: 0;
+  --bl-bass: 0;
+}
+
+/* Entrance hero: the art brightens with the bass and flares on the beat,
+   with a red glow rising from the ground. */
+.en-hero-art img,
+.ar-event-art img,
+.ar-page-hero > .ar-hero-bg img {
+  filter: brightness(calc(0.97 + var(--bl-bass) * 0.16 + var(--bl-beat) * 0.1))
+    saturate(calc(1 + var(--bl-beat) * 0.25));
+}
+
+.en-hero::after,
+.ar-event::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(75% 55% at 60% 100%, rgba(255, 60, 30, 0.6), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: calc(var(--bl-beat) * 0.5 + var(--bl-bass) * 0.12);
+  pointer-events: none;
+}
+
+.ar-event-body {
+  z-index: 3;
+}
+
+.en-hero h1 em {
+  text-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.8),
+    0 0 28px rgba(0, 0, 0, 0.6),
+    0 0 calc(18px + var(--bl-beat) * 34px) rgba(255, 110, 50, calc(0.1 + var(--bl-beat) * 0.55));
+}
+
+.en-hero .ar-btn-fire,
+.ar-event .ar-btn-fire {
+  box-shadow:
+    0 10px calc(30px + var(--bl-beat) * 34px) -10px rgba(255, 46, 58, calc(0.7 + var(--bl-beat) * 0.3)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.ar-page-hero {
+  box-shadow: 0 0 calc(var(--bl-beat) * 46px) rgba(255, 46, 58, calc(var(--bl-beat) * 0.35));
+}
+
+.ar-count.is-date {
+  box-shadow: 0 0 calc(var(--bl-beat) * 26px) rgba(255, 70, 40, calc(var(--bl-beat) * 0.7));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .en-hero-art {
+    transform: scale(calc(1 + var(--bl-beat) * 0.014));
+    transform-origin: 60% 45%;
+  }
+
+  .ar-live-dot {
+    scale: calc(1 + var(--bl-beat) * 0.7);
+  }
+}
+
+/* The music toggle: equaliser bars that move with the track. */
+.bl-music {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: rgba(14, 9, 9, 0.72);
+  color: var(--text);
+  font: 600 12.5px/1 var(--font-ui);
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.8), 0 0 calc(var(--bl-beat) * 22px) rgba(255, 70, 40, calc(var(--bl-beat) * 0.6));
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bl-music:hover {
+  border-color: var(--glass-line-hot);
+  background: rgba(30, 14, 12, 0.85);
+}
+
+.bl-music-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 16px;
+}
+
+.bl-music-bars i {
+  display: block;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--fire-grad);
+  transform-origin: bottom;
+  transform: scaleY(calc(0.22 + var(--bl-bass) * var(--k1) + var(--bl-beat) * var(--k2)));
+}
+
+.bl-music-bars i:nth-child(1) { --k1: 0.55; --k2: 0.25; }
+.bl-music-bars i:nth-child(2) { --k1: 0.35; --k2: 0.45; }
+.bl-music-bars i:nth-child(3) { --k1: 0.6; --k2: 0.2; }
+.bl-music-bars i:nth-child(4) { --k1: 0.25; --k2: 0.55; }
+
+.bl-music.is-off .bl-music-bars i {
+  transform: scaleY(0.22);
+  background: var(--text-muted);
+}
+
+.bl-music.is-off .bl-music-label {
+  color: var(--text-muted);
+}
+
+/* Waiting for a first interaction: a soft invitation. */
+.bl-music.is-pending {
+  border-color: var(--glass-line-hot);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bl-music.is-pending {
+    animation: bl-music-invite 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes bl-music-invite {
+  50% { box-shadow: 0 0 0 6px rgba(255, 70, 40, 0.12), 0 10px 30px -12px rgba(0, 0, 0, 0.8); }
+}
+
+/* Above the phone bottom nav. */
+@media (max-width: 860px) {
+  body.bl:not(.en) .bl-music {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .bl-music-label {
+    display: none;
+  }
+
+  .bl-music {
+    padding: 0 12px;
+  }
+}

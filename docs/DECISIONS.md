@@ -6026,3 +6026,60 @@ appear once they link; while the API was unreachable it showed "Data unavailable
 
 **Verified.** Playwright at 1440×900 and 390×844 on entrance, home, rankings, players, teams, coaches,
 seasons, Clan Wars and City Wars: no overflow, no page errors.
+
+## ADR-133 — Beat-synced background music; the Brawlistan variant; versioned assets
+
+**Status:** accepted.
+
+**Context.** The owner added two tracks and reported a bug:
+- `bg.mp3`, to play as site background music, with the hero moving to its beats and bass;
+- `brawlistan-variant.mp3`, a second take of the anthem for the Music page;
+- dashboard panels stuck on "Loading…". The live site worked in a fresh browser. The owner's browser had
+  paired the new `home.html` with a cached old `home.js` (GitHub Pages caches scripts for 10 minutes), and
+  the old script looks for element IDs the new page doesn't have.
+
+**Decision: background music** (`assets/js/site-music.js`, on every shell page and the entrance; not on the
+Music page, which has its own player; the old `landing.html` keeps its anthem player).
+- **Playback:** `bg.mp3` loops at volume 0.38. Autoplay with sound is blocked by browsers, so it starts on
+  the visitor's first click, key or tap. The toggle invites that with a soft pulse, and clicking the toggle
+  itself plays rather than mutes. The mute choice and position persist across pages (localStorage, best
+  effort).
+- **The toggle:** a glass pill bottom-right, above the phone bottom nav, with four equaliser bars driven by
+  the music.
+- **The beat engine:** it reads `bg.beats.json` from `scripts/beat_map.py`, the same offline beat tracking
+  as the Music page (ADR-118). Each frame it fires every beat it has passed, re-finding its place after a
+  loop or seek, and publishes:
+  - `--bl-beat` on `<html>`: 1 on a beat, scaled by strength, with downbeats harder, decaying over 0.3 s;
+  - `--bl-bass`: the track's loudness, smoothed;
+  - `window.BLBeat`, the same numbers for canvas code;
+  - a `bl:beat` event per beat.
+  - The loop sleeps when the music is paused and settled, or the tab is hidden.
+- **What moves** (all at rest when the music is off):
+  - the hero art brightens with the bass and flares on the beat;
+  - a red glow rises from the ground on the entrance hero and the dashboard's season banner;
+  - the entrance art kicks very slightly (scale 1.4%);
+  - the accent words, the fire CTA, the countdown's date box, the City and Clan Wars heroes' frame, and
+    the live dot glow or pulse;
+  - embers (`embers.js`) rise faster with the bass, glow brighter on beats, and every beat shoots a burst of
+    sparks up from the ground (bigger on strong beats, capped at 140).
+- **Reduced motion:** light changes only. No scale, no pulse, no ember animation. The music still plays.
+
+**Decision: the variant.** "Brawlistan (Variant)" joins the Music page's originals, right after
+Brawlistan. Its cover is the Brawlistan cover with a fire grade (`cover-brawlistan-variant`), so it isn't a
+duplicate tile. It has its own beat map.
+
+**Audio sizes.** The originals were 320 kbps. For the web, `bg.mp3` went to 160 kbps (3.6 MB to 1.8 MB),
+since it loads on every page, and the variant to 192 kbps like the library (8.9 MB to 5.3 MB).
+`scripts/beat_map.py` now takes track names (`python scripts/beat_map.py bg`) and lists both new tracks.
+
+**Decision: versioned assets.** `pages.yml` stamps every local `.js` and `.css` URL in the deployed HTML
+with `?v=<commit>`, so a deploy can never mix new pages with cached old scripts. The repository keeps plain
+URLs.
+
+**Verified.**
+- Headless Chromium playing the real files: beats fire at the track's tempo (13–15 in about 9 s at 95.7
+  BPM) on the entrance and home, `--bl-bass` follows the track, the Music page gets no second player, and
+  there are no page errors.
+- The stamping, run on a copy of `web/`, versions every local script and stylesheet on all pages, including
+  the generated ones.
+- The live site in a fresh browser loads every dashboard panel.

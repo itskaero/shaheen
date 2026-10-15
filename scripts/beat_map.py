@@ -1,6 +1,7 @@
 """Write a beat map for each music library track (docs/DECISIONS.md ADR-118).
 
-    python scripts/beat_map.py
+    python scripts/beat_map.py            # every track
+    python scripts/beat_map.py bg urooj   # just these
 
 For every web/assets/audio/<slug>.mp3 listed in TRACKS this writes
 web/assets/audio/<slug>.beats.json: the tempo, every beat time, how strong
@@ -24,13 +25,24 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 AUDIO = ROOT / "web" / "assets" / "audio"
-TRACKS = ("brawlistan", "urooj", "zarb", "zarb-2", "anthem-full", "bulandiyon-ki-janab")
+TRACKS = (
+    "brawlistan",
+    "brawlistan-variant",
+    "urooj",
+    "zarb",
+    "zarb-2",
+    "anthem-full",
+    "bulandiyon-ki-janab",
+    # The site-wide background loop (ADR-133); the hero pulses on its beats.
+    "bg",
+)
 
 SR = 22050
 N_FFT = 2048
@@ -165,7 +177,11 @@ def analyse(path: Path) -> dict[str, object]:
 
 
 def main() -> None:
-    for slug in TRACKS:
+    wanted = sys.argv[1:] or TRACKS
+    unknown = [slug for slug in wanted if slug not in TRACKS]
+    if unknown:
+        raise SystemExit(f"Not in TRACKS: {', '.join(unknown)}")
+    for slug in wanted:
         source = AUDIO / f"{slug}.mp3"
         if not source.exists():
             print(f"{slug}: no {source.name}, skipped")

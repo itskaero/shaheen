@@ -21,6 +21,12 @@
       desc: "The network's anthem. A name we carry together — from every city to the top of the ladder.",
     },
     {
+      // A second take of the anthem (ADR-133), with a fire-graded cover.
+      slug: "brawlistan-variant", title: "Brawlistan (Variant)", urdu: "یہ نام ہمارا", cover: "brawlistan-variant",
+      accent: "255, 70, 40", group: "originals",
+      desc: "The anthem, reforged. Same name, hotter fire.",
+    },
+    {
       slug: "urooj", title: "Urooj", urdu: "عروج", cover: "urooj",
       accent: "61, 242, 110", group: "originals",
       desc: "The rise. For the long climb, one placement match at a time.",

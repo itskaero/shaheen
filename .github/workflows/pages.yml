@@ -33,6 +33,19 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Stamp asset versions
+        # GitHub Pages lets browsers cache scripts and styles for 10 minutes,
+        # so right after a deploy a visitor could get the new HTML with an old
+        # script and see panels stuck on "Loading…" (docs/DECISIONS.md
+        # ADR-133). Each deploy appends ?v=<commit> to every local .js/.css
+        # URL, so a page always loads the scripts it was built with. Only the
+        # deployed copy changes; the repository keeps plain URLs.
+        run: |
+          v="${GITHUB_SHA::8}"
+          find web -name '*.html' -print0 \
+            | xargs -0 sed -i -E "s#((src|href)=\"assets/[^\"?]+\.(js|css))\"#\1?v=${v}\"#g"
+          echo "Stamped assets with ?v=${v}"
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:

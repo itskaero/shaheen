@@ -10,6 +10,10 @@
 //
 // data-embers="<n>" sets the ember count on a wide screen (default 90); it
 // scales down with the element's area.
+//
+// With the background music playing (site-music.js, ADR-133) the embers rise
+// faster with the bass, glow brighter on each beat, and a burst of sparks
+// shoots up from the ground on every beat (bigger on strong ones).
 (function () {
   "use strict";
 
@@ -67,22 +71,23 @@
     let embers = [];
     let pointerX = -1;
 
-    function spawn(anywhere) {
-      const firefly = Math.random() < 0.22; // drifts and blinks instead of rising fast
+    function spawn(anywhere, spark) {
+      const firefly = !spark && Math.random() < 0.22; // drifts and blinks instead of rising fast
       const rgb = Math.random() < 0.05 ? GREEN : pick(COLOURS);
-      const size = firefly ? 6 + Math.random() * 10 : 3 + Math.random() * 7;
+      const size = firefly ? 6 + Math.random() * 10 : spark ? 4 + Math.random() * 8 : 3 + Math.random() * 7;
       return {
         x: Math.random() * width,
         y: anywhere ? Math.random() * height : height + 10 + Math.random() * 40,
-        vy: firefly ? 6 + Math.random() * 14 : 22 + Math.random() * 46,
+        vy: firefly ? 6 + Math.random() * 14 : spark ? 120 + Math.random() * 160 : 22 + Math.random() * 46,
         sway: 10 + Math.random() * 30,
         swaySpeed: 0.4 + Math.random() * 1.2,
         phase: Math.random() * Math.PI * 2,
         flicker: 2 + Math.random() * 6,
         size,
         life: 0,
-        maxLife: firefly ? 7 + Math.random() * 8 : 4 + Math.random() * 6,
+        maxLife: firefly ? 7 + Math.random() * 8 : spark ? 1.6 + Math.random() * 1.6 : 4 + Math.random() * 6,
         firefly,
+        spark: !!spark,
         img: sprite(rgb),
       };
     }
@@ -100,38 +105,52 @@
       embers = Array.from({ length: target }, () => spawn(true));
     }
 
+    // Beat sparks live in their own list and are never respawned.
+    let sparks = [];
+    const MAX_SPARKS = 140;
+
+    function burst(strength) {
+      const n = Math.round((4 + strength * 18) * Math.min(1, width / 900));
+      for (let i = 0; i < n && sparks.length < MAX_SPARKS; i++) sparks.push(spawn(false, true));
+    }
+
+    function drawOne(e, t, dt, rise, glow) {
+      e.life += dt;
+      e.y -= e.vy * dt * rise;
+      // A gust away from the pointer, when it's near.
+      let push = 0;
+      if (pointerX >= 0) {
+        const d = e.x - pointerX;
+        if (Math.abs(d) < 120) push = (Math.sign(d) || 1) * (120 - Math.abs(d)) * 0.6 * dt;
+      }
+      e.x += Math.sin(t * e.swaySpeed + e.phase) * e.sway * dt + push;
+
+      const fadeIn = Math.min(1, e.life / (e.spark ? 0.1 : 0.8));
+      const fadeOut = Math.max(0, 1 - e.life / e.maxLife);
+      const blink = e.firefly
+        ? 0.35 + 0.65 * Math.max(0, Math.sin(t * e.flicker * 0.5 + e.phase))
+        : 0.7 + 0.3 * Math.sin(t * e.flicker + e.phase);
+      // Embers burn out as they rise: dimmer near the top.
+      const heightFade = Math.min(1, Math.max(0.15, e.y / height + 0.25));
+      const alpha = Math.min(1, fadeIn * fadeOut * blink * heightFade * glow);
+      if (alpha > 0.01) {
+        ctx.globalAlpha = alpha;
+        const s = e.size * (e.firefly ? 2.6 : 2.2);
+        ctx.drawImage(e.img, e.x - s / 2, e.y - s / 2, s, s);
+      }
+      return e.life > e.maxLife || e.y < -30 || e.x < -40 || e.x > width + 40;
+    }
+
     function draw(t, dt) {
+      const music = window.BLBeat || { beat: 0, bass: 0 };
+      const rise = 1 + music.bass * 1.3;
+      const glow = 1 + music.beat * 0.7;
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = "lighter";
       for (let i = 0; i < embers.length; i++) {
-        const e = embers[i];
-        e.life += dt;
-        e.y -= e.vy * dt;
-        // A gust away from the pointer, when it's near.
-        let push = 0;
-        if (pointerX >= 0) {
-          const d = e.x - pointerX;
-          if (Math.abs(d) < 120) push = (Math.sign(d) || 1) * (120 - Math.abs(d)) * 0.6 * dt;
-        }
-        e.x += Math.sin(t * e.swaySpeed + e.phase) * e.sway * dt + push;
-
-        const fadeIn = Math.min(1, e.life / 0.8);
-        const fadeOut = Math.max(0, 1 - e.life / e.maxLife);
-        const blink = e.firefly
-          ? 0.35 + 0.65 * Math.max(0, Math.sin(t * e.flicker * 0.5 + e.phase))
-          : 0.7 + 0.3 * Math.sin(t * e.flicker + e.phase);
-        // Embers burn out as they rise: dimmer near the top.
-        const heightFade = Math.min(1, Math.max(0.15, e.y / height + 0.25));
-        const alpha = fadeIn * fadeOut * blink * heightFade;
-        if (alpha > 0.01) {
-          ctx.globalAlpha = alpha;
-          const s = e.size * (e.firefly ? 2.6 : 2.2);
-          ctx.drawImage(e.img, e.x - s / 2, e.y - s / 2, s, s);
-        }
-        if (e.life > e.maxLife || e.y < -30 || e.x < -40 || e.x > width + 40) {
-          embers[i] = spawn(false);
-        }
+        if (drawOne(embers[i], t, dt, rise, glow)) embers[i] = spawn(false);
       }
+      if (sparks.length) sparks = sparks.filter((e) => !drawOne(e, t, dt, rise, glow));
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
     }
@@ -154,6 +173,9 @@
 
     let visible = true;
     let raf = 0;
+    window.addEventListener("bl:beat", (event) => {
+      if (visible && !document.hidden && event.detail.strength > 0.1) burst(event.detail.strength);
+    });
     let last = 0;
     function frame(now) {
       const dt = Math.min(0.05, (now - last) / 1000 || 0);
