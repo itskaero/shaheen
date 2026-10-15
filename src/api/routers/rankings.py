@@ -1,4 +1,5 @@
-"""GET /rankings/pakistan — the Rankings page's board (docs/DECISIONS.md ADR-105)."""
+"""GET /rankings/pakistan — the Rankings page's board (docs/DECISIONS.md ADR-105) —
+and GET /rankings/cities, City Wars (ADR-128)."""
 
 from __future__ import annotations
 
@@ -6,8 +7,15 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_session, get_settings
-from api.schemas import PakistanSeasonResponse, RankingRowResponse, RankingsBoardResponse
+from api.schemas import (
+    CityBoardResponse,
+    CityStandingResponse,
+    PakistanSeasonResponse,
+    RankingRowResponse,
+    RankingsBoardResponse,
+)
 from core.config import Settings
+from services.cities import CITY_TOP_N, city_label
 from services.rankings_service import RankingRow, RankingsService
 
 router = APIRouter(prefix="/rankings", tags=["rankings"])
@@ -38,6 +46,8 @@ def ranking_row_response(row: RankingRow) -> RankingRowResponse:
         partner_2v2=row.snapshot.partner_2v2,
         trend=row.trend,
         main_legend=row.main_legend,
+        city=row.city,
+        city_label=city_label(row.city),
     )
 
 
@@ -53,4 +63,27 @@ async def get_pakistan_rankings(
         pakistan_season=PakistanSeasonResponse.for_brawlhalla_season(board.season),
         seasons=board.seasons,
         rows=[ranking_row_response(row) for row in board.rows],
+    )
+
+
+@router.get("/cities", response_model=CityBoardResponse)
+async def get_city_board(
+    session: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> CityBoardResponse:
+    """City Wars (ADR-128)."""
+    season, standings = await RankingsService(session).cities(settings.guild_id)
+    return CityBoardResponse(
+        season=season,
+        top_n=CITY_TOP_N,
+        cities=[
+            CityStandingResponse(
+                key=c.key,
+                label=c.label,
+                rating=c.rating,
+                players=c.players,
+                top=[name for name, _rating in c.top],
+            )
+            for c in standings
+        ],
     )

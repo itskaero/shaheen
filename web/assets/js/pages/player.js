@@ -217,8 +217,31 @@
     </div>`;
   }
 
+  function questsHtml(q) {
+    if (!q || q.season == null) return UNAVAILABLE;
+    const pct = Math.round((q.level / q.max_level) * 100);
+    const resets = new Date(q.resets_at);
+    const bars = q.quests
+      .map((item) => {
+        const width = Math.round((Math.min(item.progress, item.target) / item.target) * 100);
+        return `<div class="quest${item.done ? " is-done" : ""}">
+          <div class="quest-head"><span>${item.done ? "✅ " : ""}${escapeHtml(item.label)}</span><span class="num">${formatNumber(Math.min(item.progress, item.target))}/${formatNumber(item.target)}</span></div>
+          <div class="quest-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${item.target}" aria-valuenow="${Math.min(item.progress, item.target)}" aria-label="${escapeHtml(item.label)}"><span style="width:${width}%"></span></div>
+        </div>`;
+      })
+      .join("");
+    return `<div class="quests">
+      <div class="level-ring" style="--pct:${pct}" aria-label="Season level ${q.level} of ${q.max_level}">
+        <div><strong>${q.level}</strong><span>Level</span></div>
+      </div>
+      <div class="quest-list">${bars}
+        <p class="muted quest-foot">${formatNumber(q.xp)} season XP · resets ${resets.toLocaleDateString(undefined, { weekday: "long", timeZone: "Asia/Karachi" })} 00:00 PKT · from ranked games</p>
+      </div>
+    </div>`;
+  }
+
   async function load() {
-    const [profile, history, legends, matches, checklist, seasons, rankings, directory] = await Promise.all([
+    const [profile, history, legends, matches, checklist, seasons, rankings, directory, quests] = await Promise.all([
       // api.js returns null for a 404 and throws on any other failure.
       ShaheenAPI.getPlayer(brawlhallaId).catch(() => undefined),
       ShaheenAPI.getPlayerHistory(brawlhallaId, 100).catch(() => null),
@@ -228,6 +251,7 @@
       ShaheenAPI.getPlayerSeasons(brawlhallaId).catch(() => null),
       cached("rankings", () => ShaheenAPI.getRankings()),
       cached("players", () => ShaheenAPI.getPlayers()),
+      ShaheenAPI.getPlayerQuests(brawlhallaId).catch(() => null),
     ]);
 
     if (profile === null) {
@@ -262,6 +286,7 @@
           <h1>${tagChipHtml(entry.team_tag)}${escapeHtml(profile.player_name)}</h1>
           <div class="profile-meta">
             <span>${country}</span><span aria-hidden="true">·</span>
+            ${entry.city_label ? `<span class="pill pill-city">🏙️ ${escapeHtml(entry.city_label)}</span><span aria-hidden="true">·</span>` : ""}
             <span>Brawlhalla ID ${escapeHtml(String(profile.brawlhalla_id))}</span>
             ${profile.region ? `<span aria-hidden="true">·</span><span>${escapeHtml(profile.region)}</span>` : ""}
           </div>
@@ -274,6 +299,7 @@
         <div class="profile-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="compare-btn" aria-expanded="false" aria-controls="compare">Compare</button>
           <button type="button" class="btn btn-ghost btn-sm" id="share-btn">Share</button>
+          ${whatsappButtonHtml(`${profile.player_name} on BRAWLISTAN, Pakistan's Brawlhalla network:`, new URL(`player/${slug}/`, document.baseURI).href)}
           <a class="btn btn-primary btn-sm" data-discord-invite href="${typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html"}" target="_blank" rel="noopener">Discord</a>
         </div>
       </section>
@@ -289,6 +315,10 @@
       ${compareHtml({ brawlhalla_id: brawlhallaId }, directory || [])}
 
       <div class="home-grid" style="margin-top:16px">
+        <section class="panel panel-pad span-12" aria-labelledby="h-quests">
+          <div class="section-head"><h2 id="h-quests">This week</h2><span class="muted" style="font-size:12.5px">Weekly quests · season level</span></div>
+          ${questsHtml(quests)}
+        </section>
         <section class="panel panel-pad span-8" aria-labelledby="h-history">
           <div class="section-head"><h2 id="h-history">Rating history</h2><span class="muted" style="font-size:12.5px">Dashed: peak</span></div>
           ${history && history.some((h) => h.rating != null) ? '<div class="chart-box"><canvas id="history-chart" aria-label="Rating over time" role="img"></canvas></div>' : UNAVAILABLE}

@@ -41,6 +41,7 @@
           <div><strong class="num">${t.members}</strong><span>Players</span></div>
           <div><strong>${captain ? escapeHtml(captain.player_name) : "—"}</strong><span>Captain</span></div>
         </div>
+        <div class="team-hero-share">${whatsappButtonHtml(`${t.name} [${t.tag}] on BRAWLISTAN:`, new URL(`teams/${t.slug}/`, document.baseURI).href)}</div>
       </div>`
     );
 

@@ -19,6 +19,7 @@ from database.models.member_player_link import MemberPlayerLink
 from database.models.pakistan_board_entry import PakistanBoardEntry
 from database.models.player_report import PlayerReport
 from database.models.provisioned_resource import ProvisionedResource, ResourceType
+from database.models.quest_completion import QuestCompletion
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
 from database.models.shaheen_member import ShaheenMember
@@ -60,6 +61,7 @@ __all__ = [
     "PakistanBoardEntry",
     "PlayerReport",
     "ProvisionedResource",
+    "QuestCompletion",
     "RankingSnapshot",
     "ResourceType",
     "Scrim",

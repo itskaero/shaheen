@@ -841,3 +841,38 @@ async def test_coaches_lists_linked_coaches_by_brawlhalla_identity(
         True,
     )
     assert "FooDiscord" not in str(entry) and "discord" not in str(entry).lower()
+
+
+async def test_city_board_and_player_quests_endpoints(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from database.repositories.pakistan_board_repository import PakistanBoardRepository
+
+    assert client.get("/rankings/cities").json() == {"season": None, "top_n": 5, "cities": []}
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # "Foo", brawlhalla_id=10, rating 1500
+        player = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(10)
+        assert player is not None
+        player.city = "lahore"
+        await PakistanBoardRepository(session).add(
+            guild_id=GUILD_ID, player_id=player.id, added_by_discord_id=1, owner_discord_id=1
+        )
+        snap = await RankingSnapshotRepository(session).get_latest(player.id)
+        assert snap is not None
+        snap.season = 42
+        await session.commit()
+
+    board = client.get("/rankings/cities").json()
+    assert board["season"] == 42
+    assert board["cities"] == [
+        {"key": "lahore", "label": "Lahore", "rating": 1500, "players": 1, "top": ["Foo"]}
+    ]
+    (row,) = client.get("/rankings/pakistan").json()["rows"]
+    assert (row["city"], row["city_label"]) == ("lahore", "Lahore")
+    (entry,) = client.get("/players").json()
+    assert (entry["city"], entry["city_label"]) == ("lahore", "Lahore")
+
+    quests = client.get("/players/10/quests").json()
+    assert (quests["level"], quests["xp"], quests["max_level"]) == (1, 0, 30)
+    assert [q["key"] for q in quests["quests"]] == ["grind", "win", "climb"]
+    assert client.get("/players/999/quests").status_code == 404

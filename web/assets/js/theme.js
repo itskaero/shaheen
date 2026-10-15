@@ -221,3 +221,13 @@ function holoTeamCardHtml(team, { link = true, dpr = 1.5, ambient = 0.28, cta = 
     </div>
   </${tag}>`;
 }
+
+// WhatsApp share (ADR-128): most of BRAWLISTAN's players share on WhatsApp,
+// so pages offer it directly next to the browser's own share/copy.
+function whatsappHref(text, url) {
+  return `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`;
+}
+
+function whatsappButtonHtml(text, url, cls = "btn btn-ghost btn-sm") {
+  return `<a class="${cls} btn-wa" href="${whatsappHref(text, url)}" target="_blank" rel="noopener">WhatsApp</a>`;
+}

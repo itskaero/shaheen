@@ -90,6 +90,9 @@ class Settings(BaseSettings):
     announce_achievements: bool = True
     announce_level_ups: bool = False
     announce_featured: bool = True
+    # Weekly quest completions in #achievements (ADR-128). Off: they're
+    # still recorded and shown by /quests and on the website.
+    announce_quests: bool = False
 
     @field_validator("database_url")
     @classmethod

@@ -61,7 +61,7 @@
           ${rolePill(p)}
           ${avatarHtml(p.player_name, 76)}
           <h3>${tagChipHtml(p.team_tag)}${escapeHtml(p.player_name)}</h3>
-          <span class="sub">${p.country === "PK" ? "🇵🇰 " : ""}${escapeHtml(countryName(p.country) || "Country not set")}${p.region ? ` · ${escapeHtml(p.region)}` : ""}</span>
+          <span class="sub">${p.country === "PK" ? "🇵🇰 " : ""}${escapeHtml(countryName(p.country) || "Country not set")}${p.city_label ? ` · ${escapeHtml(p.city_label)}` : ""}${p.region ? ` · ${escapeHtml(p.region)}` : ""}</span>
           <div class="card-stats">
             <div><strong class="num">${formatNumber(p.rating)}</strong><span>Rating</span></div>
             <div><strong title="${escapeHtml(p.tier || "Unranked")}">${p.tier ? escapeHtml(p.tier.split(" ")[0]) : "Unranked"}</strong><span>Tier</span></div>

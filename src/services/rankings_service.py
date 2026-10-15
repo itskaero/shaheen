@@ -25,6 +25,7 @@ from database.repositories.member_player_link_repository import MemberPlayerLink
 from database.repositories.pakistan_board_repository import PakistanBoardRepository
 from database.repositories.ranking_snapshot_repository import RankingSnapshotRepository
 from database.repositories.team_repository import TeamRepository
+from services.cities import CityStanding, city_standings
 
 TREND_WINDOW = timedelta(days=7)
 # Every Pakistan-board player is on the board because they (or staff) put
@@ -48,6 +49,8 @@ class RankingRow:
     # nothing to compare against yet.
     trend: int | None
     main_legend: str | None
+    # The Pakistani city the player represents (ADR-128), if they set one.
+    city: str | None = None
 
 
 @dataclass
@@ -102,10 +105,22 @@ class RankingsService:
                     country=PAKISTAN,
                     trend=await self._trend(player.id, season, now),
                     main_legend=await self._main_legend(player.id),
+                    city=player.city,
                 )
             )
         board.rows.sort(key=lambda row: row.snapshot.rating or 0, reverse=True)
         return board
+
+    async def cities(self, guild_id: int) -> tuple[int | None, list[CityStanding]]:
+        """City Wars (ADR-128): each city's average of its best placed 1v1
+        ratings this season, from the same rows as the Pakistan board."""
+        board = await self.pakistan(guild_id)
+        placed = [
+            (row.city, row.player.player_name, row.snapshot.rating)
+            for row in ranked_rows(board, "1v1")
+            if row.snapshot.rating is not None
+        ]
+        return board.season, city_standings(placed)
 
     async def _trend(self, player_id: int, season: int, now: datetime) -> int | None:
         ratings = [

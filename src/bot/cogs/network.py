@@ -15,12 +15,15 @@ from typing import Literal
 import discord
 from discord import app_commands
 from discord.ext import commands
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.client import ShaheenBot
 from bot.cogs.competition import announce_scrim
 from bot.content.network_embeds import (
+    build_city_board_embed,
     build_legend_embed,
     build_ping_embed,
+    build_quests_embed,
     build_rankings_embed,
     build_rising_embed,
     build_season_embed,
@@ -31,12 +34,17 @@ from bot.content.network_embeds import (
 )
 from bot.content.season_embeds import attach_season_badge
 from core.exceptions import ShaheenError
+from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.match import MatchKind
 from database.repositories.tournament_repository import TournamentRepository
 from database.session import session_scope
+from services.cities import CITIES
+from services.city_service import CityService
 from services.legend_art import available_portraits, legend_display_name, normalize_legend_key
+from services.link_service import LinkService
 from services.network_service import NetworkService
 from services.pakistan_board_service import PakistanBoardService
+from services.quest_service import QuestService
 from services.rankings_service import RankingsService, ranked_rows
 from services.seasons import pakistan_season
 
@@ -71,13 +79,18 @@ class NetworkCog(commands.Cog):
     async def rankings(
         self,
         interaction: discord.Interaction,
-        board: Literal["1v1", "2v2", "rising"] = "1v1",
+        board: Literal["1v1", "2v2", "rising", "city"] = "1v1",
     ) -> None:
         guild = _guild(interaction)
         await interaction.response.defer(ephemeral=True)
         site_url = self.bot.settings.site_url
         async with session_scope(self.bot.session_factory) as session:
-            if board == "rising":
+            if board == "city":
+                season, standings = await RankingsService(session).cities(guild.id)
+                embed = build_city_board_embed(
+                    standings=standings, season=season, site_url=site_url
+                )
+            elif board == "rising":
                 climbers = await PakistanBoardService(session).climbers(
                     guild.id, since=datetime.now(UTC) - timedelta(days=7), limit=10
                 )
@@ -158,6 +171,75 @@ class NetworkCog(commands.Cog):
         # Same flow as /scrim and the spar kiosk: a joinable post in
         # #looking-for-game.
         await announce_scrim(self.bot, interaction, member, kind, ephemeral_confirmation=True)
+
+    # --- City Wars and weekly quests (ADR-128) -----------------------------
+
+    city = app_commands.Group(name="city", description="Represent your city in City Wars")
+
+    async def _linked_player(
+        self, guild: discord.Guild, member_id: int, session: AsyncSession
+    ) -> BrawlhallaPlayer | None:
+        link = await LinkService(session, self.bot.brawlhalla).get_active_link(
+            guild_id=guild.id, discord_id=member_id
+        )
+        if link is None:
+            return None
+        return link[1]
+
+    @city.command(name="set", description="Pick the city you represent on City Wars")
+    @app_commands.describe(city="Your city")
+    @app_commands.choices(
+        city=[app_commands.Choice(name=label, value=key) for key, label in CITIES.items()]
+    )
+    async def city_set(self, interaction: discord.Interaction, city: str) -> None:
+        guild = _guild(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            player = await self._linked_player(guild, interaction.user.id, session)
+            if player is None:
+                raise ShaheenError("Link your Brawlhalla account first with `/link`.")
+            await CityService(session).set_city(
+                guild_id=guild.id, player=player, city=city, actor_discord_id=interaction.user.id
+            )
+        await interaction.followup.send(
+            f"🏙️ You now represent **{CITIES[city]}** on City Wars. "
+            "It counts once you're placed this season.",
+            ephemeral=True,
+        )
+
+    @city.command(name="clear", description="Stop representing a city")
+    async def city_clear(self, interaction: discord.Interaction) -> None:
+        guild = _guild(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            player = await self._linked_player(guild, interaction.user.id, session)
+            if player is None:
+                raise ShaheenError("Link your Brawlhalla account first with `/link`.")
+            await CityService(session).set_city(
+                guild_id=guild.id, player=player, city=None, actor_discord_id=interaction.user.id
+            )
+        await interaction.followup.send("Your city is cleared.", ephemeral=True)
+
+    @app_commands.command(name="quests", description="This week's quests and your season level")
+    @app_commands.describe(user="Whose quests (defaults to you)")
+    async def quests(
+        self, interaction: discord.Interaction, user: discord.Member | None = None
+    ) -> None:
+        guild = _guild(interaction)
+        target = user or interaction.user
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            player = await self._linked_player(guild, target.id, session)
+            if player is None:
+                who = (
+                    "You haven't"
+                    if target.id == interaction.user.id
+                    else f"{target.display_name} hasn't"
+                )
+                raise ShaheenError(f"{who} linked a Brawlhalla account (`/link`).")
+            status = await QuestService(session).status(player)
+            embed = build_quests_embed(player_name=player.player_name, status=status)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
 
 async def setup(bot: ShaheenBot) -> None:

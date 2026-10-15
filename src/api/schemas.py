@@ -8,7 +8,7 @@ shouldn't be coupled 1:1 to internal schema.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel
 
@@ -101,6 +101,10 @@ class RankingRowResponse(BaseModel):
     partner_2v2: str | None
     trend: int | None
     main_legend: str | None
+    # City Wars (ADR-128): the city key from services/cities.py and its
+    # display name, if set.
+    city: str | None = None
+    city_label: str | None = None
 
 
 class RankingsBoardResponse(BaseModel):
@@ -128,6 +132,8 @@ class PlayerDirectoryEntryResponse(BaseModel):
     peak_rating: int | None
     tier: str | None
     main_legend: str | None
+    city: str | None = None
+    city_label: str | None = None
 
 
 class SeasonSummaryResponse(BaseModel):
@@ -422,3 +428,40 @@ class CoachResponse(BaseModel):
     team: str | None
     team_slug: str | None
     team_tag: str | None
+
+
+class CityStandingResponse(BaseModel):
+    """One city on City Wars (ADR-128): the average of its best placed 1v1
+    ratings this season. Players are named by their Brawlhalla account."""
+
+    key: str
+    label: str
+    rating: int
+    players: int
+    top: list[str]
+
+
+class CityBoardResponse(BaseModel):
+    season: int | None
+    top_n: int
+    cities: list[CityStandingResponse]
+
+
+class QuestProgressResponse(BaseModel):
+    key: str
+    label: str
+    progress: int
+    target: int
+    done: bool
+
+
+class PlayerQuestsResponse(BaseModel):
+    """This week's quests and the season level (ADR-128)."""
+
+    season: int | None
+    week_start: date
+    resets_at: datetime
+    xp: int
+    level: int
+    max_level: int
+    quests: list[QuestProgressResponse]
