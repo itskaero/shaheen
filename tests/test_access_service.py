@@ -11,7 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.cogs.access import role_problem
 from core.exceptions import ConflictError
 from database.repositories.audit_log_repository import AuditLogRepository
-from services.access_service import AccessConfig, AccessService, plan_approval
+from services.access_service import (
+    AccessConfig,
+    AccessService,
+    MemberRoles,
+    members_missing_access,
+    plan_approval,
+)
 
 GUILD = 1
 JOIN, APPROVED = 100, 200
@@ -147,3 +153,45 @@ def test_role_hierarchy_is_respected() -> None:
     # ...but the server owner can, as long as the bot can.
     owner = _Member(id=1, top_role=_Role(id=3, position=5))
     assert _problem(_Role(id=56, position=8), actor=owner) is None
+
+
+# --- catching up members the join handler missed (ADR-126) ------------------
+
+
+PLAYER, STAFF_ROLE = 300, 400
+
+
+def _m(discord_id: int, *roles: int, bot: bool = False, pending: bool = False) -> MemberRoles:
+    return MemberRoles(discord_id, frozenset(roles), is_bot=bot, pending=pending)
+
+
+def test_sync_gives_the_join_time_role_to_roleless_members_only() -> None:
+    off = AccessConfig(JOIN, APPROVED, approval_enabled=False)
+    members = [
+        _m(1),  # missed on join
+        _m(2, APPROVED),  # fine
+        _m(3, PLAYER),  # only the bot's own mirror role: still missed
+        _m(4, STAFF_ROLE),  # hand-picked role: left alone automatically
+        _m(5, bot=True),
+        _m(6, pending=True),  # still in rules screening
+        _m(7, JOIN),  # waiting for approval from earlier
+    ]
+    assert members_missing_access(off, members, ignored_role_ids={PLAYER}) == [1, 3]
+    # /access sync includes members with other roles.
+    assert members_missing_access(off, members, ignored_role_ids={PLAYER}, everyone=True) == [
+        1,
+        3,
+        4,
+    ]
+
+
+def test_sync_follows_the_switch_and_does_nothing_unconfigured() -> None:
+    on = AccessConfig(JOIN, APPROVED, approval_enabled=True)
+    assert members_missing_access(on, [_m(1), _m(2, APPROVED)]) == [1]
+    assert members_missing_access(AccessConfig(), [_m(1)]) == []
+
+
+async def test_sync_is_audited(session: AsyncSession) -> None:
+    await AccessService(session).record_sync(GUILD, given=3, staff_discord_id=None)
+    entries = await AuditLogRepository(session).list_recent(GUILD)
+    assert entries[0].action == "access.sync"

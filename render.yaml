@@ -1,3 +1,6 @@
+# RETIRED (docs/DECISIONS.md ADR-127): the API and database now run on the NAS
+# (deploy/nas/, docs/DEPLOY_NAS.md). Kept for one release in case of a rollback.
+#
 # Render Blueprint — free-tier hosting for the Shaheen website API.
 # Deploy: Render dashboard -> New -> Blueprint -> point at this repo.
 # See README.md's "Deploying to production" section for the full

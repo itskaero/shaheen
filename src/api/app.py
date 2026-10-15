@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routers import (
     achievements,
     clan,
+    coaches,
     community,
     featured,
     leaderboard,
@@ -78,6 +79,7 @@ app.add_middleware(
 )
 
 app.include_router(clan.router)
+app.include_router(coaches.router)
 app.include_router(community.router)
 app.include_router(leaderboard.router)
 app.include_router(roster.router)

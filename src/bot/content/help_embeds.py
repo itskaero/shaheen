@@ -72,7 +72,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="clan",
         title="🇵🇰 Rankings & Scene",
         commands=(
-            CommandHelp("/rankings", "Pakistan's top 10 — 1v1, 2v2 or this week's risers."),
+            CommandHelp("/rankings", "Pakistan's top 10: 1v1, 2v2, risers or City Wars."),
             CommandHelp("/season", "The current Pakistan season and days left."),
             CommandHelp("/legend", "How a Legend is played across Pakistan."),
             CommandHelp("/team info", "A team's roster and rating (yours by default)."),
@@ -88,6 +88,15 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/compare", "Two members' stats side by side."),
             CommandHelp("/rivalry", "Head-to-head match record between two members."),
             CommandHelp("/lookup", "Any Brawlhalla player's rank vs the clan — no link needed."),
+        ),
+    ),
+    HelpSection(
+        key="quests",
+        title="🎯 Quests & City Wars",
+        commands=(
+            CommandHelp("/quests", "This week's quests and your season level."),
+            CommandHelp("/city set", "Represent your city on City Wars."),
+            CommandHelp("/city clear", "Stop representing a city."),
         ),
     ),
     HelpSection(
@@ -160,6 +169,17 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         ),
     ),
     HelpSection(
+        key="coaching",
+        title="🎓 Coaching",
+        commands=(
+            CommandHelp("/coach list", "The BRAWLISTAN coaches and who's taking students."),
+            CommandHelp("/coach request", "Ask a coach for a session."),
+            CommandHelp("/coach requests", "Coaches: your open requests."),
+            CommandHelp("/coach profile", "Coaches: specialty, legends, availability."),
+            CommandHelp("/coach setup", "Set the Coach role and coaching channel.", True),
+        ),
+    ),
+    HelpSection(
         key="staff_teams",
         title="🛡️ Staff — Teams",
         commands=(
@@ -176,6 +196,9 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="⚙️ Staff — Setup",
         commands=(
             CommandHelp("/sync", "Re-sync the bot's slash commands.", True),
+            CommandHelp(
+                "/admin status", "Bot, database and ranking-snapshot health at a glance.", True
+            ),
             CommandHelp("/setup run", "Create or reuse the BRAWLISTAN roles and channels.", True),
             CommandHelp(
                 "/setup roles", "Create missing roles only; never grants permissions.", True
@@ -186,6 +209,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/access roles", "Set the join role and the approved role.", True),
             CommandHelp("/access approval", "Turn member approval on or off.", True),
             CommandHelp("/access status", "Show join roles, approval and who's waiting.", True),
+            CommandHelp("/access sync", "Give the join-time role to members missing it.", True),
             CommandHelp("/setup reset", "Tear provisioned resources back down.", True),
         ),
     ),

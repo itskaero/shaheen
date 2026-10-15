@@ -1,3 +1,7 @@
+# RETIRED (docs/DECISIONS.md ADR-127): the bot now runs on the NAS
+# (deploy/nas/, docs/DEPLOY_NAS.md). Kept for one release in case of a rollback.
+# Scale it to zero (`flyctl scale count 0`) so two bots never share one token.
+#
 # Fly.io app definition for the Shaheen Discord bot — the long-lived,
 # gateway-connected process. It runs separately from the website (see
 # render.yaml): Render's free tier is request-driven and spins down

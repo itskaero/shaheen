@@ -5576,3 +5576,356 @@ and a write API is a larger, separate piece.
   - the snapshot tick puts a synced clan's roster on the board.
 - **Migration 0025:** round trip.
 - **Checks:** pytest 573, ruff, mypy.
+
+
+## ADR-126 — Guest role catch-up, error reports to staff, and coaching (directory + requests)
+
+**Status:** accepted.
+
+**Context.** The owner reported three things:
+- A command answered "Something went wrong on BRAWLISTAN's side" around `/access`.
+- Some new members weren't getting Guest. Guest is the **approved** role, with approval off, so every
+  new member should get it on join.
+- The server introduced coaching roles, and the owner wants an MVP for the site and the bot. They chose
+  a coach directory plus requests.
+
+**Finding: the error.**
+- Every `/access` path was replayed against a database with mocked Discord objects, and they all worked.
+- So the failure is runtime-only, from Discord or the database, and its traceback is only in the Fly logs.
+  The owner was on mobile and couldn't read those.
+- The fix makes the next one visible from Discord rather than guessing at it (below).
+
+**Finding: missed Guest roles.** `on_member_join` was the only place the role was given, so these
+members were left without it:
+- anyone who joined while the bot was restarting or redeploying (256 MB VM);
+- anyone whose join-time database or Discord call failed, because only `HTTPException` was caught;
+- anyone who joined while the Guest role sat at or above the bot's role.
+
+None of these was retried.
+
+**Decision: access catch-up.**
+- **A sync loop** (every 10 minutes, after `wait_until_ready`) gives `role_on_join()` to members who hold
+  neither access role.
+  - It only touches members with **no other roles**. The bot's own Player/Verified mirrors and
+    integration roles don't count. Staff and hand-picked roles are never changed automatically.
+  - It skips bots and members still in rules screening.
+  - It changes at most 50 members per pass, it is audit-logged (`access.sync`), and it never raises.
+- **The rule is a pure function**, `members_missing_access()` in `services/access_service.py`.
+- **`/access sync`** (setup-level) does the same for **every** member holding neither role, staff
+  included, after showing a count and asking to confirm.
+- **`/access status`** now also shows:
+  - how many members hold neither role;
+  - a configured role at or above the bot's role, with how to fix it.
+- **`/access status` defers first**, so a slow database can't expire the interaction.
+- **The join handler** catches every error and logs it; the sync retries.
+- **`/approval`** turns any Discord HTTP error into a clear message.
+
+**Decision: errors report themselves.**
+- An unhandled command error now gets a 6-character reference.
+  - The member sees it ("Staff have been told (ref `ab12cd`)").
+  - The log line carries it.
+  - A staff copy is posted to `MOD_LOG_CHANNEL_ID`, then `REPORT_CHANNEL_ID`, then the provisioned
+    #report.
+- **The staff copy** holds the command, the member, and the exception type plus its first line, passed
+  through `core.logging.redact` and capped at 300 characters. It never includes the traceback, and it
+  pings nobody.
+- **The error message itself is now best-effort.** It can no longer raise if the interaction has
+  expired.
+
+**Decision: coaching.**
+- **Who coaches is the Coach role**, given by hand. The bot only reads it (no role writes, no permission
+  changes, ADR-109).
+  - `/coach setup <role> <channel>` (setup-level) stores the role and the requests channel in
+    `guild_settings`.
+  - The bot mirrors the role's holders into `coaches`:
+    - on `/coach setup`, when a member's roles change, and every 30 minutes;
+    - new holders are added, and holders who lose the role go inactive, keeping their history;
+    - each coach's linked Brawlhalla account is refreshed.
+- **Profile.** `/coach profile` sets specialty, up to three legends (normalised legend keys), availability,
+  bio and accepting.
+- **Requests.**
+  - `/coach request <coach> <message>` posts a card in the coaching channel pinging the coach.
+  - Rules:
+    - one open request per student per coach, and at most three open;
+    - 10–280 characters, cleaned;
+    - requests lapse after 7 days;
+    - you can't ask yourself or a paused coach.
+  - **Accept/Decline** are `DynamicItem` buttons keyed by the request id, so they work after a restart.
+    Only the coach asked, or staff, can answer, and only once.
+  - Accepting pings the student in the channel; a decline is sent by DM, best-effort.
+  - `/coach requests` lists a coach's open ones. Everything is audit-logged.
+- **Data (migration 0026).**
+  - `coaches`: guild, discord_id (internal), display_name (internal), brawlhalla_player_id, profile
+    fields, accepting, active.
+  - `coaching_requests`: coach, student_discord_id, message, status `open|accepted|declined`, the card's
+    message id, responded_at.
+  - `guild_settings.coach_role_id` and `coaching_channel_id`.
+- **API.** `GET /coaches` lists active coaches **with a linked account**, by Brawlhalla identity only
+  (ADR-040), in this order: accepting first, then sessions, then rating. Fields: name, slug, specialty,
+  legends, availability, bio, accepting, sessions (accepted requests), current-season rating and tier,
+  and team. The snapshot workflow captures it as `web/data/coaches.json`.
+- **Website.** `coaches.html` and the Coaches nav entry:
+  - player-style cards with a "Taking students"/"Full" pill;
+  - the first legend's portrait, team pill, legend chips, bio, rating/tier/sessions, and availability;
+  - search by name, legend, specialty or team;
+  - a "How coaching works" panel with the Discord link.
+  - Sessions are booked in Discord, because the static site has no sign-in.
+
+**Not done.**
+- Booking from the website (needs Discord login).
+- Session scheduling and reviews.
+- Several coach tiers (one Coach role for now).
+- A coach badge on player profiles.
+
+**Verified.**
+- **Tests:**
+  - the catch-up rule: role-less only, ignored mirror roles, bots, pending members, `everyone`, both
+    switch states and unconfigured;
+  - the sync audit;
+  - error report text: redaction, first line only, the cap, and the embed fields;
+  - coaching: legend cleaning, role mirroring with history, profile edits and clearing, every request
+    rule, lapsing, who may answer and only once, directory order and session counts, and the embeds;
+  - `GET /coaches` lists only linked coaches and contains no Discord identity.
+- **Migration 0026:** round trip.
+- **Bot:** every cog loads (57 top-level commands, with `access sync` and `coach *`), and the dynamic
+  button is registered.
+- **Website:** Playwright with a mocked API at 1440 and 390 px: cards, search, nav state, no overflow, no
+  console errors.
+- **Checks:** pytest 590, ruff, mypy.
+
+## ADR-127 — Hosting moves to the NAS (ZimaOS) behind Cloudflare; brawlistan.rekorex.online
+
+**Status:** accepted. Supersedes the hosting parts of ADR-044, ADR-053 and ADR-054 (Render and Fly.io).
+
+**Context.**
+- Around Oct 9 the free Render Postgres became unreachable.
+  - The bot logged `asyncpg ... SSL/TLS required` on every query.
+  - The Render API, which runs `alembic upgrade head` before it serves, stopped answering, even `/health`.
+  - `snapshot.yml` spent 1.5 hours per run timing out and committed nothing. The site showed old data without
+    saying so.
+- The owner asked to move the database and the bot to their NAS (ZimaOS, Docker, on a UPS) and to serve the
+  site at **brawlistan.rekorex.online** through Cloudflare.
+- They chose a fresh database rather than recovering the old one.
+
+**Decision: hosting.**
+- **One Docker stack on the NAS** (`deploy/nas/docker-compose.yml`):
+  - Postgres, with no published port and data under `/DATA/AppData/brawlistan`;
+  - a one-shot `migrate` that the API and the bot wait for;
+  - the API, with a `/health` healthcheck;
+  - the bot;
+  - `cloudflared`;
+  - nightly `pg_dump` backups (7 daily, 4 weekly, 3 monthly).
+- **Secrets** live only in the NAS `.env`. `DATABASE_URL` is assembled from `POSTGRES_PASSWORD`, so it's
+  written once.
+- **The API is published through a Cloudflare Tunnel** at `api-brawlistan.rekorex.online`. Outbound only: no
+  router ports, works behind CGNAT, and Cloudflare handles TLS.
+- **The website stays static on GitHub Pages** with `web/CNAME` and a Cloudflare DNS CNAME. It stays up when
+  the NAS is off.
+- **The app image** is built for amd64 and arm64 by `.github/workflows/image.yml` and pushed to GHCR as
+  `latest` and `sha-…`. The NAS pulls it instead of building.
+- **Render and Fly** are marked retired. Their config stays for one release.
+
+**Decision: the domain.**
+- `https://itskaero.github.io/shaheen` becomes `https://brawlistan.rekorex.online` in canonical and Open Graph
+  tags, the page generators, `.env.example`, and `core.config.DEFAULT_SITE_URL`.
+- The bot's two private copies of the site address (`engagement.py`, `profile_embeds.py`) now use
+  `settings.site_url`.
+- `config.js` points at the tunnel.
+- Pages and assets were already relative, so nothing else moves.
+
+**Decision: a fresh database works out of the box.**
+- Migrations 0020 and 0023 seeded the starting teams only for guilds already in the database, so a new
+  database had none.
+- `TeamService.ensure_seeded` now creates whichever of SHAHEEN and the four clan teams are missing
+  (`services/team_seeds.py`), on every snapshot tick before the clan sync. It never changes an existing team.
+
+**Decision: outages are visible.**
+- The bot answers a database-connection failure with "BRAWLISTAN's database is unreachable right now" and logs
+  one line instead of a traceback (`is_database_outage`).
+- When the live API fails and the page falls back to a snapshot, the site shows "Live data is unavailable right
+  now — showing data from N hours ago". It is dismissible for the visit.
+
+**Trade-offs.**
+- Uptime now depends on home power and internet. The UPS covers load-shedding, the access catch-up (ADR-126)
+  covers joins missed while the bot was down, and the snapshots keep the site readable.
+- Backups sit on the same NAS until the owner adds an offsite copy (`docs/DEPLOY_NAS.md`).
+
+**Verified.**
+- `docker compose config` is valid.
+- On Docker locally (with a stand-in `.env`):
+  - Postgres reported healthy;
+  - `migrate` ran 0001→0026 on an empty database and exited 0;
+  - the API was healthy and `/health`, `/teams`, `/coaches`, `/rankings/pakistan` and `/seasons/current`
+    returned 200;
+  - Postgres was not published on the host;
+  - the team seed created five teams, then none on the second run;
+  - a manual backup was written and restored into a scratch database (5 teams, revision 0026).
+- Playwright with the live API returning 503: the banner shows the snapshot's age at 1440 and 390 px, with no
+  overflow, and stays dismissed after a reload.
+- **Tests:** outage detection, team seeds (idempotent, never overwrite), and the profile link using
+  `site_url`.
+- **Checks:** pytest 594, ruff, mypy.
+
+## ADR-128 — City Wars, weekly quests and season level, WhatsApp sharing
+
+**Status:** accepted. This is Phase A of the October community analysis. The analysis found that Pakistani esports grows
+through city rivalry, that BRAWLISTAN's only recurring reward was chat XP, and that players share on WhatsApp.
+
+**Decision: City Wars.**
+- **Data.** `brawlhalla_players.city` (migration 0027). The key comes from a fixed list in
+  `services/cities.py`: 17 cities and regions, with Islamabad and Rawalpindi as one entry. It is set with
+  `/city set` / `/city clear` (linked members, audit-logged). It belongs to the Brawlhalla identity, so the API
+  may show it.
+- **Score.** A city's score is the average of its best 5 placed 1v1 ratings this season, so one star and a
+  big city compete fairly. Only placed players count; a player with no city is left out.
+  `RankingsService.cities()` builds it from the same rows as the Pakistan board.
+- **Where it shows:**
+  - `GET /rankings/cities`;
+  - `city` and `city_label` on ranking rows and the player directory (the label comes from the API, so the
+    site never copies the list);
+  - `/rankings board:city`;
+  - the Rankings page's **Cities** tab (snapshot `cities`);
+  - a city pill on profiles and the city on player cards.
+
+**Decision: weekly quests and season level.**
+- **The quests.** Three quests a week, Monday 00:00 to Monday 00:00 PKT: play 15 ranked games, win 8, and
+  gain 50 rating.
+- **Progress** is computed from the ranking snapshots the bot already takes, and never stored or
+  self-reported.
+  - It is the latest reading of this week minus the baseline.
+  - The baseline is the last reading of the same season before the week, or else the week's first reading
+    (a player first seen, or a season started, mid-week).
+  - Rating progress is a net gain and never negative.
+- **Completions** are stored once per player, week and quest (`quest_completions`, with a unique
+  constraint). The snapshot tick records them for every Pakistan-board player, so a repeated tick awards
+  nothing twice.
+- **Season level.** Season XP is 100 per completion in the season; level = 1 + XP/100, capped at 30. It starts
+  again with each Brawlhalla season, so new and old players are level.
+- **Rewards** are a profile ring and the `/quests` card only: no roles, in line with the owner's "no
+  rank-specific roles" rule.
+- **Where it shows:**
+  - `/quests [user]`;
+  - `GET /players/{id}/quests`;
+  - a "This week" panel on the profile (level ring plus progress bars).
+- **Announcements:** finished quests post as one combined message per tick in #achievements, only with
+  `ANNOUNCE_QUESTS=true` (off by default, like level-ups).
+
+**Decision: WhatsApp sharing.** `whatsappButtonHtml()` (`theme.js`) adds a WhatsApp button to player profiles
+(next to Share), team pages and the Coaches page. The links point at the per-player and per-team pages, which
+carry their own preview cards.
+
+**Also changed.**
+- The Rankings tab bar keeps the open tab in view on narrow screens.
+- The help catalog gains a "🎯 Quests & City Wars" page.
+
+**Verified.**
+- **Tests:**
+  - week bounds in PKT (Sunday 23:30 vs Monday 00:30);
+  - the baseline before the week, from a mid-week first sighting, and ignoring the previous season;
+  - progress never negative; the level cap;
+  - completions recorded once, XP and level, the next week resetting quests but keeping XP;
+  - the city score (top 5 average, unknown cities ignored, unplaced left out) and city validation;
+  - the API for cities and quests (labels, 404) with no Discord identity;
+  - the embeds;
+  - migration 0027 round trip.
+- **Playwright** with a mocked API at 1440 and 390 px: the Cities tab, the profile's level ring, quest bars
+  and city pill, WhatsApp links on the profile and team page, no overflow, no page errors.
+- **Checks:** ruff, mypy, pytest.
+
+## ADR-129 — /admin status: a health check instead of a web dashboard
+
+**Status:** accepted.
+
+**Context.** After the API went dark behind a misconfigured tunnel hostname, the owner asked whether a bot
+dashboard would help. A web admin dashboard would need Discord OAuth, sessions and role checks on every write
+endpoint: the first admin-write surface on the public internet, duplicating rules the slash commands already
+enforce, for a handful of admins. What was actually missing was a quick way to see whether things were
+healthy.
+
+**Decision.** `/admin status` (Founder/Admin, the `/setup` check), ephemeral:
+- **Bot:** gateway latency and uptime (`ShaheenBot.started_at`).
+- **Database:** `SELECT 1` and its time, the Alembic revision.
+- **Rankings:** the newest ranking snapshot, the configured interval, and players tracked.
+- **Loops:** ranking snapshot, weekly digest, access catch-up, coaching sync; running or stopped.
+- **Needs attention**, most serious first: database unreachable or slow (over 300 ms), a stopped loop, no
+  snapshot yet, a snapshot older than two intervals (one missed tick can be a restart; two is a fault,
+  usually the Brawlhalla API key), Discord latency over 500 ms.
+
+**Layers.**
+- `database/repositories/system_repository.py`: the read-only queries.
+- `services/status_service.py`: Discord-agnostic. The bot passes its own facts as `BotFacts`; the service
+  adds the database's and decides what needs attention (`SystemStatus.problems()`). An unreachable
+  database is part of the report, never an exception. The log line names only the error type.
+- `bot/content/status_embeds.py`: the embed. The command is in `bot/cogs/staff.py`.
+
+The Brawlhalla API is not called: the snapshot age already shows whether it's working, without spending
+rate limit.
+
+**Verified.** Tests: a healthy report, ordering of problems, the two-interval boundary, no snapshot,
+stopped loops and slow services, `format_age`, the check on an empty database and with readings, an
+unreachable database without raising, the embed's fields. ruff, mypy, pytest (616 passed).
+
+## ADR-130 — Entrance page, arena dashboard, City Wars page
+
+**Status:** accepted.
+
+**Context.** The owner sent four references:
+- an editorial landing page as the entrance to the site;
+- an esports dashboard for layout;
+- a crypto dashboard for UI elements only;
+- new key art (three warriors on red and black, with green and white flag ribbons), for the landing or hero,
+  with red fireflies or fire moving over it.
+
+They also couldn't find City Wars on the site: it was a tab inside Rankings, and the site's snapshots had
+stopped on Oct 9, before City Wars merged, because the API was unreachable.
+
+**Decision.**
+- **`index.html` is now the entrance.** It's standalone, without the app shell:
+  - a floating glass nav;
+  - a full-screen hero on the key art, with rising embers;
+  - a centred headline, sans with serif-italic accent words;
+  - "Enter BRAWLISTAN" and "View rankings";
+  - live stat tiles: season, Discord members, ranked players, cities at war.
+  - Below the hero:
+    - a three-card carousel of the top 10 players, with the centre card glowing;
+    - a three-row legend-portrait mosaic drifting in alternate directions;
+    - "Join the Community", with a rotating circular-text badge;
+    - a two-card footer.
+- **The dashboard moves to `home.html`**, and the shell's Home link points there (the logo still goes to
+  the entrance). The layout follows the esports reference:
+  - a live ticker of the board, with green and red change pills;
+  - a season card with a progress bar, member counts and a Discord button;
+  - a season banner on the key art, with a ticking countdown to the season's end and embers;
+  - Players, Teams and City Wars as ranked lists with numbered boxes, #1 in fire;
+  - Tournaments with an Upcoming/Finished toggle;
+  - Rising, Legend meta and Featured player.
+  - Below 1500 px the grid goes 4/8, the side lists three across, and tournaments full width, so names
+    aren't cut short.
+- **`cities.html`**: City Wars gets its own page and a sidebar link. It has:
+  - a hero;
+  - a podium ordered 2-1-3;
+  - the full standings, each with a score bar;
+  - "Represent your city" steps.
+  The Rankings tab stays.
+- **Look:** `assets/css/arena.css`, scoped to `.bl-arena`, `.en` and `.ar-*` so the other pages are
+  unchanged.
+  - A fire palette from the art: red `#ff2e3a`, ember `#ff6a1f`, gold. Green stays for "up" and live.
+  - Instrument Serif for display accents.
+  - Glass cards, chips, change pills and a segmented control, after the crypto reference.
+- **Embers:** `assets/js/embers.js` fills any `[data-embers]` element with rising embers and blinking red
+  fireflies, plus a rare green one. They part around the pointer.
+  - It's built like `hero-fx.js` (ADR-110): pre-rendered glow sprites, "lighter" compositing, DPR capped at
+    2, and paused off-screen or in a hidden tab.
+  - The count scales with the element's area.
+  - Reduced motion paints a still frame. The ticker, mosaic, badge and hero zoom also stop, and the ticker
+    and mosaic become scrollable.
+- **Art:** `assets/img/brawlistan/warriors{,-1280,-800}.webp` and `warriors.jpg` (1672 px source).
+
+Data comes from the existing snapshots and endpoints (`clan`, `rankings`, `teams`, `cities`, `rising`,
+`legend-meta`, `featured`, `/tournaments`). There are no new endpoints. The `cities` snapshot appears on the
+first `snapshot.yml` run after the API is reachable again.
+
+**Verified.** Playwright with a mocked API at 1440×900 and 390×844, on the entrance, home and City Wars:
+- no horizontal overflow;
+- one embers canvas on each page;
+- no page errors (only the 404s for snapshots not yet generated).

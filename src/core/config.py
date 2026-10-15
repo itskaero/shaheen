@@ -34,6 +34,10 @@ def normalize_database_url(value: str) -> str:
     return value
 
 
+# The public website (docs/DECISIONS.md ADR-127). SITE_URL overrides it.
+DEFAULT_SITE_URL = "https://brawlistan.rekorex.online"
+
+
 class Settings(BaseSettings):
     """Runtime configuration for Shaheen Bot.
 
@@ -71,7 +75,7 @@ class Settings(BaseSettings):
     # or the season stops advancing.
     brawlhalla_season: int | None = Field(default=None, ge=1)
     # The public website, for links the bot posts (ADR-107).
-    site_url: str = "https://itskaero.github.io/shaheen"
+    site_url: str = DEFAULT_SITE_URL
     # Optional channel overrides (ADR-109). Unset, the bot posts to the
     # channels /setup provisioned: reports and the moderation log to
     # #report, announcements to #announcements.
@@ -86,6 +90,9 @@ class Settings(BaseSettings):
     announce_achievements: bool = True
     announce_level_ups: bool = False
     announce_featured: bool = True
+    # Weekly quest completions in #achievements (ADR-128). Off: they're
+    # still recorded and shown by /quests and on the website.
+    announce_quests: bool = False
 
     @field_validator("database_url")
     @classmethod

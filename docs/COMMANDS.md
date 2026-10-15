@@ -367,8 +367,23 @@ The website, as link buttons (Home, Rankings, Players, Tournaments).
 
 ### /rankings [board]
 Pakistan's top 10 for `1v1` (default) or `2v2`, or `rising` (this week's
-biggest rating gains). Placed players only; an empty board says "Data
-unavailable".
+biggest rating gains), or `city` (City Wars, ADR-128: each city's average of
+its best 5 placed 1v1 ratings this season). Placed players only; an empty
+board says "Data unavailable".
+
+### /city set <city> · /city clear
+Represent a Pakistani city on City Wars (ADR-128), picked from a fixed list
+(the twin cities share "Islamabad / Rawalpindi"). Needs a linked account;
+counts once you're placed this season. Shown on your website profile and the
+Rankings page's **Cities** tab. Audit-logged.
+
+### /quests [user]
+This week's three quests, with progress bars, and the season level (ADR-128):
+play 15 ranked games, win 8, gain 50 rating. Progress comes from your ranked
+snapshots (every 6 hours), never self-reported. Each quest is 100 season XP;
+level = 1 + XP/100, up to 30, starting again each Brawlhalla season. Weeks
+reset Monday 00:00 PKT. Completions post in #achievements only with
+`ANNOUNCE_QUESTS=true`.
 
 ### /season
 The current Pakistan season: number, name (English and Urdu), Brawlhalla
@@ -430,17 +445,65 @@ Members get their role on join, or once they pass Discord's rules screening
 if the server uses it. Turning approval off doesn't move anyone already
 waiting; `/approval` them. Audit-logged.
 
+Every 10 minutes the bot also catches up members the join handler missed
+(it was restarting, or Discord refused the edit), ADR-126. It only gives
+the join-time role to members with **no other roles** (Player/Verified
+don't count), so staff and hand-picked roles are never touched.
+
 ### /access status *(Founder/Admin)*
-Both roles, the switch, how many members are waiting, and anything missing
-(an unset or deleted role, or the bot lacking Manage Roles).
+Both roles, the switch, how many members are waiting, how many hold
+neither role, and anything missing: an unset or deleted role, a role at or
+above the bot's own (the usual reason members get nothing), or the bot
+lacking Manage Roles.
+
+### /access sync *(Founder/Admin)*
+Give the join-time role (approved role while approval is off, join role
+while it's on) to **every** member who holds neither role, including members
+with other roles. Shows the count and asks to confirm. Audit-logged.
 
 ### /approval <member> *(staff)*
 Give a member the approved role and take away the join role. Says so if
 they're already approved. Audit-logged.
 
+### /coach list
+The coaches (members holding the Coach role, ADR-126), who's taking
+students, their specialty, legends and availability, with a **Coaches page**
+button.
+
+### /coach request <coach> <message>
+Ask a coach for a session (10–280 characters on what you want help with).
+Posts a card in the coaching channel that pings the coach, with
+**Accept**/**Decline** buttons only that coach (or staff) can press. One
+open request per coach, three open at most; unanswered requests lapse after
+7 days. Accepting pings you in the channel; a decline is sent by DM.
+
+### /coach requests *(coaches)*
+Your open requests.
+
+### /coach profile [specialty] [legends] [availability] [bio] [accepting] *(coaches)*
+Edit your coach card. `legends` takes up to three names, comma-separated;
+empty text clears a field; `accepting:False` pauses new requests. You're
+listed on the website once your Brawlhalla account is linked.
+
+### /coach setup <role> <channel> *(Founder/Admin)*
+The role your coaches hold (given by hand; the bot only reads it) and the
+channel requests are posted in. The bot needs Send Messages and Embed Links
+there. Audit-logged.
+
 ### /sync *(Founder/Admin)*
 Re-sync the bot's slash commands to the server, for example after a deploy
 added commands.
+
+### /admin status *(Founder/Admin)*
+A private health check (ADR-129):
+- **Bot:** Discord latency and uptime.
+- **Database:** reachable or not, query time, and the schema revision.
+- **Rankings:** when the last ranking snapshot was taken, the snapshot
+  interval, and how many players are tracked.
+- **Background loops:** ranking snapshot, weekly digest, access catch-up and
+  coaching sync, each running or stopped.
+- **Needs attention:** anything wrong, most serious first. A snapshot older
+  than two intervals usually means a bad Brawlhalla API key.
 
 ### /team info [name]
 A team's roster (captain marked 👑), player count, team rating and logo,

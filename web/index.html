@@ -4,179 +4,149 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>BRAWLISTAN — Pakistan's Brawlhalla Network</title>
-  <meta name="description" content="Who are the best Brawlhalla players in Pakistan? Pakistan rankings, player profiles, seasons, legends and tournaments — BRAWLISTAN, Pakistan's Brawlhalla Network." />
-  <meta name="theme-color" content="#070a09" />
-  <link rel="canonical" href="https://itskaero.github.io/shaheen/" />
+  <meta name="description" content="Who are the best Brawlhalla players in Pakistan? Pakistan rankings, City Wars, player profiles, teams, seasons and tournaments — BRAWLISTAN, Pakistan's Brawlhalla Network." />
+  <meta name="theme-color" content="#050303" />
+  <link rel="canonical" href="https://brawlistan.rekorex.online/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="BRAWLISTAN" />
   <meta property="og:title" content="BRAWLISTAN — Pakistan's Brawlhalla Network" />
   <meta property="og:description" content="Track the scene. Find the players. Climb the rankings." />
-  <meta property="og:url" content="https://itskaero.github.io/shaheen/" />
-  <meta property="og:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <meta property="og:url" content="https://brawlistan.rekorex.online/" />
+  <meta property="og:image" content="https://brawlistan.rekorex.online/assets/img/brawlistan/og-card.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="BRAWLISTAN — Pakistan's Brawlhalla Network" />
   <meta name="twitter:description" content="Track the scene. Find the players. Climb the rankings." />
-  <meta name="twitter:image" content="https://itskaero.github.io/shaheen/assets/img/brawlistan/og-card.jpg" />
+  <meta name="twitter:image" content="https://brawlistan.rekorex.online/assets/img/brawlistan/og-card.jpg" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="preload" as="image" href="assets/img/brawlistan/warriors-1280.webp" type="image/webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Noto+Nastaliq+Urdu:wght@500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/brawlistan.css" />
+  <link rel="stylesheet" href="assets/css/arena.css" />
 </head>
-<body class="bl" data-page="home">
+<!-- The entrance (docs/DECISIONS.md ADR-130). The dashboard is home.html. -->
+<body class="bl en" data-page="entrance">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="bl-scene" aria-hidden="true"></div>
-  <div class="bl-app">
-    <nav class="bl-sidebar" data-shell="sidebar" aria-label="Main"></nav>
-    <div class="bl-main">
-      <header class="bl-topbar" data-shell="topbar"></header>
-      <main id="main">
-        <section class="hero hero-banner hero-immersive hero-has-card" aria-labelledby="hero-title">
-          <div class="hero-bg" aria-hidden="true">
-            <picture>
-              <source srcset="assets/img/brawlistan/hero-scene-1280.webp 1280w, assets/img/brawlistan/hero-scene.webp 1920w" sizes="100vw" type="image/webp" />
-              <img src="assets/img/brawlistan/hero-scene.jpg" alt="" width="1920" height="1080" fetchpriority="high" />
-            </picture>
-          </div>
-          <div class="hero-body">
-            <div class="hero-copy">
-              <h1 id="hero-title" class="hero-brand">
-                <picture>
-                  <source srcset="assets/img/brawlistan/wordmark.webp" type="image/webp" />
-                  <img src="assets/img/brawlistan/wordmark.png" alt="BRAWLISTAN" width="1190" height="400" fetchpriority="high" />
-                </picture>
-              </h1>
-              <span class="eyebrow hero-live"><span class="dot" aria-hidden="true"></span>Pakistan's Brawlhalla Network</span>
-              <p class="hero-lines"><span>Track the scene.</span><span>Find the players.</span><span>Climb the rankings.</span></p>
-              <span class="urdu" lang="ur">بلندیوں کی جانب</span>
-              <div class="hero-actions">
-                <a class="btn btn-current" href="rankings.html">
-                  <span>View rankings</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </a>
-                <a class="btn btn-glass" data-discord-invite href="join.html" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 5.3A16.4 16.4 0 0 0 15.5 4l-.5 1a15 15 0 0 0-6 0l-.5-1a16.4 16.4 0 0 0-4.1 1.3C1.8 9.2 1.1 13 1.4 16.7a16.6 16.6 0 0 0 5 2.5l1.1-1.7c-.6-.2-1.2-.5-1.7-.8l.4-.3a11.8 11.8 0 0 0 11.6 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.5 16.5 0 0 0 5-2.5c.4-4.3-.6-8-2.6-11.4ZM8.5 14.4c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm7 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
-                  <span>Join Discord</span>
-                </a>
-              </div>
-              <div class="hero-stats" id="hero-stats" aria-live="polite"></div>
-            </div>
-            <div class="hero-card">
-              <!-- BRAWLISTAN identity card: WebGPU foil from assets/js/holo.js (ADR-117). -->
-              <div class="holo-card is-identity" data-holo data-holo-art="assets/img/brawlistan/logo.webp"
-                   data-holo-accent="#3df26e" data-holo-accent2="#f0168c" data-holo-ambient="0.4" data-holo-dpr="2"
-                   aria-label="BRAWLISTAN identity card">
-                <div class="holo-stage">
-                  <canvas class="holo-canvas" aria-hidden="true"></canvas>
-                  <div class="holo-face">
-                    <div class="holo-fallback" aria-hidden="true">
-                      <img class="holo-fallback-art" src="assets/img/brawlistan/logo.webp" alt="" />
-                    </div>
-                    <div class="holo-content">
-                      <p class="holo-meta"><span class="holo-tag">🇵🇰 Pakistan</span><span id="hero-card-season">Season 01</span></p>
-                      <p class="holo-title" id="hero-card-name">Markhor</p>
-                      <nav class="holo-links" aria-label="Explore">
-                        <a href="players.html">Top players</a><a href="teams.html">Top teams</a><a href="rankings.html">Rankings</a>
-                      </nav>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <a class="hero-scroll" href="#home-sections" aria-label="Scroll to the rankings">
-            <span>Scroll</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </a>
-        </section>
 
-        <div class="home-grid" id="home-sections" style="margin-top: 16px; scroll-margin-top: 80px">
-          <section class="panel panel-pad span-8" aria-labelledby="top10-title">
-            <div class="section-head">
-              <h2 id="top10-title">Pakistan Top 10</h2>
-              <a href="rankings.html#pakistan">Full rankings &rarr;</a>
-            </div>
-            <div id="top10"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <div class="span-4 stack">
-            <section class="panel panel-pad" aria-labelledby="season-title">
-              <div class="section-head">
-                <h2 id="season-title">Current Season</h2>
-                <a href="seasons.html">All seasons &rarr;</a>
-              </div>
-              <div id="season"><p class="unavailable">Loading…</p></div>
-            </section>
-            <section class="panel panel-pad" aria-labelledby="featured-title">
-              <div class="section-head"><h2 id="featured-title">Featured Player</h2></div>
-              <div id="featured"><p class="unavailable">Loading…</p></div>
-            </section>
-          </div>
-
-          <section class="panel panel-pad span-4" aria-labelledby="rising-title">
-            <div class="section-head">
-              <h2 id="rising-title">Rising Players</h2>
-              <span class="muted" style="font-size: 12.5px">Last 7 days</span>
-            </div>
-            <div id="rising"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <section class="panel panel-pad span-4" aria-labelledby="meta-title">
-            <div class="section-head">
-              <h2 id="meta-title">Legend Meta</h2>
-              <span class="muted" style="font-size: 12.5px">Most played</span>
-            </div>
-            <div id="legend-meta"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <section class="panel panel-pad span-4" aria-labelledby="tournament-title">
-            <div class="section-head">
-              <h2 id="tournament-title">Latest Tournament</h2>
-              <a href="tournaments.html">All &rarr;</a>
-            </div>
-            <div id="tournament"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <section class="panel panel-pad span-6" aria-labelledby="team-title">
-            <div class="section-head">
-              <h2 id="team-title">Featured Team</h2>
-              <a href="teams.html">All teams &rarr;</a>
-            </div>
-            <div id="featured-team"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <section class="panel panel-pad span-6" aria-labelledby="community-title">
-            <div class="section-head"><h2 id="community-title">Community</h2></div>
-            <div id="community"><p class="unavailable">Loading…</p></div>
-          </section>
-
-          <section class="panel panel-pad span-6 founding" aria-labelledby="founding-title">
-            <picture>
-              <source srcset="assets/img/logo-emblem.webp" type="image/webp" />
-              <img src="assets/img/logo-emblem.png" alt="" width="120" height="71" loading="lazy" />
-            </picture>
-            <div>
-              <span class="eyebrow">Founding Team</span>
-              <h2 id="founding-title">Built by SHAHEEN</h2>
-              <p>BRAWLISTAN started as the home of SHAHEEN, a Pakistani Brawlhalla clan. The rankings, profiles and seasons grew out of that clan's tools, and now they cover the whole Pakistani scene.</p>
-              <a class="btn btn-ghost btn-sm" href="clan.html">Meet the founding team</a>
-            </div>
-          </section>
-        </div>
-      </main>
-      <footer class="bl-footer" data-shell="footer"></footer>
+  <header class="en-nav">
+    <a class="en-brand" href="./" aria-label="BRAWLISTAN">
+      <picture>
+        <source srcset="assets/img/brawlistan/wordmark.webp" type="image/webp" />
+        <img src="assets/img/brawlistan/wordmark.png" alt="BRAWLISTAN" width="120" height="40" />
+      </picture>
+    </a>
+    <nav class="en-links" aria-label="Main">
+      <a href="home.html">Home</a>
+      <a href="rankings.html">Rankings</a>
+      <a href="cities.html" class="is-hot">City Wars</a>
+      <a href="players.html">Players</a>
+      <a href="teams.html">Teams</a>
+    </nav>
+    <div class="en-actions">
+      <a class="en-link-quiet" data-discord-invite href="join.html" target="_blank" rel="noopener">Discord</a>
+      <a class="ar-btn ar-btn-outline" href="home.html">Enter</a>
     </div>
-  </div>
-  <nav class="bl-bottomnav" data-shell="bottomnav" aria-label="Main"></nav>
+  </header>
+
+  <main id="main">
+    <!-- Hero: the warrior art, embers rising over it (embers.js). -->
+    <section class="en-hero" aria-labelledby="en-title" data-embers="120">
+      <picture class="en-hero-art" aria-hidden="true">
+        <source srcset="assets/img/brawlistan/warriors-800.webp 800w, assets/img/brawlistan/warriors-1280.webp 1280w, assets/img/brawlistan/warriors.webp 1672w" sizes="100vw" type="image/webp" />
+        <img src="assets/img/brawlistan/warriors.jpg" alt="" width="1672" height="941" fetchpriority="high" />
+      </picture>
+      <div class="en-hero-body">
+        <span class="ar-pill"><span class="ar-live-dot" aria-hidden="true"></span>Pakistan's Brawlhalla Network</span>
+        <h1 id="en-title">Pakistan's <em>finest</em><br /><em>brawlers</em> in one arena</h1>
+        <p>BRAWLISTAN tracks every ranked Pakistani player: the rankings, the rivalries between cities, the teams and the seasons.</p>
+        <div class="en-cta">
+          <a class="ar-btn ar-btn-fire ar-btn-lg" href="home.html">
+            Enter BRAWLISTAN
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="ar-btn ar-btn-glass ar-btn-lg" href="rankings.html">View rankings</a>
+        </div>
+        <span class="en-urdu" lang="ur">بلندیوں کی جانب</span>
+        <dl class="en-stats" id="en-stats" aria-live="polite"></dl>
+      </div>
+      <a class="en-scroll" href="#en-players" aria-label="Scroll to the top players">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </a>
+    </section>
+
+    <!-- Top players carousel -->
+    <section class="en-section" id="en-players" aria-labelledby="en-players-title">
+      <span class="ar-pill">Top of the board</span>
+      <h2 id="en-players-title">The <em>best</em> in Pakistan, <em>this season</em></h2>
+      <p class="en-sub">Ranked by 1v1 rating, refreshed every few hours from the official Brawlhalla API.</p>
+      <div class="en-carousel">
+        <button type="button" class="en-arrow" data-dir="-1" aria-label="Previous player">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+        <div class="en-cards" id="en-cards" aria-live="polite"><p class="unavailable">Loading…</p></div>
+        <button type="button" class="en-arrow" data-dir="1" aria-label="Next player">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Legend mosaic: three rows drifting in turn. -->
+    <section class="en-mosaic" aria-label="Brawlhalla legends" id="en-mosaic"></section>
+
+    <!-- Join the community -->
+    <section class="en-join" aria-labelledby="en-join-title">
+      <div class="en-join-left">
+        <span class="en-join-label">(bl) Join us</span>
+        <div class="en-badge" aria-hidden="true">
+          <svg viewBox="0 0 200 200">
+            <defs><path id="en-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
+            <text><textPath href="#en-circle">HIGHER TOGETHER &#8226; PAKISTAN &#8226; BRAWLISTAN &#8226; HIGHER TOGETHER &#8226;</textPath></text>
+          </svg>
+          <picture>
+            <source srcset="assets/img/brawlistan/mark.webp" type="image/webp" />
+            <img src="assets/img/brawlistan/mark.png" alt="" width="72" height="72" loading="lazy" />
+          </picture>
+        </div>
+      </div>
+      <div class="en-join-right">
+        <span class="en-join-kicker">Let's start</span>
+        <h2 id="en-join-title">Join the <em>Community</em></h2>
+        <p>Rankings talk, clips, looking-for-game, City Wars and tournaments all happen in the Discord. Link your account there to claim your profile.</p>
+        <a class="en-get" data-discord-invite href="join.html" target="_blank" rel="noopener">
+          Join the Discord
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="en-footer">
+    <div class="en-foot-card">
+      <picture>
+        <source srcset="assets/img/brawlistan/wordmark.webp" type="image/webp" />
+        <img src="assets/img/brawlistan/wordmark.png" alt="BRAWLISTAN" width="150" height="50" loading="lazy" />
+      </picture>
+      <p>Pakistan's Brawlhalla Network. Founded by <a href="clan.html">SHAHEEN</a>.</p>
+      <nav class="en-foot-links" aria-label="Footer">
+        <a href="home.html">Home</a><a href="rankings.html">Rankings</a><a href="cities.html">City Wars</a><a href="teams.html">Teams</a><a href="seasons.html">Seasons</a><a href="tournaments.html">Tournaments</a>
+      </nav>
+      <small>&copy; <span id="en-year"></span> BRAWLISTAN &middot; Data from the official Brawlhalla API &middot; Not affiliated with Blue Mammoth Games</small>
+    </div>
+    <div class="en-foot-card en-foot-side">
+      <h2>Find us</h2>
+      <a class="ar-btn ar-btn-glass" data-discord-invite href="join.html" target="_blank" rel="noopener">Discord</a>
+      <a class="ar-btn ar-btn-glass" href="music.html">Music</a>
+      <span class="en-urdu" lang="ur">بلندیوں کی جانب</span>
+    </div>
+  </footer>
 
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/shell.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/theme.js"></script>
-  <script src="assets/js/pages/home.js"></script>
-  <script src="assets/js/hero-fx.js" defer></script>
-  <script type="module" src="assets/js/holo.js"></script>
+  <script src="assets/js/pages/entrance.js"></script>
+  <script src="assets/js/embers.js" defer></script>
 </body>
 </html>

@@ -4,10 +4,13 @@
   on) and the approved role (lets them in). Setup-level.
 - `/access approval`: turn approval on or off. Setup-level.
 - `/access status`: the current setup and what's missing.
+- `/access sync`: give the join-time role to every member missing it. Setup-level.
 - `/approval member`: swap a member's join role for the approved role. Staff.
 
 New members get their role on join, or once they pass Discord's rules
-screening if the server uses it. The rules live in services/access_service.py;
+screening if the server uses it. A join the bot missed (it was restarting,
+or the role edit failed) is caught up by a sync every few minutes (ADR-126),
+which only touches members with no other roles. The rules live in services/access_service.py;
 this cog only reads and changes Discord roles. Channel access stays the
 owner's to configure (ADR-109): the bot never edits permissions.
 """
@@ -15,23 +18,35 @@ owner's to configure (ADR-109): the bot never edits permissions.
 from __future__ import annotations
 
 import logging
-from collections.abc import Set
+from collections.abc import Iterable, Set
 
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from bot.checks.permissions import require_setup_authorized, require_staff_authorized
 from bot.client import ShaheenBot
 from bot.constants import ROLE_PLAYER, ROLE_VERIFIED
 from bot.palette import EMERALD
+from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
 from database.models.provisioned_resource import ResourceType
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.session import session_scope
-from services.access_service import AccessConfig, AccessService, plan_approval
+from services.access_service import (
+    AccessConfig,
+    AccessService,
+    MemberRoles,
+    members_missing_access,
+    plan_approval,
+)
 
 logger = logging.getLogger(__name__)
+
+# How often the catch-up sync runs, and how many members one pass may change
+# (Discord rate-limits role edits; the rest wait for the next pass).
+SYNC_MINUTES = 10
+SYNC_BATCH = 50
 
 # A join or approved role is handed out automatically, so it must not carry
 # anything beyond ordinary member access.
@@ -98,7 +113,38 @@ def _role_text(guild: discord.Guild, role_id: int | None) -> str:
     return role.mention if role is not None else "a deleted role (set it again)"
 
 
-def build_status_embed(guild: discord.Guild, config: AccessConfig) -> discord.Embed:
+def member_roles(members: Iterable[discord.Member]) -> list[MemberRoles]:
+    return [
+        MemberRoles(
+            discord_id=m.id,
+            role_ids=frozenset(r.id for r in m.roles if not r.is_default()),
+            is_bot=m.bot,
+            pending=m.pending,
+        )
+        for m in members
+    ]
+
+
+def placement_problems(guild: discord.Guild, config: AccessConfig) -> list[str]:
+    """Configured roles the bot can't hand out any more, e.g. someone moved
+    the role above the bot's own (the usual reason members get nothing)."""
+    me = guild.me
+    if me is None:
+        return []
+    problems = []
+    for label, role_id in (("join", config.join_role_id), ("approved", config.approved_role_id)):
+        role = guild.get_role(role_id) if role_id else None
+        if role is not None and role >= me.top_role:
+            problems.append(
+                f"The {label} role {role.mention} is at or above the bot's role, so the bot "
+                "can't give it. Drag the bot's role above it in Server Settings → Roles."
+            )
+    return problems
+
+
+def build_status_embed(
+    guild: discord.Guild, config: AccessConfig, *, missing: int | None = None
+) -> discord.Embed:
     join_text = _role_text(guild, config.join_role_id)
     approved_text = _role_text(guild, config.approved_role_id)
     if config.approval_enabled:
@@ -113,7 +159,13 @@ def build_status_embed(guild: discord.Guild, config: AccessConfig) -> discord.Em
     if join_role is not None:
         waiting = sum(1 for member in join_role.members if not member.bot)
         embed.add_field(name="Waiting for approval", value=str(waiting))
-    problems = config.warnings()
+    if missing:
+        embed.add_field(
+            name="Missing their role",
+            value=f"{missing} member(s) hold neither role. `/access sync` gives it to them.",
+            inline=False,
+        )
+    problems = config.warnings() + placement_problems(guild, config)
     me = guild.me
     if me is not None and not me.guild_permissions.manage_roles:
         problems.append("The bot is missing the Manage Roles permission.")
@@ -129,6 +181,14 @@ class AccessCog(commands.Cog):
 
     def __init__(self, bot: ShaheenBot) -> None:
         self.bot = bot
+        self.sync_loop = tasks.loop(minutes=SYNC_MINUTES)(self._sync_tick)
+
+    async def cog_load(self) -> None:
+        self.sync_loop.before_loop(self.bot.wait_until_ready)
+        self.sync_loop.start()
+
+    async def cog_unload(self) -> None:
+        self.sync_loop.cancel()
 
     # --- configuration ------------------------------------------------------
 
@@ -161,10 +221,12 @@ class AccessCog(commands.Cog):
     @require_setup_authorized()
     async def status(self, interaction: discord.Interaction) -> None:
         actor = _member(interaction)
+        await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
             config = await AccessService(session).config(actor.guild.id)
-        await interaction.response.send_message(
-            embed=build_status_embed(actor.guild, config), ephemeral=True
+        missing = members_missing_access(config, member_roles(actor.guild.members), everyone=True)
+        await interaction.followup.send(
+            embed=build_status_embed(actor.guild, config, missing=len(missing)), ephemeral=True
         )
 
     @access.command(name="roles", description="Set the join role and the approved role")
@@ -271,6 +333,11 @@ class AccessCog(commands.Cog):
             raise ShaheenError(
                 "Discord refused the role change; check the bot's role position."
             ) from exc
+        except discord.HTTPException as exc:
+            logger.warning("/approval role change failed for %s: %s", member.id, exc)
+            raise ShaheenError(
+                "Discord didn't accept the role change just now. Try again in a moment."
+            ) from exc
         async with session_scope(self.bot.session_factory) as session:
             await AccessService(session).record_approval(
                 staff.guild.id, member_discord_id=member.id, staff_discord_id=staff.id
@@ -280,6 +347,97 @@ class AccessCog(commands.Cog):
             f"✅ {member.mention} is approved" + (f" and now has {add.mention}." if add else "."),
             ephemeral=True,
         )
+
+    # --- catching up -------------------------------------------------------
+
+    @access.command(name="sync", description="Give the join-time role to every member missing it")
+    @require_setup_authorized()
+    async def sync(self, interaction: discord.Interaction) -> None:
+        actor = _member(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            config = await AccessService(session).config(actor.guild.id)
+        role_id = config.role_on_join()
+        role = actor.guild.get_role(role_id) if role_id else None
+        if role is None:
+            raise ShaheenError("No role to give: set one with /access roles first.")
+        await self._check_roles(actor, role)
+        missing = members_missing_access(config, member_roles(actor.guild.members), everyone=True)
+        if not missing:
+            await interaction.followup.send(
+                f"Everyone already has {role.mention} or the other access role.", ephemeral=True
+            )
+            return
+
+        view = ConfirmView(author_id=actor.id)
+        message = await interaction.followup.send(
+            f"Give {role.mention} to **{len(missing)}** member(s) who hold neither access role? "
+            "This includes members with other roles (staff, captains).",
+            view=view,
+            ephemeral=True,
+            wait=True,
+        )
+        await view.wait()
+        if not view.confirmed:
+            await message.edit(content="Sync cancelled.", view=None)
+            return
+        await message.edit(content=f"Giving {role.mention} to {len(missing)} member(s)…", view=None)
+        given, failed = await self._hand_out(actor.guild, role, missing, f"/access sync by {actor}")
+        async with session_scope(self.bot.session_factory) as session:
+            await AccessService(session).record_sync(
+                actor.guild.id, given=given, staff_discord_id=actor.id
+            )
+        logger.info("/access sync by %s: %d given, %d failed", actor.id, given, failed)
+        note = f" {failed} failed; check the bot's role position." if failed else ""
+        await message.edit(content=f"✅ Gave {role.mention} to {given} member(s).{note}")
+
+    async def _sync_tick(self) -> None:
+        """Every few minutes: give the join-time role to members the join
+        handler missed (ADR-126). Only members with no other roles, so staff
+        and hand-picked roles are never touched; never raises."""
+        guild = self.bot.get_guild(self.bot.settings.guild_id)
+        if guild is None:
+            return
+        try:
+            async with session_scope(self.bot.session_factory) as session:
+                config = await AccessService(session).config(guild.id)
+            role_id = config.role_on_join()
+            role = guild.get_role(role_id) if role_id else None
+            me = guild.me
+            if role is None or me is None or role >= me.top_role:
+                return
+            ignored = await self._bot_managed_role_ids(guild)
+            ignored |= {r.id for r in guild.roles if r.managed}
+            missing = members_missing_access(
+                config, member_roles(guild.members), ignored_role_ids=ignored
+            )[:SYNC_BATCH]
+            if not missing:
+                return
+            given, _failed = await self._hand_out(guild, role, missing, "BRAWLISTAN access sync")
+            if given:
+                async with session_scope(self.bot.session_factory) as session:
+                    await AccessService(session).record_sync(
+                        guild.id, given=given, staff_discord_id=None
+                    )
+                logger.info("Access sync gave the join-time role to %d member(s)", given)
+        except Exception:
+            logger.exception("Access sync failed")
+
+    async def _hand_out(
+        self, guild: discord.Guild, role: discord.Role, member_ids: list[int], reason: str
+    ) -> tuple[int, int]:
+        given = failed = 0
+        for member_id in member_ids:
+            member = guild.get_member(member_id)
+            if member is None:
+                continue
+            try:
+                await member.add_roles(role, reason=reason)
+                given += 1
+            except discord.HTTPException as exc:
+                failed += 1
+                logger.warning("Couldn't give the access role to %s: %s", member_id, exc)
+        return given, failed
 
     # --- new members --------------------------------------------------------
 
@@ -297,21 +455,27 @@ class AccessCog(commands.Cog):
             await self._give_join_role(after)
 
     async def _give_join_role(self, member: discord.Member) -> None:
-        async with session_scope(self.bot.session_factory) as session:
-            config = await AccessService(session).config(member.guild.id)
-        role_id = config.role_on_join()
-        if role_id is None:
-            return
-        role = member.guild.get_role(role_id)
-        if role is None:
-            logger.warning("Join access role no longer exists; run /access roles")
-            return
-        if role in member.roles:
-            return
+        # Never raises: a failure here (database or Discord) is logged, and
+        # the next sync tick catches the member up.
         try:
+            async with session_scope(self.bot.session_factory) as session:
+                config = await AccessService(session).config(member.guild.id)
+            role_id = config.role_on_join()
+            if role_id is None:
+                return
+            role = member.guild.get_role(role_id)
+            if role is None:
+                logger.warning("Join access role no longer exists; run /access roles")
+                return
+            if role in member.roles:
+                return
             await member.add_roles(role, reason="BRAWLISTAN join access")
-        except discord.HTTPException:
-            logger.warning("Couldn't give the join access role to %s", member.id, exc_info=True)
+        except Exception:
+            logger.warning(
+                "Couldn't give the join access role to %s; the sync will retry",
+                member.id,
+                exc_info=True,
+            )
 
 
 async def setup(bot: ShaheenBot) -> None:

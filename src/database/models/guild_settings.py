@@ -36,6 +36,10 @@ class GuildSettings(TimestampMixin, Base):
     approval_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=false()
     )
+    # Coaching (ADR-126): the Discord role whose holders are coaches, and the
+    # channel coaching requests are posted in. Internal only.
+    coach_role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    coaching_channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"GuildSettings(guild_id={self.guild_id}, setup_mode={self.setup_mode!r})"

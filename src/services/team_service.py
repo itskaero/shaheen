@@ -31,6 +31,7 @@ from database.repositories.ranking_snapshot_repository import RankingSnapshotRep
 from database.repositories.team_repository import TeamRepository
 from integrations.brawlhalla.models import ClanResponse
 from services.report_service import clean_text
+from services.team_seeds import SEED_TEAMS
 
 TEAM_RATING_SIZE = 3  # a team's rating is the average of its best 3 placed players
 # Manual /team add limit. In-game clans hold up to 100 and a clan sync
@@ -183,6 +184,38 @@ class TeamService:
         )
         await self._log(guild_id, "team.create", actor_discord_id, f"{team.name} ({team.tag})")
         return team
+
+    async def ensure_seeded(self, guild_id: int) -> list[Team]:
+        """Create any of the starting teams this guild is missing (ADR-127).
+        Idempotent; never changes an existing team. Returns what it created."""
+        existing = {t.slug for t in await self._teams.list_for_guild(guild_id)}
+        created = []
+        for seed in SEED_TEAMS:
+            if seed.slug in existing:
+                continue
+            team = await self._teams.add(
+                Team(
+                    guild_id=guild_id,
+                    slug=seed.slug,
+                    name=seed.name,
+                    tag=seed.tag,
+                    country="PK",
+                    logo=seed.slug,
+                    description=seed.description,
+                    is_founding=seed.is_founding,
+                    accent=seed.accent,
+                    accent_secondary=seed.accent_secondary,
+                    brawlhalla_clan_id=seed.clan_id,
+                )
+            )
+            await self._audit.add(
+                guild_id=guild_id,
+                action="team.seed",
+                source="discord",
+                subject=f"{team.name} ({team.tag})",
+            )
+            created.append(team)
+        return created
 
     async def can_manage(self, team: Team, *, discord_id: int, is_staff: bool) -> bool:
         """Staff manage every team; a captain manages their own (ADR-114)."""

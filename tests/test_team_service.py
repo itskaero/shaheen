@@ -251,3 +251,21 @@ async def test_team_colours_and_rank(session: AsyncSession) -> None:
     detail = await service.detail(GUILD, "weak")
     assert detail is not None and detail.summary.rank == 2
     assert unrated.accent is None
+
+
+async def test_starting_teams_are_seeded_once_and_never_overwritten(
+    session: AsyncSession,
+) -> None:
+    from services.team_seeds import SEED_TEAMS
+
+    service = TeamService(session)
+    created = await service.ensure_seeded(GUILD)
+    assert [t.slug for t in created] == [s.slug for s in SEED_TEAMS]
+    shaheen = await service.get(GUILD, "shaheen")
+    assert (shaheen.is_founding, shaheen.tag, shaheen.country) == (True, "SHN", "PK")
+    assert (await service.get(GUILD, "delight-esports")).brawlhalla_clan_id == 2042085
+
+    shaheen.description = "Edited by staff"
+    assert await service.ensure_seeded(GUILD) == []  # idempotent
+    assert (await service.get(GUILD, "shaheen")).description == "Edited by staff"
+    assert len(await service.all_teams(GUILD)) == len(SEED_TEAMS)

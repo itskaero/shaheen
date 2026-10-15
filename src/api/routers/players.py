@@ -16,11 +16,17 @@ from api.schemas import (
     PakistanSeasonResponse,
     PlayerDirectoryEntryResponse,
     PlayerProfileResponse,
+    PlayerQuestsResponse,
+    QuestProgressResponse,
     RankingHistoryEntryResponse,
     SeasonSummaryResponse,
 )
 from core.config import Settings
+from database.repositories.brawlhalla_player_repository import BrawlhallaPlayerRepository
+from services.cities import city_label
 from services.players_service import PlayersService
+from services.quest_service import QuestService
+from services.quests import MAX_LEVEL
 from services.website_service import WebsiteService
 
 router = APIRouter(prefix="/players", tags=["players"])
@@ -50,6 +56,8 @@ async def list_players(
             peak_rating=entry.snapshot.peak_rating if entry.snapshot else None,
             tier=entry.snapshot.tier if entry.snapshot else None,
             main_legend=entry.main_legend,
+            city=entry.player.city,
+            city_label=city_label(entry.player.city),
         )
         for entry in entries
     ]
@@ -197,3 +205,32 @@ async def get_player_seasons(
         )
         for summary in history
     ]
+
+
+@router.get("/{brawlhalla_id}/quests", response_model=PlayerQuestsResponse)
+async def get_player_quests(
+    brawlhalla_id: int, session: AsyncSession = Depends(get_session)
+) -> PlayerQuestsResponse:
+    """This week's quests and the season level (ADR-128)."""
+    player = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(brawlhalla_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    status = await QuestService(session).status(player)
+    return PlayerQuestsResponse(
+        season=status.season,
+        week_start=status.week_start,
+        resets_at=status.resets_at,
+        xp=status.xp,
+        level=status.level,
+        max_level=MAX_LEVEL,
+        quests=[
+            QuestProgressResponse(
+                key=q.quest.key,
+                label=q.quest.label,
+                progress=q.progress,
+                target=q.quest.target,
+                done=q.done,
+            )
+            for q in status.quests
+        ],
+    )

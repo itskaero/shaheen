@@ -135,3 +135,20 @@ class RankingSnapshotRepository:
             .order_by(RankingSnapshot.captured_at.asc())
         )
         return list((await self._session.execute(stmt)).scalars().all())
+
+    async def latest_before(
+        self, player_id: int, before: datetime, *, season: int
+    ) -> RankingSnapshot | None:
+        """The newest reading of `season` taken before `before` — where a
+        weekly quest counts from (docs/DECISIONS.md ADR-128)."""
+        stmt = (
+            select(RankingSnapshot)
+            .where(
+                RankingSnapshot.brawlhalla_player_id == player_id,
+                RankingSnapshot.season == season,
+                RankingSnapshot.captured_at < before,
+            )
+            .order_by(RankingSnapshot.captured_at.desc())
+            .limit(1)
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()

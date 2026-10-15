@@ -101,6 +101,8 @@ const ShaheenAPI = (() => {
         throw err;
       }
       console.warn(`[shaheen] live refresh of ${name} failed (${err.message}); showing snapshot.`);
+      // shell.js shows one "showing data from N hours ago" banner (ADR-127).
+      window.dispatchEvent(new CustomEvent("bl:stale", { detail: { name, capturedAt: snapshot.captured_at } }));
     }
   }
 
@@ -120,6 +122,9 @@ const ShaheenAPI = (() => {
     getFeatured: () => get("/featured"),
     getSeasons: () => get("/seasons"),
     getTeams: () => get("/teams"),
+    getCoaches: () => get("/coaches"),
+    getCityBoard: () => get("/rankings/cities"),
+    getPlayerQuests: (id) => get(`/players/${encodeURIComponent(id)}/quests`),
     getTeam: (slug) => get(`/teams/${encodeURIComponent(slug)}`),
     getCurrentSeason: () => get("/seasons/current"),
     getSeason: (brawlhallaSeason) => get(`/seasons/${encodeURIComponent(brawlhallaSeason)}`),

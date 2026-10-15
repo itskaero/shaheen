@@ -63,6 +63,16 @@ class GuildSettingsRepository:
         await self._session.flush()
         return settings
 
+    async def set_coaching(
+        self, guild_id: int, *, coach_role_id: int | None, coaching_channel_id: int | None
+    ) -> GuildSettings:
+        """Store the Coach role and the coaching channel (ADR-126)."""
+        settings = await self._get_or_create(guild_id)
+        settings.coach_role_id = coach_role_id
+        settings.coaching_channel_id = coaching_channel_id
+        await self._session.flush()
+        return settings
+
     async def mark_season_announced(self, guild_id: int, brawlhalla_season: int) -> None:
         """Remember the season-start post (docs/DECISIONS.md ADR-102).
 

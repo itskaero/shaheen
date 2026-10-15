@@ -164,7 +164,22 @@ def test_profile_embed_links_to_website_profile() -> None:
     )
     value = _field(embed, "Full Profile")
     assert value is not None
-    assert "player.html?id=12345" in value
+    assert "https://brawlistan.rekorex.online/player.html?id=12345" in value
+
+
+def test_profile_embed_uses_the_configured_site_url() -> None:
+    embed = build_profile_embed(
+        display_name="Reko",
+        avatar_url=None,
+        player=PLAYER,
+        stats=STATS,
+        ranked=None,
+        joined_at=None,
+        chat_activity=None,
+        achievements=[],
+        site_url="https://example.org/",
+    )
+    assert "(https://example.org/player.html?id=12345)" in (_field(embed, "Full Profile") or "")
 
 
 # --- ADR-094: favourite Legend, playstyle, clan role, Discord dates ---------

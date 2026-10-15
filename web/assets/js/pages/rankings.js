@@ -2,11 +2,12 @@
 //
 // One /rankings/pakistan payload backs the Pakistan, Global, 1v1 and 2v2 tabs:
 // each tab keeps the rows that have the number it ranks by and sorts on it.
-// Rising reads /pakistan/rising. Power has no data source, so it says so.
+// Rising reads /pakistan/rising; Cities reads /rankings/cities (City Wars,
+// ADR-128). Power has no data source, so it says so.
 // Tab state lives in the URL hash (rankings.html#2v2), so boards are linkable
 // and the old rankings.html#pakistan links still land on the Pakistan board.
 (function () {
-  const TABS = ["pakistan", "global", "1v1", "2v2", "power", "rising"];
+  const TABS = ["pakistan", "global", "1v1", "2v2", "power", "rising", "cities"];
   const TIERS = ["Valhallan", "Diamond", "Platinum", "Gold", "Silver", "Bronze", "Tin"];
   const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
 
@@ -25,6 +26,7 @@
 
   let data = null; // the /rankings/pakistan payload
   let rising = null; // the /pakistan/rising list
+  let cities = null; // the /rankings/cities board
   let tab = tabFromHash();
 
   function tabFromHash() {
@@ -227,12 +229,42 @@
       ) + '<div class="table-foot"><span>Biggest rating gains on the Pakistan board over the last seven days.</span></div>';
   }
 
+  function renderCities() {
+    if (!cities) {
+      board.innerHTML = '<p class="unavailable">Loading…</p>';
+      return;
+    }
+    const q = filters.search.value.trim().toLowerCase();
+    const rows = (cities.cities || []).filter((c) => !q || c.label.toLowerCase().includes(q) || c.top.some((n) => n.toLowerCase().includes(q)));
+    const howTo = `<span>Represent your city: run <code>/city set</code> in the <a data-discord-invite href="${typeof DISCORD_INVITE_URL !== "undefined" ? DISCORD_INVITE_URL : "join.html"}" target="_blank" rel="noopener">Discord</a>.</span>`;
+    if (!rows.length) {
+      board.innerHTML = UNAVAILABLE + `<div class="table-foot">${howTo}<span></span></div>`;
+      return;
+    }
+    board.innerHTML =
+      table(
+        [
+          { label: "#", cell: (_c, i) => rankHtml(i + 1) },
+          { label: "City", cell: (c) => `<strong>${escapeHtml(c.label)}</strong>` },
+          { label: "Score", cls: "right", cell: (c) => `<span class="num">${formatNumber(c.rating)}</span>` },
+          { label: "Placed", cls: "right hide-sm", cell: (c) => `<span class="num">${formatNumber(c.players)}</span>` },
+          { label: "Top players", cls: "hide-sm", cell: (c) => `<span class="muted">${c.top.map(escapeHtml).join(", ")}</span>` },
+        ],
+        rows
+      ) + `<div class="table-foot">${howTo}<span>Score: average of each city's best ${cities.top_n} placed 1v1 ratings this season.</span></div>`;
+  }
+
   function render() {
     TABS.forEach((name) => {
       const el = document.getElementById(`tab-${name}`);
       const active = name === tab;
       el.setAttribute("aria-selected", active ? "true" : "false");
       el.tabIndex = active ? 0 : -1;
+      // Narrow screens scroll the tab bar: keep the open tab in view.
+      const bar = el.parentElement;
+      if (active && bar && (el.offsetLeft < bar.scrollLeft || el.offsetLeft + el.offsetWidth > bar.scrollLeft + bar.clientWidth)) {
+        bar.scrollLeft = el.offsetLeft - (bar.clientWidth - el.offsetWidth) / 2;
+      }
     });
     board.setAttribute("aria-labelledby", `tab-${tab}`);
     // Bracket filters don't apply to Rising/Power; hide the ones that don't.
@@ -244,6 +276,7 @@
 
     if (tab === "power") return renderPower();
     if (tab === "rising") return renderRising();
+    if (tab === "cities") return renderCities();
     if (!data) {
       board.innerHTML = '<p class="unavailable">Loading…</p>';
       return;
@@ -344,6 +377,13 @@
     : ShaheenAPI.withSnapshot("rankings", () => ShaheenAPI.getRankings(), onData)
   ).catch(() => {
     if (!data && tab in VIEWS) board.innerHTML = UNAVAILABLE;
+  });
+  ShaheenAPI.withSnapshot("cities", () => ShaheenAPI.getCityBoard(), (payload) => {
+    cities = payload;
+    if (tab === "cities") render();
+  }).catch(() => {
+    cities = cities || { cities: [], top_n: 5 };
+    if (tab === "cities") render();
   });
   ShaheenAPI.withSnapshot("rising", () => ShaheenAPI.getPakistanRising(7, 25), (rows) => {
     rising = rows;

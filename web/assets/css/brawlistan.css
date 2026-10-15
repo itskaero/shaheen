@@ -3813,3 +3813,275 @@ body.hide-tags .clan-tag {
     text-align: center;
   }
 }
+
+/* ---------- coaches (ADR-126): the player card, with legends and availability ---------- */
+
+.coach-grid {
+  margin-bottom: 22px;
+}
+
+.coach-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-glass);
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.coach-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.coach-card .card-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.coach-who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.coach-who .legend-avatar,
+.coach-who .avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.coach-who h3 {
+  margin: 12px 0 2px;
+  font-size: 15.5px;
+  font-weight: 650;
+}
+
+.coach-who:hover h3 {
+  text-decoration: underline;
+}
+
+.coach-card .sub {
+  color: var(--text-faint);
+  font-size: 12.5px;
+}
+
+.coach-team {
+  margin-top: 8px;
+}
+
+.coach-legends {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.coach-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.coach-legend .legend-avatar,
+.coach-legend .avatar {
+  border-radius: 50%;
+}
+
+.coach-bio {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.coach-when {
+  margin: 10px 0 0;
+  color: var(--text-faint);
+  font-size: 12.5px;
+}
+
+.coach-how h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.coach-how ol {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+
+.coach-how code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.92em;
+}
+
+@media (max-width: 560px) {
+  .coach-grid .player-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- stale-data banner (ADR-127) ---------- */
+
+.bl-stale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: var(--radius);
+  background: rgba(233, 196, 106, 0.08);
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.bl-stale strong {
+  color: #e9c46a;
+}
+
+.bl-stale-close {
+  flex: none;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-faint);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bl-stale-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+/* ---------- weekly quests, City Wars, WhatsApp (ADR-128) ---------- */
+
+.quests {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.level-ring {
+  --pct: 0;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: conic-gradient(var(--green) calc(var(--pct) * 1%), rgba(255, 255, 255, 0.07) 0);
+}
+
+.level-ring > div {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--surface-raised, #0d1311);
+  text-align: center;
+}
+
+.level-ring strong {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.level-ring span {
+  color: var(--text-faint);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quest-list {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+}
+
+.quest-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+}
+
+.quest-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.quest-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2d6a4f, var(--green));
+}
+
+.quest.is-done .quest-head span:first-child {
+  color: var(--green);
+}
+
+.quest-foot {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.pill-city {
+  background: rgba(42, 212, 255, 0.1);
+  color: #7fdcff;
+}
+
+.btn-wa {
+  border-color: rgba(37, 211, 102, 0.35);
+  color: #4ee08a;
+}
+
+.btn-wa:hover {
+  background: rgba(37, 211, 102, 0.1);
+}
+
+.team-hero-share,
+.coach-how-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 560px) {
+  .quests {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .level-ring {
+    align-self: center;
+  }
+}

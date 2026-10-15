@@ -85,6 +85,7 @@ class ProfileCog(commands.Cog):
             discord_created_at=member.created_at,
             discord_joined_at=member.joined_at,
             on_pakistan_board=on_pakistan_board,
+            site_url=self.bot.settings.site_url,
         )
         files = await attach_legend_strip(embed, _top_legend_keys(stats, 3))
         # VIEW PROFILE opens the player's page on the website (ADR-111).

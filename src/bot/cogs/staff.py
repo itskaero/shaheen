@@ -1,13 +1,15 @@
-"""Staff commands (docs/DECISIONS.md ADR-111): /announce, /feature, /sync.
+"""Staff commands (docs/DECISIONS.md ADR-111): /announce, /feature, /sync, and
+/admin status (ADR-129).
 
 Thin: the featured-player rule lives in services/featured_service.py and
 every action is audit-logged. /announce and /feature are staff
-(Founder/Admin/Moderator); /sync is setup-level (Founder/Admin).
+(Founder/Admin/Moderator); /sync and /admin status are setup-level (Founder/Admin).
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 import discord
@@ -19,12 +21,14 @@ from bot.client import ShaheenBot
 from bot.cogs.competition import resolve_provisioned_channel
 from bot.constants import CHANNEL_ANNOUNCEMENTS
 from bot.content.network_embeds import build_announcement_embed, build_featured_embed
+from bot.content.status_embeds import build_status_embed
 from bot.views.confirm import ConfirmView
 from core.exceptions import ShaheenError
 from database.repositories.audit_log_repository import AuditLogRepository
 from database.session import session_scope
 from services.featured_service import FeaturedService
 from services.link_service import LinkService
+from services.status_service import BotFacts, StatusService
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +177,42 @@ class StaffCog(commands.Cog):
         synced = await self.bot.tree.sync(guild=guild)
         logger.info("/sync by %s: %d command(s)", interaction.user.id, len(synced))
         await interaction.followup.send(f"Synced {len(synced)} command(s).", ephemeral=True)
+
+    admin = app_commands.Group(name="admin", description="Bot administration (admin)")
+
+    @admin.command(name="status", description="Is the bot, database and ranking snapshot healthy?")
+    @require_setup_authorized()
+    async def status(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        now = datetime.now(UTC)
+        facts = BotFacts(
+            gateway_ms=round(self.bot.latency * 1000),
+            uptime=now - self.bot.started_at,
+            loops=self._loops(),
+        )
+        report = await StatusService(self.bot.session_factory).check(
+            now=now,
+            bot=facts,
+            snapshot_interval=timedelta(hours=self.bot.settings.snapshot_interval_hours),
+        )
+        logger.info(
+            "/admin status by %s: %d problem(s)", interaction.user.id, len(report.problems())
+        )
+        await interaction.followup.send(embed=build_status_embed(report), ephemeral=True)
+
+    def _loops(self) -> dict[str, bool]:
+        """Each background loop the cogs run, and whether it's running."""
+        loops: dict[str, bool] = {}
+        for cog_name, attribute, label in (
+            ("ClanCog", "snapshot_loop", "ranking snapshot"),
+            ("ClanCog", "weekly_digest_loop", "weekly digest"),
+            ("AccessCog", "sync_loop", "access catch-up"),
+            ("CoachingCog", "sync_loop", "coaching sync"),
+        ):
+            loop = getattr(self.bot.get_cog(cog_name), attribute, None)
+            if loop is not None:
+                loops[label] = loop.is_running()
+        return loops
 
 
 async def setup(bot: ShaheenBot) -> None:

@@ -7,6 +7,7 @@ from database.models.base import Base
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
 from database.models.chat_activity import ChatActivity
+from database.models.coaching import Coach, CoachingRequest
 from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
 from database.models.guild_snapshot import GuildSnapshot
@@ -18,6 +19,7 @@ from database.models.member_player_link import MemberPlayerLink
 from database.models.pakistan_board_entry import PakistanBoardEntry
 from database.models.player_report import PlayerReport
 from database.models.provisioned_resource import ProvisionedResource, ResourceType
+from database.models.quest_completion import QuestCompletion
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
 from database.models.shaheen_member import ShaheenMember
@@ -42,6 +44,8 @@ __all__ = [
     "Challenge",
     "ChallengeStatus",
     "ChatActivity",
+    "Coach",
+    "CoachingRequest",
     "DiscordUser",
     "GuildSettings",
     "GuildSnapshot",
@@ -57,6 +61,7 @@ __all__ = [
     "PakistanBoardEntry",
     "PlayerReport",
     "ProvisionedResource",
+    "QuestCompletion",
     "RankingSnapshot",
     "ResourceType",
     "Scrim",
