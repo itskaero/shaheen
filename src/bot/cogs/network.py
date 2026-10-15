@@ -1,5 +1,5 @@
 """BRAWLISTAN network commands (docs/DECISIONS.md ADR-111): /ping, /site,
-/rankings, /season, /legend, /tournaments, /looking.
+/rankings, /season, /legend, /tournaments, /looking, and /clanwars (ADR-131).
 
 Any member, no permission check. Thin: data comes from services, embeds from
 bot/content/network_embeds.py. Read-only replies are ephemeral, like /help.
@@ -21,6 +21,7 @@ from bot.client import ShaheenBot
 from bot.cogs.competition import announce_scrim
 from bot.content.network_embeds import (
     build_city_board_embed,
+    build_clan_wars_embed,
     build_legend_embed,
     build_ping_embed,
     build_quests_embed,
@@ -40,6 +41,7 @@ from database.repositories.tournament_repository import TournamentRepository
 from database.session import session_scope
 from services.cities import CITIES
 from services.city_service import CityService
+from services.clan_war_service import ClanWarService
 from services.legend_art import available_portraits, legend_display_name, normalize_legend_key
 from services.link_service import LinkService
 from services.network_service import NetworkService
@@ -239,6 +241,15 @@ class NetworkCog(commands.Cog):
                 raise ShaheenError(f"{who} linked a Brawlhalla account (`/link`).")
             status = await QuestService(session).status(player)
             embed = build_quests_embed(player_name=player.player_name, status=status)
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="clanwars", description="This week's Clan Wars standings")
+    async def clanwars(self, interaction: discord.Interaction) -> None:
+        guild = _guild(interaction)
+        await interaction.response.defer(ephemeral=True)
+        async with session_scope(self.bot.session_factory) as session:
+            board = await ClanWarService(session).board(guild.id)
+            embed = build_clan_wars_embed(board=board, site_url=self.bot.settings.site_url)
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 

@@ -16,6 +16,8 @@ from database.models.player_report import PlayerReport
 from database.models.tournament import Tournament, TournamentStatus
 from services.cities import CITY_TOP_N, CityStanding
 from services.clan_service import LegendMetaEntry
+from services.clan_war_service import ClanWarsBoard
+from services.clan_wars import TEAM_TOP_N, WIN_POINTS
 from services.legend_art import legend_display_name
 from services.pakistan_board_service import PakistanClimber
 from services.players_service import player_slug
@@ -248,7 +250,7 @@ def build_city_board_embed(
 ) -> discord.Embed:
     embed = discord.Embed(
         title="🏙️ City Wars",
-        url=f"{site_url.rstrip('/')}/rankings.html#cities",
+        url=f"{site_url.rstrip('/')}/cities.html",
         colour=EMERALD,
     )
     lines = [
@@ -291,6 +293,60 @@ def build_quests_embed(*, player_name: str, status: QuestStatus) -> discord.Embe
     embed.add_field(name="Resets", value=f"<t:{resets}:R> (Monday 00:00 PKT)", inline=False)
     embed.set_footer(text=f"Each quest is worth {XP_PER_QUEST} season XP · from your ranked games")
     return embed
+
+
+def build_clan_wars_embed(*, board: ClanWarsBoard, site_url: str, limit: int = 8) -> discord.Embed:
+    """This week's Clan Wars standings and the season table (ADR-131)."""
+    week = board.week
+    embed = discord.Embed(
+        title="⚔️ Clan Wars", url=f"{site_url.rstrip('/')}/clanwars.html", colour=GOLD
+    )
+    lines = []
+    for i, standing in enumerate(week.standings[:limit], start=1):
+        top = ", ".join(s.player.player_name for s in standing.counted[:3])
+        lines.append(
+            f"{_place(i)} **{standing.team.name}** [{standing.team.tag}] — "
+            f"**{standing.points}** pts" + (f" · {top}" if top else "")
+        )
+    embed.description = (
+        "\n".join(lines)
+        if lines
+        else "Data unavailable — no teams yet. Staff add them with `/team`."
+    )
+    if board.season_table:
+        embed.add_field(
+            name="Season · weeks won",
+            value="\n".join(
+                f"{_place(i)} **{row.team.name}** — {row.wins} won · {row.points} pts"
+                for i, row in enumerate(board.season_table[:5], start=1)
+            ),
+            inline=False,
+        )
+    if board.last_winner is not None:
+        last = board.last_winner
+        embed.add_field(
+            name="Last week",
+            value=f"🏆 **{last.team.name}** with {last.points} pts",
+            inline=True,
+        )
+    embed.add_field(
+        name="Ends", value=f"<t:{int(week.ends_at.timestamp())}:R> (Monday 00:00 PKT)", inline=True
+    )
+    embed.set_footer(
+        text=f"{WIN_POINTS} pts per ranked win + every rating point gained · "
+        f"best {TEAM_TOP_N} members count"
+    )
+    return embed
+
+
+def build_clan_war_winner_text(
+    *, team_name: str, tag: str, points: int, runner_up: str | None
+) -> str:
+    """The weekly winner post in #announcements (ADR-131)."""
+    text = f"⚔️ **Clan Wars** — **{team_name}** [{tag}] won the week with **{points}** pts!"
+    if runner_up:
+        text += f" Runner-up: {runner_up}."
+    return text + " A new week has started: every ranked win counts."
 
 
 def build_quest_completions_text(lines: Sequence[str]) -> str:

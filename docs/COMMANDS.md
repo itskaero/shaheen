@@ -374,8 +374,21 @@ board says "Data unavailable".
 ### /city set <city> · /city clear
 Represent a Pakistani city on City Wars (ADR-128), picked from a fixed list
 (the twin cities share "Islamabad / Rawalpindi"). Needs a linked account;
-counts once you're placed this season. Shown on your website profile and the
-Rankings page's **Cities** tab. Audit-logged.
+counts once you're placed this season. Shown on your website profile, the
+Rankings page's **Cities** tab and the City Wars page. Audit-logged.
+
+### /clanwars
+This week's Clan Wars standings (ADR-131): every team's points, with its top
+scorers, then the season table (weeks won) and last week's winner, with a link
+to `clanwars.html`.
+- **Points:** each team member scores 10 per ranked 1v1 win plus every rating
+  point gained this week (a loss costs nothing). From ranked snapshots, never
+  self-reported.
+- **Team score:** its best five members, so a big roster can't win on numbers
+  alone.
+- **The week** runs Monday 00:00 to Monday 00:00 PKT, like the quests. A
+  finished week is recorded once; the winner posts in #announcements only
+  with `ANNOUNCE_CLAN_WARS=true`.
 
 ### /quests [user]
 This week's three quests, with progress bars, and the season level (ADR-128):

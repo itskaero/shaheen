@@ -92,9 +92,10 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
     ),
     HelpSection(
         key="quests",
-        title="🎯 Quests & City Wars",
+        title="🎯 Quests, City Wars & Clan Wars",
         commands=(
             CommandHelp("/quests", "This week's quests and your season level."),
+            CommandHelp("/clanwars", "This week's Clan Wars standings and the season table."),
             CommandHelp("/city set", "Represent your city on City Wars."),
             CommandHelp("/city clear", "Stop representing a city."),
         ),

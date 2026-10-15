@@ -35,7 +35,7 @@ from bot.content.clan_embeds import (
     build_tier_change_announcement_embed,
     build_weekly_digest_embed,
 )
-from bot.content.network_embeds import build_quest_completions_text
+from bot.content.network_embeds import build_clan_war_winner_text, build_quest_completions_text
 from bot.content.profile_embeds import build_not_linked_embed
 from bot.content.season_embeds import attach_season_badge, build_season_start_embed
 from bot.legend_art import attach_legend_strip
@@ -51,6 +51,7 @@ from services.account_roles import RoleDiff, plan_account_roles
 from services.achievement_service import AchievementService
 from services.achievements import AchievementDef, evaluate_engagement_achievements
 from services.clan_service import ClanService
+from services.clan_war_service import ClanWarService
 from services.digest_service import WeeklyDigest, WeeklyDigestService
 from services.guild_snapshot_service import GuildSnapshotService
 from services.image_service import (
@@ -158,6 +159,48 @@ class ClanCog(commands.Cog):
                 await self._announce(guild, announcement)
         await self._post_pending_reports(guild)
         await self._record_quests(guild)
+        await self._record_clan_wars(guild)
+
+    async def _record_clan_wars(self, guild: discord.Guild) -> None:
+        """Keep last week's Clan Wars standings once the week is over
+        (ADR-131). Recorded always; the winner is posted in #announcements
+        only with ANNOUNCE_CLAN_WARS on. Never raises into the snapshot loop."""
+        try:
+            async with session_scope(self.bot.session_factory) as session:
+                results = await ClanWarService(session).record_finished(guild.id)
+                names = {
+                    team.id: (team.name, team.tag)
+                    for team in await TeamService(session).all_teams(guild.id)
+                }
+        except Exception:
+            logger.exception("Recording Clan Wars failed")
+            return
+        if not results:
+            return
+        winner = results[0]
+        logger.info(
+            "Clan Wars week %s recorded: %d team(s), winner team %d with %d pts",
+            winner.week_start,
+            len(results),
+            winner.team_id,
+            winner.points,
+        )
+        if not self.bot.settings.announce_clan_wars or winner.team_id not in names:
+            return
+        channel = await resolve_provisioned_channel(self.bot, guild, _ANNOUNCEMENTS_KEY)
+        if channel is None:
+            return
+        name, tag = names[winner.team_id]
+        runner_up = names.get(results[1].team_id, (None, None))[0] if len(results) > 1 else None
+        try:
+            await channel.send(
+                build_clan_war_winner_text(
+                    team_name=name, tag=tag, points=winner.points, runner_up=runner_up
+                ),
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
+        except discord.HTTPException as exc:
+            logger.warning("Clan Wars announcement not posted: %s", exc)
 
     async def _record_quests(self, guild: discord.Guild) -> None:
         """Weekly quests finished since the last tick (ADR-128). Recorded

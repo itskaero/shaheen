@@ -93,6 +93,9 @@ class Settings(BaseSettings):
     # Weekly quest completions in #achievements (ADR-128). Off: they're
     # still recorded and shown by /quests and on the website.
     announce_quests: bool = False
+    # The weekly Clan Wars winner in #announcements (ADR-131). Off: the week
+    # is still recorded and shown by /clanwars and on the website.
+    announce_clan_wars: bool = False
 
     @field_validator("database_url")
     @classmethod

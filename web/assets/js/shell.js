@@ -46,6 +46,7 @@
     { key: "home", label: "Home", href: "home.html", icon: "home", mobile: true },
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
     { key: "cities", label: "City Wars", href: "cities.html", icon: "pin" },
+    { key: "clanwars", label: "Clan Wars", href: "clanwars.html", icon: "swords" },
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield" },
     { key: "coaches", label: "Coaches", href: "coaches.html", icon: "cap" },

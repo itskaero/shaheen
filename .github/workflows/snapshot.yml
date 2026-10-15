@@ -82,6 +82,7 @@ jobs:
           snapshot teams /teams
           snapshot coaches /coaches
           snapshot cities /rankings/cities
+          snapshot clan-wars /clan-wars
 
       - name: Generate per-player pages
         # Static web/player/<slug>/index.html pages with each player's own
