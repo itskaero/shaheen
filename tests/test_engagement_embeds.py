@@ -8,6 +8,6 @@ from bot.content.engagement_embeds import build_anthem_embed
 
 
 def test_anthem_embed_links_to_the_music_page() -> None:
-    embed = build_anthem_embed(website_url="https://itskaero.github.io/shaheen/music.html")
-    assert embed.url == "https://itskaero.github.io/shaheen/music.html"
-    assert "https://itskaero.github.io/shaheen/music.html" in embed.fields[0].value
+    embed = build_anthem_embed(website_url="https://brawlistan.rekorex.online/music.html")
+    assert embed.url == "https://brawlistan.rekorex.online/music.html"
+    assert "https://brawlistan.rekorex.online/music.html" in embed.fields[0].value

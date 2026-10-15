@@ -240,6 +240,48 @@
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
+  // ---- stale-data banner (ADR-127): the live API didn't answer, so the
+  // page is showing its committed snapshot. One banner per page, oldest
+  // snapshot wins; dismissing hides it for the rest of the visit.
+  let staleAt = null;
+  function ago(iso) {
+    const hours = Math.max(0, (Date.now() - Date.parse(iso)) / 3600000);
+    if (hours < 1) return "less than an hour ago";
+    if (hours < 48) return `${Math.round(hours)} hour${Math.round(hours) === 1 ? "" : "s"} ago`;
+    return `${Math.round(hours / 24)} days ago`;
+  }
+  window.addEventListener("bl:stale", (event) => {
+    const at = event.detail && event.detail.capturedAt;
+    if (!at || Number.isNaN(Date.parse(at))) return;
+    try {
+      if (sessionStorage.getItem("bl-stale-dismissed") === "1") return;
+    } catch {
+      /* storage blocked: show it anyway */
+    }
+    if (staleAt && Date.parse(staleAt) <= Date.parse(at)) return;
+    staleAt = at;
+    const main = document.getElementById("main");
+    if (!main) return;
+    let bar = document.getElementById("bl-stale");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "bl-stale";
+      bar.className = "bl-stale";
+      bar.setAttribute("role", "status");
+      main.prepend(bar);
+    }
+    bar.innerHTML = `<span>Live data is unavailable right now — showing data from <strong>${ago(at)}</strong>.</span>
+      <button type="button" class="bl-stale-close" aria-label="Dismiss">✕</button>`;
+    bar.querySelector("button").addEventListener("click", () => {
+      bar.remove();
+      try {
+        sessionStorage.setItem("bl-stale-dismissed", "1");
+      } catch {
+        /* ignore */
+      }
+    });
+  });
+
   renderScene();
   renderSidebar();
   renderTopbar();

@@ -41,7 +41,7 @@ def test_render_sets_the_player_title_meta_base_and_id() -> None:
     )
     assert 'data-player-id="5734378"' in page
     assert (
-        '<link rel="canonical" href="https://itskaero.github.io/shaheen/player/kaero-5734378/" />'
+        '<link rel="canonical" href="https://brawlistan.rekorex.online/player/kaero-5734378/" />'
         in page
     )
     assert "1,906 rating, Platinum 4, team SHAHEEN, Pakistan" in page

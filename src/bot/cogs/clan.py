@@ -62,6 +62,7 @@ from services.pakistan_board_service import PakistanBoardService
 from services.report_service import ReportService
 from services.seasons import season_to_announce
 from services.snapshot_service import Announcement, SnapshotService
+from services.team_service import TeamService
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,13 @@ class ClanCog(commands.Cog):
         if guild is None:
             logger.warning("Snapshot tick skipped: guild %s not found", self.bot.settings.guild_id)
             return
+
+        # A fresh database starts with the founding and clan teams (ADR-127);
+        # created before the snapshot so their clan rosters fill this tick.
+        async with session_scope(self.bot.session_factory) as session:
+            seeded = await TeamService(session).ensure_seeded(guild.id)
+        if seeded:
+            logger.info("Seeded %d starting team(s)", len(seeded))
 
         async with session_scope(self.bot.session_factory) as session:
             service = SnapshotService(
