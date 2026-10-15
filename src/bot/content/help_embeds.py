@@ -72,7 +72,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         key="clan",
         title="🇵🇰 Rankings & Scene",
         commands=(
-            CommandHelp("/rankings", "Pakistan's top 10 — 1v1, 2v2 or this week's risers."),
+            CommandHelp("/rankings", "Pakistan's top 10: 1v1, 2v2, risers or City Wars."),
             CommandHelp("/season", "The current Pakistan season and days left."),
             CommandHelp("/legend", "How a Legend is played across Pakistan."),
             CommandHelp("/team info", "A team's roster and rating (yours by default)."),
@@ -88,6 +88,15 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/compare", "Two members' stats side by side."),
             CommandHelp("/rivalry", "Head-to-head match record between two members."),
             CommandHelp("/lookup", "Any Brawlhalla player's rank vs the clan — no link needed."),
+        ),
+    ),
+    HelpSection(
+        key="quests",
+        title="🎯 Quests & City Wars",
+        commands=(
+            CommandHelp("/quests", "This week's quests and your season level."),
+            CommandHelp("/city set", "Represent your city on City Wars."),
+            CommandHelp("/city clear", "Stop representing a city."),
         ),
     ),
     HelpSection(

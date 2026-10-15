@@ -14,10 +14,13 @@ import discord
 from bot.palette import CREAM, EMERALD, FOREST_GREEN, GOLD, GREY
 from database.models.player_report import PlayerReport
 from database.models.tournament import Tournament, TournamentStatus
+from services.cities import CITY_TOP_N, CityStanding
 from services.clan_service import LegendMetaEntry
 from services.legend_art import legend_display_name
 from services.pakistan_board_service import PakistanClimber
 from services.players_service import player_slug
+from services.quest_service import QuestStatus
+from services.quests import MAX_LEVEL, XP_PER_QUEST
 from services.rankings_service import RankingRow
 from services.seasons import PakistanSeason, season_label
 
@@ -235,3 +238,61 @@ def build_featured_embed(
     )
     embed.set_footer(text=FOOTER)
     return embed
+
+
+# --- City Wars and weekly quests (ADR-128) ---------------------------------
+
+
+def build_city_board_embed(
+    *, standings: Sequence[CityStanding], season: int | None, site_url: str, limit: int = 10
+) -> discord.Embed:
+    embed = discord.Embed(
+        title="🏙️ City Wars",
+        url=f"{site_url.rstrip('/')}/rankings.html#cities",
+        colour=EMERALD,
+    )
+    lines = [
+        f"{_place(i)} **{c.label}** — {c.rating} · {c.players} placed"
+        for i, c in enumerate(standings[:limit], start=1)
+    ]
+    embed.description = (
+        "\n".join(lines)
+        if lines
+        else "Data unavailable — no placed player has set a city yet. Set yours with `/city set`."
+    )
+    embed.set_footer(
+        text=f"Average of each city's best {CITY_TOP_N} placed 1v1 ratings · "
+        + (season_label(season) or FOOTER)
+    )
+    return embed
+
+
+def _bar(progress: int, target: int, width: int = 10) -> str:
+    filled = min(width, round(width * progress / target)) if target else width
+    return "█" * filled + "░" * (width - filled)
+
+
+def build_quests_embed(*, player_name: str, status: QuestStatus) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"🎯 Weekly quests · {player_name}",
+        description=f"Season level **{status.level}**/{MAX_LEVEL} · {status.xp} XP",
+        colour=GOLD,
+    )
+    if status.season is None:
+        embed.description = "Data unavailable — quests start once ranked data comes in."
+    for item in status.quests:
+        mark = "✅" if item.done else "▫️"
+        embed.add_field(
+            name=f"{mark} {item.quest.label}",
+            value=f"`{_bar(item.progress, item.quest.target)}` {item.progress}/{item.quest.target}",
+            inline=False,
+        )
+    resets = int(status.resets_at.timestamp())
+    embed.add_field(name="Resets", value=f"<t:{resets}:R> (Monday 00:00 PKT)", inline=False)
+    embed.set_footer(text=f"Each quest is worth {XP_PER_QUEST} season XP · from your ranked games")
+    return embed
+
+
+def build_quest_completions_text(lines: Sequence[str]) -> str:
+    """One #achievements post per tick, listing everyone who finished one."""
+    return "🎯 **Weekly quests done**\n" + "\n".join(lines[:20])

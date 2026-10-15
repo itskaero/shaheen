@@ -3973,3 +3973,115 @@ body.hide-tags .clan-tag {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
+
+/* ---------- weekly quests, City Wars, WhatsApp (ADR-128) ---------- */
+
+.quests {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.level-ring {
+  --pct: 0;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: conic-gradient(var(--green) calc(var(--pct) * 1%), rgba(255, 255, 255, 0.07) 0);
+}
+
+.level-ring > div {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--surface-raised, #0d1311);
+  text-align: center;
+}
+
+.level-ring strong {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.level-ring span {
+  color: var(--text-faint);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quest-list {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+}
+
+.quest-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+}
+
+.quest-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.quest-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2d6a4f, var(--green));
+}
+
+.quest.is-done .quest-head span:first-child {
+  color: var(--green);
+}
+
+.quest-foot {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.pill-city {
+  background: rgba(42, 212, 255, 0.1);
+  color: #7fdcff;
+}
+
+.btn-wa {
+  border-color: rgba(37, 211, 102, 0.35);
+  color: #4ee08a;
+}
+
+.btn-wa:hover {
+  background: rgba(37, 211, 102, 0.1);
+}
+
+.team-hero-share,
+.coach-how-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 560px) {
+  .quests {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .level-ring {
+    align-self: center;
+  }
+}

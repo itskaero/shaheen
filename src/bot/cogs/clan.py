@@ -35,6 +35,7 @@ from bot.content.clan_embeds import (
     build_tier_change_announcement_embed,
     build_weekly_digest_embed,
 )
+from bot.content.network_embeds import build_quest_completions_text
 from bot.content.profile_embeds import build_not_linked_embed
 from bot.content.season_embeds import attach_season_badge, build_season_start_embed
 from bot.legend_art import attach_legend_strip
@@ -59,6 +60,8 @@ from services.image_service import (
 )
 from services.link_service import LinkService
 from services.pakistan_board_service import PakistanBoardService
+from services.quest_service import QuestService
+from services.quests import XP_PER_QUEST
 from services.report_service import ReportService
 from services.seasons import season_to_announce
 from services.snapshot_service import Announcement, SnapshotService
@@ -154,6 +157,43 @@ class ClanCog(commands.Cog):
             for announcement in result.announcements:
                 await self._announce(guild, announcement)
         await self._post_pending_reports(guild)
+        await self._record_quests(guild)
+
+    async def _record_quests(self, guild: discord.Guild) -> None:
+        """Weekly quests finished since the last tick (ADR-128). Recorded
+        always; posted in #achievements only with ANNOUNCE_QUESTS on. Never
+        raises into the snapshot loop."""
+        try:
+            async with session_scope(self.bot.session_factory) as session:
+                completions = await QuestService(session).evaluate(guild.id)
+                linked = {
+                    player.id: discord_id
+                    for _m, player, discord_id in await MemberPlayerLinkRepository(
+                        session
+                    ).list_active_for_guild(guild.id)
+                }
+        except Exception:
+            logger.exception("Recording weekly quests failed")
+            return
+        if completions:
+            logger.info("Weekly quests: %d completion(s)", len(completions))
+        if not completions or not self.bot.settings.announce_quests:
+            return
+        channel = await self._hall_of_fame_channel(guild)
+        if channel is None:
+            return
+        lines = []
+        for done in completions:
+            discord_id = linked.get(done.player.id)
+            who = f"<@{discord_id}>" if discord_id else f"**{done.player.player_name}**"
+            lines.append(f"{who} · {done.quest.label} (+{XP_PER_QUEST} XP)")
+        try:
+            await channel.send(
+                build_quest_completions_text(lines),
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+        except discord.HTTPException as exc:
+            logger.warning("Quest announcement not posted: %s", exc)
 
     async def _announce(self, guild: discord.Guild, announcement: Announcement) -> None:
         channel = await self._hall_of_fame_channel(guild)

@@ -367,8 +367,23 @@ The website, as link buttons (Home, Rankings, Players, Tournaments).
 
 ### /rankings [board]
 Pakistan's top 10 for `1v1` (default) or `2v2`, or `rising` (this week's
-biggest rating gains). Placed players only; an empty board says "Data
-unavailable".
+biggest rating gains), or `city` (City Wars, ADR-128: each city's average of
+its best 5 placed 1v1 ratings this season). Placed players only; an empty
+board says "Data unavailable".
+
+### /city set <city> · /city clear
+Represent a Pakistani city on City Wars (ADR-128), picked from a fixed list
+(the twin cities share "Islamabad / Rawalpindi"). Needs a linked account;
+counts once you're placed this season. Shown on your website profile and the
+Rankings page's **Cities** tab. Audit-logged.
+
+### /quests [user]
+This week's three quests, with progress bars, and the season level (ADR-128):
+play 15 ranked games, win 8, gain 50 rating. Progress comes from your ranked
+snapshots (every 6 hours), never self-reported. Each quest is 100 season XP;
+level = 1 + XP/100, up to 30, starting again each Brawlhalla season. Weeks
+reset Monday 00:00 PKT. Completions post in #achievements only with
+`ANNOUNCE_QUESTS=true`.
 
 ### /season
 The current Pakistan season: number, name (English and Urdu), Brawlhalla

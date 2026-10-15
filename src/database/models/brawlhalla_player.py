@@ -22,6 +22,9 @@ class BrawlhallaPlayer(TimestampMixin, Base):
     )
     player_name: Mapped[str] = mapped_column(String(64), nullable=False)
     region: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    # The Pakistani city the player represents (services/cities.py, ADR-128).
+    # Set by the player; public, since it belongs to the Brawlhalla identity.
+    city: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (

@@ -5765,3 +5765,69 @@ None of these was retried.
 - **Tests:** outage detection, team seeds (idempotent, never overwrite), and the profile link using
   `site_url`.
 - **Checks:** pytest 594, ruff, mypy.
+
+## ADR-128 — City Wars, weekly quests and season level, WhatsApp sharing
+
+**Status:** accepted. This is Phase A of the October community analysis. The analysis found that Pakistani esports grows
+through city rivalry, that BRAWLISTAN's only recurring reward was chat XP, and that players share on WhatsApp.
+
+**Decision: City Wars.**
+- **Data.** `brawlhalla_players.city` (migration 0027). The key comes from a fixed list in
+  `services/cities.py`: 17 cities and regions, with Islamabad and Rawalpindi as one entry. It is set with
+  `/city set` / `/city clear` (linked members, audit-logged). It belongs to the Brawlhalla identity, so the API
+  may show it.
+- **Score.** A city's score is the average of its best 5 placed 1v1 ratings this season, so one star and a
+  big city compete fairly. Only placed players count; a player with no city is left out.
+  `RankingsService.cities()` builds it from the same rows as the Pakistan board.
+- **Where it shows:**
+  - `GET /rankings/cities`;
+  - `city` and `city_label` on ranking rows and the player directory (the label comes from the API, so the
+    site never copies the list);
+  - `/rankings board:city`;
+  - the Rankings page's **Cities** tab (snapshot `cities`);
+  - a city pill on profiles and the city on player cards.
+
+**Decision: weekly quests and season level.**
+- **The quests.** Three quests a week, Monday 00:00 to Monday 00:00 PKT: play 15 ranked games, win 8, and
+  gain 50 rating.
+- **Progress** is computed from the ranking snapshots the bot already takes, and never stored or
+  self-reported.
+  - It is the latest reading of this week minus the baseline.
+  - The baseline is the last reading of the same season before the week, or else the week's first reading
+    (a player first seen, or a season started, mid-week).
+  - Rating progress is a net gain and never negative.
+- **Completions** are stored once per player, week and quest (`quest_completions`, with a unique
+  constraint). The snapshot tick records them for every Pakistan-board player, so a repeated tick awards
+  nothing twice.
+- **Season level.** Season XP is 100 per completion in the season; level = 1 + XP/100, capped at 30. It starts
+  again with each Brawlhalla season, so new and old players are level.
+- **Rewards** are a profile ring and the `/quests` card only: no roles, in line with the owner's "no
+  rank-specific roles" rule.
+- **Where it shows:**
+  - `/quests [user]`;
+  - `GET /players/{id}/quests`;
+  - a "This week" panel on the profile (level ring plus progress bars).
+- **Announcements:** finished quests post as one combined message per tick in #achievements, only with
+  `ANNOUNCE_QUESTS=true` (off by default, like level-ups).
+
+**Decision: WhatsApp sharing.** `whatsappButtonHtml()` (`theme.js`) adds a WhatsApp button to player profiles
+(next to Share), team pages and the Coaches page. The links point at the per-player and per-team pages, which
+carry their own preview cards.
+
+**Also changed.**
+- The Rankings tab bar keeps the open tab in view on narrow screens.
+- The help catalog gains a "🎯 Quests & City Wars" page.
+
+**Verified.**
+- **Tests:**
+  - week bounds in PKT (Sunday 23:30 vs Monday 00:30);
+  - the baseline before the week, from a mid-week first sighting, and ignoring the previous season;
+  - progress never negative; the level cap;
+  - completions recorded once, XP and level, the next week resetting quests but keeping XP;
+  - the city score (top 5 average, unknown cities ignored, unplaced left out) and city validation;
+  - the API for cities and quests (labels, 404) with no Discord identity;
+  - the embeds;
+  - migration 0027 round trip.
+- **Playwright** with a mocked API at 1440 and 390 px: the Cities tab, the profile's level ring, quest bars
+  and city pill, WhatsApp links on the profile and team page, no overflow, no page errors.
+- **Checks:** ruff, mypy, pytest.
