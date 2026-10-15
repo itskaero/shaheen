@@ -6007,11 +6007,16 @@ per-team war history pages. They can build on `clan_war_results` later.
   - the live pill and dot, season chips, checkboxes, team monograms, and team tags (ember gold).
 - **Green stays where it carries meaning:** rating gains (▲), "verified", the online dot, finished quests,
   and each team's own colours on its card.
-- **Headline:**
-  - a blurred dark pool behind the hero text;
-  - heavier white type with a tighter shadow;
-  - the accent words in solid warm amber (`#ffc283`) with a dark shadow and a faint ember glow, instead of
-    the clipped gradient.
+- **Headline:** the accent words are solid warm amber (`#ffc283`) with a dark shadow, instead of the clipped
+  gradient, and the white type is heavier.
+- **The art stays clear.** The owner then asked for the hero to look clear, so the text no longer sits over
+  the characters:
+  - on desktop the copy is bottom-left, under the characters, on two lines, with the stats as a 2×2 grid
+    bottom-right;
+  - only the edges darken: a fade at the foot, a light one on the left and under the nav, and none over the
+    middle of the art;
+  - on phones the art sits on top (fading out) and the text follows below it, instead of covering it;
+  - the Urdu motto moves into the eyebrow pill.
 
 **Coaches page (finding, no change).** `GET /coaches` lists only coaches with a linked Brawlhalla account
 (ADR-126 and ADR-040: the site never shows Discord identities). The NAS database is new (ADR-127), so the

@@ -1323,16 +1323,17 @@ body.en main:first-of-type {
   color: var(--text);
 }
 
-/* Hero */
+/* Hero: the key art stays clear. The text sits bottom-left over a fade,
+   below the characters, and the stats bottom-right (ADR-132). */
 .en-hero {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   min-height: 100svh;
-  padding: 120px 20px 80px;
+  padding: 120px max(20px, 5vw) 64px;
   overflow: hidden;
   isolation: isolate;
-  text-align: center;
 }
 
 .en-hero-art {
@@ -1345,24 +1346,26 @@ body.en main:first-of-type {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 55% 30%;
-  transform: scale(1.06);
+  object-position: 58% 22%;
+  transform: scale(1.03);
   animation: en-breathe 18s ease-in-out infinite alternate;
 }
 
 @keyframes en-breathe {
-  to { transform: scale(1.12) translate3d(-1%, -1%, 0); }
+  to { transform: scale(1.08) translate3d(-1%, -0.5%, 0); }
 }
 
-/* Darken towards the centre text and fade into the page below. */
+/* Only the edges darken: a fade under the text, a little under the nav,
+   and into the page below. The middle of the art is untouched. */
 .en-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(58% 52% at 50% 54%, rgba(5, 3, 3, 0.82), rgba(5, 3, 3, 0.3) 72%),
-    linear-gradient(180deg, rgba(5, 3, 3, 0.55) 0%, transparent 25%, transparent 60%, var(--night) 100%);
+    linear-gradient(0deg, var(--night) 0%, rgba(5, 3, 3, 0.86) 16%, rgba(5, 3, 3, 0.45) 34%, transparent 52%),
+    linear-gradient(90deg, rgba(5, 3, 3, 0.7) 0%, rgba(5, 3, 3, 0.25) 36%, transparent 52%),
+    linear-gradient(180deg, rgba(5, 3, 3, 0.5) 0%, transparent 16%);
 }
 
 .en-hero .embers-fx {
@@ -1372,34 +1375,44 @@ body.en main:first-of-type {
 .en-hero-body {
   position: relative;
   z-index: 2;
-  display: grid;
-  justify-items: center;
-  max-width: 860px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
 }
 
-/* A soft dark pool behind the hero text so it reads over the busy art. */
-.en-hero-body::before {
-  content: "";
-  position: absolute;
-  inset: -8% -14% -4%;
-  z-index: -1;
-  background: radial-gradient(closest-side, rgba(5, 3, 3, 0.86), rgba(5, 3, 3, 0.62) 55%, transparent);
-  filter: blur(14px);
-  pointer-events: none;
+.en-hero-copy {
+  display: grid;
+  justify-items: start;
+  max-width: 800px;
+}
+
+.en-hero .ar-pill {
+  background: rgba(10, 6, 6, 0.55);
+}
+
+.en-hero .ar-pill .en-urdu {
+  margin: 0 0 0 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--glass-line);
+  font-size: 12px;
 }
 
 .en-hero h1 {
-  margin: 22px 0 16px;
+  margin: 18px 0 14px;
   font-family: var(--font-ui);
-  font-size: clamp(44px, 7.4vw, 96px);
+  font-size: clamp(40px, 5.4vw, 80px);
   font-weight: 700;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 8px 40px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 8px 34px rgba(0, 0, 0, 0.7);
 }
 
-/* Lighter, warmer accent words with an outline-like shadow: the red-orange
-   gradient alone sank into the red art. */
+/* Solid warm amber accent words: a red-orange gradient sank into the art. */
 .en-hero h1 em {
   padding-right: 0.06em;
   font-size: 1.08em;
@@ -1407,46 +1420,41 @@ body.en main:first-of-type {
   background: none;
   color: #ffc283;
   -webkit-text-fill-color: #ffc283;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.85), 0 0 24px rgba(0, 0, 0, 0.8), 0 0 42px rgba(255, 90, 40, 0.35);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8), 0 0 28px rgba(0, 0, 0, 0.6);
 }
 
 .en-hero p {
-  max-width: 560px;
+  max-width: 520px;
   margin: 0;
-  color: rgba(236, 238, 234, 0.9);
+  color: rgba(236, 238, 234, 0.88);
   font-size: 16px;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.9);
 }
 
 .en-cta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
-  margin-top: 30px;
+  margin-top: 26px;
 }
 
 .en-urdu {
-  margin-top: 18px;
   color: var(--ember-gold);
   font-size: 17px;
-  opacity: 0.85;
 }
 
 .en-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(128px, 1fr));
   gap: 10px;
-  margin: 28px 0 0;
+  margin: 0;
 }
 
 .en-stats > div {
-  min-width: 128px;
   padding: 10px 16px;
   border: 1px solid var(--glass-line);
   border-radius: 14px;
-  background: rgba(10, 6, 6, 0.5);
+  background: rgba(10, 6, 6, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -1467,13 +1475,13 @@ body.en main:first-of-type {
 
 .en-scroll {
   position: absolute;
-  bottom: 22px;
+  bottom: 18px;
   left: 50%;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--glass-line);
   border-radius: 50%;
   transform: translateX(-50%);
@@ -1481,8 +1489,8 @@ body.en main:first-of-type {
 }
 
 .en-scroll svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 @keyframes en-bob {
@@ -1903,10 +1911,22 @@ body.en main:first-of-type {
   .en-nav { top: 8px; right: 8px; left: 8px; padding: 8px 8px 8px 12px; }
   .en-brand img { height: 26px; }
   .en-link-quiet { display: none; }
-  .en-hero { padding: 100px 16px 80px; }
+  /* Phones: the art on top, the text below it rather than over it. */
+  .en-hero { min-height: auto; padding: 50svh 16px 64px; }
+  .en-hero-art {
+    bottom: auto;
+    height: 66svh;
+    -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent);
+    mask-image: linear-gradient(180deg, #000 72%, transparent);
+  }
+  .en-hero-art img { object-position: 42% 20%; }
+  .en-hero::before {
+    background: linear-gradient(180deg, rgba(5, 3, 3, 0.45) 0%, transparent 14%, transparent 36%, rgba(5, 3, 3, 0.85) 52%, var(--night) 62%);
+  }
+  .en-hero .ar-pill .en-urdu { display: none; }
   .en-cta .ar-btn { width: 100%; }
   .en-cta { width: 100%; }
-  .en-stats > div { min-width: 0; flex: 1 1 40%; }
+  .en-stats { width: 100%; }
   .en-carousel { gap: 8px; }
   .en-arrow { width: 36px; height: 36px; }
   .en-tile { width: 108px; height: 108px; }
