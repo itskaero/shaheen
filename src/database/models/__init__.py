@@ -7,6 +7,7 @@ from database.models.base import Base
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
 from database.models.chat_activity import ChatActivity
+from database.models.clan_war_result import ClanWarResult
 from database.models.coaching import Coach, CoachingRequest
 from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
@@ -44,6 +45,7 @@ __all__ = [
     "Challenge",
     "ChallengeStatus",
     "ChatActivity",
+    "ClanWarResult",
     "Coach",
     "CoachingRequest",
     "DiscordUser",

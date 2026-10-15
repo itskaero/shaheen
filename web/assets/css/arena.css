@@ -867,6 +867,192 @@ a.ar-row:hover {
 /* Laptop widths: the narrow side columns would cut names short, so the
    season card and banner go 4/8, the side lists go three across, and
    tournaments take a full row ("dense" fills the gap it leaves). */
+/* Clan Wars page (ADR-131) */
+.ar-war-hero {
+  padding: 56px 28px 46px;
+}
+
+.ar-page-hero > .ar-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.ar-hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 55% 28%;
+  opacity: 0.45;
+}
+
+.ar-war-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(70% 90% at 50% 50%, rgba(8, 4, 4, 0.85), rgba(8, 4, 4, 0.35));
+}
+
+.ar-war-hero .embers-fx {
+  z-index: 1;
+}
+
+.ar-countdown-centre {
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.ar-war-banner {
+  margin-bottom: 16px;
+}
+
+.ar-war-banner a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--glass-line-hot);
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(255, 46, 58, 0.22), rgba(255, 106, 31, 0.06) 60%, transparent),
+    var(--glass-strong);
+}
+
+.ar-war-banner a > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.ar-war-banner strong {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.ar-war-banner-pts {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.ar-war-banner-pts b {
+  color: var(--text);
+  font-size: 24px;
+}
+
+.ar-war-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ar-war-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-areas:
+    "rank team score"
+    "rank chips chips";
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px;
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ar-war-row.is-leading {
+  border-color: var(--glass-line-hot);
+  background: linear-gradient(90deg, rgba(255, 46, 58, 0.14), transparent 70%), rgba(255, 255, 255, 0.03);
+}
+
+.ar-war-row > .ar-rank {
+  grid-area: rank;
+  align-self: start;
+}
+
+.ar-war-team {
+  display: flex;
+  grid-area: team;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ar-war-team > span {
+  display: grid;
+  min-width: 0;
+}
+
+.ar-war-team strong {
+  overflow: hidden;
+  font-size: 15.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ar-war-team .muted {
+  font-size: 12px;
+}
+
+.ar-war-score {
+  display: grid;
+  grid-area: score;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.ar-war-score strong {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.ar-war-score .muted {
+  font-size: 12px;
+}
+
+.ar-war-score .ar-meter {
+  grid-column: 1 / -1;
+}
+
+.ar-war-chips {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: chips;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.ar-war-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted) !important;
+}
+
+.ar-war-chip:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text) !important;
+}
+
+.ar-war-chip b {
+  color: var(--ember-gold);
+}
+
+.ar-steps-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.ar-grid .span-12 { grid-column: span 12; }
+
 @media (max-width: 1500px) {
   .ar-grid { grid-auto-flow: row dense; }
   .ar-grid .span-3 { grid-column: span 4; }
@@ -895,6 +1081,15 @@ a.ar-row:hover {
   .ar-page-hero { padding: 32px 18px; }
   .ar-ticker-label { display: none; }
   .ar-table .hide-sm { display: none; }
+  .ar-war-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "rank team"
+      "rank score"
+      "rank chips";
+  }
+  .ar-steps-row { grid-template-columns: 1fr; }
+  .ar-war-banner a { flex-wrap: wrap; }
 }
 
 /* ---------- entrance (index.html) ---------- */

@@ -5929,3 +5929,59 @@ first `snapshot.yml` run after the API is reachable again.
 - no horizontal overflow;
 - one embers canvas on each page;
 - no page errors (only the 404s for snapshots not yet generated).
+
+## ADR-131 — Clan Wars: a weekly team league from ranked play
+
+**Status:** accepted. The first community feature proposed after ADR-130.
+
+**Context.** Teams existed (ADR-114), with rosters that can follow in-game clans (ADR-120), but nothing set
+them against each other. The owner asked to start Clan Wars.
+
+**Decision: a weekly league, scored automatically.** There are no challenges to accept, no matches to
+report and nothing to self-report: the score comes from the ranking snapshots the bot already takes, like
+the weekly quests (ADR-128).
+- **The week:** Monday 00:00 to Monday 00:00 PKT (`services/quests.week_bounds`).
+- **A member's points:** `WIN_POINTS` (10) per ranked 1v1 win plus every rating point gained, from the last
+  reading of the season before the week (or the week's first reading) to the latest one. A rating loss
+  counts as 0, so playing never hurts the team.
+- **A team's score:** the sum of its best `TEAM_TOP_N` (5) members. A big clan roster can't win on headcount,
+  but a team still needs five active players to field its full score.
+- **Membership:** a player scores for the team they're on now. Switching teams mid-week moves their week's
+  points with them; at this size that's simpler than splitting a week.
+- **Recording:** the snapshot tick keeps last week's standings once it's over (`clan_war_results`, one row per
+  team per week with a unique constraint, migration 0028). It uses only readings taken before the week ended,
+  and the week's own season (`RankingSnapshotRepository.season_before`), so a Brawlhalla season starting on a
+  Monday can't zero the week before. A week nobody scored in records nothing.
+- **Season table:** weeks won, then total points, then fewer weeks played.
+- **Rules live in `services/clan_wars.py`** (pure) and **`services/clan_war_service.py`** (database). Both are
+  Discord-free.
+
+**Where it shows:**
+- `/clanwars` (anyone, ephemeral);
+- `GET /clan-wars`: the week, the standings with scorers (Brawlhalla identity only, ADR-040), the season
+  table and last week's winner;
+- the `clan-wars` site snapshot;
+- `clanwars.html`: a hero on the key art with embers and the countdown to Monday, last week's winner, the live
+  standings with each team's counted scorers, the season table, and how it works;
+- a Clan Wars link in the sidebar, the entrance nav, the home banner and the home Teams panel.
+
+**Announcements:** the weekly winner (and runner-up) posts in #announcements only with
+`ANNOUNCE_CLAN_WARS=true`, off by default like the quests. Mentions are disabled.
+
+**Not in this round:** head-to-head challenges between two teams, rewards or roles for the winner, and
+per-team war history pages. They can build on `clan_war_results` later.
+
+**Verified.**
+- **Tests:**
+  - player points (wins and gains, losses free, missing readings);
+  - team points (best five) and season table ordering;
+  - the live week from the last reading before it;
+  - a team with nobody playing;
+  - last week recorded once, only from readings before it ended;
+  - a week nobody scored in;
+  - a finished week keeping its own season across a reset;
+  - the API (every team listed, scorers by Brawlhalla identity, nothing from Discord);
+  - the help catalog;
+  - the migration round trip.
+- **Playwright** with a mocked API at 1440 and 390 px: no overflow, no page errors.
+- **Checks:** ruff, mypy, pytest (627 passed).

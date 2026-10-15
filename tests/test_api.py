@@ -876,3 +876,53 @@ async def test_city_board_and_player_quests_endpoints(
     assert (quests["level"], quests["xp"], quests["max_level"]) == (1, 0, 30)
     assert [q["key"] for q in quests["quests"]] == ["grind", "win", "climb"]
     assert client.get("/players/999/quests").status_code == 404
+
+
+async def test_clan_wars_endpoint(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    """ADR-131: the week, every team (even with no points), scorers by
+    Brawlhalla identity only, and an empty season table before any week ends."""
+    from database.repositories.team_repository import TeamRepository
+    from services.team_service import TeamService
+
+    empty = client.get("/clan-wars").json()
+    assert empty["standings"] == [] and empty["season_table"] == []
+    assert (empty["win_points"], empty["top_n"], empty["last_winner"]) == (10, 5, None)
+
+    now = datetime.now(UTC)
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # "Foo", brawlhalla_id=10
+        player = await BrawlhallaPlayerRepository(session).get_by_brawlhalla_id(10)
+        assert player is not None
+        teams = TeamService(session)
+        red = await teams.create(guild_id=GUILD_ID, name="Red Hawks", tag="RH", actor_discord_id=1)
+        await teams.create(guild_id=GUILD_ID, name="Blue Wolves", tag="BW", actor_discord_id=1)
+        await TeamRepository(session).add_member(
+            team_id=red.id, player_id=player.id, role="player", joined_at=now - timedelta(days=30)
+        )
+        repo = RankingSnapshotRepository(session)
+        for at, wins, rating in ((now - timedelta(days=8), 10, 1500), (now, 12, 1525)):
+            await repo.add(
+                RankingSnapshot(
+                    brawlhalla_player_id=player.id,
+                    captured_at=at,
+                    rating=rating,
+                    peak_rating=rating,
+                    tier="Gold",
+                    wins=wins,
+                    games=wins * 2,
+                    season=42,
+                )
+            )
+        await session.commit()
+
+    board = client.get("/clan-wars").json()
+    assert board["season"] == 42
+    first, second = board["standings"]
+    assert (first["tag"], first["place"], first["points"]) == ("RH", 1, 45)
+    assert first["scorers"] == [
+        {"brawlhalla_id": 10, "player_name": "Foo", "slug": "foo-10", "points": 45}
+    ]
+    assert (second["tag"], second["points"], second["scorers"]) == ("BW", 0, [])
+    assert "discord" not in str(board).lower()

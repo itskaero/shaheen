@@ -447,6 +447,55 @@ class CityBoardResponse(BaseModel):
     cities: list[CityStandingResponse]
 
 
+class ClanWarTeamRef(BaseModel):
+    slug: str
+    name: str
+    tag: str
+    logo: str | None
+    accent: str | None = None
+
+
+class ClanWarMemberResponse(BaseModel):
+    """A member who scored this week. Brawlhalla identity only (ADR-040)."""
+
+    brawlhalla_id: int
+    player_name: str
+    slug: str
+    points: int
+
+
+class ClanWarStandingResponse(ClanWarTeamRef):
+    place: int
+    points: int
+    # Members who scored this week; the first `top_n` count.
+    scorers: list[ClanWarMemberResponse]
+
+
+class ClanWarSeasonRowResponse(ClanWarTeamRef):
+    wins: int
+    points: int
+    weeks: int
+
+
+class ClanWarWinnerResponse(ClanWarTeamRef):
+    points: int
+    week_start: date
+
+
+class ClanWarsResponse(BaseModel):
+    """Clan Wars (ADR-131): this week's standings, the season table and last
+    week's winner."""
+
+    season: int | None
+    week_start: date
+    ends_at: datetime
+    win_points: int
+    top_n: int
+    standings: list[ClanWarStandingResponse]
+    season_table: list[ClanWarSeasonRowResponse]
+    last_winner: ClanWarWinnerResponse | None
+
+
 class QuestProgressResponse(BaseModel):
     key: str
     label: str

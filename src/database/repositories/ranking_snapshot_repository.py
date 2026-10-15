@@ -54,6 +54,13 @@ class RankingSnapshotRepository:
         stmt = select(func.max(RankingSnapshot.season))
         return (await self._session.execute(stmt)).scalar_one_or_none()
 
+    async def season_before(self, moment: datetime) -> int | None:
+        """The highest season any reading taken before `moment` carries: the
+        season a finished Clan Wars week belongs to (ADR-131), even when a new
+        season has started since."""
+        stmt = select(func.max(RankingSnapshot.season)).where(RankingSnapshot.captured_at < moment)
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
     async def list_seasons(self) -> list[int]:
         """Every season any snapshot carries, newest first (ADR-105)."""
         stmt = (
