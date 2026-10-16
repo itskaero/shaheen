@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-09T13:11:09Z",
+  "captured_at": "2026-10-15T21:19:06Z",
   "source": "/teams",
   "data": [
     {
@@ -12,20 +12,36 @@
       "is_founding": true,
       "accent": "#3df26e",
       "accent_secondary": "#f0168c",
-      "rank": 1,
+      "rank": null,
       "brawlhalla_clan_id": null,
-      "members": 1,
-      "rating": 1840,
+      "members": 0,
+      "rating": null,
+      "best": null
+    },
+    {
+      "slug": "sigma-grinders",
+      "name": "Sigma Grinders",
+      "tag": "SG",
+      "country": "PK",
+      "logo": "sigma-grinders",
+      "description": null,
+      "is_founding": false,
+      "accent": "#8b3dff",
+      "accent_secondary": "#d9d4ff",
+      "rank": 1,
+      "brawlhalla_clan_id": 1777529,
+      "members": 11,
+      "rating": 1789,
       "best": {
-        "brawlhalla_id": 5734378,
-        "player_name": "kaero.",
-        "slug": "kaero-5734378",
+        "brawlhalla_id": 56008741,
+        "player_name": "arman",
+        "slug": "arman-56008741",
         "role": "player",
-        "clan_rank": null,
-        "rating": 1840,
-        "peak_rating": 1924,
-        "tier": "Platinum 3",
-        "main_legend": "koji"
+        "clan_rank": "Officer",
+        "rating": 1802,
+        "peak_rating": 1917,
+        "tier": "Platinum 2",
+        "main_legend": "mordex"
       }
     },
     {
@@ -41,43 +57,17 @@
       "rank": 2,
       "brawlhalla_clan_id": 2042085,
       "members": 28,
-      "rating": 1809,
+      "rating": 1782,
       "best": {
         "brawlhalla_id": 1739958,
         "player_name": "scoooot!!!",
         "slug": "scoooot-1739958",
         "role": "player",
         "clan_rank": "Recruit",
-        "rating": 2041,
+        "rating": 1961,
         "peak_rating": 2056,
         "tier": "Diamond",
         "main_legend": "caspian"
-      }
-    },
-    {
-      "slug": "sigma-grinders",
-      "name": "Sigma Grinders",
-      "tag": "SG",
-      "country": "PK",
-      "logo": "sigma-grinders",
-      "description": null,
-      "is_founding": false,
-      "accent": "#8b3dff",
-      "accent_secondary": "#d9d4ff",
-      "rank": 3,
-      "brawlhalla_clan_id": 1777529,
-      "members": 11,
-      "rating": 1799,
-      "best": {
-        "brawlhalla_id": 56008741,
-        "player_name": "arman",
-        "slug": "arman-56008741",
-        "role": "player",
-        "clan_rank": "Officer",
-        "rating": 1805,
-        "peak_rating": 1864,
-        "tier": "Platinum 2",
-        "main_legend": "mordex"
       }
     },
     {
@@ -90,20 +80,20 @@
       "is_founding": false,
       "accent": "#e3122d",
       "accent_secondary": "#c7cad6",
-      "rank": 4,
+      "rank": 3,
       "brawlhalla_clan_id": 2542774,
       "members": 22,
-      "rating": 1574,
+      "rating": 1598,
       "best": {
-        "brawlhalla_id": 115697497,
-        "player_name": "Kirito",
-        "slug": "kirito-115697497",
+        "brawlhalla_id": 101991193,
+        "player_name": "bloom",
+        "slug": "bloom-101991193",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1574,
-        "peak_rating": 1718,
-        "tier": "Gold 4",
-        "main_legend": "sidra"
+        "rating": 1623,
+        "peak_rating": 1420,
+        "tier": "Gold 5",
+        "main_legend": "kaya"
       }
     },
     {

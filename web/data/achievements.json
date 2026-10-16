@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-09T13:11:09Z",
+  "captured_at": "2026-10-15T21:19:06Z",
   "source": "/achievements",
   "data": [
     {
@@ -13,14 +13,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-10T14:59:28.816536Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.799387Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T10:57:41.875559Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.799829Z"
         }
       ]
     },
@@ -35,14 +35,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-10T18:52:55.474899Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.886695Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T12:46:12.021177Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.854792Z"
         }
       ]
     },
@@ -57,14 +57,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-10T18:52:55.971890Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.896139Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T12:46:12.675749Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.860296Z"
         }
       ]
     },
@@ -73,15 +73,20 @@
       "name": "Platinum Shaheen",
       "description": "Reached Platinum tier in ranked.",
       "category": "ranked",
-      "holder_count": 1,
+      "holder_count": 2,
       "total_members": 2,
-      "completion_pct": 50.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.946034Z"
+        },
+        {
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
-          "earned_at": "2026-09-10T18:52:56.466434Z"
+          "earned_at": "2026-10-15T19:34:30.889759Z"
         }
       ]
     },
@@ -90,17 +95,11 @@
       "name": "Diamond Shaheen",
       "description": "Reached Diamond tier or higher in ranked.",
       "category": "ranked",
-      "holder_count": 1,
+      "holder_count": 0,
       "total_members": 2,
-      "completion_pct": 50.0,
-      "rarity": "Common",
-      "holders": [
-        {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-10T18:52:56.964634Z"
-        }
-      ]
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "games_1000",
@@ -113,14 +112,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:28.788778Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.903571Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T12:46:13.164958Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.866863Z"
         }
       ]
     },
@@ -135,14 +134,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:29.498731Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.910942Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T12:46:13.655579Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.870993Z"
         }
       ]
     },
@@ -157,14 +156,14 @@
       "rarity": "Common",
       "holders": [
         {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:30.017094Z"
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.918734Z"
         },
         {
-          "brawlhalla_id": 104869463,
-          "player_name": "JavelskyMobile",
-          "earned_at": "2026-10-05T12:46:14.144040Z"
+          "brawlhalla_id": 5734378,
+          "player_name": "kaero.",
+          "earned_at": "2026-10-15T19:34:30.874626Z"
         }
       ]
     },
@@ -173,15 +172,20 @@
       "name": "Gold Shaheen",
       "description": "Reached Gold tier in ranked.",
       "category": "ranked",
-      "holder_count": 1,
+      "holder_count": 2,
       "total_members": 2,
-      "completion_pct": 50.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.939747Z"
+        },
+        {
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:31.571399Z"
+          "earned_at": "2026-10-15T19:34:30.886485Z"
         }
       ]
     },
@@ -201,15 +205,20 @@
       "name": "Ascendant",
       "description": "Hit a peak rating of 1500.",
       "category": "ranked",
-      "holder_count": 1,
+      "holder_count": 2,
       "total_members": 2,
-      "completion_pct": 50.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.925239Z"
+        },
+        {
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:30.534183Z"
+          "earned_at": "2026-10-15T19:34:30.879775Z"
         }
       ]
     },
@@ -218,15 +227,20 @@
       "name": "Skyborne",
       "description": "Hit a peak rating of 1800.",
       "category": "ranked",
-      "holder_count": 1,
+      "holder_count": 2,
       "total_members": 2,
-      "completion_pct": 50.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-15T19:02:26.932942Z"
+        },
+        {
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
-          "earned_at": "2026-09-18T12:27:31.051541Z"
+          "earned_at": "2026-10-15T19:34:30.883218Z"
         }
       ]
     },
@@ -378,17 +392,11 @@
       "name": "MVP of the Week",
       "description": "Named MVP in a weekly digest.",
       "category": "community",
-      "holder_count": 1,
+      "holder_count": 0,
       "total_members": 2,
-      "completion_pct": 50.0,
-      "rarity": "Common",
-      "holders": [
-        {
-          "brawlhalla_id": 5734378,
-          "player_name": "kaero.",
-          "earned_at": "2026-09-20T12:00:07.789770Z"
-        }
-      ]
+      "completion_pct": 0.0,
+      "rarity": "Unclaimed",
+      "holders": []
     },
     {
       "key": "veteran_30d",
@@ -403,7 +411,7 @@
         {
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
-          "earned_at": "2026-10-07T21:04:12.833625Z"
+          "earned_at": "2026-10-15T19:34:30.893083Z"
         }
       ]
     },

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-09T13:11:09Z",
+  "captured_at": "2026-10-15T21:19:06Z",
   "source": "/players",
   "data": [
     {
@@ -14,27 +14,31 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 2041,
+      "rating": 1961,
       "peak_rating": 2056,
       "tier": "Diamond",
-      "main_legend": "caspian"
+      "main_legend": "caspian",
+      "city": null,
+      "city_label": null
     },
     {
-      "brawlhalla_id": 5734378,
-      "slug": "kaero-5734378",
-      "player_name": "kaero.",
+      "brawlhalla_id": 84939075,
+      "slug": "pumpkin-man-3-84939075",
+      "player_name": "Pumpkin Man <3",
       "country": "PK",
-      "team": "SHAHEEN",
-      "team_slug": "shaheen",
-      "team_tag": "SHN",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null,
       "is_claimed": true,
-      "is_verified": false,
+      "is_verified": true,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1840,
-      "peak_rating": 1924,
-      "tier": "Platinum 3",
-      "main_legend": "koji"
+      "rating": 1921,
+      "peak_rating": 1921,
+      "tier": "Platinum 4",
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 56008741,
@@ -48,44 +52,12 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1805,
-      "peak_rating": 1864,
+      "rating": 1802,
+      "peak_rating": 1917,
       "tier": "Platinum 2",
-      "main_legend": "mordex"
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "slug": "arman0mobile-113753082",
-      "player_name": "arman0mobile",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1803,
-      "peak_rating": 1858,
-      "tier": "Platinum 2",
-      "main_legend": "isaiah"
-    },
-    {
-      "brawlhalla_id": 37628417,
-      "slug": "roykhan-37628417",
-      "player_name": "Roykhan",
-      "country": "PK",
-      "team": null,
-      "team_slug": null,
-      "team_tag": null,
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1801,
-      "peak_rating": 1852,
-      "tier": "Platinum 2",
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8488940,
@@ -102,7 +74,28 @@
       "rating": 1790,
       "peak_rating": 1822,
       "tier": "Platinum 2",
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 113753082,
+      "slug": "arman0mobile-113753082",
+      "player_name": "arman0mobile",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1775,
+      "peak_rating": 1858,
+      "tier": "Platinum 2",
+      "main_legend": "isaiah",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 10285200,
@@ -119,7 +112,28 @@
       "rating": 1736,
       "peak_rating": null,
       "tier": "Platinum 1",
-      "main_legend": "hattori"
+      "main_legend": "hattori",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 5734378,
+      "slug": "kaero-5734378",
+      "player_name": "kaero.",
+      "country": "PK",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null,
+      "is_claimed": true,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1680,
+      "peak_rating": 1924,
+      "tier": "Platinum 1",
+      "main_legend": "koji",
+      "city": "bahawalpur",
+      "city_label": "Bahawalpur"
     },
     {
       "brawlhalla_id": 97035412,
@@ -136,7 +150,66 @@
       "rating": 1650,
       "peak_rating": 1696,
       "tier": "Platinum 0",
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 101991193,
+      "slug": "bloom-101991193",
+      "player_name": "bloom",
+      "country": "PK",
+      "team": "Revenant Wolf",
+      "team_slug": "revenant-wolf",
+      "team_tag": "RW",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "EU",
+      "rating": 1623,
+      "peak_rating": 1420,
+      "tier": "Gold 5",
+      "main_legend": "kaya",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 106237759,
+      "slug": "devil-106237759",
+      "player_name": "DeviL",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1587,
+      "peak_rating": null,
+      "tier": "Gold 5",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 102618812,
+      "slug": "asta-102618812",
+      "player_name": "ASTA",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1581,
+      "peak_rating": 1449,
+      "tier": "Gold 5",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 88497903,
@@ -150,27 +223,12 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1584,
+      "rating": 1576,
       "peak_rating": 1666,
       "tier": "Gold 4",
-      "main_legend": "wu shang"
-    },
-    {
-      "brawlhalla_id": 106237759,
-      "slug": "devil-106237759",
-      "player_name": "DeviL",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "EU",
-      "rating": 1582,
-      "peak_rating": null,
-      "tier": "Gold 5",
-      "main_legend": "tezca"
+      "main_legend": "wu shang",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 115697497,
@@ -187,7 +245,9 @@
       "rating": 1574,
       "peak_rating": 1718,
       "tier": "Gold 4",
-      "main_legend": "sidra"
+      "main_legend": "sidra",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 65526716,
@@ -201,10 +261,12 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "US-E",
-      "rating": 1573,
+      "rating": 1523,
       "peak_rating": 1603,
-      "tier": "Gold 4",
-      "main_legend": "tezca"
+      "tier": "Gold 3",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8450575,
@@ -221,7 +283,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "hattori"
+      "main_legend": "hattori",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 67045240,
@@ -238,7 +302,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mako"
+      "main_legend": "mako",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 60278914,
@@ -255,7 +321,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "diana"
+      "main_legend": "diana",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 40156547,
@@ -272,24 +340,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "thor"
-    },
-    {
-      "brawlhalla_id": 122163744,
-      "slug": "anjaan-admi-122163744",
-      "player_name": "Anjaan_Admi",
-      "country": "PK",
-      "team": null,
-      "team_slug": null,
-      "team_tag": null,
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "mirage"
+      "main_legend": "thor",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 120648946,
@@ -306,24 +359,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "loki"
-    },
-    {
-      "brawlhalla_id": 102618812,
-      "slug": "asta-102618812",
-      "player_name": "ASTA",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "tezca"
+      "main_legend": "loki",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 41200172,
@@ -340,7 +378,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 45796042,
@@ -357,7 +397,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "nix"
+      "main_legend": "nix",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 56285119,
@@ -374,7 +416,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "nix"
+      "main_legend": "nix",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 64446531,
@@ -391,7 +435,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 125278166,
@@ -408,24 +454,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "thea"
-    },
-    {
-      "brawlhalla_id": 101991193,
-      "slug": "bloom-101991193",
-      "player_name": "Bloom",
-      "country": "PK",
-      "team": "Revenant Wolf",
-      "team_slug": "revenant-wolf",
-      "team_tag": "RW",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "kaya"
+      "main_legend": "thea",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 88523853,
@@ -442,7 +473,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "cross"
+      "main_legend": "cross",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 118832218,
@@ -459,7 +492,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 53846332,
@@ -476,7 +511,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "diana"
+      "main_legend": "diana",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 53984045,
@@ -493,7 +530,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 55310032,
@@ -510,7 +549,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "scarlet"
+      "main_legend": "scarlet",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 73881277,
@@ -527,7 +568,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "cassidy"
+      "main_legend": "cassidy",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 117371627,
@@ -544,7 +587,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 100925330,
@@ -561,7 +606,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 30635900,
@@ -578,7 +625,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "ulgrim"
+      "main_legend": "ulgrim",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 126888165,
@@ -595,7 +644,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mirage"
+      "main_legend": "mirage",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 36414373,
@@ -612,7 +663,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "sir roland"
+      "main_legend": "sir roland",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 136372121,
@@ -629,7 +682,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "dusk"
+      "main_legend": "dusk",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 56407341,
@@ -646,7 +701,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 128560354,
@@ -663,7 +720,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "artemis"
+      "main_legend": "artemis",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 60943018,
@@ -680,7 +739,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 91461415,
@@ -697,7 +758,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8136345,
@@ -714,7 +777,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 77324891,
@@ -731,7 +796,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "artemis"
+      "main_legend": "artemis",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 105146045,
@@ -748,7 +815,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 118969996,
@@ -765,7 +834,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "thea"
+      "main_legend": "thea",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 125796936,
@@ -782,7 +853,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "artemis"
+      "main_legend": "artemis",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 116337998,
@@ -799,7 +872,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "sir roland"
+      "main_legend": "sir roland",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 135320627,
@@ -816,7 +891,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mako"
+      "main_legend": "mako",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 65344633,
@@ -833,7 +910,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "nix"
+      "main_legend": "nix",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 7854627,
@@ -850,7 +929,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "bodvar"
+      "main_legend": "bodvar",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 86942248,
@@ -867,7 +948,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 129773867,
@@ -884,7 +967,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "loki"
+      "main_legend": "loki",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 55278854,
@@ -901,7 +986,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 36331158,
@@ -918,7 +1005,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "redraptor"
+      "main_legend": "redraptor",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 38635298,
@@ -935,7 +1024,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "ember"
+      "main_legend": "ember",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 104869463,
@@ -945,14 +1036,16 @@
       "team": "Delight Esports",
       "team_slug": "delight-esports",
       "team_tag": "DE",
-      "is_claimed": true,
-      "is_verified": true,
+      "is_claimed": false,
+      "is_verified": false,
       "on_pakistan_board": true,
       "region": "none",
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "tezca"
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 104175575,
@@ -969,7 +1062,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "tezca"
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 9200968,
@@ -986,7 +1081,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 92526835,
@@ -1003,7 +1100,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "val"
+      "main_legend": "val",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 127222968,
@@ -1020,7 +1119,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mako"
+      "main_legend": "mako",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8836264,
@@ -1037,7 +1138,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "lord vraxx"
+      "main_legend": "lord vraxx",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 63736355,
@@ -1054,7 +1157,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "hattori"
+      "main_legend": "hattori",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 44737786,
@@ -1071,7 +1176,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 109120866,
@@ -1088,7 +1195,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "redraptor"
+      "main_legend": "redraptor",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 56126124,
@@ -1105,7 +1214,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 3877407,
@@ -1122,7 +1233,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 112494860,
@@ -1139,7 +1252,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "onyx"
+      "main_legend": "onyx",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 41417409,
@@ -1156,7 +1271,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 136240191,
@@ -1173,7 +1290,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 47094614,
@@ -1190,7 +1309,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "lin fei"
+      "main_legend": "lin fei",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 99470550,
@@ -1207,7 +1328,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 128320434,
@@ -1224,7 +1347,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 79837513,
@@ -1241,7 +1366,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "petra"
+      "main_legend": "petra",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 25723604,
@@ -1258,7 +1385,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "diana"
+      "main_legend": "diana",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 130482318,
@@ -1275,7 +1404,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "ransom"
+      "main_legend": "ransom",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 87818732,
@@ -1292,7 +1423,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 129774056,
@@ -1309,7 +1442,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 130315001,
@@ -1326,7 +1461,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "queen nai"
+      "main_legend": "queen nai",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 109096654,
@@ -1343,7 +1480,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "hattori"
+      "main_legend": "hattori",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 79497791,
@@ -1360,7 +1499,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "cross"
+      "main_legend": "cross",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 64208223,
@@ -1377,7 +1518,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "brynn"
+      "main_legend": "brynn",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 89263800,
@@ -1394,7 +1537,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "kaya"
+      "main_legend": "kaya",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 56863338,
@@ -1411,7 +1556,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "thatch"
+      "main_legend": "thatch",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 79224070,
@@ -1428,7 +1575,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "hattori"
+      "main_legend": "hattori",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 24443193,
@@ -1445,7 +1594,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 124817271,
@@ -1462,7 +1613,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "sir roland"
+      "main_legend": "sir roland",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 105143161,
@@ -1479,7 +1632,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "redraptor"
+      "main_legend": "redraptor",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 25009734,
@@ -1496,7 +1651,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "orion"
+      "main_legend": "orion",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 137881295,
@@ -1513,7 +1670,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "bodvar"
+      "main_legend": "bodvar",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 48718125,
@@ -1530,7 +1689,9 @@
       "rating": null,
       "peak_rating": null,
       "tier": null,
-      "main_legend": "mordex"
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     }
   ]
 }
