@@ -364,3 +364,42 @@ sh scripts/master.sh out/recruit-raw-9x16.mp4 ../recruitment/out/brawlistan-disc
 npx remotion render src/index.ts RecruitWide out/recruit-raw-16x9.mp4
 sh scripts/master.sh out/recruit-raw-16x9.mp4 ../recruitment/out/brawlistan-discord-trailer-16x9.mp4
 ```
+
+## 12. The 60 s cut
+
+**Output:**
+- `out/brawlistan-discord-trailer-60s-9x16.mp4`
+- `out/brawlistan-discord-trailer-60s-16x9.mp4`
+- `out/brawlistan-discord-trailer-60s-9x16-whatsapp.mp4` (720p, about 13 MB)
+
+All three run 62 s and are mastered to about −13.3 LUFS with a −1.4 dBFS peak.
+
+**Source:** `video/explainer/src/recruit/RecruitLong.tsx` (compositions `RecruitLongVertical` and
+`RecruitLongWide`).
+
+It plays "Storming the Gate" from 0:00 (track time = video time):
+- the quiet intro carries "Still grinding alone?";
+- the phone ping bursts in the track's silence at 0:10;
+- the logo lands on the hit at 0:26.7;
+- the end card runs from 0:53.6 to the slam at 1:00.
+
+New clips (`public/recruit/`):
+
+| Clip | Source | Used for |
+|---|---|---|
+| `g-grinder.mp4` | gemini_generated_video_d02dc8fb | The lonely grinder (0:00) |
+| `g-ping.mp4` | gemini_generated_video_180025bd | The Discord ping (0:06.7) |
+| `g-win.mp4` | gemini_generated_video_f6a84d50 | "Find your fighters" (0:33.4) |
+| `h5-landmark.mp4` | hailuo_1792179033 | Minar-e-Pakistan with floating islands |
+| `h6-clan.mp4` | hailuo_1792179042 | "Fight for your clan" |
+| `h7-crowds.mp4` | hailuo_1792179048 | City vs city. Only its first ~1.3 s is used: later frames show garbled AI text on the banners. |
+
+Gemini's clips are 1280×720, so the 9:16 cut crops into them and they are slightly softer there.
+
+**Re-render**, from `video/explainer`:
+```bash
+npx remotion render src/index.ts RecruitLongVertical out/recruit-long-raw-9x16.mp4
+sh scripts/master.sh out/recruit-long-raw-9x16.mp4 ../recruitment/out/brawlistan-discord-trailer-60s-9x16.mp4
+npx remotion render src/index.ts RecruitLongWide out/recruit-long-raw-16x9.mp4
+sh scripts/master.sh out/recruit-long-raw-16x9.mp4 ../recruitment/out/brawlistan-discord-trailer-60s-16x9.mp4
+```
