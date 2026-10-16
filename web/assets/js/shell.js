@@ -37,6 +37,8 @@
     feather: '<path d="M20 4c-6 0-12 4-14 12l-2 4M16 8 6 18M9 15h6"/>',
     cap: '<path d="M2 9.5 12 5l10 4.5-10 4.5L2 9.5Z"/><path d="M6 11.3V16c1.7 1.6 3.7 2.4 6 2.4s4.3-.8 6-2.4v-4.7M22 9.5V15"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
     pin: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
   };
 
@@ -46,15 +48,15 @@
     { key: "home", label: "Home", href: "home.html", icon: "home", mobile: true },
     { key: "rankings", label: "Rankings", href: "rankings.html", icon: "trophy", mobile: true },
     { key: "cities", label: "City Wars", href: "cities.html", icon: "pin" },
-    { key: "clanwars", label: "Clan Wars", href: "clanwars.html", icon: "swords" },
+    { key: "clanwars", label: "Clan Wars", href: "clanwars.html", icon: "swords", mobile: true },
     { key: "players", label: "Players", href: "players.html", icon: "users", mobile: true },
     { key: "teams", label: "Teams", href: "teams.html", icon: "shield" },
     { key: "coaches", label: "Coaches", href: "coaches.html", icon: "cap" },
     { key: "legends", label: "Legends", href: "legends.html", icon: "swords", ready: false },
-    { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar", mobile: true },
+    { key: "seasons", label: "Seasons", href: "seasons.html", icon: "calendar" },
     { key: "tournaments", label: "Tournaments", href: "tournaments.html", icon: "flag" },
     { key: "statistics", label: "Statistics", href: "statistics.html", icon: "chart", ready: false },
-    { key: "discord", label: "Discord", href: "join.html", icon: "discord", mobile: true },
+    { key: "discord", label: "Discord", href: "join.html", icon: "discord" },
   ];
 
   const COMMUNITY = [
@@ -194,18 +196,75 @@
       <a class="btn btn-primary btn-sm" data-discord-invite href="join.html" target="_blank" rel="noopener">${icon("discord")}Join Discord</a>`;
   }
 
-  // ---- mobile bottom nav ----
+  // ---- mobile bottom nav + "More" sheet (ADR-134) ----
+  // The sidebar is hidden on phones and the bar fits five buttons, so the
+  // last one opens a sheet with every page; no page is unreachable.
   function renderBottomNav() {
     const el = document.querySelector('[data-shell="bottomnav"]');
     if (!el) return;
     const items = visible.filter((item) => item.mobile);
-    el.style.setProperty("--items", String(items.length));
-    el.innerHTML = items
-      .map((item) => {
-        const current = item.key === page ? ' aria-current="page"' : "";
-        return `<a href="${item.href}"${current}>${icon(item.icon)}<span>${item.label}</span></a>`;
-      })
-      .join("");
+    const inSheet = !items.some((item) => item.key === page);
+    el.style.setProperty("--items", String(items.length + 1));
+    el.innerHTML =
+      items
+        .map((item) => {
+          const current = item.key === page ? ' aria-current="page"' : "";
+          return `<a href="${item.href}"${current}>${icon(item.icon)}<span>${item.label}</span></a>`;
+        })
+        .join("") +
+      `<button type="button" class="bl-more"${inSheet && page ? ' aria-current="page"' : ""} aria-haspopup="dialog" aria-expanded="false" aria-controls="bl-sheet">${icon("more")}<span>More</span></button>`;
+    renderSheet(el.querySelector(".bl-more"));
+  }
+
+  function renderSheet(opener) {
+    const sheet = document.createElement("div");
+    sheet.className = "bl-sheet";
+    sheet.id = "bl-sheet";
+    sheet.hidden = true;
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    sheet.setAttribute("aria-label", "All pages");
+    const link = (item) => {
+      const current = item.key === page ? ' aria-current="page"' : "";
+      return `<li><a href="${item.href}"${current}>${icon(item.icon)}<span>${item.label}</span></a></li>`;
+    };
+    sheet.innerHTML = `
+      <div class="bl-sheet-backdrop" data-close></div>
+      <div class="bl-sheet-panel">
+        <div class="bl-sheet-head">
+          <strong>BRAWLISTAN</strong>
+          <button type="button" class="bl-sheet-close" data-close aria-label="Close">${icon("close")}</button>
+        </div>
+        <ul class="bl-sheet-grid">${visible.map(link).join("")}</ul>
+        <div class="bl-nav-group-label">Community</div>
+        <ul class="bl-sheet-grid">${COMMUNITY.map(link).join("")}</ul>
+      </div>`;
+    document.body.appendChild(sheet);
+
+    function open() {
+      sheet.hidden = false;
+      requestAnimationFrame(() => sheet.classList.add("is-open"));
+      opener.setAttribute("aria-expanded", "true");
+      document.body.classList.add("bl-sheet-open");
+      const first = sheet.querySelector('a[aria-current="page"]') || sheet.querySelector("a");
+      if (first) first.focus({ preventScroll: true });
+    }
+    function close() {
+      sheet.classList.remove("is-open");
+      opener.setAttribute("aria-expanded", "false");
+      document.body.classList.remove("bl-sheet-open");
+      setTimeout(() => {
+        sheet.hidden = true;
+      }, 200);
+      opener.focus({ preventScroll: true });
+    }
+    opener.addEventListener("click", () => (sheet.hidden ? open() : close()));
+    sheet.addEventListener("click", (event) => {
+      if (event.target.closest("[data-close]")) close();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !sheet.hidden) close();
+    });
   }
 
   // ---- footer ----

@@ -6083,3 +6083,39 @@ URLs.
 - The stamping, run on a copy of `web/`, versions every local script and stylesheet on all pages, including
   the generated ones.
 - The live site in a fresh browser loads every dashboard panel.
+
+## ADR-134 — Every page reachable on phones; paged rankings
+
+**Status:** accepted.
+
+**Context.** The owner reported that some pages (Music, Coaches and others) couldn't be reached on a phone,
+and that Rankings had no pagination. On phones the sidebar is hidden and the bottom bar showed five
+shortcuts (Home, Rankings, Players, Seasons, Discord). Teams, Coaches, City Wars, Clan Wars, Tournaments,
+Achievements, Founding Team and Music had no way in. Rankings rendered every row in one table.
+
+**Decision: a "More" sheet** (`shell.js`, so every shell page and the generated player and team pages get
+it).
+- **The bar:** Home, Rankings, Clan Wars, Players, **More**. Seasons and Discord move into the sheet; Discord
+  is also the top bar's button.
+- **More** opens a bottom sheet (`role="dialog"`, `aria-modal`) with every main page and the Community pages
+  as icon tiles, the current one highlighted. More itself shows as current on a page that isn't in the bar.
+- **Closing:** the ✕, the backdrop or Escape, with focus returned to More. The page behind doesn't scroll
+  while it's open.
+- Wide screens keep the sidebar; the sheet never shows there. It doesn't animate under reduced motion.
+
+**Decision: paged rankings** (`pages/rankings.js`).
+- 25 rows a page on every board. The shared table helper slices the filtered rows and passes each row's
+  position in the whole board, so ranks continue (page 2 starts at 26).
+- **The pager:** "26–50 of 80", previous and next, the first and last page, and the pages either side of the
+  current one, with gaps. It only appears when a board has more than one page.
+- A new tab, filter, search or season goes back to page 1. A data refresh keeps the page, clamped to the
+  last one. Changing page scrolls back to the board's top and focuses the current page button.
+
+**Verified.** Playwright at 390×844:
+- the bar and the sheet list all 13 pages, with Music marked current on the Music page;
+- Escape closes the sheet;
+- an 80-row board pages 1–25, then 26–50 with ranks continuing, across 4 pages;
+- no overflow and no page errors.
+
+The live Pakistan board currently has 15 placed players, so it fits on one page and the pager stays hidden
+until more players are linked.

@@ -6,10 +6,13 @@
 // ADR-128). Power has no data source, so it says so.
 // Tab state lives in the URL hash (rankings.html#2v2), so boards are linkable
 // and the old rankings.html#pakistan links still land on the Pakistan board.
+// Long boards are paged, PAGE_SIZE rows at a time (ADR-134); a new tab,
+// filter or season goes back to page 1, and ranks stay absolute.
 (function () {
   const TABS = ["pakistan", "global", "1v1", "2v2", "power", "rising", "cities"];
   const TIERS = ["Valhallan", "Diamond", "Platinum", "Gold", "Silver", "Bronze", "Tin"];
   const UNAVAILABLE = '<p class="unavailable">Data unavailable</p>';
+  const PAGE_SIZE = 25;
 
   const board = document.getElementById("board");
   const seasonSelect = document.getElementById("season-select");
@@ -28,6 +31,8 @@
   let rising = null; // the /pakistan/rising list
   let cities = null; // the /rankings/cities board
   let tab = tabFromHash();
+  let page = 1;
+  let pageCount = 1;
 
   function tabFromHash() {
     const name = location.hash.replace("#", "");
@@ -72,14 +77,48 @@
     return row.games ? `${Math.round((row.wins / row.games) * 100)}%` : "—";
   }
 
+  // One page of the board. `i` passed to each cell is the row's position in
+  // the whole (filtered) board, so ranks continue across pages.
   function table(columns, rows) {
+    pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    page = Math.min(Math.max(1, page), pageCount);
+    const start = (page - 1) * PAGE_SIZE;
     const head = columns.map((c) => `<th scope="col"${c.cls ? ` class="${c.cls}"` : ""}>${c.label}</th>`).join("");
     const body = rows
-      .map((row, i) => `<tr>${columns.map((c) => `<td${c.cls ? ` class="${c.cls}"` : ""}>${c.cell(row, i)}</td>`).join("")}</tr>`)
+      .slice(start, start + PAGE_SIZE)
+      .map((row, j) => `<tr>${columns.map((c) => `<td${c.cls ? ` class="${c.cls}"` : ""}>${c.cell(row, start + j)}</td>`).join("")}</tr>`)
       .join("");
     return `<div class="bl-table-wrap"><table class="bl-table">
-      <caption class="sr-only">${escapeHtml(tabLabel())} rankings</caption>
-      <thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+      <caption class="sr-only">${escapeHtml(tabLabel())} rankings${pageCount > 1 ? `, page ${page} of ${pageCount}` : ""}</caption>
+      <thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${pager(rows.length)}`;
+  }
+
+  // Previous / numbered pages (with gaps) / next. Nothing for one page.
+  function pager(total) {
+    if (pageCount <= 1) return "";
+    const nums = [];
+    for (let n = 1; n <= pageCount; n++) {
+      if (n === 1 || n === pageCount || Math.abs(n - page) <= 1) nums.push(n);
+      else if (nums[nums.length - 1] !== "…") nums.push("…");
+    }
+    const first = (page - 1) * PAGE_SIZE + 1;
+    const last = Math.min(total, page * PAGE_SIZE);
+    const button = (n, label, cls = "", aria = "") =>
+      `<button type="button" class="bl-page${cls}" data-page="${n}"${aria}>${label}</button>`;
+    return `<nav class="bl-pager" aria-label="Pages">
+      <span class="bl-pager-range num">${first}–${last} of ${total}</span>
+      <span class="bl-pager-pages">
+        ${button(page - 1, "‹", page === 1 ? " is-disabled" : "", ` aria-label="Previous page"${page === 1 ? " disabled" : ""}`)}
+        ${nums
+          .map((n) =>
+            n === "…"
+              ? '<span class="bl-page-gap" aria-hidden="true">…</span>'
+              : button(n, n, n === page ? " is-current" : "", n === page ? ' aria-current="page"' : ` aria-label="Page ${n}"`)
+          )
+          .join("")}
+        ${button(page + 1, "›", page === pageCount ? " is-disabled" : "", ` aria-label="Next page"${page === pageCount ? " disabled" : ""}`)}
+      </span>
+    </nav>`;
   }
 
   function tabLabel() {
@@ -318,6 +357,7 @@
     el.addEventListener("click", () => {
       history.replaceState(null, "", `#${name}`);
       tab = name;
+      page = 1;
       render();
     });
     el.addEventListener("keydown", (event) => {
@@ -326,15 +366,33 @@
       const next = TABS[(index + (event.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
       history.replaceState(null, "", `#${next}`);
       tab = next;
+      page = 1;
       render();
       document.getElementById(`tab-${next}`).focus();
     });
   });
   window.addEventListener("hashchange", () => {
     tab = tabFromHash();
+    page = 1;
     render();
   });
-  Object.values(filters).forEach((el) => el.addEventListener(el.type === "search" ? "input" : "change", render));
+  Object.values(filters).forEach((el) =>
+    el.addEventListener(el.type === "search" ? "input" : "change", () => {
+      page = 1;
+      render();
+    })
+  );
+  // Paging: one listener for every pager the board renders.
+  board.addEventListener("click", (event) => {
+    const button = event.target.closest && event.target.closest(".bl-page[data-page]");
+    if (!button || button.disabled) return;
+    page = Number(button.dataset.page);
+    render();
+    const top = board.getBoundingClientRect().top + window.scrollY - 90;
+    if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
+    const current = board.querySelector(".bl-page.is-current");
+    if (current) current.focus({ preventScroll: true });
+  });
   document.getElementById("filters").addEventListener("submit", (event) => event.preventDefault());
   document.getElementById("filters-toggle").addEventListener("click", (event) => {
     const form = document.getElementById("filters");
@@ -360,6 +418,7 @@
   applyTags();
 
   seasonSelect.addEventListener("change", () => {
+    page = 1;
     board.innerHTML = '<p class="unavailable">Loading…</p>';
     ShaheenAPI.getRankings(seasonSelect.value)
       .then(onData)
