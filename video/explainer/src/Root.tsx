@@ -4,6 +4,7 @@ import "./fonts";
 import { Explainer } from "./Explainer";
 import { EndCard } from "./EndCard";
 import { RECRUIT_DURATION, Recruit } from "./recruit/Recruit";
+import { RECRUIT_LONG_DURATION, RecruitLong } from "./recruit/RecruitLong";
 import { DURATION_S, FPS, HEIGHT, WIDTH } from "./theme";
 
 export const Root: React.FC = () => (
@@ -22,5 +23,7 @@ export const Root: React.FC = () => (
   {/* The Discord recruitment trailer (video/recruitment/README.md) */}
   <Composition id="RecruitVertical" component={Recruit} durationInFrames={RECRUIT_DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ vertical: true }} />
   <Composition id="RecruitWide" component={Recruit} durationInFrames={RECRUIT_DURATION} fps={FPS} width={1920} height={1080} defaultProps={{ vertical: false }} />
+  <Composition id="RecruitLongVertical" component={RecruitLong} durationInFrames={RECRUIT_LONG_DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ vertical: true }} />
+  <Composition id="RecruitLongWide" component={RecruitLong} durationInFrames={RECRUIT_LONG_DURATION} fps={FPS} width={1920} height={1080} defaultProps={{ vertical: false }} />
   </>
 );

@@ -14,6 +14,7 @@ import { MUSIC_START, RECRUIT_BEATS } from "./beats";
 const FPS = 30;
 const s = (sec: number) => Math.round(sec * FPS);
 export const RECRUIT_DURATION = s(30);
+export { s as sec, FPS as RECRUIT_FPS };
 
 const EMERALD = "#1ee08a";
 const GREEN = "#3df26e";
@@ -42,10 +43,10 @@ const T = {
 type V = { vertical: boolean };
 
 /** Beat pulse at the current frame (0..1), from the trailer track. */
-function usePulse(): number {
+export function usePulse(beats: ReadonlyArray<readonly [number, number]> = RECRUIT_BEATS): number {
   const t = useCurrentFrame() / FPS;
   let best = 0;
-  for (const [bt, st] of RECRUIT_BEATS) {
+  for (const [bt, st] of beats) {
     if (bt > t) break;
     const age = t - bt;
     if (age < 0.35) best = Math.max(best, (0.4 + 0.6 * (st / 9)) * Math.exp(-age * 9));
@@ -54,7 +55,7 @@ function usePulse(): number {
 }
 
 /** One Hailuo clip from `from` to `to` (seconds), starting `offset` seconds in. */
-const Clip: React.FC<{ src: string; from: number; to: number; offset?: number; pos?: string; zoom?: [number, number]; filter?: string; rate?: number }> = ({
+export const Clip: React.FC<{ src: string; from: number; to: number; offset?: number; pos?: string; zoom?: [number, number]; filter?: string; rate?: number }> = ({
   src,
   from,
   to,
@@ -86,7 +87,7 @@ const ClipInner: React.FC<{ src: string; len: number; offset: number; pos: strin
 };
 
 /** Big kinetic line, cream with an optional emerald word. */
-const Line: React.FC<{ at: number; out?: number; size: number; children: React.ReactNode; delay?: number }> = ({ at, out, size, children, delay = 0 }) => {
+export const Line: React.FC<{ at: number; out?: number; size: number; children: React.ReactNode; delay?: number }> = ({ at, out, size, children, delay = 0 }) => {
   const frame = useCurrentFrame();
   if (frame < s(at) - 1 || (out !== undefined && frame > s(out) + 8)) return null;
   return (
@@ -110,15 +111,15 @@ const Line: React.FC<{ at: number; out?: number; size: number; children: React.R
   );
 };
 
-const G: React.FC<{ children: React.ReactNode }> = ({ children }) => <span style={{ color: GREEN }}>{children}</span>;
+export const G: React.FC<{ children: React.ReactNode }> = ({ children }) => <span style={{ color: GREEN }}>{children}</span>;
 
 /** Scene 3 flashes: the site's real features, 0.6 s each. */
-const FeatureFlash: React.FC<V> = ({ vertical }) => {
+export const FeatureFlash: React.FC<V & { times?: [number, number, number, number] }> = ({ vertical, times = [T.flash1, T.flash2, T.flash3, T.riser] }) => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  if (t < T.flash1 || t >= T.riser) return null;
-  const which = t < T.flash2 ? 0 : t < T.flash3 ? 1 : 2;
-  const start = [T.flash1, T.flash2, T.flash3][which];
+  if (t < times[0] || t >= times[3]) return null;
+  const which = t < times[1] ? 0 : t < times[2] ? 1 : 2;
+  const start = times[which];
   const p = prog(frame, s(start), 5);
   const label = ["City Wars", "Clan Wars", "Pakistan Rankings"][which];
   const cities = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan", "Faisalabad", "Hyderabad", "Sialkot"];
@@ -156,13 +157,13 @@ const FeatureFlash: React.FC<V> = ({ vertical }) => {
 };
 
 /** The drop: the BRAWLISTAN logo slams onto the emerald burst. */
-const LogoDrop: React.FC<V> = ({ vertical }) => {
+export const LogoDrop: React.FC<V & { drop?: number; lift?: number; until?: number; beats?: ReadonlyArray<readonly [number, number]> }> = ({ vertical, drop = T.drop, lift = T.city, until = T.waiting, beats }) => {
   const frame = useCurrentFrame();
-  const pulse = usePulse();
-  const d = s(T.drop);
-  if (frame < d || frame >= s(T.waiting) + 6) return null;
-  const drift = interpolate(frame, [s(T.city) - 10, s(T.city) + 8], [0, vertical ? -260 : -150], { ...clamp, easing: easeInOut });
-  const out = prog(frame, s(T.waiting) - 2, 8);
+  const pulse = usePulse(beats);
+  const d = s(drop);
+  if (frame < d || frame >= s(until) + 6) return null;
+  const drift = interpolate(frame, [s(lift) - 10, s(lift) + 8], [0, vertical ? -260 : -150], { ...clamp, easing: easeInOut });
+  const out = prog(frame, s(until) - 2, 8);
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", opacity: 1 - out }}>
       <div style={{ transform: `translateY(${drift}px) scale(${1 + pulse * 0.025})` }}>
@@ -277,7 +278,7 @@ export const Recruit: React.FC<V> = ({ vertical }) => {
   );
 };
 
-const EndCardIn: React.FC<V> = ({ vertical }) => {
+export const EndCardIn: React.FC<V> = ({ vertical }) => {
   const frame = useCurrentFrame();
   const p = prog(frame, 0, 12, easeOut);
   return (

@@ -15,3 +15,6 @@ out/rev*.jpg
 out/recruit-raw-*.mp4
 out/recruit-render.log
 out/rstills/
+out/recruit-long-raw-*.mp4
+out/recruit-long.log
+out/lstills/
