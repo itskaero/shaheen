@@ -1,0 +1,26 @@
+{
+  "name": "brawlistan-explainer",
+  "private": true,
+  "description": "BRAWLISTAN kinetic-typography explainer video (Remotion). See README.md.",
+  "type": "module",
+  "scripts": {
+    "capture": "node scripts/capture.mjs && node scripts/capture-claim.mjs",
+    "sfx": "python3 scripts/make_sfx.py",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Explainer out/brawlistan-explainer.mp4",
+    "still": "remotion still src/index.ts Explainer"
+  },
+  "dependencies": {
+    "@fontsource/instrument-serif": "5.2.8",
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/noto-nastaliq-urdu": "5.2.7",
+    "@remotion/cli": "4.0.536",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+out/stills/
+out/sheet*.jpg
+out/*.wav
+# Only the screenshots the video uses are kept; npm run capture makes the rest.
+public/shots/*
+!public/shots/entrance.png
+!public/shots/home.png
+!public/shots/cities-full.png
+!public/shots/claim-*.png
