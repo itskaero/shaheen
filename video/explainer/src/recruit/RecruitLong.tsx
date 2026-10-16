@@ -11,6 +11,7 @@ import { Embers, Finish, Flash, SpeedBurst } from "../components/fx";
 import { typed } from "../components/type";
 import { FONT } from "../theme";
 import { TRACK_BEATS } from "./beats";
+import { Kinetic } from "./Kinetic";
 import { Clip, EndCardIn, FeatureFlash, G, Line, LogoDrop, sec as s } from "./Recruit";
 
 export const RECRUIT_LONG_DURATION = s(62);
@@ -52,39 +53,6 @@ const T = {
 };
 
 type V = { vertical: boolean };
-
-const BigWords: React.FC<{ words: Array<[number, React.ReactNode]>; until: number; size: number }> = ({ words, until, size }) => {
-  const frame = useCurrentFrame();
-  if (frame < s(words[0][0]) - 1 || frame > s(until) + 2) return null;
-  return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 4 }}>
-      {words.map(([at, w], i) => {
-        if (frame < s(at)) return null;
-        const p = prog(frame, s(at), 5);
-        return (
-          <div
-            key={i}
-            style={{
-              fontFamily: FONT.sans,
-              fontWeight: 900,
-              fontSize: size,
-              lineHeight: 0.95,
-              textTransform: "uppercase",
-              color: CREAM,
-              letterSpacing: -size * 0.025,
-              transform: `scale(${2 - p})`,
-              opacity: p,
-              filter: p < 1 ? `blur(${(1 - p) * 10}px)` : undefined,
-              textShadow: "0 6px 40px #000",
-            }}
-          >
-            {w}
-          </div>
-        );
-      })}
-    </AbsoluteFill>
-  );
-};
 
 export const RecruitLong: React.FC<V> = ({ vertical }) => {
   const frame = useCurrentFrame();
@@ -148,36 +116,40 @@ export const RecruitLong: React.FC<V> = ({ vertical }) => {
               {typed(frame, s(2.3), "players…", 18)}
             </div>
           )}
-          <Line at={T.alone} out={T.ping - 0.2} size={vertical ? 104 : 96}>Still grinding</Line>
-          <Line at={T.alone + 0.6} out={T.ping - 0.2} size={vertical ? 104 : 96}><G>alone?</G></Line>
-          <Line at={T.rival} out={T.clash - 0.2} size={big}>Your next rival</Line>
-          <Line at={T.knight} out={T.clash - 0.2} size={big}><span style={{ color: "#ff6a1f" }}>is out there.</span></Line>
-          <Line at={T.crowds + 0.05} out={T.flash1 - 0.25} size={big}>Find your <G>people.</G></Line>
-          <Line at={T.map + 0.05} out={T.flash1 - 0.25} size={big}>Build your <G>rivalries.</G></Line>
+          <Kinetic beats={TRACK_BEATS} variant="rise" text="Still grinding" at={T.alone} out={T.ping - 0.3} size={vertical ? 104 : 96} />
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="*alone?*" at={T.alone + 0.8} out={T.ping - 0.3} size={vertical ? 104 : 96} />
+          <Kinetic beats={TRACK_BEATS} variant="rise" text="Your next rival" at={T.rival} out={T.clash - 0.25} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="slam" text="*is out there.*" accent="#ff6a1f" at={T.knight} out={T.clash - 0.25} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="rise" text="Find your *people.*" at={T.crowds + 0.05} out={T.flash1 - 0.3} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="Build your *rivalries.*" at={T.map + 0.05} out={T.flash1 - 0.3} size={big} />
         </div>
         <div style={{ position: "absolute", top: vertical ? "61%" : "68%", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <Line at={T.city} out={T.clan - 0.2} size={vertical ? 96 : 80}>Represent your <G>city.</G></Line>
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="Represent your *city.*" at={T.city} out={T.clan - 0.3} size={vertical ? 96 : 80} />
         </div>
         <div style={{ position: "absolute", top: textTop, left: 60, right: 60, transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <Line at={T.clan + 0.1} out={T.win - 0.2} size={big}>Fight for your <G>clan.</G></Line>
-          <Line at={T.win + 0.1} out={T.oneCommunity - 0.2} size={big}>Find your <G>fighters.</G></Line>
+          <Kinetic beats={TRACK_BEATS} variant="slam" text="Fight for your *clan.*" at={T.clan + 0.05} out={T.win - 0.3} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="rise" text="Find your *fighters.*" at={T.win + 0.1} out={T.oneCommunity - 0.3} size={big} />
         </div>
         <div style={{ position: "absolute", top: "50%", left: 60, right: 60, transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <Line at={T.oneCommunity} out={T.landmark2 - 0.2} size={big}>One community.</Line>
-          <Line at={T.everyCity} out={T.landmark2 - 0.2} size={big}><G>Every city.</G></Line>
-          <Line at={T.battles} out={T.landmark2 - 0.2} size={big}>Endless battles.</Line>
-          <Line at={T.become} out={T.waiting - 0.2} size={vertical ? 100 : 90}>Become part of</Line>
-          <Line at={T.become + 0.3} out={T.waiting - 0.2} size={vertical ? 100 : 90}><G>BRAWLISTAN.</G></Line>
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="One community." at={T.oneCommunity} out={T.landmark2 - 0.3} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="*Every city.*" at={T.everyCity} out={T.landmark2 - 0.3} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="slam" text="Endless battles." at={T.battles} out={T.landmark2 - 0.3} size={big} />
+          <Kinetic beats={TRACK_BEATS} variant="rise" text="Become part of" at={T.become} out={T.waiting - 0.3} size={vertical ? 100 : 90} />
+          <Kinetic beats={TRACK_BEATS} variant="slice" text="*BRAWLISTAN.*" at={T.become + 0.5} out={T.waiting - 0.3} size={vertical ? 100 : 90} />
           {t >= T.waiting - 0.05 && t < T.end + 0.3 && (
             <div style={{ opacity: 1 - prog(frame, s(T.end) - 4, 8) }}>
-              <Line at={T.waiting + 0.3} size={vertical ? 140 : 120}>Your community</Line>
-              <Line at={T.waiting + 0.9} size={vertical ? 140 : 120}><G>is waiting.</G></Line>
+              <Kinetic beats={TRACK_BEATS} variant="rise" text="Your community" at={T.waiting + 0.3} out={T.end - 0.3} size={vertical ? 140 : 120} />
+              <Kinetic beats={TRACK_BEATS} variant="slice" text="*is waiting.*" at={T.waiting + 1.0} out={T.end - 0.3} size={vertical ? 140 : 120} />
             </div>
           )}
         </div>
       </AbsoluteFill>
 
-      <BigWords words={[[T.fight, "Pakistan,"], [25.472, "it's time"], [26.076, <G key="f">to fight.</G>]]} until={T.drop - 0.04} size={vertical ? 150 : 140} />
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 6 }}>
+        <Kinetic beats={TRACK_BEATS} variant="slam" text="Pakistan," at={T.fight} out={T.drop - 0.1} size={vertical ? 150 : 140} />
+        <Kinetic beats={TRACK_BEATS} variant="slam" text="it's time" at={25.472} out={T.drop - 0.1} size={vertical ? 150 : 140} />
+        <Kinetic beats={TRACK_BEATS} variant="slam" text="*to fight.*" at={26.076} out={T.drop - 0.1} size={vertical ? 150 : 140} />
+      </AbsoluteFill>
       <FeatureFlash vertical={vertical} times={[T.flash1, T.flash2, T.flash3, T.fight]} />
       <LogoDrop vertical={vertical} drop={T.drop} lift={T.city} until={T.clan} beats={TRACK_BEATS} />
 

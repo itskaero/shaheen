@@ -8,6 +8,7 @@ import { clamp, easeInOut, easeOut, prog, shake } from "../anim";
 import { Finish, Flash, SpeedBurst, Embers } from "../components/fx";
 import { MaskUp, Slam, typed } from "../components/type";
 import { EndCard } from "../EndCard";
+import { Kinetic } from "./Kinetic";
 import { FONT } from "../theme";
 import { MUSIC_START, RECRUIT_BEATS } from "./beats";
 
@@ -231,22 +232,20 @@ export const Recruit: React.FC<V> = ({ vertical }) => {
               {typed(frame, s(1.5), "players…", 18)}
             </div>
           )}
-          <Line at={T.rival} out={T.people - 0.2} size={big}>Your next rival</Line>
-          <Line at={T.clash} out={T.people - 0.2} size={big}>
-            <span style={{ color: t < T.people ? "#ff6a1f" : GREEN }}>is out there.</span>
-          </Line>
-          <Line at={T.people + 0.1} out={T.flash1 - 0.25} size={big}>Find your <G>people.</G></Line>
-          <Line at={T.map + 0.05} out={T.flash1 - 0.25} size={big}>Build your <G>rivalries.</G></Line>
+          <Kinetic variant="slam" text="Your next rival" at={T.rival} out={T.people - 0.25} size={big} />
+          <Kinetic variant="slam" text="*is out there.*" accent="#ff6a1f" at={T.clash} out={T.people - 0.25} size={big} />
+          <Kinetic variant="rise" text="Find your *people.*" at={T.people + 0.1} out={T.flash1 - 0.3} size={big} />
+          <Kinetic variant="slice" text="Build your *rivalries.*" at={T.map + 0.05} out={T.flash1 - 0.3} size={big} />
         </div>
         {/* Under the logo */}
         <div style={{ position: "absolute", top: vertical ? "61%" : "68%", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <Line at={T.city} out={T.waiting - 0.2} size={vertical ? 96 : 80}>Represent your <G>city.</G></Line>
-          <Line at={T.become} out={T.waiting - 0.2} size={vertical ? 72 : 60}>Become part of <G>BRAWLISTAN.</G></Line>
+          <Kinetic variant="slice" text="Represent your *city.*" at={T.city} out={T.waiting - 0.3} size={vertical ? 96 : 80} />
+          <Kinetic variant="rise" text="Become part of *BRAWLISTAN.*" at={T.become} out={T.waiting - 0.3} size={vertical ? 72 : 60} />
         </div>
         {t >= T.waiting - 0.05 && t < T.end + 0.3 && (
           <div style={{ position: "absolute", top: "50%", left: 0, right: 0, transform: "translateY(-50%)", opacity: 1 - prog(frame, s(T.end) - 4, 8) }}>
-            <Line at={T.waiting} size={vertical ? 140 : 120}>Your community</Line>
-            <Line at={T.waiting + 0.35} size={vertical ? 140 : 120}><G>is waiting.</G></Line>
+            <Kinetic variant="rise" text="Your community" at={T.waiting} out={T.end - 0.3} size={vertical ? 140 : 120} />
+            <Kinetic variant="slice" text="*is waiting.*" at={T.waiting + 0.45} out={T.end - 0.3} size={vertical ? 140 : 120} />
           </div>
         )}
       </AbsoluteFill>
