@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-15T21:19:06Z",
+  "captured_at": "2026-10-16T04:25:54Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -59,7 +59,7 @@
     {
       "legend_name_key": "koji",
       "player_count": 80,
-      "total_games": 21051,
+      "total_games": 21063,
       "win_rate": 50.3
     }
   ]

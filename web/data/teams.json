@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-15T21:19:06Z",
+  "captured_at": "2026-10-16T04:25:54Z",
   "source": "/teams",
   "data": [
     {
@@ -31,17 +31,17 @@
       "rank": 1,
       "brawlhalla_clan_id": 1777529,
       "members": 11,
-      "rating": 1789,
+      "rating": 1838,
       "best": {
-        "brawlhalla_id": 56008741,
-        "player_name": "arman",
-        "slug": "arman-56008741",
+        "brawlhalla_id": 7854627,
+        "player_name": "hmmm",
+        "slug": "hmmm-7854627",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1802,
-        "peak_rating": 1917,
-        "tier": "Platinum 2",
-        "main_legend": "mordex"
+        "rating": 1921,
+        "peak_rating": 1921,
+        "tier": "Platinum 4",
+        "main_legend": "bodvar"
       }
     },
     {

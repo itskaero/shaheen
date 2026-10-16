@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-15T21:19:06Z",
+  "captured_at": "2026-10-16T04:25:54Z",
   "source": "/players",
   "data": [
     {
@@ -18,6 +18,25 @@
       "peak_rating": 2056,
       "tier": "Diamond",
       "main_legend": "caspian",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 7854627,
+      "slug": "hmmm-7854627",
+      "player_name": "hmmm",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "EU",
+      "rating": 1921,
+      "peak_rating": 1921,
+      "tier": "Platinum 4",
+      "main_legend": "bodvar",
       "city": null,
       "city_label": null
     },
@@ -90,7 +109,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1775,
+      "rating": 1764,
       "peak_rating": 1858,
       "tier": "Platinum 2",
       "main_legend": "isaiah",
@@ -911,25 +930,6 @@
       "peak_rating": null,
       "tier": null,
       "main_legend": "nix",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 7854627,
-      "slug": "hmmm-7854627",
-      "player_name": "hmmm",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "bodvar",
       "city": null,
       "city_label": null
     },
