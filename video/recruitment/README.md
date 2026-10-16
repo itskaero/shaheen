@@ -323,3 +323,44 @@ Join the Discord 👉 discord.gg/UXVDWxBzy
 
 #Brawlhalla #BrawlhallaPakistan #PakistaniGamers #Brawlistan #Esports
 ```
+
+---
+
+## 11. The assembled trailer (built from your Hailuo clips)
+
+**Output:**
+- `out/brawlistan-discord-trailer-9x16.mp4`: 1080×1920, 30 s, the master for TikTok, Reels, Shorts and
+  Status.
+- `out/brawlistan-discord-trailer-16x9.mp4`: 1920×1080, for YouTube and Discord.
+- `out/brawlistan-discord-trailer-9x16-whatsapp.mp4`: a lighter copy for sending on WhatsApp.
+
+Both are mastered to about −14 LUFS with a −1.5 dBTP ceiling.
+
+**Source:** `video/explainer/src/recruit/Recruit.tsx`, with the compositions `RecruitVertical` and
+`RecruitWide`.
+
+| Clip (public/recruit/) | Hailuo file | Used at |
+|---|---|---|
+| `h1-arena.mp4` | hailuo_1792159919 | 0:00–0:04, The Call |
+| `h2a-knight.mp4` | hailuo_1792159929 | 0:04–0:06, "Your next rival" |
+| `h2b-clash.mp4` | hailuo_1792159934 | 0:06–0:08.3, "is out there." (the X lands at ~0:07) |
+| `h3-landscape.mp4` | hailuo_1792159942 | 0:08.3–0:10.6 "Find your people"; 0:21–0:30 behind the end |
+| `h3b-map.mp4` | hailuo_1792160088 | 0:10.6–0:15, "Build your rivalries" + the feature flashes |
+| `h4-burst.mp4` | hailuo_1792160392 | 0:15–0:21, the logo drop |
+
+**Music:** "Storming the Gate" (your Suno track), played from 11.70 s, so its big hit (26.70 s)
+lands at 0:15 and its silent break falls on the beat of darkness before the drop. The beat map is in
+`src/recruit/beats.ts` (made with `scripts/beat_map.py`).
+
+**Real-site flashes (0:12.5–0:14.4):**
+- City Wars: city names from the fixed list;
+- Clan Wars: Sigma Grinders vs Delight Esports, this week's top two, with no scores shown;
+- Pakistan Rankings: the real Rankings page.
+
+**Re-render**, from `video/explainer`:
+```bash
+npx remotion render src/index.ts RecruitVertical out/recruit-raw-9x16.mp4
+sh scripts/master.sh out/recruit-raw-9x16.mp4 ../recruitment/out/brawlistan-discord-trailer-9x16.mp4
+npx remotion render src/index.ts RecruitWide out/recruit-raw-16x9.mp4
+sh scripts/master.sh out/recruit-raw-16x9.mp4 ../recruitment/out/brawlistan-discord-trailer-16x9.mp4
+```

@@ -11,3 +11,7 @@ public/shots/*
 out/render-raw.mp4
 out/review/
 out/rev*.jpg
+!public/shots/rankings.png
+out/recruit-raw-*.mp4
+out/recruit-render.log
+out/rstills/

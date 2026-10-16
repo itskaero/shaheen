@@ -8,12 +8,13 @@ export const PulseContext = createContext(0);
 export const usePulse = () => useContext(PulseContext);
 
 /** Rising embers and red fireflies, like the site's embers.js. */
-export const Embers: React.FC<{ count?: number; seed?: number; speed?: number; opacity?: number; green?: boolean }> = ({
+export const Embers: React.FC<{ count?: number; seed?: number; speed?: number; opacity?: number; green?: boolean; palette?: string[] }> = ({
   count = 60,
   seed = 1,
   speed = 1,
   opacity = 1,
   green = false,
+  palette,
 }) => {
   const frame = useCurrentFrame();
   const pulse = usePulse();
@@ -29,7 +30,7 @@ export const Embers: React.FC<{ count?: number; seed?: number; speed?: number; o
         const x = r1 * WIDTH + Math.sin((frame + i * 37) / (18 + r2 * 20)) * 30;
         const size = 2 + r3 * 5;
         const isGreen = green && i % 9 === 0;
-        const col = isGreen ? C.green : r2 > 0.6 ? C.ember : r2 > 0.25 ? C.red : C.amber;
+        const col = palette ? palette[i % palette.length] : isGreen ? C.green : r2 > 0.6 ? C.ember : r2 > 0.25 ? C.red : C.amber;
         const twinkle = 0.45 + 0.55 * Math.abs(Math.sin((frame + i * 13) / (6 + r1 * 9)));
         return (
           <div
