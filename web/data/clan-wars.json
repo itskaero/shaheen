@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -9,12 +9,35 @@
     "top_n": 5,
     "standings": [
       {
+        "slug": "delight-esports",
+        "name": "Delight Esports",
+        "tag": "DE",
+        "logo": "delight-esports",
+        "accent": "#e9c46a",
+        "place": 1,
+        "points": 123,
+        "scorers": [
+          {
+            "brawlhalla_id": 1739958,
+            "player_name": "scoooot!!!",
+            "slug": "scoooot-1739958",
+            "points": 63
+          },
+          {
+            "brawlhalla_id": 88497903,
+            "player_name": "Santa",
+            "slug": "santa-88497903",
+            "points": 60
+          }
+        ]
+      },
+      {
         "slug": "sigma-grinders",
         "name": "Sigma Grinders",
         "tag": "SG",
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
-        "place": 1,
+        "place": 2,
         "points": 70,
         "scorers": [
           {
@@ -22,23 +45,6 @@
             "player_name": "hmmm",
             "slug": "hmmm-7854627",
             "points": 70
-          }
-        ]
-      },
-      {
-        "slug": "delight-esports",
-        "name": "Delight Esports",
-        "tag": "DE",
-        "logo": "delight-esports",
-        "accent": "#e9c46a",
-        "place": 2,
-        "points": 63,
-        "scorers": [
-          {
-            "brawlhalla_id": 1739958,
-            "player_name": "scoooot!!!",
-            "slug": "scoooot-1739958",
-            "points": 63
           }
         ]
       },

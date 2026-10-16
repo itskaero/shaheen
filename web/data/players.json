@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/players",
   "data": [
     {
@@ -58,6 +58,25 @@
       "main_legend": "mordex",
       "city": null,
       "city_label": null
+    },
+    {
+      "brawlhalla_id": 37628417,
+      "slug": "roykhan-37628417",
+      "player_name": "Roykhan",
+      "country": "PK",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null,
+      "is_claimed": true,
+      "is_verified": true,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1815,
+      "peak_rating": 1852,
+      "tier": "Platinum 3",
+      "main_legend": "mordex",
+      "city": "bahawalpur",
+      "city_label": "Bahawalpur"
     },
     {
       "brawlhalla_id": 56008741,
@@ -193,6 +212,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 88497903,
+      "slug": "santa-88497903",
+      "player_name": "Santa",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1596,
+      "peak_rating": 1666,
+      "tier": "Gold 4",
+      "main_legend": "wu shang",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 106237759,
       "slug": "devil-106237759",
       "player_name": "DeviL",
@@ -227,25 +265,6 @@
       "peak_rating": 1449,
       "tier": "Gold 5",
       "main_legend": "tezca",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "slug": "santa-88497903",
-      "player_name": "Santa",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1576,
-      "peak_rating": 1666,
-      "tier": "Gold 4",
-      "main_legend": "wu shang",
       "city": null,
       "city_label": null
     },
@@ -1036,7 +1055,7 @@
       "team": "Delight Esports",
       "team_slug": "delight-esports",
       "team_tag": "DE",
-      "is_claimed": false,
+      "is_claimed": true,
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "none",

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/roster",
   "data": [
     {
@@ -12,6 +12,15 @@
       "member_since": "2026-10-10T01:50:32.927000Z"
     },
     {
+      "brawlhalla_id": 37628417,
+      "player_name": "Roykhan",
+      "region": "ME",
+      "rating": 1815,
+      "peak_rating": 1852,
+      "tier": "Platinum 3",
+      "member_since": "2026-10-12T19:36:06.506000Z"
+    },
+    {
       "brawlhalla_id": 5734378,
       "player_name": "kaero.",
       "region": "ME",
@@ -19,6 +28,15 @@
       "peak_rating": 1924,
       "tier": "Platinum 1",
       "member_since": "2026-09-07T17:12:06.145000Z"
+    },
+    {
+      "brawlhalla_id": 104869463,
+      "player_name": "JavelskyMobile",
+      "region": null,
+      "rating": null,
+      "peak_rating": null,
+      "tier": null,
+      "member_since": null
     }
   ]
 }

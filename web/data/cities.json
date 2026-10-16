@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/rankings/cities",
   "data": {
     "season": 42,
@@ -8,9 +8,10 @@
       {
         "key": "bahawalpur",
         "label": "Bahawalpur",
-        "rating": 1680,
-        "players": 1,
+        "rating": 1748,
+        "players": 2,
         "top": [
+          "Roykhan",
           "kaero."
         ]
       }

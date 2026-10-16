@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -29,6 +29,16 @@
       "rating": 1921,
       "peak_rating": 1921,
       "tier": "Platinum 4",
+      "is_clan_member": true,
+      "is_claimed": true
+    },
+    {
+      "brawlhalla_id": 37628417,
+      "player_name": "Roykhan",
+      "region": "ME",
+      "rating": 1815,
+      "peak_rating": 1852,
+      "tier": "Platinum 3",
       "is_clan_member": true,
       "is_claimed": true
     },
@@ -103,6 +113,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "region": "ME",
+      "rating": 1596,
+      "peak_rating": 1666,
+      "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 106237759,
       "player_name": "DeviL",
       "region": "ME",
@@ -119,16 +139,6 @@
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "player_name": "Santa",
-      "region": "ME",
-      "rating": 1576,
-      "peak_rating": 1666,
-      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     },

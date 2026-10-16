@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -61,7 +61,7 @@
         "peak_rating_2v2": 1696,
         "tier_2v2": "Gold 4",
         "partner_2v2": null,
-        "trend": null,
+        "trend": 0,
         "main_legend": "bodvar",
         "city": null,
         "city_label": null
@@ -91,6 +91,32 @@
         "main_legend": "mordex",
         "city": null,
         "city_label": null
+      },
+      {
+        "brawlhalla_id": 37628417,
+        "player_name": "Roykhan",
+        "country": "PK",
+        "team": null,
+        "team_slug": null,
+        "team_tag": null,
+        "is_claimed": true,
+        "is_verified": true,
+        "region": "ME",
+        "rating": 1815,
+        "peak_rating": 1852,
+        "tier": "Platinum 3",
+        "wins": 22,
+        "games": 40,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": 1319,
+        "peak_rating_2v2": 1319,
+        "tier_2v2": "Silver 4",
+        "partner_2v2": "Ravix",
+        "trend": null,
+        "main_legend": "mordex",
+        "city": "bahawalpur",
+        "city_label": "Bahawalpur"
       },
       {
         "brawlhalla_id": 56008741,
@@ -245,32 +271,6 @@
         "partner_2v2": null,
         "trend": 0,
         "main_legend": "mordex",
-        "city": null,
-        "city_label": null
-      },
-      {
-        "brawlhalla_id": 101991193,
-        "player_name": "bloom",
-        "country": "PK",
-        "team": "Revenant Wolf",
-        "team_slug": "revenant-wolf",
-        "team_tag": "RW",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "EU",
-        "rating": 1623,
-        "peak_rating": 1420,
-        "tier": "Gold 5",
-        "wins": 0,
-        "games": 1,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": null,
-        "peak_rating_2v2": null,
-        "tier_2v2": null,
-        "partner_2v2": null,
-        "trend": 0,
-        "main_legend": "kaya",
         "city": null,
         "city_label": null
       }

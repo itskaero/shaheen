@@ -1,65 +1,65 @@
 {
-  "captured_at": "2026-10-16T04:25:54Z",
+  "captured_at": "2026-10-16T11:17:07Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
-      "player_count": 83,
-      "total_games": 78127,
-      "win_rate": 53.0
+      "player_count": 84,
+      "total_games": 80131,
+      "win_rate": 53.2
     },
     {
       "legend_name_key": "nix",
-      "player_count": 80,
-      "total_games": 45351,
-      "win_rate": 52.7
+      "player_count": 81,
+      "total_games": 46804,
+      "win_rate": 52.8
     },
     {
       "legend_name_key": "tezca",
-      "player_count": 79,
-      "total_games": 37719,
+      "player_count": 80,
+      "total_games": 37749,
       "win_rate": 52.2
     },
     {
       "legend_name_key": "orion",
-      "player_count": 82,
-      "total_games": 28533,
-      "win_rate": 52.4
+      "player_count": 83,
+      "total_games": 28611,
+      "win_rate": 52.5
     },
     {
       "legend_name_key": "wu shang",
-      "player_count": 82,
-      "total_games": 24954,
+      "player_count": 83,
+      "total_games": 24988,
       "win_rate": 53.2
     },
     {
       "legend_name_key": "artemis",
-      "player_count": 82,
-      "total_games": 24234,
-      "win_rate": 52.2
+      "player_count": 83,
+      "total_games": 24383,
+      "win_rate": 52.3
     },
     {
       "legend_name_key": "teros",
-      "player_count": 76,
-      "total_games": 23780,
-      "win_rate": 57.4
+      "player_count": 77,
+      "total_games": 23850,
+      "win_rate": 57.5
     },
     {
       "legend_name_key": "cassidy",
-      "player_count": 80,
-      "total_games": 21792,
+      "player_count": 81,
+      "total_games": 21860,
       "win_rate": 55.1
     },
     {
       "legend_name_key": "mirage",
-      "player_count": 82,
-      "total_games": 21167,
-      "win_rate": 51.7
+      "player_count": 83,
+      "total_games": 21709,
+      "win_rate": 51.9
     },
     {
       "legend_name_key": "koji",
-      "player_count": 80,
-      "total_games": 21063,
+      "player_count": 81,
+      "total_games": 21163,
       "win_rate": 50.3
     }
   ]
