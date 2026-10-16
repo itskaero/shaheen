@@ -113,7 +113,7 @@ const Scoring: React.FC = () => {
                 justifyContent: "space-between",
               }}
             >
-              <div style={{ ...DISPLAY, fontSize: r.big.length > 3 ? 120 : 170, color: r.big === "0" ? C.green : C.amber, letterSpacing: -4, textShadow: `0 0 ${20 + pulse * 30}px rgba(255,194,131,0.35)` }}>{r.big}</div>
+              <div style={{ ...DISPLAY, fontSize: r.big.length > 3 ? 104 : 170, whiteSpace: "nowrap", color: r.big === "0" ? C.green : C.amber, letterSpacing: -4, textShadow: `0 0 ${20 + pulse * 30}px rgba(255,194,131,0.35)` }}>{r.big}</div>
               <div style={{ fontFamily: FONT.sans, fontWeight: 700, fontSize: 32, color: C.cream, lineHeight: 1.25 }}>{r.line}</div>
             </div>
           );
@@ -128,7 +128,7 @@ const Scoring: React.FC = () => {
 
 const Standings: React.FC = () => {
   const frame = useCurrentFrame();
-  const o = prog(frame, 225, 7) * (1 - prog(frame, 306, 6));
+  const o = prog(frame, 225, 7) * (1 - prog(frame, 292, 6));
   const max = 70;
   return (
     <AbsoluteFill style={{ opacity: o }}>
@@ -197,22 +197,22 @@ const VERSUS = [
 
 const Compare: React.FC = () => {
   const frame = useCurrentFrame();
-  const o = prog(frame, 310, 6);
-  const split = prog(frame, 310, 12, easeInOut);
+  const o = prog(frame, 294, 6);
+  const split = prog(frame, 294, 12, easeInOut);
   return (
     <AbsoluteFill style={{ opacity: o }}>
       <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 960 * split, overflow: "hidden", background: "linear-gradient(160deg, rgba(1,65,28,0.55), rgba(10,6,6,0.9))" }} />
       <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 960 * split, overflow: "hidden", background: "linear-gradient(200deg, rgba(120,70,10,0.5), rgba(10,6,6,0.9))" }} />
       <div style={{ position: "absolute", left: 958, top: 0, bottom: 0, width: 4, background: C.cream, opacity: split, boxShadow: `0 0 30px ${C.amber}` }} />
-      <div style={{ position: "absolute", left: 952 - 70, top: 120, width: 140, textAlign: "center", ...DISPLAY, fontSize: 60, color: C.cream, background: C.bg, borderRadius: 999, padding: "16px 0", opacity: prog(frame, 316, 6) }}>VS</div>
+      <div style={{ position: "absolute", left: 952 - 70, top: 120, width: 140, textAlign: "center", ...DISPLAY, fontSize: 60, color: C.cream, background: C.bg, borderRadius: 999, padding: "16px 0", opacity: prog(frame, 300, 6) }}>VS</div>
       {(["city", "clan"] as const).map((side, si) => (
         <div key={side} style={{ position: "absolute", left: si ? 1040 : 120, top: 240, width: 760 }}>
           <div style={{ ...DISPLAY, fontSize: 120, color: si ? C.amber : C.cream }}>
-            <MaskUp start={314 + si * 4}>{si ? "Clan Wars" : "City Wars"}</MaskUp>
+            <MaskUp start={298 + si * 4}>{si ? "Clan Wars" : "City Wars"}</MaskUp>
           </div>
           <div style={{ marginTop: 40, display: "flex", flexDirection: "column", gap: 26 }}>
             {VERSUS.map((v, i) => {
-              const p = prog(frame, 322 + i * 6, 8);
+              const p = prog(frame, 304 + i * 5, 8);
               return (
                 <div key={v.k} style={{ opacity: p, transform: `translateY(${(1 - p) * 20}px)` }}>
                   <div style={{ fontFamily: FONT.sans, fontWeight: 700, fontSize: 20, letterSpacing: 3, color: C.muted, textTransform: "uppercase" }}>{v.k}</div>
@@ -231,7 +231,7 @@ export const ClanWars: React.FC = () => {
   const frame = useCurrentFrame();
   return (
     <AbsoluteFill style={{ background: C.bg, overflow: "hidden" }}>
-      <AbsoluteFill style={{ opacity: frame < 310 ? 0.3 : 0.12 }}>
+      <AbsoluteFill style={{ opacity: frame < 294 ? 0.3 : 0.12 }}>
         <Img src={staticFile("img/warriors.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "blur(3px) sepia(0.4) saturate(1.3) hue-rotate(10deg)" }} />
       </AbsoluteFill>
       <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(10,6,6,0.55), rgba(10,6,6,0.94))" }} />
@@ -245,7 +245,7 @@ export const ClanWars: React.FC = () => {
       <Flash at={0} dur={9} color={C.gold} max={0.75} />
       <Streaks at={114} dur={8} dir={-1} color={C.gold} />
       <Streaks at={220} dur={8} color={C.gold} />
-      <Flash at={310} dur={6} max={0.35} />
+      <Flash at={294} dur={6} max={0.35} />
     </AbsoluteFill>
   );
 };

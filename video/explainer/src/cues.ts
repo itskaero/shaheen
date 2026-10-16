@@ -57,8 +57,8 @@ export const CUES: Cue[] = [
   ...many("clan", [121, 139, 156, 173], "hit", 0.55),
   [at("clan", 219), "whoosh", 0.5],
   [at("clan", 242), "sweep", 0.35],
-  [at("clan", 306), "whoosh", 0.5],
-  [at("clan", 310), "hit", 0.6],
+  [at("clan", 290), "whoosh", 0.5],
+  [at("clan", 294), "hit", 0.6],
   // 6. Call to action
   ...many("cta", [0, 33, 68, 103], "hit", 0.55),
   [at("cta", 133), "whoosh", 0.55],

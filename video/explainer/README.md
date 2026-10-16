@@ -6,7 +6,8 @@ to get started. Built with [Remotion](https://www.remotion.dev/) from the site's
 own screenshots, art, fonts, palette and original music. Nothing in `web/` was
 changed.
 
-**Output:** `out/brawlistan-explainer.mp4` (1920×1080, 30 fps, H.264 + AAC).
+**Output:** `out/brawlistan-explainer.mp4` (1920×1080, 30 fps, H.264 + AAC,
+64 s, audio mastered to −14 LUFS / −1.5 dBTP by `scripts/master.sh`).
 
 ## What the video says, and where it was verified
 
@@ -41,7 +42,7 @@ Everything on screen was checked against the code and docs in this repository.
 | 0:05.8–0:12.7 | Meet the site | The real entrance page flies in; the camera drops onto the real sidebar as Rankings, City Wars, Clan Wars, Players, Teams, Seasons hit on the beat |
 | 0:12.7–0:27.7 | Link your profile | Four-step rail: Join Discord (real button), `/link` → code, Claim this profile (real form, demo profile), Linked → what you get |
 | 0:27.7–0:40.4 | City Wars | City names flicker, the track's drop slams **CITY WARS** over a green-and-white ribbon; `/city set`; best-5 average; the real City Wars page |
-| 0:40.4–0:52.5 | Clan Wars | Gold **CLAN WARS** slam; the five real teams; +10 / +1 / 0 / top 5; real standings and the Monday deadline; City Wars vs Clan Wars split |
+| 0:40.4–0:52.5 | Clan Wars | Gold **CLAN WARS** slam; the five real teams; +10 / +1 / 0 / top 5; real standings and the Monday deadline; City Wars vs Clan Wars split (from 0:50.2) |
 | 0:52.5–1:04.2 | Call to action | 1 Join the Discord · 2 `/link` · 3 `/city set` · 4 Play ranked → logo, URL, motto, final hit |
 
 City Wars uses the Pakistan-green accent and Clan Wars gold, so the two are
@@ -74,7 +75,7 @@ python3 scripts/beats_ts.py                           # src/beats.ts from the be
 npm run sfx                                           # public/sfx/*.wav
 
 npm run studio    # preview / scrub in the browser
-npm run render    # -> out/brawlistan-explainer.mp4
+npm run render    # Remotion -> out/render-raw.mp4, then master.sh -> out/brawlistan-explainer.mp4
 ```
 
 A single frame: `npx remotion still src/index.ts Explainer out/frame.jpg --frame=900`.

@@ -8,3 +8,4 @@ public/shots/*
 !public/shots/home.png
 !public/shots/cities-full.png
 !public/shots/claim-*.png
+out/render-raw.mp4
