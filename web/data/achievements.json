@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T16:34:42Z",
+  "captured_at": "2026-10-16T21:02:55Z",
   "source": "/achievements",
   "data": [
     {
@@ -39,9 +39,9 @@
       "name": "Centurion",
       "description": "Played 100 games.",
       "category": "milestone",
-      "holder_count": 3,
+      "holder_count": 4,
       "total_members": 4,
-      "completion_pct": 75.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
@@ -58,6 +58,11 @@
           "brawlhalla_id": 37628417,
           "player_name": "Roykhan",
           "earned_at": "2026-10-16T10:57:29.762976Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-16T16:36:18.669424Z"
         }
       ]
     },
@@ -66,9 +71,9 @@
       "name": "Battle-Hardened",
       "description": "Played 500 games.",
       "category": "milestone",
-      "holder_count": 3,
+      "holder_count": 4,
       "total_members": 4,
-      "completion_pct": 75.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
@@ -85,6 +90,11 @@
           "brawlhalla_id": 37628417,
           "player_name": "Roykhan",
           "earned_at": "2026-10-16T10:57:29.776617Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-16T16:36:18.677699Z"
         }
       ]
     },
@@ -131,9 +141,9 @@
       "name": "Veteran of a Thousand",
       "description": "Played 1,000 games.",
       "category": "milestone",
-      "holder_count": 3,
+      "holder_count": 4,
       "total_members": 4,
-      "completion_pct": 75.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
@@ -150,6 +160,11 @@
           "brawlhalla_id": 37628417,
           "player_name": "Roykhan",
           "earned_at": "2026-10-16T10:57:29.785002Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-16T16:36:18.685741Z"
         }
       ]
     },
@@ -158,9 +173,9 @@
       "name": "Relentless",
       "description": "Played 2,500 games.",
       "category": "milestone",
-      "holder_count": 3,
+      "holder_count": 4,
       "total_members": 4,
-      "completion_pct": 75.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
@@ -177,6 +192,11 @@
           "brawlhalla_id": 37628417,
           "player_name": "Roykhan",
           "earned_at": "2026-10-16T10:57:29.790035Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-16T16:36:18.693692Z"
         }
       ]
     },
@@ -185,9 +205,9 @@
       "name": "Unbroken",
       "description": "Played 5,000 games.",
       "category": "milestone",
-      "holder_count": 3,
+      "holder_count": 4,
       "total_members": 4,
-      "completion_pct": 75.0,
+      "completion_pct": 100.0,
       "rarity": "Common",
       "holders": [
         {
@@ -204,6 +224,11 @@
           "brawlhalla_id": 37628417,
           "player_name": "Roykhan",
           "earned_at": "2026-10-16T10:57:29.794266Z"
+        },
+        {
+          "brawlhalla_id": 104869463,
+          "player_name": "JavelskyMobile",
+          "earned_at": "2026-10-16T16:36:18.701669Z"
         }
       ]
     },

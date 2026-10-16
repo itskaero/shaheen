@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T16:34:42Z",
+  "captured_at": "2026-10-16T21:02:55Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -113,7 +113,7 @@
         "peak_rating_2v2": 1319,
         "tier_2v2": "Silver 4",
         "partner_2v2": "Ravix",
-        "trend": null,
+        "trend": 0,
         "main_legend": "mordex",
         "city": "bahawalpur",
         "city_label": "Bahawalpur"
@@ -128,18 +128,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1802,
+        "rating": 1808,
         "peak_rating": 1917,
-        "tier": "Platinum 2",
-        "wins": 65,
-        "games": 127,
+        "tier": "Platinum 3",
+        "wins": 68,
+        "games": 131,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1529,
         "peak_rating_2v2": 1529,
         "tier_2v2": "Gold 3",
         "partner_2v2": null,
-        "trend": 0,
+        "trend": 6,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -180,18 +180,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1764,
+        "rating": 1763,
         "peak_rating": 1858,
         "tier": "Platinum 2",
-        "wins": 54,
-        "games": 103,
+        "wins": 55,
+        "games": 105,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": -11,
+        "trend": -12,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -276,15 +276,15 @@
       }
     ],
     "rising": {
-      "brawlhalla_id": 1739958,
-      "player_name": "scoooot!!!",
-      "rating_gain": 33,
-      "rating": 1961
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "rating_gain": 45,
+      "rating": 1621
     },
     "legend": {
       "legend_name_key": "wu shang",
-      "games": 27,
-      "win_rate": 33.3,
+      "games": 51,
+      "win_rate": 43.1,
       "players": 1
     },
     "tournaments": []

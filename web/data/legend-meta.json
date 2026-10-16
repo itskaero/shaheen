@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T16:34:42Z",
+  "captured_at": "2026-10-16T21:02:55Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -17,7 +17,7 @@
     {
       "legend_name_key": "tezca",
       "player_count": 80,
-      "total_games": 37749,
+      "total_games": 37750,
       "win_rate": 52.2
     },
     {
@@ -29,19 +29,19 @@
     {
       "legend_name_key": "wu shang",
       "player_count": 83,
-      "total_games": 24988,
+      "total_games": 25012,
       "win_rate": 53.2
     },
     {
       "legend_name_key": "artemis",
       "player_count": 83,
-      "total_games": 24383,
+      "total_games": 24384,
       "win_rate": 52.3
     },
     {
       "legend_name_key": "teros",
       "player_count": 77,
-      "total_games": 23850,
+      "total_games": 23854,
       "win_rate": 57.5
     },
     {
@@ -59,7 +59,7 @@
     {
       "legend_name_key": "koji",
       "player_count": 81,
-      "total_games": 21163,
+      "total_games": 21165,
       "win_rate": 50.3
     }
   ]
