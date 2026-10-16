@@ -24,6 +24,7 @@ from database.models.quest_completion import QuestCompletion
 from database.models.ranking_snapshot import RankingSnapshot
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
 from database.models.shaheen_member import ShaheenMember
+from database.models.staff_member import StaffMember
 from database.models.team import Team, TeamMember
 from database.models.tournament import (
     Tournament,
@@ -70,6 +71,7 @@ __all__ = [
     "ScrimSignup",
     "ScrimStatus",
     "ShaheenMember",
+    "StaffMember",
     "Team",
     "TeamMember",
     "Tournament",

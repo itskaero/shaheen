@@ -81,6 +81,7 @@ jobs:
           snapshot season-current /seasons/current
           snapshot teams /teams
           snapshot coaches /coaches
+          snapshot staff /staff
           snapshot cities /rankings/cities
           snapshot clan-wars /clan-wars
 

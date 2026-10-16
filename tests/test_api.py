@@ -843,6 +843,31 @@ async def test_coaches_lists_linked_coaches_by_brawlhalla_identity(
     assert "FooDiscord" not in str(entry) and "discord" not in str(entry).lower()
 
 
+async def test_staff_lists_founders_and_admins_without_discord_identity(
+    session_factory: async_sessionmaker[AsyncSession], client: TestClient
+) -> None:
+    from services.staff_service import StaffHolder, StaffService
+
+    assert client.get("/staff").json() == []
+    async with session_factory() as session:
+        await _seed_linked_player(session)  # Discord 1 -> brawlhalla_id=10, "Foo"
+        service = StaffService(session)
+        await service.sync(
+            GUILD_ID,
+            [
+                StaffHolder(1, "FooDiscord", "founder"),
+                StaffHolder(987654321, "Admin Nick", "admin"),
+            ],
+        )
+        await session.commit()
+
+    founder, admin = client.get("/staff").json()
+    assert founder == {"name": "Foo", "role": "founder", "avatar": None, "slug": "foo-10"}
+    assert admin == {"name": "Admin Nick", "role": "admin", "avatar": None, "slug": None}
+    body = client.get("/staff").text
+    assert "FooDiscord" not in body and "987654321" not in body and "discord" not in body.lower()
+
+
 async def test_city_board_and_player_quests_endpoints(
     session_factory: async_sessionmaker[AsyncSession], client: TestClient
 ) -> None:

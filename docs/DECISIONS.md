@@ -6119,3 +6119,52 @@ it).
 
 The live Pakistan board currently has 15 placed players, so it fits on one page and the pager stays hidden
 until more players are linked.
+
+## ADR-135 — Founders and Admins on the Founding Team page
+
+**Status:** accepted. Amends ADR-040 for the Founder and Admin roles only.
+
+**Context.** The owner asked for the Founding Team page to show the people running the Discord: the Founder
+and Admin role holders, with their Discord avatar and their name in the server (their Brawlhalla name if
+they've linked), but no Discord ID or handle.
+
+**Decision.**
+- **What's public, and only for these two roles:** a name, the role and the avatar image.
+  - **Name:** the linked Brawlhalla name if they've linked, otherwise their server display name (nickname,
+    else global display name).
+  - **Never shown:** Discord IDs, usernames, CDN URLs, or anything about Moderators, Captains or members.
+  - **Avatar:** the bot downloads it at 128 px (WebP) and stores the bytes, so the page never links a
+    Discord CDN URL, which carries the user ID. The API serves it as a data URI. The bytes are checked
+    to be a real PNG, WebP, JPEG or GIF under 256 KB; anything else is refused.
+- **Data (migration 0029):** `staff_members` holds guild, discord_id (internal), role (`founder` or `admin`,
+  the higher one held), display_name, the linked player, avatar_key (Discord's hash, internal), avatar
+  bytes and type, position and active.
+- **Sync** (`bot/cogs/staff_directory.py` → `services/staff_service.py`, Discord-free, like the Coach mirror
+  in ADR-126):
+  - It runs every 30 minutes, and when a holder's roles, nickname or avatar change (`on_member_update`,
+    `on_user_update`).
+  - It finds the roles through the provisioned ledger (ADR-109), falling back to the role names.
+  - Avatars are downloaded only when Discord's hash changes.
+  - Losing the role hides the member (the row stays, inactive).
+  - The bot never edits roles.
+- **API:** `GET /staff` returns `[{name, role, avatar, slug}]`, Founders first, then Admins, each in
+  joined order. `slug` links to their player page when linked. The snapshot workflow captures it as
+  `web/data/staff.json`.
+- **Website:** a "Founders & Admins" panel on `clan.html`.
+  - Cards show the avatar (or the initial avatar), the name and a role pill, and link to the player page
+    when linked.
+  - Names are escaped, and only `data:image/…;base64` avatars are rendered.
+
+**Verified.**
+- **Tests:**
+  - linked members show their Brawlhalla name and slug, unlinked ones their display name;
+  - no Discord ID reaches an entry;
+  - Founders come first, in order, and other roles are ignored;
+  - the sync is idempotent and avatars re-download only on a hash change;
+  - a default avatar clears the stored one, and losing the role hides the member;
+  - non-images, oversized files and non-staff are refused;
+  - `/staff` contains no Discord name, ID or the word "discord".
+- **Migration 0029:** round trip.
+- **Playwright** at 1440 and 390 px: cards render, a nickname containing HTML shows as text, a
+  `javascript:` avatar falls back to the initial avatar, no overflow, no page errors.
+- **Checks:** ruff, mypy, pytest.

@@ -16,6 +16,39 @@
     if (shaheen) setHtml("founding-card", holoTeamCardHtml(shaheen, { dpr: 2, ambient: 0.32 }));
   }).catch(() => {}); // the static logo stays
 
+  // ---- Founders & Admins (ADR-135): name, role and avatar only ----
+  const STAFF_ROLES = [
+    ["founder", "Founders", "Founder"],
+    ["admin", "Admins", "Admin"],
+  ];
+  // The API sends the avatar as a data URI; anything else is ignored.
+  const SAFE_AVATAR = /^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+/=]+$/;
+
+  function staffCardHtml(person, label) {
+    const avatar = person.avatar && SAFE_AVATAR.test(person.avatar)
+      ? `<img class="staff-avatar" src="${person.avatar}" alt="" width="56" height="56" loading="lazy" />`
+      : avatarHtml(person.name, 56);
+    const name = `<strong class="staff-name">${escapeHtml(person.name)}</strong>`;
+    const body = `${avatar}<span class="staff-text">${name}<span class="pill ${person.role === "founder" ? "pill-founder" : "pill-team"}">${label}</span></span>`;
+    return person.slug
+      ? `<a class="staff-card" href="player/${encodeURIComponent(person.slug)}/" title="${escapeHtml(person.name)}'s player profile">${body}</a>`
+      : `<div class="staff-card">${body}</div>`;
+  }
+
+  ShaheenAPI.withSnapshot("staff", () => ShaheenAPI.getStaff(), (staff) => {
+    const people = Array.isArray(staff) ? staff : [];
+    if (!people.length) return setHtml("staff-content", '<p class="unavailable">No one to show yet.</p>');
+    setHtml(
+      "staff-content",
+      STAFF_ROLES.map(([role, heading, label]) => {
+        const group = people.filter((p) => p.role === role);
+        if (!group.length) return "";
+        return `<div class="staff-group"><h3 class="staff-heading">${heading}</h3>
+          <div class="staff-grid">${group.map((p) => staffCardHtml(p, label)).join("")}</div></div>`;
+      }).join("")
+    );
+  }).catch(() => setHtml("staff-content", UNAVAILABLE));
+
   // ---- numbers ----
   ShaheenAPI.withSnapshot("clan", () => ShaheenAPI.getClan(), (clan) => {
     const stats = [];

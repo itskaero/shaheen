@@ -430,6 +430,17 @@ class CoachResponse(BaseModel):
     team_tag: str | None
 
 
+class StaffMemberResponse(BaseModel):
+    """A Founder or Admin on the Founding Team page (ADR-135). Their linked
+    Brawlhalla name, else their server display name; the avatar is a data URI.
+    Never a Discord id, username or CDN URL."""
+
+    name: str
+    role: str  # "founder" | "admin"
+    avatar: str | None
+    slug: str | None  # their player page, when linked
+
+
 class CityStandingResponse(BaseModel):
     """One city on City Wars (ADR-128): the average of its best placed 1v1
     ratings this season. Players are named by their Brawlhalla account."""
