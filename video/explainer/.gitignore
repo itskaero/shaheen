@@ -9,3 +9,5 @@ public/shots/*
 !public/shots/cities-full.png
 !public/shots/claim-*.png
 out/render-raw.mp4
+out/review/
+out/rev*.jpg
