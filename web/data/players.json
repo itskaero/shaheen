@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-17T10:36:58Z",
+  "captured_at": "2026-10-17T15:29:20Z",
   "source": "/players",
   "data": [
     {
@@ -128,7 +128,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1763,
+      "rating": 1770,
       "peak_rating": 1858,
       "tier": "Platinum 2",
       "main_legend": "isaiah",
@@ -223,7 +223,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1621,
+      "rating": 1605,
       "peak_rating": 1675,
       "tier": "Gold 4",
       "main_legend": "wu shang",

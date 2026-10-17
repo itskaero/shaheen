@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-17T10:36:58Z",
+  "captured_at": "2026-10-17T15:29:20Z",
   "source": "/clan",
   "data": {
     "name": "Shaheen",
@@ -16,7 +16,7 @@
       "starts_at": "2026-09-23T00:00:00Z",
       "ends_at": "2026-12-23T00:00:00Z"
     },
-    "discord_member_count": 59,
+    "discord_member_count": 60,
     "discord_boost_tier": 1,
     "discord_boost_count": 2
   }
