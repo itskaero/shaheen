@@ -1,11 +1,11 @@
 {
-  "captured_at": "2026-10-17T04:19:58Z",
+  "captured_at": "2026-10-17T10:36:58Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
       "player_count": 84,
-      "total_games": 80142,
+      "total_games": 80143,
       "win_rate": 53.2
     },
     {
@@ -17,7 +17,7 @@
     {
       "legend_name_key": "tezca",
       "player_count": 80,
-      "total_games": 37750,
+      "total_games": 37751,
       "win_rate": 52.2
     },
     {
@@ -41,7 +41,7 @@
     {
       "legend_name_key": "teros",
       "player_count": 77,
-      "total_games": 23854,
+      "total_games": 23855,
       "win_rate": 57.5
     },
     {

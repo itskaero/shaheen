@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-17T04:19:58Z",
+  "captured_at": "2026-10-17T10:36:58Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,7 +15,7 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 1,
-        "points": 238,
+        "points": 272,
         "scorers": [
           {
             "brawlhalla_id": 88497903,
@@ -28,6 +28,12 @@
             "player_name": "scoooot!!!",
             "slug": "scoooot-1739958",
             "points": 63
+          },
+          {
+            "brawlhalla_id": 65526716,
+            "player_name": "Orion",
+            "slug": "orion-65526716",
+            "points": 34
           }
         ]
       },
