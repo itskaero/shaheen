@@ -446,6 +446,24 @@ Post a standing panel in the current channel: the looking-for-game panel
 button → ID → check the player → pick a city → done; 5 lookups per member
 per 10 minutes).
 
+### /reactionrole post · add · remove · list *(Founder/Admin)*
+Roles members pick by reacting (ADR-137): react to get the role, remove the
+reaction to lose it.
+- **`post <channel> <title> [description]`** posts a branded panel and replies
+  with its link. Panels list their emoji and roles and update themselves.
+- **`add <message link> <emoji> <role>`** makes that emoji on any message (a
+  panel or not) give the role, and adds the bot's reaction so members only
+  tap it. Standard emoji or this server's own; 20 per message; one emoji and
+  one role each per message.
+- **`remove <message link> <emoji>`** stops it; members keep roles they have.
+- **`list`** shows every binding with a link to its message.
+- **Safe roles only:** not @everyone, not managed by an integration, below the
+  bot's and your own top role, and with no moderation or admin permissions.
+  Checked again on every reaction. Changes are audit-logged; deleting the
+  message removes its bindings.
+- **The bot needs** Manage Roles (its role above the ones it hands out), and
+  Add Reactions, Read Message History and View Channel where the message is.
+
 ### /report <reason> [player] [name]
 Privately report a player to staff: a Discord member, or a Brawlhalla name
 for someone outside the server. Creates a moderation record and posts a card

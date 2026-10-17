@@ -168,10 +168,20 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
             CommandHelp("/emoji clear", "Delete every custom emoji in the server.", True),
             CommandHelp("/pakistan add", "Add any Pakistani player to that leaderboard.", True),
             CommandHelp("/pakistan remove", "Remove a player from the Pakistan board.", True),
+        ),
+    ),
+    HelpSection(
+        key="staff_panels",
+        title="🧩 Staff — Panels & roles",
+        commands=(
             CommandHelp("/linkpanel", "Post the one-tap link panel here.", True),
             CommandHelp("/sparpanel", "Post the looking-for-game panel here.", True),
             CommandHelp("/warroom setup", "Run the live Clan Wars + City Wars channel.", True),
             CommandHelp("/warroom off", "Stop the war room posts.", True),
+            CommandHelp("/reactionrole post", "Post a reaction-role panel.", True),
+            CommandHelp("/reactionrole add", "Make an emoji on a message give a role.", True),
+            CommandHelp("/reactionrole remove", "Stop an emoji giving a role.", True),
+            CommandHelp("/reactionrole list", "Every reaction role, with links.", True),
         ),
     ),
     HelpSection(
@@ -297,12 +307,14 @@ def build_help_embed(section_key: str | None = None) -> discord.Embed:
         colour=GOLD,
     )
     for section in HELP_SECTIONS:
-        # A Staff category's title already says so; marking every line too
-        # would push the overview past Discord's 6000-character embed limit.
-        embed.add_field(
-            name=section.title,
-            value=_format(section, mark_staff=not is_staff_section(section)),
-            inline=False,
+        # Staff categories list just their command names: in full, the whole
+        # catalog would pass Discord's 6000-character embed limit. Their own
+        # page (/help category:…) has the descriptions.
+        value = (
+            ", ".join(command.name for command in section.commands)
+            if is_staff_section(section)
+            else _format(section)
         )
+        embed.add_field(name=section.title, value=value, inline=False)
     embed.set_footer(text="Staff-only commands are marked. New here? Start with /link.")
     return embed

@@ -56,6 +56,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.coaching",
     "bot.cogs.staff_directory",
     "bot.cogs.war_room",
+    "bot.cogs.reaction_roles",
 )
 
 

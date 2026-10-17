@@ -6238,3 +6238,38 @@ phases; they can build on `clan_war_rosters` and `clan_war_results`.
   - the help catalog.
 - **Migration 0030:** round trip.
 - **Checks:** ruff, mypy, pytest.
+
+## ADR-137 — Reaction roles
+
+**Status:** accepted. Asked for by the owner after ADR-136.
+
+**Context.** Staff wanted members to pick roles (region, ping roles, interests) by reacting to a message,
+without a second bot.
+
+**Decision.**
+- **Commands** (`/reactionrole post|add|remove|list`, Founder/Admin; `bot/cogs/reaction_roles.py` →
+  `services/reaction_role_service.py`, Discord-free):
+  - `post` puts up a branded panel whose role list rewrites itself from the bindings;
+  - `add` takes a message link, an emoji and a role, works on any message, and adds the bot's own reaction;
+  - `remove` drops a binding without taking the role from anyone; `list` shows them all with links.
+- **Data** (`reaction_roles`, migration 0031): guild, channel, message, emoji, role; unique per message and
+  emoji. Emoji are stored normalised (Unicode without its variation selector, custom as `<:name:id>`) and
+  compared by custom-emoji ID, so renaming an emoji doesn't break its role. Changes are audit-logged.
+  Deleting the message deletes its bindings.
+- **Limits:** 20 bindings per message (Discord's reaction limit); one emoji and one role each per message.
+- **Safety (least privilege):** a role can be bound only if it isn't @everyone or integration-managed, sits
+  below the bot's top role and the staff member's own (unless they own the server), and carries no
+  moderation or admin permission (administrator, manage server/roles/channels/messages/webhooks/nicknames/
+  expressions/events/threads, kick, ban, timeout, mention everyone, audit log, voice moderation). The same
+  check runs on every reaction, so a role that gains a dangerous permission later stops being handed out.
+- **Events:** raw reaction add/remove, filtered by an in-memory set of bound message IDs so unrelated
+  reactions never reach the database. Bots are ignored.
+
+**Not in this round:** "pick one" (exclusive) panels and button/menu role pickers.
+
+**Verified.**
+- **Tests:** emoji normalisation and matching across renames, message-link parsing, adding, duplicate emoji or
+  role, the 20 limit, lookups per guild, removing, forgetting a deleted message, the role safety check, the
+  panel and its intro round trip, the list, the help catalog.
+- **Migration 0031:** round trip.
+- **Checks:** ruff, mypy, pytest (662 passed).
