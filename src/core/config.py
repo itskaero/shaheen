@@ -96,6 +96,9 @@ class Settings(BaseSettings):
     # The weekly Clan Wars winner in #announcements (ADR-131). Off: the week
     # is still recorded and shown by /clanwars and on the website.
     announce_clan_wars: bool = False
+    # Clan Wars eligibility (ADR-136): ranked games an account needs before a
+    # week starts for its points to count, so a fresh alt can't farm a week.
+    clan_wars_min_games: int = Field(default=10, ge=0)
 
     @field_validator("database_url")
     @classmethod

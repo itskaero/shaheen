@@ -17,8 +17,10 @@ from discord import app_commands
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from bot.checks.permissions import require_setup_authorized
 from bot.client import ShaheenBot
 from bot.cogs.competition import announce_scrim
+from bot.content.competition_embeds import build_spar_kiosk_embed
 from bot.content.network_embeds import (
     build_city_board_embed,
     build_clan_wars_embed,
@@ -34,6 +36,8 @@ from bot.content.network_embeds import (
     site_view,
 )
 from bot.content.season_embeds import attach_season_badge
+from bot.spar_ping import spar_ping_message, toggle_spar_role
+from bot.views.spar import SparKioskView
 from core.exceptions import ShaheenError
 from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.match import MatchKind
@@ -162,17 +166,54 @@ class NetworkCog(commands.Cog):
         )
 
     @app_commands.command(name="looking", description="Find a 1v1 sparring partner or 2v2 game")
-    @app_commands.describe(mode="1v1 or 2v2")
+    @app_commands.describe(
+        mode="1v1 or 2v2", note="Optional, e.g. 'FT5, NA servers' (80 characters, no links)"
+    )
     @app_commands.checks.cooldown(1, 120, key=lambda i: i.user.id)
-    async def looking(self, interaction: discord.Interaction, mode: Literal["1v1", "2v2"]) -> None:
+    async def looking(
+        self,
+        interaction: discord.Interaction,
+        mode: Literal["1v1", "2v2"],
+        note: app_commands.Range[str, 1, 120] | None = None,
+    ) -> None:
         member = interaction.user
         if not isinstance(member, discord.Member):
             raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
         await interaction.response.defer(ephemeral=True)
         kind = MatchKind.TWO_V_TWO if mode == "2v2" else MatchKind.ONE_V_ONE
-        # Same flow as /scrim and the spar kiosk: a joinable post in
-        # #looking-for-game.
-        await announce_scrim(self.bot, interaction, member, kind, ephemeral_confirmation=True)
+        # Same flow as /scrim and the spar kiosk: a spar card in
+        # #looking-for-game, with you already on Side A (ADR-136).
+        await announce_scrim(
+            self.bot,
+            interaction,
+            member,
+            kind,
+            ephemeral_confirmation=True,
+            note=note,
+            join_creator=True,
+        )
+
+    @app_commands.command(
+        name="sparping", description="Turn spar pings on or off: get tagged when someone's looking"
+    )
+    async def sparping(self, interaction: discord.Interaction) -> None:
+        member = interaction.user
+        if not isinstance(member, discord.Member):
+            raise ShaheenError("This command can only be used inside the BRAWLISTAN server.")
+        await interaction.response.defer(ephemeral=True)
+        state = await toggle_spar_role(self.bot, member)
+        await interaction.followup.send(spar_ping_message(state), ephemeral=True)
+
+    @app_commands.command(
+        name="sparpanel", description="Post the looking-for-game panel in this channel (admin)"
+    )
+    @require_setup_authorized()
+    async def spar_panel(self, interaction: discord.Interaction) -> None:
+        channel = interaction.channel
+        if not isinstance(channel, discord.TextChannel):
+            raise ShaheenError("Run this in a text channel.")
+        await channel.send(embed=build_spar_kiosk_embed(), view=SparKioskView())
+        await interaction.response.send_message("Spar panel posted.", ephemeral=True)
 
     # --- City Wars and weekly quests (ADR-128) -----------------------------
 
@@ -248,7 +289,9 @@ class NetworkCog(commands.Cog):
         guild = _guild(interaction)
         await interaction.response.defer(ephemeral=True)
         async with session_scope(self.bot.session_factory) as session:
-            board = await ClanWarService(session).board(guild.id)
+            board = await ClanWarService(
+                session, min_games=self.bot.settings.clan_wars_min_games
+            ).board(guild.id)
             embed = build_clan_wars_embed(board=board, site_url=self.bot.settings.site_url)
         await interaction.followup.send(embed=embed, ephemeral=True)
 

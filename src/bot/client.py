@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.constants import CHANNEL_REPORT
 from bot.content.error_embeds import build_error_report_embed, error_reference
+from bot.views.link_panel import LinkPanelView
 from bot.views.spar import SparKioskView
 from core.config import Settings
 from core.exceptions import ShaheenError
@@ -54,6 +55,7 @@ STARTUP_EXTENSIONS = (
     "bot.cogs.access",
     "bot.cogs.coaching",
     "bot.cogs.staff_directory",
+    "bot.cogs.war_room",
 )
 
 
@@ -101,6 +103,8 @@ class ShaheenBot(commands.Bot):
         # The spar kiosk in #looking-for-game. The self-assign roles panel
         # and the clan application views retired with ADR-109.
         self.add_view(SparKioskView())
+        # The one-tap link panel in #welcome (ADR-136).
+        self.add_view(LinkPanelView())
 
         for extension in STARTUP_EXTENSIONS:
             await self.load_extension(extension)

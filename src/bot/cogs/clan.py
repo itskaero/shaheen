@@ -167,7 +167,9 @@ class ClanCog(commands.Cog):
         only with ANNOUNCE_CLAN_WARS on. Never raises into the snapshot loop."""
         try:
             async with session_scope(self.bot.session_factory) as session:
-                results = await ClanWarService(session).record_finished(guild.id)
+                service = ClanWarService(session, min_games=self.bot.settings.clan_wars_min_games)
+                await service.lock_roster(guild.id)
+                results = await service.record_finished(guild.id)
                 names = {
                     team.id: (team.name, team.tag)
                     for team in await TeamService(session).all_teams(guild.id)

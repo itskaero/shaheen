@@ -480,17 +480,41 @@ class ClanWarStandingResponse(ClanWarTeamRef):
     points: int
     # Members who scored this week; the first `top_n` count.
     scorers: list[ClanWarMemberResponse]
+    # Members whose points don't count: an account too new (ADR-136).
+    ineligible: list[ClanWarMemberResponse] = []
+
+
+class ClanWarMvpResponse(ClanWarMemberResponse):
+    """The week's top scorer from any team (ADR-136)."""
+
+    team_slug: str | None
+    team_name: str | None
+    team_tag: str | None
+
+
+class ClanWarDuelResponse(BaseModel):
+    """A head-to-head pairing this week (ADR-136). `b` is None for a bye."""
+
+    a: ClanWarTeamRef
+    b: ClanWarTeamRef | None
+    points_a: int
+    points_b: int
+    leader: str | None  # the slug of the team ahead, None when level
 
 
 class ClanWarSeasonRowResponse(ClanWarTeamRef):
     wins: int
     points: int
     weeks: int
+    duel_wins: int = 0
+    duel_draws: int = 0
+    duel_losses: int = 0
 
 
 class ClanWarWinnerResponse(ClanWarTeamRef):
     points: int
     week_start: date
+    mvp: ClanWarMvpResponse | None = None
 
 
 class ClanWarsResponse(BaseModel):
@@ -505,6 +529,11 @@ class ClanWarsResponse(BaseModel):
     standings: list[ClanWarStandingResponse]
     season_table: list[ClanWarSeasonRowResponse]
     last_winner: ClanWarWinnerResponse | None
+    # ADR-136: this week's duels and MVP so far, and the eligibility rule.
+    duels: list[ClanWarDuelResponse] = []
+    mvp: ClanWarMvpResponse | None = None
+    min_games: int = 0
+    roster_locked: bool = False
 
 
 class QuestProgressResponse(BaseModel):

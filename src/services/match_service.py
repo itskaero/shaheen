@@ -180,6 +180,27 @@ class MatchService:
         await self._scrims.mark_full(scrim, match_id=match.id)
         return ScrimJoinResult(scrim=scrim, match=match, side_counts=(a_count, b_count))
 
+    async def set_scrim_announcement(
+        self, scrim_id: int, *, channel_id: int, message_id: int
+    ) -> None:
+        scrim = await self._scrims.get(scrim_id)
+        if scrim is not None:
+            await self._scrims.set_announcement(scrim, channel_id=channel_id, message_id=message_id)
+
+    async def close_scrim(self, scrim_id: int, *, discord_id: int | None = None) -> bool:
+        """Cancel a still-open scrim (ADR-136): its creator calling it off
+        (`discord_id`), or the call expiring (no `discord_id`). Returns
+        whether it was open; a full or already-closed scrim is left as is."""
+        scrim = await self._scrims.get(scrim_id)
+        if scrim is None or scrim.status != ScrimStatus.OPEN:
+            return False
+        if discord_id is not None:
+            creator = await self._find_member_id(guild_id=scrim.guild_id, discord_id=discord_id)
+            if creator != scrim.created_by_member_id:
+                raise ShaheenError("Only whoever posted this call can cancel it.")
+        await self._scrims.cancel(scrim)
+        return True
+
     # --- Ad-hoc matches -----------------------------------------------------
 
     async def create_match(

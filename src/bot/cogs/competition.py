@@ -13,6 +13,7 @@ Phase 2/3's read commands.
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import TYPE_CHECKING, Literal
 
 import discord
@@ -30,10 +31,12 @@ from bot.content.competition_embeds import (
     build_report_outcome_embed,
     build_report_preview_embed,
     build_rivalry_embed,
+    build_scrim_closed_embed,
     build_scrim_embed,
     build_scrim_full_embed,
     build_tournament_created_embed,
 )
+from bot.spar_ping import spar_role
 from bot.views.competition import ChallengeView, ReportConfirmView, ScrimJoinView
 from core.exceptions import ShaheenError
 from database.models.match import MatchKind, MatchSide
@@ -49,6 +52,7 @@ from database.repositories.tournament_repository import (
 )
 from database.session import session_scope
 from services.match_service import MatchService
+from services.spar_service import SparService, clean_note
 from services.tournament_service import TournamentService
 
 if TYPE_CHECKING:
@@ -70,6 +74,8 @@ logger = logging.getLogger(__name__)
 
 _KIND_MAP: dict[str, MatchKind] = {"1v1": MatchKind.ONE_V_ONE, "2v2": MatchKind.TWO_V_TWO}
 _SIDE_MAP: dict[str, MatchSide] = {"A": MatchSide.A, "B": MatchSide.B}
+# How long a spar call stays open before it closes itself (ADR-136).
+SPAR_CALL_TTL = timedelta(minutes=30)
 
 
 class CompetitionCog(commands.Cog):
@@ -515,22 +521,54 @@ async def announce_scrim(
     match_kind: MatchKind,
     *,
     ephemeral_confirmation: bool,
+    note: str | None = None,
+    join_creator: bool = False,
 ) -> None:
-    """Create a Scrim and post its join-embed to #scrims.
+    """Create a Scrim and post its spar card to #looking-for-game.
 
-    Shared by the /scrim command and the persistent spar-kiosk panel
-    (bot/views/spar.py, docs/DECISIONS.md ADR-058) so both entry points run
-    the exact same flow — `interaction.response.defer(...)` must already
-    have been called by the caller before this runs.
+    Shared by /scrim, /looking and the persistent spar-kiosk panel
+    (bot/views/spar.py, docs/DECISIONS.md ADR-058, ADR-136) so every entry
+    point runs the exact same flow — `interaction.response.defer(...)` must
+    already have been called by the caller before this runs. A spar call
+    (`join_creator`) puts its creator on Side A; every call tags the Spar
+    Ping role when its cooldown allows, and closes after SPAR_CALL_TTL.
     """
+    note = clean_note(note)
+    sides: tuple[list[str], list[str]] = ([], [])
     async with session_scope(bot.session_factory) as session:
-        scrim = await MatchService(session).create_scrim(
+        service = MatchService(session)
+        scrim = await service.create_scrim(
             guild_id=member.guild.id,
             creator_discord_id=member.id,
             creator_joined_at=member.joined_at,
             kind=match_kind,
         )
         scrim_id = scrim.id
+        if join_creator:
+            await service.join_scrim(
+                scrim_id=scrim_id,
+                discord_id=member.id,
+                joined_at=member.joined_at,
+                side=MatchSide.A,
+            )
+            sides[0].append(member.display_name)
+        profile = await SparService(session).profile(member.guild.id, member.id)
+
+    expires_at = discord.utils.utcnow() + SPAR_CALL_TTL
+    joined_ids = [member.id] if join_creator else []
+    message: discord.Message | discord.WebhookMessage | None = None
+
+    def card() -> discord.Embed:
+        return build_scrim_embed(
+            creator_name=member.display_name,
+            kind=match_kind,
+            side_counts=(len(sides[0]), len(sides[1])),
+            sides=sides,
+            profile=profile,
+            note=note,
+            expires_at=expires_at,
+            site_url=bot.settings.site_url,
+        )
 
     async def on_join(view_interaction: discord.Interaction, side: str) -> None:
         joiner = view_interaction.user
@@ -548,32 +586,118 @@ async def announce_scrim(
                 joined_at=joiner.joined_at,
                 side=resolved_side,
             )
+        sides[0 if resolved_side is MatchSide.A else 1].append(joiner.display_name)
+        joined_ids.append(joiner.id)
 
         if result.match is not None:
+            view.stop()
             await view_interaction.response.edit_message(
-                embed=build_scrim_full_embed(kind=match_kind), view=None
+                content=None, embed=build_scrim_full_embed(kind=match_kind, sides=sides), view=None
             )
+            await _open_match_thread(view_interaction, result.match.id, match_kind, joined_ids)
         else:
-            await view_interaction.response.edit_message(
-                embed=build_scrim_embed(
-                    creator_name=member.display_name,
-                    kind=match_kind,
-                    side_counts=result.side_counts,
-                )
-            )
+            await view_interaction.response.edit_message(embed=card())
 
-    view = ScrimJoinView(is_team=match_kind is MatchKind.TWO_V_TWO, on_join=on_join)
-    embed = build_scrim_embed(creator_name=member.display_name, kind=match_kind, side_counts=(0, 0))
+    async def on_cancel(view_interaction: discord.Interaction) -> None:
+        async with session_scope(bot.session_factory) as inner_session:
+            closed = await MatchService(inner_session).close_scrim(
+                scrim_id, discord_id=view_interaction.user.id
+            )
+        view.stop()
+        await view_interaction.response.edit_message(
+            content=None,
+            embed=build_scrim_closed_embed(
+                creator_name=member.display_name, kind=match_kind, cancelled=closed
+            ),
+            view=None,
+        )
+
+    async def on_expire() -> None:
+        async with session_scope(bot.session_factory) as inner_session:
+            closed = await MatchService(inner_session).close_scrim(scrim_id)
+        if closed and message is not None:
+            try:
+                await message.edit(
+                    content=None,
+                    embed=build_scrim_closed_embed(
+                        creator_name=member.display_name, kind=match_kind, cancelled=False
+                    ),
+                    view=None,
+                )
+            except discord.HTTPException:
+                logger.info("Couldn't mark scrim %s expired (message gone?)", scrim_id)
+
+    view = ScrimJoinView(
+        is_team=match_kind is MatchKind.TWO_V_TWO,
+        on_join=on_join,
+        on_cancel=on_cancel,
+        on_expire=on_expire,
+        timeout=SPAR_CALL_TTL.total_seconds(),
+    )
     target_channel = await resolve_provisioned_channel(
         bot, member.guild, CHANNEL_LOOKING_FOR_GAME.logical_key
     )
+    content, mentions = await _spar_ping(bot, member, match_kind)
     if target_channel is not None:
-        await target_channel.send(embed=embed, view=view)
+        message = await target_channel.send(
+            content=content, embed=card(), view=view, allowed_mentions=mentions
+        )
         await interaction.followup.send(
-            f"Scrim announced in {target_channel.mention}.", ephemeral=ephemeral_confirmation
+            f"Your call is up in {target_channel.mention}."
+            + ("" if content else " (Spar Ping was tagged recently, so no ping this time.)"),
+            ephemeral=ephemeral_confirmation,
         )
     else:
-        await interaction.followup.send(embed=embed, view=view, ephemeral=ephemeral_confirmation)
+        message = await interaction.followup.send(
+            content=content or discord.utils.MISSING,
+            embed=card(),
+            view=view,
+            ephemeral=ephemeral_confirmation,
+            allowed_mentions=mentions,
+            wait=True,
+        )
+    async with session_scope(bot.session_factory) as session:
+        await MatchService(session).set_scrim_announcement(
+            scrim_id, channel_id=message.channel.id, message_id=message.id
+        )
+
+
+async def _spar_ping(
+    bot: ShaheenBot, member: discord.Member, match_kind: MatchKind
+) -> tuple[str | None, discord.AllowedMentions]:
+    """The Spar Ping line and the mentions it may make: that role only."""
+    none = discord.AllowedMentions.none()
+    role = await spar_role(bot, member.guild)
+    if role is None:
+        return None, none
+    async with session_scope(bot.session_factory) as session:
+        if not await SparService(session).claim_ping(member.guild.id):
+            return None, none
+    return (
+        f"{role.mention} **{member.display_name}** is looking for a {match_kind.value}!",
+        discord.AllowedMentions(everyone=False, users=False, roles=[role]),
+    )
+
+
+async def _open_match_thread(
+    interaction: discord.Interaction, match_id: int, kind: MatchKind, player_ids: list[int]
+) -> None:
+    """A thread for the matched players to sort lobby details in. Best effort:
+    skipped without Create Public Threads."""
+    message = interaction.message
+    if message is None or not isinstance(message.channel, discord.TextChannel):
+        return
+    try:
+        thread = await message.create_thread(
+            name=f"{kind.value} · match #{match_id}", auto_archive_duration=60
+        )
+        await thread.send(
+            " ".join(f"<@{pid}>" for pid in player_ids)
+            + " you're matched! Share a room number here, then `/match report` the result.",
+            allowed_mentions=discord.AllowedMentions(users=True, roles=False, everyone=False),
+        )
+    except discord.HTTPException:
+        logger.info("No thread for match %s (missing permission?)", match_id)
 
 
 async def setup(bot: ShaheenBot) -> None:

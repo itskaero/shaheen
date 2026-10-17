@@ -6168,3 +6168,73 @@ they've linked), but no Discord ID or handle.
 - **Playwright** at 1440 and 390 px: cards render, a nickname containing HTML shows as text, a
   `javascript:` avatar falls back to the initial avatar, no overflow, no page errors.
 - **Checks:** ruff, mypy, pytest.
+
+## ADR-136 — Fair Clan Wars, weekly duels, the war room, one-tap linking and spar pings
+
+**Status:** accepted. Phase 0 and Phase 1 of the engagement proposal after the platform audit
+(docs/PLATFORM_AUDIT.md), plus the owner's ask for a Spar Ping role.
+
+**Context.** Clan Wars (ADR-131) and City Wars (ADR-128) are what the owner wants people to flock to, but
+the week was easy to game and quiet to watch:
+- a strong player could move to the leading team mid-week, and their points moved with them;
+- a fresh alt (or a new account) farming early placement wins scored as much as a real member;
+- standings changed only on the website, so nothing in Discord pulled people back during the week;
+- linking needed a typed command, the first hurdle for a new member;
+- looking for a game posted a bare card nobody was told about.
+
+**Decision.**
+- **Roster lock** (`clan_war_rosters`, migration 0030): the first tick of a week records every active team
+  member against their team, once (`ClanWarService.lock_roster`, idempotent; a player is on one team). The
+  week is scored from that roster; a week with no lock yet (the website before the first tick) falls back to
+  current members. A transfer counts for the new team from next Monday.
+- **Eligibility floor:** a member's points count only if their latest reading from before the week shows at
+  least `CLAN_WARS_MIN_GAMES` (default 10) ranked games. Others still appear, struck through, as
+  `ineligible`, so nobody wonders where their points went. 0 turns the floor off.
+- **Weekly duels:** every team gets one rival each week by round robin (circle method, the pairing fixed by
+  the week's date from an epoch Monday, so the bot and the website agree; a bye for an odd team count). A duel
+  is won on that week's Clan Wars points; there's nothing to report. The season table adds each team's duel
+  W-D-L, recomputed from the recorded weeks with the current team list (a team deleted later changes
+  old pairings; acceptable at this size, and stored points never change). Byes and 0-0 weeks don't count.
+- **MVP:** the week's top counted scorer from any team, stored on that week's `clan_war_results` rows
+  (`mvp_brawlhalla_player_id`, `mvp_points`) and awarded the existing MVP of the Week achievement if linked.
+- **The war room** (`/warroom setup <channel>`, Founder/Admin; `bot/cogs/war_room.py` →
+  `services/war_room_service.py`, with the timing rules pure in `services/war_room.py`): every 15 minutes it
+  - edits one pinned scoreboard (standings, duels, City Wars top 3);
+  - posts when the lead changes (not on a new week's first leader, and never on a tie);
+  - posts one countdown in the final 6 hours;
+  - posts Monday's verdict once, with a 1200x630 result card (`render_clan_war_card`) and the MVP, who is
+    mentioned only if they're linked (allowed mentions: that user only).
+  Its state (message, leader, posted weeks) is in `guild_settings`, so a restart never double-posts; setting
+  it up marks last week's verdict as done, so it doesn't post an old result on day one.
+- **One-tap link** (`/linkpanel` → `bot/views/link_panel.py`): a persistent button opens a modal for the
+  Brawlhalla or Steam64 ID, shows the player found, offers a city, and links through the same
+  `complete_link` as `/link <ID>` (initial snapshot, Player role). Already-linked members can just pick a city.
+  Lookups are rate-limited to 5 per member per 10 minutes (`services/rate_limit.SlidingWindow`, per process).
+- **Spar calls** (`/looking [note]`, the spar panel; `services/spar_service.py`, Discord-free):
+  - the card shows the caller's linked name and clan tag, 1v1/2v2 rating and tier, region, city and main
+    Legend portrait (from the website's portraits), the note and filled/open slots;
+  - the caller is already on Side A, can cancel, and the call closes itself after 30 minutes (the scrim is
+    marked cancelled);
+  - a thread opens for the matched players when it fills (skipped without the permission);
+  - `/scrim` keeps its old organiser behaviour (the creator isn't auto-joined).
+- **Spar Ping role** (`bot/spar_ping.py`): opt-in with the panel's 🔔 button or `/sparping`. Created on
+  first use with no permissions, unhoisted, unmentionable when the bot has Mention @everyone and mentionable
+  otherwise (so the ping lands); a same-named role made by hand is adopted. Every call tags it, at most once
+  per 10 minutes per server (`guild_settings.spar_last_ping_at`), with allowed mentions limited to that role.
+  Notes have mentions and links stripped.
+
+**Why not more.** Rewards roles, clan-vs-clan challenges with stakes, and a war history page are later
+phases; they can build on `clan_war_rosters` and `clan_war_results`.
+
+**Verified.**
+- **Tests:**
+  - eligibility, round-robin pairings (everyone meets everyone, byes), duel records;
+  - a mid-week transfer scoring for the locked team, and a fresh account shown but uncounted;
+  - the duels and MVP recorded with the week;
+  - the war-room plan (lead change, countdown and verdict once each), the view, the MVP award, the embeds and
+    the card;
+  - the spar card, note cleanup, ping cooldown, the caller's profile, cancel (creator only) and expiry
+    (leaves a full scrim alone), and the rate limit;
+  - the help catalog.
+- **Migration 0030:** round trip.
+- **Checks:** ruff, mypy, pytest.
