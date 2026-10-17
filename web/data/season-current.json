@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-16T21:02:55Z",
+  "captured_at": "2026-10-17T04:19:58Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -57,9 +57,9 @@
         "games": 10,
         "global_rank": null,
         "region_rank": null,
-        "rating_2v2": 1614,
-        "peak_rating_2v2": 1696,
-        "tier_2v2": "Gold 4",
+        "rating_2v2": 1702,
+        "peak_rating_2v2": 1718,
+        "tier_2v2": "Platinum 1",
         "partner_2v2": null,
         "trend": 0,
         "main_legend": "bodvar",
