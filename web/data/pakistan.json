@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T04:25:43Z",
+  "captured_at": "2026-10-18T10:58:56Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -133,6 +133,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 65526716,
+      "player_name": "Orion",
+      "region": "US-E",
+      "rating": 1582,
+      "peak_rating": 1603,
+      "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 102618812,
       "player_name": "ASTA",
       "region": "ME",
@@ -149,16 +159,6 @@
       "rating": 1575,
       "peak_rating": 1718,
       "tier": "Gold 4",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 65526716,
-      "player_name": "Orion",
-      "region": "US-E",
-      "rating": 1527,
-      "peak_rating": 1603,
-      "tier": "Gold 3",
       "is_clan_member": false,
       "is_claimed": false
     }

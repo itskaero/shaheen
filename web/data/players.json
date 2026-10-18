@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T04:25:43Z",
+  "captured_at": "2026-10-18T10:58:56Z",
   "source": "/players",
   "data": [
     {
@@ -250,6 +250,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 65526716,
+      "slug": "orion-65526716",
+      "player_name": "Orion",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "US-E",
+      "rating": 1582,
+      "peak_rating": 1603,
+      "tier": "Gold 4",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 102618812,
       "slug": "asta-102618812",
       "player_name": "ASTA",
@@ -284,25 +303,6 @@
       "peak_rating": 1718,
       "tier": "Gold 4",
       "main_legend": "sidra",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 65526716,
-      "slug": "orion-65526716",
-      "player_name": "Orion",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "US-E",
-      "rating": 1527,
-      "peak_rating": 1603,
-      "tier": "Gold 3",
-      "main_legend": "tezca",
       "city": null,
       "city_label": null
     },

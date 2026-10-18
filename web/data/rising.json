@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T04:25:43Z",
+  "captured_at": "2026-10-18T10:58:56Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -7,6 +7,13 @@
       "player_name": "scoooot!!!",
       "rating": 2069,
       "rating_gain": 141,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 65526716,
+      "player_name": "Orion",
+      "rating": 1582,
+      "rating_gain": 59,
       "is_claimed": false
     },
     {
@@ -21,13 +28,6 @@
       "player_name": "arman",
       "rating": 1808,
       "rating_gain": 6,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 65526716,
-      "player_name": "Orion",
-      "rating": 1527,
-      "rating_gain": 4,
       "is_claimed": false
     },
     {
