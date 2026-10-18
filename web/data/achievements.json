@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T10:58:56Z",
+  "captured_at": "2026-10-18T15:49:06Z",
   "source": "/achievements",
   "data": [
     {
@@ -472,11 +472,17 @@
       "name": "MVP of the Week",
       "description": "Named MVP in a weekly digest.",
       "category": "community",
-      "holder_count": 0,
+      "holder_count": 1,
       "total_members": 4,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed",
-      "holders": []
+      "completion_pct": 25.0,
+      "rarity": "Uncommon",
+      "holders": [
+        {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-10-18T12:00:02.635930Z"
+        }
+      ]
     },
     {
       "key": "veteran_30d",
