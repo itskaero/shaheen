@@ -45,6 +45,11 @@ of creating a new one.
 Founder, Admin, Moderator, Team Captain, Contributor, Verified, Player. They
 are created with no permissions. See docs/PERMISSIONS.md.
 
+**Spar Ping** (ADR-136) is separate: an opt-in, unhoisted, no-permission role
+the bot creates the first time a member turns spar pings on, and tags on spar
+calls. It's unmentionable when the bot has Mention @everyone (so only the bot
+can ping it), mentionable otherwise.
+
 ## Permissions
 
 `/setup` never sets or changes permissions; the owner configures them by

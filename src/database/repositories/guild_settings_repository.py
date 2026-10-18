@@ -73,6 +73,28 @@ class GuildSettingsRepository:
         await self._session.flush()
         return settings
 
+    async def set_war_room(
+        self, guild_id: int, *, channel_id: int | None, message_id: int | None = None
+    ) -> GuildSettings:
+        """Point the war room at a channel (ADR-136), or with None turn it off."""
+        settings = await self._get_or_create(guild_id)
+        settings.war_room_channel_id = channel_id
+        settings.war_room_message_id = message_id
+        await self._session.flush()
+        return settings
+
+    async def set_spar_ping(
+        self, guild_id: int, *, role_id: int | None = None, last_ping_at: datetime | None = None
+    ) -> GuildSettings:
+        """Remember the Spar Ping role and/or when it was last pinged (ADR-136)."""
+        settings = await self._get_or_create(guild_id)
+        if role_id is not None:
+            settings.spar_role_id = role_id
+        if last_ping_at is not None:
+            settings.spar_last_ping_at = last_ping_at
+        await self._session.flush()
+        return settings
+
     async def mark_season_announced(self, guild_id: int, brawlhalla_season: int) -> None:
         """Remember the season-start post (docs/DECISIONS.md ADR-102).
 

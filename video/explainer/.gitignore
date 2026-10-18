@@ -1,0 +1,22 @@
+node_modules/
+out/stills/
+out/sheet*.jpg
+out/*.wav
+# Only the screenshots the video uses are kept; npm run capture makes the rest.
+public/shots/*
+!public/shots/entrance.png
+!public/shots/home.png
+!public/shots/cities-full.png
+!public/shots/claim-*.png
+out/render-raw.mp4
+out/review/
+out/rev*.jpg
+!public/shots/rankings.png
+out/recruit-raw-*.mp4
+out/recruit-render.log
+out/rstills/
+out/recruit-long-raw-*.mp4
+out/recruit-long.log
+out/lstills/
+out/kstills/
+out/kinetic-render.log

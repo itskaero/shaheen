@@ -5,9 +5,9 @@ See docs/DECISIONS.md ADR-011, ADR-015 and ADR-102.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, false
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Integer, String, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.models.base import Base, TimestampMixin
@@ -40,6 +40,21 @@ class GuildSettings(TimestampMixin, Base):
     # channel coaching requests are posted in. Internal only.
     coach_role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     coaching_channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    # The war room (ADR-136): the channel, its pinned live scoreboard, the
+    # leader last seen (for lead-change posts) and which week's countdown
+    # and verdict have been posted, so a restart never posts twice.
+    war_room_channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    war_room_message_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    war_room_leader_team_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    war_room_leader_week: Mapped[date | None] = mapped_column(Date, nullable=True)
+    war_room_countdown_week: Mapped[date | None] = mapped_column(Date, nullable=True)
+    war_room_verdict_week: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Looking for game (ADR-136): the opt-in Spar Ping role and when it was
+    # last pinged, so a burst of posts pings it once.
+    spar_role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    spar_last_ping_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"GuildSettings(guild_id={self.guild_id}, setup_mode={self.setup_mode!r})"

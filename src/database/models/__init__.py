@@ -8,6 +8,7 @@ from database.models.brawlhalla_player import BrawlhallaPlayer
 from database.models.challenge import Challenge, ChallengeStatus
 from database.models.chat_activity import ChatActivity
 from database.models.clan_war_result import ClanWarResult
+from database.models.clan_war_roster import ClanWarRoster
 from database.models.coaching import Coach, CoachingRequest
 from database.models.discord_user import DiscordUser
 from database.models.guild_settings import GuildSettings
@@ -22,8 +23,10 @@ from database.models.player_report import PlayerReport
 from database.models.provisioned_resource import ProvisionedResource, ResourceType
 from database.models.quest_completion import QuestCompletion
 from database.models.ranking_snapshot import RankingSnapshot
+from database.models.reaction_role import ReactionRole
 from database.models.scrim import Scrim, ScrimSignup, ScrimStatus
 from database.models.shaheen_member import ShaheenMember
+from database.models.staff_member import StaffMember
 from database.models.team import Team, TeamMember
 from database.models.tournament import (
     Tournament,
@@ -46,6 +49,7 @@ __all__ = [
     "ChallengeStatus",
     "ChatActivity",
     "ClanWarResult",
+    "ClanWarRoster",
     "Coach",
     "CoachingRequest",
     "DiscordUser",
@@ -65,11 +69,13 @@ __all__ = [
     "ProvisionedResource",
     "QuestCompletion",
     "RankingSnapshot",
+    "ReactionRole",
     "ResourceType",
     "Scrim",
     "ScrimSignup",
     "ScrimStatus",
     "ShaheenMember",
+    "StaffMember",
     "Team",
     "TeamMember",
     "Tournament",

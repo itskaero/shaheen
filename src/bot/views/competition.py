@@ -12,6 +12,8 @@ import discord
 
 ChallengeResponse = Callable[[discord.Interaction, bool], Awaitable[None]]
 ScrimJoin = Callable[[discord.Interaction, str], Awaitable[None]]
+ScrimCancel = Callable[[discord.Interaction], Awaitable[None]]
+ScrimExpire = Callable[[], Awaitable[None]]
 ReportResponse = Callable[[discord.Interaction, bool], Awaitable[None]]
 
 
@@ -50,27 +52,53 @@ class ChallengeView(discord.ui.View):
 
 
 class ScrimJoinView(discord.ui.View):
-    """One "Join" button for 1v1 (auto-assigned side), two for 2v2."""
+    """One "Join" button for 1v1 (auto-assigned side), two for 2v2, and,
+    for a spar call (ADR-136), a Cancel only its creator can use. When the
+    call times out unanswered, `on_expire` closes it."""
 
-    def __init__(self, *, is_team: bool, on_join: ScrimJoin, timeout: float = 3600) -> None:
+    def __init__(
+        self,
+        *,
+        is_team: bool,
+        on_join: ScrimJoin,
+        on_cancel: ScrimCancel | None = None,
+        on_expire: ScrimExpire | None = None,
+        timeout: float = 3600,
+    ) -> None:
         super().__init__(timeout=timeout)
         self._on_join = on_join
+        self._on_expire = on_expire
 
         if is_team:
             self.add_item(_JoinSideButton("Join Side A", "A", self._on_join))
             self.add_item(_JoinSideButton("Join Side B", "B", self._on_join))
         else:
             self.add_item(_JoinSideButton("Join", "auto", self._on_join))
+        if on_cancel is not None:
+            self.add_item(_CancelButton(on_cancel))
+
+    async def on_timeout(self) -> None:
+        if self._on_expire is not None:
+            await self._on_expire()
 
 
 class _JoinSideButton(discord.ui.Button):
     def __init__(self, label: str, side: str, on_join: ScrimJoin) -> None:
-        super().__init__(label=label, style=discord.ButtonStyle.primary)
+        super().__init__(label=label, style=discord.ButtonStyle.success, emoji="⚔️")
         self._side = side
         self._on_join = on_join
 
     async def callback(self, interaction: discord.Interaction) -> None:
         await self._on_join(interaction, self._side)
+
+
+class _CancelButton(discord.ui.Button):
+    def __init__(self, on_cancel: ScrimCancel) -> None:
+        super().__init__(label="Cancel", style=discord.ButtonStyle.secondary)
+        self._on_cancel = on_cancel
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await self._on_cancel(interaction)
 
 
 class ReportConfirmView(discord.ui.View):

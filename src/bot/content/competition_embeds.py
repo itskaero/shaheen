@@ -2,26 +2,37 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import discord
 
 from bot.palette import EMERALD, FOREST_GREEN, GOLD, GREY
 from database.models.match import Match, MatchKind, MatchStatus
 from database.models.tournament import Tournament, TournamentMatch, TournamentMatchStatus
+from services.legend_art import legend_display_name, legend_portrait_path, normalize_legend_key
+from services.spar_service import SparProfile
+
+# BRAWLISTAN orange, as on the link panel: spar cards should pop in the feed.
+SPAR_ORANGE = 0xFF6A1F
 
 
 def build_spar_kiosk_embed() -> discord.Embed:
     """Posted with SparKioskView attached (bot/cogs/setup.py, docs/DECISIONS.md
-    ADR-058) — clicking either button runs the same flow as /scrim.
+    ADR-058, ADR-136) — the 1v1/2v2 buttons run the same flow as /looking.
     """
-    return discord.Embed(
-        title="🥊 Looking to Spar?",
+    embed = discord.Embed(
+        title="🥊 Looking for a game?",
         description=(
-            "Click below to announce a scrim — Shaheen posts it in #scrims "
-            "with a Join button for whoever's up.\n\n"
-            "Prefer picking a specific mode or teammate? Use `/scrim` or `/challenge` instead."
+            "Tap a mode and BRAWLISTAN posts a spar card here with your rating and main, "
+            "a Join button, and a ping for everyone with **Spar Ping**.\n\n"
+            "🔔 **Spar pings**: get tagged whenever someone's looking. Tap again to stop."
         ),
-        colour=GOLD,
+        colour=SPAR_ORANGE,
     )
+    embed.add_field(name="Add a note", value="`/looking mode:1v1 note:FT5, NA`", inline=True)
+    embed.add_field(name="Pick a rival", value="`/challenge @member`", inline=True)
+    embed.set_footer(text="Cards close after 30 minutes. Pings go out at most every 10 minutes.")
+    return embed
 
 
 def build_challenge_embed(*, challenger_name: str, opponent_name: str) -> discord.Embed:
@@ -48,28 +59,99 @@ def build_challenge_result_embed(*, accepted: bool, opponent_name: str) -> disco
     )
 
 
-def build_scrim_embed(
-    *, creator_name: str, kind: MatchKind, side_counts: tuple[int, int]
-) -> discord.Embed:
-    capacity = 1 if kind is MatchKind.ONE_V_ONE else 2
-    a_count, b_count = side_counts
-    embed = discord.Embed(
-        title=f"⚔️ Scrim — {kind.value}",
-        description=f"Organized by **{creator_name}**. Join below!",
-        colour=GOLD,
+def _slots(names: list[str], capacity: int) -> str:
+    filled = [f"🟢 {name}" for name in names[:capacity]]
+    return "\n".join(filled + ["⚪ *open*"] * (capacity - len(filled)))
+
+
+def _profile_line(profile: SparProfile) -> str:
+    name = (
+        f"**[{profile.team_tag}] {profile.player_name}**"
+        if profile.team_tag
+        else (f"**{profile.player_name}**")
     )
-    embed.add_field(name="Side A", value=f"{a_count}/{capacity}", inline=True)
-    embed.add_field(name="Side B", value=f"{b_count}/{capacity}", inline=True)
+    bits = [name]
+    if profile.rating is not None:
+        bits.append(f"1v1 **{profile.rating:,}**" + (f" {profile.tier}" if profile.tier else ""))
+    if profile.rating_2v2 is not None:
+        bits.append(f"2v2 **{profile.rating_2v2:,}**")
+    if profile.region:
+        bits.append(f"🌍 {profile.region.upper()}")
+    if profile.city:
+        bits.append(f"🏙️ {profile.city}")
+    return " · ".join(bits)
+
+
+def build_scrim_embed(
+    *,
+    creator_name: str,
+    kind: MatchKind,
+    side_counts: tuple[int, int],
+    sides: tuple[list[str], list[str]] | None = None,
+    profile: SparProfile | None = None,
+    note: str | None = None,
+    expires_at: datetime | None = None,
+    site_url: str | None = None,
+) -> discord.Embed:
+    """The spar card (ADR-136): who's looking, at what level, open slots."""
+    capacity = 1 if kind is MatchKind.ONE_V_ONE else 2
+    a_names, b_names = sides if sides is not None else ([], [])
+    a_count, b_count = side_counts
+    lines = []
+    if note:
+        lines.append(f"> {note}")
+    lines.append(
+        _profile_line(profile)
+        if profile
+        else f"**{creator_name}** · not linked yet (`/link` to show your rating)"
+    )
+    if expires_at is not None:
+        stamp = int(expires_at.timestamp())
+        lines.append(f"⏳ Open until <t:{stamp}:t> (<t:{stamp}:R>)")
+    embed = discord.Embed(
+        title=f"🥊 {creator_name} is looking for a {kind.value}",
+        description="\n".join(lines),
+        colour=SPAR_ORANGE,
+    )
+    # Names when the caller tracks them, else counts (older callers).
+    embed.add_field(
+        name="Side A",
+        value=_slots(a_names, capacity) if sides is not None else f"{a_count}/{capacity}",
+        inline=True,
+    )
+    embed.add_field(
+        name="Side B",
+        value=_slots(b_names, capacity) if sides is not None else f"{b_count}/{capacity}",
+        inline=True,
+    )
+    if profile and profile.main_legend and site_url and legend_portrait_path(profile.main_legend):
+        key = normalize_legend_key(profile.main_legend)
+        embed.set_thumbnail(url=f"{site_url.rstrip('/')}/assets/img/legend-portraits/{key}.webp")
+        embed.set_footer(text=f"Main: {legend_display_name(profile.main_legend)}")
     return embed
 
 
-def build_scrim_full_embed(*, kind: MatchKind) -> discord.Embed:
-    return discord.Embed(
-        title="✅ Scrim Full",
-        description=(
-            f"The {kind.value} scrim is full — good luck! Report the result with `/match report`."
-        ),
+def build_scrim_full_embed(
+    *, kind: MatchKind, sides: tuple[list[str], list[str]] | None = None
+) -> discord.Embed:
+    embed = discord.Embed(
+        title=f"✅ {kind.value} locked in",
+        description="Good luck! Report the result with `/match report` when you're done.",
         colour=FOREST_GREEN,
+    )
+    if sides is not None:
+        embed.add_field(name="Side A", value="\n".join(sides[0]) or "—", inline=True)
+        embed.add_field(name="Side B", value="\n".join(sides[1]) or "—", inline=True)
+    return embed
+
+
+def build_scrim_closed_embed(
+    *, creator_name: str, kind: MatchKind, cancelled: bool
+) -> discord.Embed:
+    return discord.Embed(
+        title=f"{creator_name}'s {kind.value} call {'was cancelled' if cancelled else 'expired'}",
+        description="Still up for a game? Tap the spar panel or use `/looking` again.",
+        colour=GREY,
     )
 
 

@@ -143,6 +143,20 @@ class RankingSnapshotRepository:
         )
         return list((await self._session.execute(stmt)).scalars().all())
 
+    async def latest_before_any(self, player_id: int, before: datetime) -> RankingSnapshot | None:
+        """The newest reading of any season taken before `before`: whether an
+        account existed before a Clan Wars week began (ADR-136)."""
+        stmt = (
+            select(RankingSnapshot)
+            .where(
+                RankingSnapshot.brawlhalla_player_id == player_id,
+                RankingSnapshot.captured_at < before,
+            )
+            .order_by(RankingSnapshot.captured_at.desc())
+            .limit(1)
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
     async def latest_before(
         self, player_id: int, before: datetime, *, season: int
     ) -> RankingSnapshot | None:

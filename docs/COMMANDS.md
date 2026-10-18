@@ -389,6 +389,21 @@ to `clanwars.html`.
 - **The week** runs Monday 00:00 to Monday 00:00 PKT, like the quests. A
   finished week is recorded once; the winner posts in #announcements only
   with `ANNOUNCE_CLAN_WARS=true`.
+- **Fair play (ADR-136):** rosters lock at the start of the week (a mid-week
+  transfer scores for its old team until Monday), and an account needs
+  `CLAN_WARS_MIN_GAMES` (10) ranked games from before the week to count;
+  newer accounts show struck through, uncounted.
+- **Duels:** every week each team also gets one rival (round robin; a bye
+  when the team count is odd). The season table shows duel W-D-L.
+- **MVP:** the week's top counted scorer, on the verdict and the website.
+
+### /warroom setup <channel> · /warroom off *(Founder/Admin)*
+Run a live Clan Wars channel (ADR-136): a pinned scoreboard edited every 15
+minutes (standings, this week's duels, City Wars top 3), a post when the lead
+changes, a countdown in the final 6 hours on Sunday, and Monday's verdict with
+the result card and the MVP (who gets the MVP of the Week achievement, and a
+mention only if they're linked). Needs View, Send, Embed Links and Attach
+Files in the channel; Manage Messages to pin. `/warroom off` stops it.
 
 ### /quests [user]
 This week's three quests, with progress bars, and the season level (ADR-128):
@@ -410,10 +425,44 @@ lifetime games, win rate and popularity rank. Autocompletes names.
 ### /tournaments
 The ten most recent tournaments and their status.
 
-### /looking <mode>
-Find a 1v1 sparring partner or a 2v2 game: posts a joinable card in
-#looking-for-game (the same flow as `/scrim`). One every 2 minutes per
-member.
+### /looking <mode> [note]
+Post a spar call in #looking-for-game (ADR-136): a card with your linked
+name, clan tag, 1v1/2v2 rating and tier, region, city and your main Legend's
+portrait, an optional note (80 characters; mentions and links are stripped),
+and open slots. You're already on Side A; others tap **Join**. When it
+fills, a thread opens for the players to share a room. You can **Cancel**
+it, and it closes itself after 30 minutes. Every call tags the **Spar
+Ping** role, at most once every 10 minutes server-wide. One call every 2
+minutes per member.
+
+### /sparping
+Turn spar pings on or off: gives or takes the opt-in **Spar Ping** role
+(no permissions; created the first time anyone turns it on). Same as the 🔔
+button on the spar panel.
+
+### /sparpanel · /linkpanel *(Founder/Admin)*
+Post a standing panel in the current channel: the looking-for-game panel
+(1v1, 2v2, 🔔 Spar pings), or the one-tap link panel for #welcome (link
+button → ID → check the player → pick a city → done; 5 lookups per member
+per 10 minutes).
+
+### /reactionrole post · add · remove · list *(Founder/Admin)*
+Roles members pick by reacting (ADR-137): react to get the role, remove the
+reaction to lose it.
+- **`post <channel> <title> [description]`** posts a branded panel and replies
+  with its link. Panels list their emoji and roles and update themselves.
+- **`add <message link> <emoji> <role>`** makes that emoji on any message (a
+  panel or not) give the role, and adds the bot's reaction so members only
+  tap it. Standard emoji or this server's own; 20 per message; one emoji and
+  one role each per message.
+- **`remove <message link> <emoji>`** stops it; members keep roles they have.
+- **`list`** shows every binding with a link to its message.
+- **Safe roles only:** not @everyone, not managed by an integration, below the
+  bot's and your own top role, and with no moderation or admin permissions.
+  Checked again on every reaction. Changes are audit-logged; deleting the
+  message removes its bindings.
+- **The bot needs** Manage Roles (its role above the ones it hands out), and
+  Add Reactions, Read Message History and View Channel where the message is.
 
 ### /report <reason> [player] [name]
 Privately report a player to staff: a Discord member, or a Brawlhalla name
@@ -602,8 +651,12 @@ mode:launch` posts once and that keep working across bot restarts
 section for which channel gets what.
 
 - **Spar kiosk** (#looking-for-game) — 🥊 1v1 / 👥 2v2 buttons that run the
-  exact same flow as `/scrim`, just without typing the command. (The opt-in
-  role panel retired with ADR-109.)
+  exact same flow as `/looking`, just without typing the command, and a 🔔
+  toggle for the Spar Ping role (ADR-136). Repost it with `/sparpanel` to
+  get the 🔔 button on an older panel. (The opt-in role panel retired with
+  ADR-109.)
+- **Link panel** (`/linkpanel`, ADR-136) — one button that links an account
+  in a modal, with a city pick.
 
 Every other text channel also gets a short static intro embed in launch
 mode (docs/DECISIONS.md ADR-059) — see docs/DISCORD_SPEC.md's "Standing

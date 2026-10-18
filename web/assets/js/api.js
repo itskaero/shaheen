@@ -123,6 +123,7 @@ const ShaheenAPI = (() => {
     getSeasons: () => get("/seasons"),
     getTeams: () => get("/teams"),
     getCoaches: () => get("/coaches"),
+    getStaff: () => get("/staff"),
     getCityBoard: () => get("/rankings/cities"),
     getClanWars: () => get("/clan-wars"),
     getPlayerQuests: (id) => get(`/players/${encodeURIComponent(id)}/quests`),

@@ -105,7 +105,8 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         title="⚔️ Playing",
         commands=(
             CommandHelp("/challenge", "Challenge another member to a 1v1."),
-            CommandHelp("/looking", "Find a 1v1 sparring partner or a 2v2 game."),
+            CommandHelp("/looking", "Post a spar call for a 1v1 or 2v2, with an optional note."),
+            CommandHelp("/sparping", "Get tagged (or stop) when someone's looking for a game."),
             CommandHelp("/scrim", "Announce a scrim for members to join."),
             CommandHelp("/match report", "Report a match result for the other side to confirm."),
             CommandHelp("/matches", "A member's match history."),
@@ -170,6 +171,20 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         ),
     ),
     HelpSection(
+        key="staff_panels",
+        title="🧩 Staff — Panels & roles",
+        commands=(
+            CommandHelp("/linkpanel", "Post the one-tap link panel here.", True),
+            CommandHelp("/sparpanel", "Post the looking-for-game panel here.", True),
+            CommandHelp("/warroom setup", "Run the live Clan Wars + City Wars channel.", True),
+            CommandHelp("/warroom off", "Stop the war room posts.", True),
+            CommandHelp("/reactionrole post", "Post a reaction-role panel.", True),
+            CommandHelp("/reactionrole add", "Make an emoji on a message give a role.", True),
+            CommandHelp("/reactionrole remove", "Stop an emoji giving a role.", True),
+            CommandHelp("/reactionrole list", "Every reaction role, with links.", True),
+        ),
+    ),
+    HelpSection(
         key="coaching",
         title="🎓 Coaching",
         commands=(
@@ -219,9 +234,10 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
 SECTION_KEYS: tuple[str, ...] = tuple(section.key for section in HELP_SECTIONS)
 
 
-def _format(section: HelpSection) -> str:
+def _format(section: HelpSection, *, mark_staff: bool = True) -> str:
     return "\n".join(
-        f"**{command.name}** — {command.summary}" + (" *(staff)*" if command.staff_only else "")
+        f"**{command.name}** — {command.summary}"
+        + (" *(staff)*" if mark_staff and command.staff_only else "")
         for command in section.commands
     )
 
@@ -291,6 +307,14 @@ def build_help_embed(section_key: str | None = None) -> discord.Embed:
         colour=GOLD,
     )
     for section in HELP_SECTIONS:
-        embed.add_field(name=section.title, value=_format(section), inline=False)
+        # Staff categories list just their command names: in full, the whole
+        # catalog would pass Discord's 6000-character embed limit. Their own
+        # page (/help category:…) has the descriptions.
+        value = (
+            ", ".join(command.name for command in section.commands)
+            if is_staff_section(section)
+            else _format(section)
+        )
+        embed.add_field(name=section.title, value=value, inline=False)
     embed.set_footer(text="Staff-only commands are marked. New here? Start with /link.")
     return embed

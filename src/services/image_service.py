@@ -638,3 +638,129 @@ def render_achievement_card(
         min_size=18,
     )
     return _png(image)
+
+
+# --- Clan Wars result card (docs/DECISIONS.md ADR-136) ----------------------
+
+CLAN_WAR_CARD_SIZE = (1200, 630)
+_CW_BG = (10, 6, 6)
+_CW_EMBER = (255, 106, 31)
+_CW_FIRE = (255, 46, 58)
+_CW_CREAM = (251, 249, 216)
+_CW_MUTED = (190, 176, 160)
+_CW_GOLD = (242, 193, 78)
+
+
+def _hex_rgb(value: str | None, default: tuple[int, int, int]) -> tuple[int, int, int]:
+    if not value or len(value) != 7 or not value.startswith("#"):
+        return default
+    try:
+        return (int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16))
+    except ValueError:
+        return default
+
+
+def render_clan_war_card(
+    *,
+    week_label: str,
+    standings: list[tuple[str, str, int, str | None]],
+    mvp: tuple[str, int, str | None] | None,
+    site: str,
+) -> bytes:
+    """The shareable weekly Clan Wars result: the winner large, the next
+    places, the MVP and the site. `standings` is (name, tag, points, accent
+    colour) best first; `mvp` is (player name, points, team tag)."""
+    width, height = CLAN_WAR_CARD_SIZE
+    image = Image.new("RGBA", CLAN_WAR_CARD_SIZE, (*_CW_BG, 255))
+
+    # A diagonal fire wash and a soft glow behind the winner.
+    wash = Image.new("RGBA", CLAN_WAR_CARD_SIZE, (0, 0, 0, 0))
+    wd = ImageDraw.Draw(wash)
+    for i in range(0, width + height, 6):
+        alpha = max(0, 70 - abs(i - 620) // 6)
+        wd.line([(i, 0), (i - height, height)], fill=(*_CW_FIRE, alpha), width=6)
+    image = Image.alpha_composite(image, wash.filter(ImageFilter.GaussianBlur(18)))
+    glow = Image.new("RGBA", CLAN_WAR_CARD_SIZE, (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((-120, 80, 760, 560), fill=(*_CW_EMBER, 60))
+    image = Image.alpha_composite(image, glow.filter(ImageFilter.GaussianBlur(80)))
+
+    draw = ImageDraw.Draw(image)
+    label_font = _fit_font(
+        "CLAN WARS",
+        _SUBTITLE_FONT_PATH,
+        variation=None,
+        max_width=600,
+        initial_size=34,
+        min_size=20,
+    )
+    draw.text((64, 52), "CLAN WARS", font=label_font, fill=_CW_EMBER)
+    draw.text(
+        (64 + draw.textlength("CLAN WARS  ", font=label_font), 52),
+        f"· {week_label.upper()}",
+        font=label_font,
+        fill=_CW_MUTED,
+    )
+
+    if standings:
+        name, tag, points, accent = standings[0]
+        accent_rgb = _hex_rgb(accent, _CW_EMBER)
+        draw.rectangle((64, 120, 72, 300), fill=accent_rgb)
+        draw.text((92, 116), "WEEK WINNER", font=label_font, fill=_CW_GOLD)
+        winner_font = _fit_font(
+            name, _NAME_FONT_PATH, variation=None, max_width=720, initial_size=96, min_size=40
+        )
+        draw.text((90, 160), name, font=winner_font, fill=_CW_CREAM)
+        sub_font = _fit_font(
+            "x", _SUBTITLE_FONT_PATH, variation=None, max_width=600, initial_size=40, min_size=40
+        )
+        draw.text((92, 262), f"[{tag}]  ·  {points:,} PTS", font=sub_font, fill=_CW_EMBER)
+
+        row_font = _fit_font(
+            "x", _NAME_FONT_PATH, variation=None, max_width=600, initial_size=30, min_size=30
+        )
+        pts_font = _fit_font(
+            "x", _SUBTITLE_FONT_PATH, variation=None, max_width=300, initial_size=34, min_size=34
+        )
+        y = 350
+        for place, (r_name, r_tag, r_points, r_accent) in enumerate(standings[1:4], start=2):
+            draw.ellipse((66, y + 6, 90, y + 30), fill=_hex_rgb(r_accent, _CW_MUTED))
+            text = f"{place}.  {r_name} [{r_tag}]"
+            while draw.textlength(text, font=row_font) > 560 and len(r_name) > 4:
+                r_name = r_name[:-2]
+                text = f"{place}.  {r_name}… [{r_tag}]"
+            draw.text((106, y), text, font=row_font, fill=_CW_CREAM)
+            draw.text((700, y + 2), f"{r_points:,} pts", font=pts_font, fill=_CW_MUTED)
+            y += 52
+
+    if mvp is not None:
+        mvp_name, mvp_points, mvp_tag = mvp
+        box = (820, 120, 1136, 300)
+        draw.rounded_rectangle(box, radius=24, fill=(30, 18, 14, 255), outline=_CW_GOLD, width=3)
+        star_font = _fit_font(
+            "x", _SUBTITLE_FONT_PATH, variation=None, max_width=200, initial_size=30, min_size=30
+        )
+        draw.text((848, 140), "MVP OF THE WEEK", font=star_font, fill=_CW_GOLD)
+        mvp_font = _fit_font(
+            mvp_name, _NAME_FONT_PATH, variation=None, max_width=260, initial_size=48, min_size=22
+        )
+        draw.text((848, 184), mvp_name, font=mvp_font, fill=_CW_CREAM)
+        draw.text(
+            (848, 246),
+            f"{mvp_points:,} pts" + (f" · [{mvp_tag}]" if mvp_tag else ""),
+            font=star_font,
+            fill=_CW_EMBER,
+        )
+
+    foot_font = _fit_font(
+        site, _SUBTITLE_FONT_PATH, variation=None, max_width=700, initial_size=30, min_size=18
+    )
+    draw.line((64, 560, width - 64, 560), fill=(255, 255, 255, 40), width=1)
+    draw.text((64, 574), site, font=foot_font, fill=_CW_CREAM)
+    tagline = "A new war every week · join the Discord"
+    draw.text(
+        (width - 64 - draw.textlength(tagline, font=foot_font), 574),
+        tagline,
+        font=foot_font,
+        fill=_CW_MUTED,
+    )
+    return _png(image)

@@ -49,9 +49,13 @@
       .map((t) => {
         const counted = t.scorers.slice(0, board.top_n);
         const bench = t.scorers.length - counted.length;
-        const chips = counted
-          .map((s) => `<a class="ar-war-chip" href="player.html?id=${encodeURIComponent(s.brawlhalla_id)}">${escapeHtml(s.player_name)} <b class="num">${formatNumber(s.points)}</b></a>`)
-          .join("");
+        const chips =
+          counted
+            .map((s) => `<a class="ar-war-chip" href="player.html?id=${encodeURIComponent(s.brawlhalla_id)}">${escapeHtml(s.player_name)} <b class="num">${formatNumber(s.points)}</b></a>`)
+            .join("") +
+          (t.ineligible || [])
+            .map((s) => `<span class="ar-war-chip is-ineligible" title="Not counted yet: this account needs ${board.min_games} ranked games from before the week">${escapeHtml(s.player_name)} <b class="num">${formatNumber(s.points)}</b></span>`)
+            .join("");
         return `<li class="ar-war-row${t.place === 1 && t.points > 0 ? " is-leading" : ""}">
           <span class="ar-rank${t.place === 1 && t.points > 0 ? " is-top" : ""}">${t.place}</span>
           <a class="ar-war-team" href="${teamHref(t.slug)}">${logoHtml(t, 40)}
@@ -67,6 +71,33 @@
       .join("")}</ol>`;
   }
 
+  // This week's head-to-head duels (ADR-136).
+  function renderDuels(board) {
+    const el = document.getElementById("cw-duels");
+    const duels = board.duels || [];
+    if (!duels.length) {
+      el.innerHTML = '<p class="unavailable">Duels start once there are two teams.</p>';
+      return;
+    }
+    const side = (team, points, leading) => `<a class="ar-duel-side${leading ? " is-leading" : ""}" href="${teamHref(team.slug)}">
+        ${logoHtml(team, 48)}
+        <span class="ar-duel-name"><strong>${escapeHtml(team.name)}</strong><span class="muted">[${escapeHtml(team.tag)}]</span></span>
+        <b class="num">${formatNumber(points)}</b>
+      </a>`;
+    el.innerHTML = `<div class="ar-duels">${duels
+      .map((d) =>
+        d.b
+          ? `<div class="ar-duel">${side(d.a, d.points_a, d.leader === d.a.slug)}<span class="ar-duel-vs" aria-label="versus">VS</span>${side(d.b, d.points_b, d.leader === d.b.slug)}</div>`
+          : `<div class="ar-duel is-bye">${side(d.a, d.points_a, false)}<span class="ar-duel-vs">BYE</span><span class="muted ar-duel-note">No rival this week: every point still counts for the table.</span></div>`
+      )
+      .join("")}</div>`;
+    const chip = document.getElementById("cw-mvp-chip");
+    if (chip) {
+      chip.hidden = !board.mvp;
+      if (board.mvp) chip.textContent = `⭐ Top scorer: ${board.mvp.player_name} · ${formatNumber(board.mvp.points)} pts`;
+    }
+  }
+
   function renderSeason(board) {
     const el = document.getElementById("cw-season");
     const rows = board.season_table || [];
@@ -78,7 +109,7 @@
       .map(
         (r, i) => `<li><a class="ar-row" href="${teamHref(r.slug)}">
           ${logoHtml(r, 36)}
-          <span class="ar-row-main"><strong>${escapeHtml(r.name)}</strong><span class="muted num">${formatNumber(r.points)} pts &middot; ${r.weeks} week${r.weeks === 1 ? "" : "s"}</span></span>
+          <span class="ar-row-main"><strong>${escapeHtml(r.name)}</strong><span class="muted num">${formatNumber(r.points)} pts &middot; duels ${r.duel_wins || 0}-${r.duel_draws || 0}-${r.duel_losses || 0}</span></span>
           <span class="ar-delta${r.wins ? " is-up" : ""}">🏆 ${r.wins}</span>
           <span class="ar-rank${i === 0 ? " is-top" : ""}">${i + 1}</span>
         </a></li>`
@@ -99,7 +130,7 @@
       <span><span class="ar-eyebrow">Last week's winner &middot; ${escapeHtml(weekLabel(last.week_start))}</span>
       <strong>${escapeHtml(last.name)}</strong></span>
       <span class="ar-war-banner-pts"><b class="num">${formatNumber(last.points)}</b> pts</span>
-    </a>`;
+    </a>${last.mvp ? `<p class="ar-war-mvp">⭐ MVP: <a href="player.html?id=${encodeURIComponent(last.mvp.brawlhalla_id)}">${escapeHtml(last.mvp.player_name)}</a>${last.mvp.team_tag ? ` <span class="muted">[${escapeHtml(last.mvp.team_tag)}]</span>` : ""} &middot; <b class="num">${formatNumber(last.mvp.points)}</b> pts</p>` : ""}`;
   }
 
   function render(board) {
@@ -108,16 +139,17 @@
     if (week) week.textContent = weekLabel(board.week_start);
     const rules = document.getElementById("cw-rules");
     if (rules) {
-      rules.textContent = `Each member scores ${board.win_points} points per ranked win plus every rating point gained this week. A team's best ${board.top_n} members count.`;
+      rules.textContent = `Each member scores ${board.win_points} points per ranked win plus every rating point gained this week. A team's best ${board.top_n} members count, and every clan has a rival to beat.`;
     }
     countdown(board.ends_at);
     renderLast(board);
+    renderDuels(board);
     renderStandings(board);
     renderSeason(board);
   }
 
   ShaheenAPI.withSnapshot("clan-wars", () => ShaheenAPI.getClanWars(), render).catch(() => {
-    ["cw-standings", "cw-season"].forEach((id) => {
+    ["cw-duels", "cw-standings", "cw-season"].forEach((id) => {
       const el = document.getElementById(id);
       if (el && el.textContent.trim() === "Loading…") el.innerHTML = UNAVAILABLE;
     });

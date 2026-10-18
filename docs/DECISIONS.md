@@ -6119,3 +6119,157 @@ it).
 
 The live Pakistan board currently has 15 placed players, so it fits on one page and the pager stays hidden
 until more players are linked.
+
+## ADR-135 — Founders and Admins on the Founding Team page
+
+**Status:** accepted. Amends ADR-040 for the Founder and Admin roles only.
+
+**Context.** The owner asked for the Founding Team page to show the people running the Discord: the Founder
+and Admin role holders, with their Discord avatar and their name in the server (their Brawlhalla name if
+they've linked), but no Discord ID or handle.
+
+**Decision.**
+- **What's public, and only for these two roles:** a name, the role and the avatar image.
+  - **Name:** the linked Brawlhalla name if they've linked, otherwise their server display name (nickname,
+    else global display name).
+  - **Never shown:** Discord IDs, usernames, CDN URLs, or anything about Moderators, Captains or members.
+  - **Avatar:** the bot downloads it at 128 px (WebP) and stores the bytes, so the page never links a
+    Discord CDN URL, which carries the user ID. The API serves it as a data URI. The bytes are checked
+    to be a real PNG, WebP, JPEG or GIF under 256 KB; anything else is refused.
+- **Data (migration 0029):** `staff_members` holds guild, discord_id (internal), role (`founder` or `admin`,
+  the higher one held), display_name, the linked player, avatar_key (Discord's hash, internal), avatar
+  bytes and type, position and active.
+- **Sync** (`bot/cogs/staff_directory.py` → `services/staff_service.py`, Discord-free, like the Coach mirror
+  in ADR-126):
+  - It runs every 30 minutes, and when a holder's roles, nickname or avatar change (`on_member_update`,
+    `on_user_update`).
+  - It finds the roles through the provisioned ledger (ADR-109), falling back to the role names.
+  - Avatars are downloaded only when Discord's hash changes.
+  - Losing the role hides the member (the row stays, inactive).
+  - The bot never edits roles.
+- **API:** `GET /staff` returns `[{name, role, avatar, slug}]`, Founders first, then Admins, each in
+  joined order. `slug` links to their player page when linked. The snapshot workflow captures it as
+  `web/data/staff.json`.
+- **Website:** a "Founders & Admins" panel on `clan.html`.
+  - Cards show the avatar (or the initial avatar), the name and a role pill, and link to the player page
+    when linked.
+  - Names are escaped, and only `data:image/…;base64` avatars are rendered.
+
+**Verified.**
+- **Tests:**
+  - linked members show their Brawlhalla name and slug, unlinked ones their display name;
+  - no Discord ID reaches an entry;
+  - Founders come first, in order, and other roles are ignored;
+  - the sync is idempotent and avatars re-download only on a hash change;
+  - a default avatar clears the stored one, and losing the role hides the member;
+  - non-images, oversized files and non-staff are refused;
+  - `/staff` contains no Discord name, ID or the word "discord".
+- **Migration 0029:** round trip.
+- **Playwright** at 1440 and 390 px: cards render, a nickname containing HTML shows as text, a
+  `javascript:` avatar falls back to the initial avatar, no overflow, no page errors.
+- **Checks:** ruff, mypy, pytest.
+
+## ADR-136 — Fair Clan Wars, weekly duels, the war room, one-tap linking and spar pings
+
+**Status:** accepted. Phase 0 and Phase 1 of the engagement proposal after the platform audit
+(docs/PLATFORM_AUDIT.md), plus the owner's ask for a Spar Ping role.
+
+**Context.** Clan Wars (ADR-131) and City Wars (ADR-128) are what the owner wants people to flock to, but
+the week was easy to game and quiet to watch:
+- a strong player could move to the leading team mid-week, and their points moved with them;
+- a fresh alt (or a new account) farming early placement wins scored as much as a real member;
+- standings changed only on the website, so nothing in Discord pulled people back during the week;
+- linking needed a typed command, the first hurdle for a new member;
+- looking for a game posted a bare card nobody was told about.
+
+**Decision.**
+- **Roster lock** (`clan_war_rosters`, migration 0030): the first tick of a week records every active team
+  member against their team, once (`ClanWarService.lock_roster`, idempotent; a player is on one team). The
+  week is scored from that roster; a week with no lock yet (the website before the first tick) falls back to
+  current members. A transfer counts for the new team from next Monday.
+- **Eligibility floor:** a member's points count only if their latest reading from before the week shows at
+  least `CLAN_WARS_MIN_GAMES` (default 10) ranked games. Others still appear, struck through, as
+  `ineligible`, so nobody wonders where their points went. 0 turns the floor off.
+- **Weekly duels:** every team gets one rival each week by round robin (circle method, the pairing fixed by
+  the week's date from an epoch Monday, so the bot and the website agree; a bye for an odd team count). A duel
+  is won on that week's Clan Wars points; there's nothing to report. The season table adds each team's duel
+  W-D-L, recomputed from the recorded weeks with the current team list (a team deleted later changes
+  old pairings; acceptable at this size, and stored points never change). Byes and 0-0 weeks don't count.
+- **MVP:** the week's top counted scorer from any team, stored on that week's `clan_war_results` rows
+  (`mvp_brawlhalla_player_id`, `mvp_points`) and awarded the existing MVP of the Week achievement if linked.
+- **The war room** (`/warroom setup <channel>`, Founder/Admin; `bot/cogs/war_room.py` →
+  `services/war_room_service.py`, with the timing rules pure in `services/war_room.py`): every 15 minutes it
+  - edits one pinned scoreboard (standings, duels, City Wars top 3);
+  - posts when the lead changes (not on a new week's first leader, and never on a tie);
+  - posts one countdown in the final 6 hours;
+  - posts Monday's verdict once, with a 1200x630 result card (`render_clan_war_card`) and the MVP, who is
+    mentioned only if they're linked (allowed mentions: that user only).
+  Its state (message, leader, posted weeks) is in `guild_settings`, so a restart never double-posts; setting
+  it up marks last week's verdict as done, so it doesn't post an old result on day one.
+- **One-tap link** (`/linkpanel` → `bot/views/link_panel.py`): a persistent button opens a modal for the
+  Brawlhalla or Steam64 ID, shows the player found, offers a city, and links through the same
+  `complete_link` as `/link <ID>` (initial snapshot, Player role). Already-linked members can just pick a city.
+  Lookups are rate-limited to 5 per member per 10 minutes (`services/rate_limit.SlidingWindow`, per process).
+- **Spar calls** (`/looking [note]`, the spar panel; `services/spar_service.py`, Discord-free):
+  - the card shows the caller's linked name and clan tag, 1v1/2v2 rating and tier, region, city and main
+    Legend portrait (from the website's portraits), the note and filled/open slots;
+  - the caller is already on Side A, can cancel, and the call closes itself after 30 minutes (the scrim is
+    marked cancelled);
+  - a thread opens for the matched players when it fills (skipped without the permission);
+  - `/scrim` keeps its old organiser behaviour (the creator isn't auto-joined).
+- **Spar Ping role** (`bot/spar_ping.py`): opt-in with the panel's 🔔 button or `/sparping`. Created on
+  first use with no permissions, unhoisted, unmentionable when the bot has Mention @everyone and mentionable
+  otherwise (so the ping lands); a same-named role made by hand is adopted. Every call tags it, at most once
+  per 10 minutes per server (`guild_settings.spar_last_ping_at`), with allowed mentions limited to that role.
+  Notes have mentions and links stripped.
+
+**Why not more.** Rewards roles, clan-vs-clan challenges with stakes, and a war history page are later
+phases; they can build on `clan_war_rosters` and `clan_war_results`.
+
+**Verified.**
+- **Tests:**
+  - eligibility, round-robin pairings (everyone meets everyone, byes), duel records;
+  - a mid-week transfer scoring for the locked team, and a fresh account shown but uncounted;
+  - the duels and MVP recorded with the week;
+  - the war-room plan (lead change, countdown and verdict once each), the view, the MVP award, the embeds and
+    the card;
+  - the spar card, note cleanup, ping cooldown, the caller's profile, cancel (creator only) and expiry
+    (leaves a full scrim alone), and the rate limit;
+  - the help catalog.
+- **Migration 0030:** round trip.
+- **Checks:** ruff, mypy, pytest.
+
+## ADR-137 — Reaction roles
+
+**Status:** accepted. Asked for by the owner after ADR-136.
+
+**Context.** Staff wanted members to pick roles (region, ping roles, interests) by reacting to a message,
+without a second bot.
+
+**Decision.**
+- **Commands** (`/reactionrole post|add|remove|list`, Founder/Admin; `bot/cogs/reaction_roles.py` →
+  `services/reaction_role_service.py`, Discord-free):
+  - `post` puts up a branded panel whose role list rewrites itself from the bindings;
+  - `add` takes a message link, an emoji and a role, works on any message, and adds the bot's own reaction;
+  - `remove` drops a binding without taking the role from anyone; `list` shows them all with links.
+- **Data** (`reaction_roles`, migration 0031): guild, channel, message, emoji, role; unique per message and
+  emoji. Emoji are stored normalised (Unicode without its variation selector, custom as `<:name:id>`) and
+  compared by custom-emoji ID, so renaming an emoji doesn't break its role. Changes are audit-logged.
+  Deleting the message deletes its bindings.
+- **Limits:** 20 bindings per message (Discord's reaction limit); one emoji and one role each per message.
+- **Safety (least privilege):** a role can be bound only if it isn't @everyone or integration-managed, sits
+  below the bot's top role and the staff member's own (unless they own the server), and carries no
+  moderation or admin permission (administrator, manage server/roles/channels/messages/webhooks/nicknames/
+  expressions/events/threads, kick, ban, timeout, mention everyone, audit log, voice moderation). The same
+  check runs on every reaction, so a role that gains a dangerous permission later stops being handed out.
+- **Events:** raw reaction add/remove, filtered by an in-memory set of bound message IDs so unrelated
+  reactions never reach the database. Bots are ignored.
+
+**Not in this round:** "pick one" (exclusive) panels and button/menu role pickers.
+
+**Verified.**
+- **Tests:** emoji normalisation and matching across renames, message-link parsing, adding, duplicate emoji or
+  role, the 20 limit, lookups per guild, removing, forgetting a deleted message, the role safety check, the
+  panel and its intro round trip, the list, the help catalog.
+- **Migration 0031:** round trip.
+- **Checks:** ruff, mypy, pytest (662 passed).

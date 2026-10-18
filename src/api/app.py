@@ -29,6 +29,7 @@ from api.routers import (
     rankings,
     roster,
     seasons,
+    staff,
     teams,
     tournaments,
 )
@@ -82,6 +83,7 @@ app.add_middleware(
 app.include_router(clan.router)
 app.include_router(clan_wars.router)
 app.include_router(coaches.router)
+app.include_router(staff.router)
 app.include_router(community.router)
 app.include_router(leaderboard.router)
 app.include_router(roster.router)

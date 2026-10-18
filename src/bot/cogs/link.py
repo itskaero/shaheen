@@ -13,7 +13,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot.checks.permissions import require_staff_authorized
+from bot.checks.permissions import require_setup_authorized, require_staff_authorized
 from bot.client import ShaheenBot
 from bot.constants import ROLE_PLAYER, ROLE_VERIFIED, RoleSpec
 from bot.content.profile_embeds import (
@@ -31,6 +31,7 @@ from database.repositories.audit_log_repository import AuditLogRepository
 from database.repositories.provisioned_resource_repository import ProvisionedResourceRepository
 from database.session import session_scope
 from integrations.brawlhalla.errors import BrawlhallaAPIError
+from integrations.brawlhalla.models import SearchResult
 from services.link_code_service import LinkCodeService
 from services.link_service import LinkService
 from services.snapshot_service import SnapshotRunResult, SnapshotService
@@ -94,40 +95,21 @@ class LinkCog(commands.Cog):
             await message.edit(content="Link cancelled.", embed=None, view=None)
             return
 
-        async with session_scope(self.bot.session_factory) as session:
-            link_service = LinkService(session, self.bot.brawlhalla)
-            outcome = await link_service.link(
-                guild_id=member.guild.id,
-                discord_id=member.id,
-                joined_at=member.joined_at,
-                candidate=candidate,
-            )
-
-        # Take an initial snapshot now instead of leaving the member absent
-        # from /leaderboard and the website until the next scheduled
-        # snapshot tick (up to SNAPSHOT_INTERVAL_HOURS later, ADR-059) —
-        # both leaderboards skip any player with zero RankingSnapshot rows.
-        # A Brawlhalla hiccup here must never fail /link itself, matching
-        # link_service.py's own "region is a nice-to-have" pattern.
-        try:
-            async with session_scope(self.bot.session_factory) as session:
-                await SnapshotService(
-                    session,
-                    self.bot.brawlhalla,
-                    season=self.bot.current_brawlhalla_season(),
-                ).snapshot_member(outcome.member, outcome.player, member.id, SnapshotRunResult())
-        except BrawlhallaAPIError as exc:
-            logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)
-
-        # Granted now rather than on the next snapshot tick, which mirrors
-        # the same rule for anyone this misses (ADR-109).
-        granted = await self._set_role(member, ROLE_PLAYER, present=True)
-        embed = build_link_success_embed(
-            player_name=outcome.player.player_name,
-            role_name=ROLE_PLAYER.name if granted else None,
-            on_pakistan_board=outcome.on_pakistan_board,
-        )
+        embed = await complete_link(self.bot, member, candidate)
         await message.edit(content=None, embed=embed, view=None)
+
+    @app_commands.command(
+        name="linkpanel", description="Post the one-tap link panel in this channel (admin)"
+    )
+    @require_setup_authorized()
+    async def link_panel(self, interaction: discord.Interaction) -> None:
+        from bot.views.link_panel import LinkPanelView, build_link_panel_embed
+
+        channel = interaction.channel
+        if not isinstance(channel, discord.TextChannel):
+            raise ShaheenError("Run this in a text channel.")
+        await channel.send(embed=build_link_panel_embed(), view=LinkPanelView())
+        await interaction.response.send_message("Link panel posted.", ephemeral=True)
 
     @app_commands.command(name="unlink", description="Remove your active Brawlhalla link")
     async def unlink(self, interaction: discord.Interaction) -> None:
@@ -207,29 +189,72 @@ class LinkCog(commands.Cog):
         )
 
     async def _set_role(self, member: discord.Member, spec: RoleSpec, *, present: bool) -> bool:
-        """Add or remove one of the provisioned account roles (ADR-109).
+        return await set_provisioned_role(self.bot, member, spec, present=present)
 
-        Best-effort: a role /setup hasn't created yet or a missing
-        permission is logged and returns False, never fails the command.
-        """
-        async with session_scope(self.bot.session_factory) as session:
-            resource = await ProvisionedResourceRepository(session).get(
-                guild_id=member.guild.id,
-                resource_type=ResourceType.ROLE,
-                logical_key=spec.logical_key,
-            )
-        role = member.guild.get_role(resource.discord_id) if resource is not None else None
-        if role is None or (role in member.roles) == present:
-            return False
-        try:
-            if present:
-                await member.add_roles(role, reason=f"BRAWLISTAN {spec.name} role")
-            else:
-                await member.remove_roles(role, reason=f"BRAWLISTAN {spec.name} role")
-        except discord.HTTPException as exc:
-            logger.warning("Could not update the %s role on %s: %s", spec.name, member.id, exc)
-            return False
-        return True
+
+async def set_provisioned_role(
+    bot: ShaheenBot, member: discord.Member, spec: RoleSpec, *, present: bool
+) -> bool:
+    """Add or remove one of the provisioned account roles (ADR-109).
+
+    Best-effort: a role /setup hasn't created yet or a missing
+    permission is logged and returns False, never fails the command.
+    """
+    async with session_scope(bot.session_factory) as session:
+        resource = await ProvisionedResourceRepository(session).get(
+            guild_id=member.guild.id,
+            resource_type=ResourceType.ROLE,
+            logical_key=spec.logical_key,
+        )
+    role = member.guild.get_role(resource.discord_id) if resource is not None else None
+    if role is None or (role in member.roles) == present:
+        return False
+    try:
+        if present:
+            await member.add_roles(role, reason=f"BRAWLISTAN {spec.name} role")
+        else:
+            await member.remove_roles(role, reason=f"BRAWLISTAN {spec.name} role")
+    except discord.HTTPException as exc:
+        logger.warning("Could not update the %s role on %s: %s", spec.name, member.id, exc)
+        return False
+    return True
+
+
+async def complete_link(
+    bot: ShaheenBot, member: discord.Member, candidate: SearchResult
+) -> discord.Embed:
+    """Link `member` to the confirmed `candidate`: store the link, take the
+    first snapshot and grant the Player role. Shared by /link <ID> and the
+    one-tap link panel (ADR-136). Returns the success embed."""
+    async with session_scope(bot.session_factory) as session:
+        link_service = LinkService(session, bot.brawlhalla)
+        outcome = await link_service.link(
+            guild_id=member.guild.id,
+            discord_id=member.id,
+            joined_at=member.joined_at,
+            candidate=candidate,
+        )
+
+    # Take an initial snapshot now instead of leaving the member absent
+    # from /leaderboard and the website until the next scheduled snapshot
+    # tick (ADR-059). A Brawlhalla hiccup here must never fail the link.
+    try:
+        async with session_scope(bot.session_factory) as session:
+            await SnapshotService(
+                session,
+                bot.brawlhalla,
+                season=bot.current_brawlhalla_season(),
+            ).snapshot_member(outcome.member, outcome.player, member.id, SnapshotRunResult())
+    except BrawlhallaAPIError as exc:
+        logger.warning("Initial snapshot after /link failed for %s: %s", member.id, exc)
+
+    # Granted now rather than on the next snapshot tick (ADR-109).
+    granted = await set_provisioned_role(bot, member, ROLE_PLAYER, present=True)
+    return build_link_success_embed(
+        player_name=outcome.player.player_name,
+        role_name=ROLE_PLAYER.name if granted else None,
+        on_pakistan_board=outcome.on_pakistan_board,
+    )
 
 
 async def setup(bot: ShaheenBot) -> None:

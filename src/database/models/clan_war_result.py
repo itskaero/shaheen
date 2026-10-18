@@ -32,3 +32,9 @@ class ClanWarResult(Base):
     # 1 is the week's winner.
     place: Mapped[int] = mapped_column(Integer, nullable=False)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # The week's MVP, its top scorer from any team (ADR-136): stored on every
+    # row of the week, so any team's row answers "who was MVP".
+    mvp_brawlhalla_player_id: Mapped[int | None] = mapped_column(
+        ForeignKey("brawlhalla_players.id", ondelete="SET NULL"), nullable=True
+    )
+    mvp_points: Mapped[int | None] = mapped_column(Integer, nullable=True)
