@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T15:49:06Z",
+  "captured_at": "2026-10-18T20:37:10Z",
   "source": "/players",
   "data": [
     {
@@ -193,6 +193,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 88497903,
+      "slug": "santa-88497903",
+      "player_name": "Santa",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1644,
+      "peak_rating": 1675,
+      "tier": "Gold 5",
+      "main_legend": "wu shang",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 101991193,
       "slug": "bloom-101991193",
       "player_name": "bloom",
@@ -208,25 +227,6 @@
       "peak_rating": 1420,
       "tier": "Gold 5",
       "main_legend": "kaya",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "slug": "santa-88497903",
-      "player_name": "Santa",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1605,
-      "peak_rating": 1675,
-      "tier": "Gold 4",
-      "main_legend": "wu shang",
       "city": null,
       "city_label": null
     },

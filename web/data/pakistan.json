@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T15:49:06Z",
+  "captured_at": "2026-10-18T20:37:10Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -103,22 +103,22 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "region": "ME",
+      "rating": 1644,
+      "peak_rating": 1675,
+      "tier": "Gold 5",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 101991193,
       "player_name": "bloom",
       "region": "EU",
       "rating": 1623,
       "peak_rating": 1420,
       "tier": "Gold 5",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "player_name": "Santa",
-      "region": "ME",
-      "rating": 1605,
-      "peak_rating": 1675,
-      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     },

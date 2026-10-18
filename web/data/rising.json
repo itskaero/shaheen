@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T15:49:06Z",
+  "captured_at": "2026-10-18T20:37:10Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -10,17 +10,17 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "rating": 1644,
+      "rating_gain": 68,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 65526716,
       "player_name": "Orion",
       "rating": 1582,
       "rating_gain": 59,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "player_name": "Santa",
-      "rating": 1605,
-      "rating_gain": 29,
       "is_claimed": false
     },
     {

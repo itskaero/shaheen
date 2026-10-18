@@ -1,10 +1,10 @@
 {
-  "captured_at": "2026-10-18T15:49:06Z",
+  "captured_at": "2026-10-18T20:37:10Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
-    "week_start": "2026-10-12",
-    "ends_at": "2026-10-18T19:00:00Z",
+    "week_start": "2026-10-19",
+    "ends_at": "2026-10-25T19:00:00Z",
     "win_points": 10,
     "top_n": 5,
     "standings": [
@@ -28,26 +28,7 @@
         "place": 2,
         "points": 0,
         "scorers": [],
-        "ineligible": [
-          {
-            "brawlhalla_id": 88497903,
-            "player_name": "Santa",
-            "slug": "santa-88497903",
-            "points": 309
-          },
-          {
-            "brawlhalla_id": 65526716,
-            "player_name": "Orion",
-            "slug": "orion-65526716",
-            "points": 149
-          },
-          {
-            "brawlhalla_id": 1739958,
-            "player_name": "scoooot!!!",
-            "slug": "scoooot-1739958",
-            "points": 271
-          }
-        ]
+        "ineligible": []
       },
       {
         "slug": "revenant-wolf",
@@ -58,14 +39,7 @@
         "place": 3,
         "points": 0,
         "scorers": [],
-        "ineligible": [
-          {
-            "brawlhalla_id": 115697497,
-            "player_name": "Kirito",
-            "slug": "kirito-115697497",
-            "points": 21
-          }
-        ]
+        "ineligible": []
       },
       {
         "slug": "shaheen",
@@ -87,26 +61,7 @@
         "place": 5,
         "points": 0,
         "scorers": [],
-        "ineligible": [
-          {
-            "brawlhalla_id": 7854627,
-            "player_name": "hmmm",
-            "slug": "hmmm-7854627",
-            "points": 70
-          },
-          {
-            "brawlhalla_id": 113753082,
-            "player_name": "arman0mobile",
-            "slug": "arman0mobile-113753082",
-            "points": 20
-          },
-          {
-            "brawlhalla_id": 56008741,
-            "player_name": "arman",
-            "slug": "arman-56008741",
-            "points": 40
-          }
-        ]
+        "ineligible": []
       }
     ],
     "season_table": [],
@@ -119,6 +74,25 @@
           "tag": "SHN",
           "logo": "shaheen",
           "accent": "#3df26e"
+        },
+        "b": {
+          "slug": "clan-monke",
+          "name": "Clan Monke",
+          "tag": "MONKE",
+          "logo": "clan-monke",
+          "accent": "#e8b923"
+        },
+        "points_a": 0,
+        "points_b": 0,
+        "leader": null
+      },
+      {
+        "a": {
+          "slug": "revenant-wolf",
+          "name": "Revenant Wolf",
+          "tag": "RW",
+          "logo": "revenant-wolf",
+          "accent": "#e3122d"
         },
         "b": null,
         "points_a": 0,
@@ -134,30 +108,11 @@
           "accent": "#e9c46a"
         },
         "b": {
-          "slug": "clan-monke",
-          "name": "Clan Monke",
-          "tag": "MONKE",
-          "logo": "clan-monke",
-          "accent": "#e8b923"
-        },
-        "points_a": 0,
-        "points_b": 0,
-        "leader": null
-      },
-      {
-        "a": {
           "slug": "sigma-grinders",
           "name": "Sigma Grinders",
           "tag": "SG",
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
-        },
-        "b": {
-          "slug": "revenant-wolf",
-          "name": "Revenant Wolf",
-          "tag": "RW",
-          "logo": "revenant-wolf",
-          "accent": "#e3122d"
         },
         "points_a": 0,
         "points_b": 0,
