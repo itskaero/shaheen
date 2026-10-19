@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T20:37:10Z",
+  "captured_at": "2026-10-19T04:34:58Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "wu shang",
-      "games": 109,
-      "win_rate": 51.4,
+      "games": 111,
+      "win_rate": 52.3,
       "players": 4
     },
     "tournaments": []

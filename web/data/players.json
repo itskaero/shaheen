@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T20:37:10Z",
+  "captured_at": "2026-10-19T04:34:58Z",
   "source": "/players",
   "data": [
     {
@@ -231,6 +231,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 115697497,
+      "slug": "kirito-115697497",
+      "player_name": "Kirito",
+      "country": "PK",
+      "team": "Revenant Wolf",
+      "team_slug": "revenant-wolf",
+      "team_tag": "RW",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1601,
+      "peak_rating": 1718,
+      "tier": "Gold 4",
+      "main_legend": "sidra",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 106237759,
       "slug": "devil-106237759",
       "player_name": "DeviL",
@@ -284,25 +303,6 @@
       "peak_rating": 1449,
       "tier": "Gold 5",
       "main_legend": "tezca",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 115697497,
-      "slug": "kirito-115697497",
-      "player_name": "Kirito",
-      "country": "PK",
-      "team": "Revenant Wolf",
-      "team_slug": "revenant-wolf",
-      "team_tag": "RW",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1575,
-      "peak_rating": 1718,
-      "tier": "Gold 4",
-      "main_legend": "sidra",
       "city": null,
       "city_label": null
     },

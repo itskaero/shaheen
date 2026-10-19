@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T20:37:10Z",
+  "captured_at": "2026-10-19T04:34:58Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -26,8 +26,8 @@
     {
       "brawlhalla_id": 115697497,
       "player_name": "Kirito",
-      "rating": 1575,
-      "rating_gain": 1,
+      "rating": 1601,
+      "rating_gain": 27,
       "is_claimed": false
     }
   ]

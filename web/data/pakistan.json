@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T20:37:10Z",
+  "captured_at": "2026-10-19T04:34:58Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -123,6 +123,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 115697497,
+      "player_name": "Kirito",
+      "region": "ME",
+      "rating": 1601,
+      "peak_rating": 1718,
+      "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 106237759,
       "player_name": "DeviL",
       "region": "ME",
@@ -149,16 +159,6 @@
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 115697497,
-      "player_name": "Kirito",
-      "region": "ME",
-      "rating": 1575,
-      "peak_rating": 1718,
-      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     }

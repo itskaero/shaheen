@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-18T20:37:10Z",
+  "captured_at": "2026-10-19T04:34:58Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -9,12 +9,30 @@
     "top_n": 5,
     "standings": [
       {
+        "slug": "revenant-wolf",
+        "name": "Revenant Wolf",
+        "tag": "RW",
+        "logo": "revenant-wolf",
+        "accent": "#e3122d",
+        "place": 1,
+        "points": 86,
+        "scorers": [
+          {
+            "brawlhalla_id": 115697497,
+            "player_name": "Kirito",
+            "slug": "kirito-115697497",
+            "points": 86
+          }
+        ],
+        "ineligible": []
+      },
+      {
         "slug": "clan-monke",
         "name": "Clan Monke",
         "tag": "MONKE",
         "logo": "clan-monke",
         "accent": "#e8b923",
-        "place": 1,
+        "place": 2,
         "points": 0,
         "scorers": [],
         "ineligible": []
@@ -25,17 +43,6 @@
         "tag": "DE",
         "logo": "delight-esports",
         "accent": "#e9c46a",
-        "place": 2,
-        "points": 0,
-        "scorers": [],
-        "ineligible": []
-      },
-      {
-        "slug": "revenant-wolf",
-        "name": "Revenant Wolf",
-        "tag": "RW",
-        "logo": "revenant-wolf",
-        "accent": "#e3122d",
         "place": 3,
         "points": 0,
         "scorers": [],
@@ -95,7 +102,7 @@
           "accent": "#e3122d"
         },
         "b": null,
-        "points_a": 0,
+        "points_a": 86,
         "points_b": 0,
         "leader": null
       },
@@ -119,7 +126,15 @@
         "leader": null
       }
     ],
-    "mvp": null,
+    "mvp": {
+      "brawlhalla_id": 115697497,
+      "player_name": "Kirito",
+      "slug": "kirito-115697497",
+      "points": 86,
+      "team_slug": "revenant-wolf",
+      "team_name": "Revenant Wolf",
+      "team_tag": "RW"
+    },
     "min_games": 10,
     "roster_locked": true
   }
