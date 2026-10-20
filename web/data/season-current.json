@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-19T13:04:37Z",
+  "captured_at": "2026-10-20T16:59:09Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -93,6 +93,32 @@
         "city_label": null
       },
       {
+        "brawlhalla_id": 113753082,
+        "player_name": "arman0mobile",
+        "country": "PK",
+        "team": "Sigma Grinders",
+        "team_slug": "sigma-grinders",
+        "team_tag": "SG",
+        "is_claimed": false,
+        "is_verified": false,
+        "region": "ME",
+        "rating": 1824,
+        "peak_rating": 1858,
+        "tier": "Platinum 3",
+        "wins": 63,
+        "games": 117,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": 1535,
+        "peak_rating_2v2": 1592,
+        "tier_2v2": "Gold 3",
+        "partner_2v2": "Yeetnt",
+        "trend": 49,
+        "main_legend": "isaiah",
+        "city": null,
+        "city_label": null
+      },
+      {
         "brawlhalla_id": 37628417,
         "player_name": "Roykhan",
         "country": "PK",
@@ -171,32 +197,6 @@
         "city_label": null
       },
       {
-        "brawlhalla_id": 113753082,
-        "player_name": "arman0mobile",
-        "country": "PK",
-        "team": "Sigma Grinders",
-        "team_slug": "sigma-grinders",
-        "team_tag": "SG",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "ME",
-        "rating": 1770,
-        "peak_rating": 1858,
-        "tier": "Platinum 2",
-        "wins": 56,
-        "games": 106,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": 1535,
-        "peak_rating_2v2": 1592,
-        "tier_2v2": "Gold 3",
-        "partner_2v2": "Yeetnt",
-        "trend": -5,
-        "main_legend": "isaiah",
-        "city": null,
-        "city_label": null
-      },
-      {
         "brawlhalla_id": 10285200,
         "player_name": "JUN",
         "country": "PK",
@@ -219,6 +219,32 @@
         "partner_2v2": null,
         "trend": 0,
         "main_legend": "hattori",
+        "city": null,
+        "city_label": null
+      },
+      {
+        "brawlhalla_id": 88497903,
+        "player_name": "Santa",
+        "country": "PK",
+        "team": "Delight Esports",
+        "team_slug": "delight-esports",
+        "team_tag": "DE",
+        "is_claimed": false,
+        "is_verified": false,
+        "region": "ME",
+        "rating": 1688,
+        "peak_rating": 1710,
+        "tier": "Platinum 1",
+        "wins": 127,
+        "games": 250,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": null,
+        "peak_rating_2v2": null,
+        "tier_2v2": null,
+        "partner_2v2": null,
+        "trend": 112,
+        "main_legend": "wu shang",
         "city": null,
         "city_label": null
       },
@@ -247,32 +273,6 @@
         "main_legend": "koji",
         "city": "bahawalpur",
         "city_label": "Bahawalpur"
-      },
-      {
-        "brawlhalla_id": 97035412,
-        "player_name": "TrueNobita",
-        "country": "PK",
-        "team": "Delight Esports",
-        "team_slug": "delight-esports",
-        "team_tag": "DE",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "ME",
-        "rating": 1650,
-        "peak_rating": 1696,
-        "tier": "Platinum 0",
-        "wins": 6,
-        "games": 13,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": null,
-        "peak_rating_2v2": null,
-        "tier_2v2": null,
-        "partner_2v2": null,
-        "trend": 0,
-        "main_legend": "mordex",
-        "city": null,
-        "city_label": null
       }
     ],
     "rising": {
@@ -283,9 +283,9 @@
     },
     "legend": {
       "legend_name_key": "wu shang",
-      "games": 111,
-      "win_rate": 52.3,
-      "players": 4
+      "games": 135,
+      "win_rate": 55.6,
+      "players": 6
     },
     "tournaments": []
   }
