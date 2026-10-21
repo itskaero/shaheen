@@ -70,7 +70,8 @@ this spec, after a confirm. Anything made by hand is never touched.
 
 `/setup run mode:launch` posts, once each, the welcome and rules embeds and
 a short intro for every other channel (`bot/content/channel_intros.py`).
-#looking-for-game also gets the persistent spar kiosk.
+#welcome also gets the one-tap link panel, and #looking-for-game the
+persistent spar kiosk. Each member's welcome card carries the link button.
 `tests/test_setup_launch_messages.py` checks that every text channel in the
 spec has launch content.
 

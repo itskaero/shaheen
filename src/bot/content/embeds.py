@@ -22,8 +22,8 @@ def build_welcome_embed() -> discord.Embed:
             "**Pakistan's Brawlhalla Network.**\n"
             "Track the scene. Find the players. Climb the rankings.\n\n"
             "1. Read #rules.\n"
-            "2. Run `/link` in #bot-commands to put your Brawlhalla account on the Pakistan "
-            "rankings — you'll get the **Player** role.\n"
+            "2. Tap **Link your account** below to put your Brawlhalla account on the "
+            "Pakistan rankings — you'll get the **Player** role.\n"
             "3. Find a game in #looking-for-game.\n\n"
             "BRAWLISTAN grew out of SHAHEEN, its founding team."
         ),

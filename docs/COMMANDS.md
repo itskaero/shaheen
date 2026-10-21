@@ -655,8 +655,11 @@ section for which channel gets what.
   toggle for the Spar Ping role (ADR-136). Repost it with `/sparpanel` to
   get the 🔔 button on an older panel. (The opt-in role panel retired with
   ADR-109.)
-- **Link panel** (`/linkpanel`, ADR-136) — one button that links an account
-  in a modal, with a city pick.
+- **Link panel** (#welcome, ADR-136) — one button that links an account in a
+  modal, with a city pick. `/setup run mode:launch` posts it under the
+  welcome message (re-running it adds just the panel to a server that already
+  has the welcome), `/linkpanel` posts one anywhere, and every new member's
+  welcome card carries the same button.
 
 Every other text channel also gets a short static intro embed in launch
 mode (docs/DECISIONS.md ADR-059) — see docs/DISCORD_SPEC.md's "Standing

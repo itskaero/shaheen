@@ -33,6 +33,7 @@ from bot.content.engagement_embeds import (
     build_level_embed,
     build_level_up_embed,
 )
+from bot.views.link_panel import LinkPanelView
 from core.exceptions import ShaheenError
 from database.repositories.chat_activity_repository import ChatActivityRepository
 from database.repositories.discord_user_repository import DiscordUserRepository
@@ -209,8 +210,8 @@ class EngagementCog(commands.Cog):
         renderer = render_welcome_card if joining else render_goodbye_card
         filename = "welcome.png" if joining else "goodbye.png"
         content = (
-            f"{member.mention} just joined BRAWLISTAN — read #rules, then run `/link` to "
-            "put yourself on the Pakistan rankings!"
+            f"{member.mention} just joined BRAWLISTAN — read #rules, then tap **Link your "
+            "account** to put yourself on the Pakistan rankings!"
             if joining
             else f"{member.display_name} has left BRAWLISTAN."
         )
@@ -224,11 +225,14 @@ class EngagementCog(commands.Cog):
                 "Failed to render %s card for %s", "welcome" if joining else "goodbye", member.id
             )
 
+        # Arrivals get the one-tap link button (ADR-136); the same persistent
+        # view as /linkpanel, so it links whoever taps it and survives restarts.
+        view = LinkPanelView() if joining else discord.utils.MISSING
         with contextlib.suppress(discord.Forbidden):
             if file is not None:
-                await channel.send(content=content, file=file)
+                await channel.send(content=content, file=file, view=view)
             else:
-                await channel.send(content=content)
+                await channel.send(content=content, view=view)
 
 
 async def setup(bot: ShaheenBot) -> None:

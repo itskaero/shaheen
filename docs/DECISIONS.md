@@ -6210,6 +6210,8 @@ the week was easy to game and quiet to watch:
   Brawlhalla or Steam64 ID, shows the player found, offers a city, and links through the same
   `complete_link` as `/link <ID>` (initial snapshot, Player role). Already-linked members can just pick a city.
   Lookups are rate-limited to 5 per member per 10 minutes (`services/rate_limit.SlidingWindow`, per process).
+  The same button sits under every new member's welcome card, and `/setup run mode:launch` posts the panel
+  in #welcome below the welcome message (its title check means a re-run adds only the panel).
 - **Spar calls** (`/looking [note]`, the spar panel; `services/spar_service.py`, Discord-free):
   - the card shows the caller's linked name and clan tag, 1v1/2v2 rating and tier, region, city and main
     Legend portrait (from the website's portraits), the note and filled/open slots;

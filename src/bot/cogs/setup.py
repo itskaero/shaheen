@@ -59,6 +59,7 @@ from bot.content.embeds import (
     build_welcome_embed,
 )
 from bot.views.confirm import ConfirmView
+from bot.views.link_panel import LinkPanelView, build_link_panel_embed
 from bot.views.spar import SparKioskView
 from core.exceptions import SetupError
 from database.models.provisioned_resource import ResourceType
@@ -324,7 +325,10 @@ def _launch_messages() -> dict[str, list[tuple[discord.Embed, discord.ui.View | 
     attached to the message that was actually sent (ADR-058).
     """
     return {
-        CHANNEL_WELCOME.logical_key: [(build_welcome_embed(), None)],
+        CHANNEL_WELCOME.logical_key: [
+            (build_welcome_embed(), None),
+            (build_link_panel_embed(), LinkPanelView()),
+        ],
         CHANNEL_RULES.logical_key: [(build_rules_embed(), None)],
         CHANNEL_ANNOUNCEMENTS.logical_key: [(build_announcements_intro_embed(), None)],
         CHANNEL_RANKINGS.logical_key: [(build_rankings_intro_embed(), None)],
