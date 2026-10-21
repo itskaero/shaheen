@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-20T16:59:09Z",
+  "captured_at": "2026-10-21T11:42:22Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,13 +15,19 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 124,
+        "points": 244,
         "scorers": [
           {
             "brawlhalla_id": 113753082,
             "player_name": "arman0mobile",
             "slug": "arman0mobile-113753082",
-            "points": 124
+            "points": 163
+          },
+          {
+            "brawlhalla_id": 56008741,
+            "player_name": "arman",
+            "slug": "arman-56008741",
+            "points": 81
           }
         ],
         "ineligible": []
@@ -33,13 +39,19 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 114,
+        "points": 181,
         "scorers": [
           {
             "brawlhalla_id": 88497903,
             "player_name": "Santa",
             "slug": "santa-88497903",
-            "points": 114
+            "points": 161
+          },
+          {
+            "brawlhalla_id": 1739958,
+            "player_name": "scoooot!!!",
+            "slug": "scoooot-1739958",
+            "points": 20
           }
         ],
         "ineligible": []
@@ -135,8 +147,8 @@
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
         },
-        "points_a": 114,
-        "points_b": 124,
+        "points_a": 181,
+        "points_b": 244,
         "leader": "sigma-grinders"
       }
     ],
@@ -144,7 +156,7 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "slug": "arman0mobile-113753082",
-      "points": 124,
+      "points": 163,
       "team_slug": "sigma-grinders",
       "team_name": "Sigma Grinders",
       "team_tag": "SG"
