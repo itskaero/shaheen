@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-21T17:08:02Z",
+  "captured_at": "2026-10-21T21:38:04Z",
   "source": "/players",
   "data": [
     {
@@ -14,7 +14,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 2013,
+      "rating": 2005,
       "peak_rating": 2069,
       "tier": "Diamond",
       "main_legend": "caspian",
