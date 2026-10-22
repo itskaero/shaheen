@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-22T17:06:47Z",
+  "captured_at": "2026-10-22T21:32:08Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,7 +15,7 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 371,
+        "points": 355,
         "scorers": [
           {
             "brawlhalla_id": 113753082,
@@ -24,16 +24,16 @@
             "points": 210
           },
           {
-            "brawlhalla_id": 56008741,
-            "player_name": "arman",
-            "slug": "arman-56008741",
-            "points": 81
-          },
-          {
             "brawlhalla_id": 8488940,
             "player_name": "Yeetnt",
             "slug": "yeetnt-8488940",
             "points": 80
+          },
+          {
+            "brawlhalla_id": 56008741,
+            "player_name": "arman",
+            "slug": "arman-56008741",
+            "points": 65
           }
         ],
         "ineligible": []
@@ -45,13 +45,13 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 211,
+        "points": 210,
         "scorers": [
           {
             "brawlhalla_id": 88497903,
             "player_name": "Santa",
             "slug": "santa-88497903",
-            "points": 161
+            "points": 160
           },
           {
             "brawlhalla_id": 1739958,
@@ -153,8 +153,8 @@
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
         },
-        "points_a": 211,
-        "points_b": 371,
+        "points_a": 210,
+        "points_b": 355,
         "leader": "sigma-grinders"
       }
     ],
