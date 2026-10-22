@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-21T21:38:04Z",
+  "captured_at": "2026-10-22T04:37:41Z",
   "source": "/leaderboard?limit=25",
   "data": [
     {
@@ -22,7 +22,7 @@
       "brawlhalla_id": 5734378,
       "player_name": "kaero.",
       "region": "ME",
-      "rating": 1680,
+      "rating": 1737,
       "peak_rating": 1924,
       "tier": "Platinum 1"
     },
