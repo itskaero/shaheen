@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-22T04:37:41Z",
+  "captured_at": "2026-10-22T11:45:33Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -86,7 +86,7 @@
       "brawlhalla_id": 8488940,
       "player_name": "Yeetnt",
       "region": "ME",
-      "rating": 1735,
+      "rating": 1713,
       "peak_rating": 1822,
       "tier": "Platinum 1",
       "is_clan_member": false,

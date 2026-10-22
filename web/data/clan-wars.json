@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-22T04:37:41Z",
+  "captured_at": "2026-10-22T11:45:33Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,7 +15,7 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 331,
+        "points": 371,
         "scorers": [
           {
             "brawlhalla_id": 113753082,
@@ -33,7 +33,7 @@
             "brawlhalla_id": 8488940,
             "player_name": "Yeetnt",
             "slug": "yeetnt-8488940",
-            "points": 40
+            "points": 80
           }
         ],
         "ineligible": []
@@ -154,7 +154,7 @@
           "accent": "#8b3dff"
         },
         "points_a": 211,
-        "points_b": 331,
+        "points_b": 371,
         "leader": "sigma-grinders"
       }
     ],
