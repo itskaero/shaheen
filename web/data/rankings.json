@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-23T04:43:51Z",
+  "captured_at": "2026-10-23T11:33:05Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -115,7 +115,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 80,
+        "trend": 81,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -141,7 +141,7 @@
         "peak_rating_2v2": 1529,
         "tier_2v2": "Gold 3",
         "partner_2v2": null,
-        "trend": 25,
+        "trend": 19,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -182,18 +182,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1745,
+        "rating": 1753,
         "peak_rating": 1822,
         "tier": "Platinum 2",
-        "wins": 126,
-        "games": 239,
+        "wins": 133,
+        "games": 253,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": -45,
+        "trend": -37,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -297,7 +297,7 @@
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 60,
+        "trend": 15,
         "main_legend": "wu shang",
         "city": null,
         "city_label": null
@@ -349,7 +349,7 @@
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 27,
+        "trend": 26,
         "main_legend": "sidra",
         "city": null,
         "city_label": null
