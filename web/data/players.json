@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-22T21:32:08Z",
+  "captured_at": "2026-10-23T04:43:51Z",
   "source": "/players",
   "data": [
     {
@@ -71,7 +71,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1840,
+      "rating": 1844,
       "peak_rating": 1877,
       "tier": "Platinum 3",
       "main_legend": "isaiah",
@@ -117,6 +117,25 @@
       "city_label": "Bahawalpur"
     },
     {
+      "brawlhalla_id": 8488940,
+      "slug": "yeetnt-8488940",
+      "player_name": "Yeetnt",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1745,
+      "peak_rating": 1822,
+      "tier": "Platinum 2",
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 10285200,
       "slug": "jun-10285200",
       "player_name": "JUN",
@@ -136,25 +155,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 8488940,
-      "slug": "yeetnt-8488940",
-      "player_name": "Yeetnt",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1713,
-      "peak_rating": 1822,
-      "tier": "Platinum 1",
-      "main_legend": "mordex",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 5734378,
       "slug": "kaero-5734378",
       "player_name": "kaero.",
@@ -166,9 +166,9 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1667,
+      "rating": 1708,
       "peak_rating": 1924,
-      "tier": "Platinum 0",
+      "tier": "Platinum 1",
       "main_legend": "koji",
       "city": "bahawalpur",
       "city_label": "Bahawalpur"
