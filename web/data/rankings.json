@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-24T10:52:51Z",
+  "captured_at": "2026-10-24T15:53:29Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -37,7 +37,7 @@
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 44,
+        "trend": -64,
         "main_legend": "caspian",
         "city": null,
         "city_label": null
@@ -130,18 +130,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1860,
+        "rating": 1832,
         "peak_rating": 1877,
         "tier": "Platinum 3",
-        "wins": 81,
-        "games": 146,
+        "wins": 83,
+        "games": 152,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 90,
+        "trend": 62,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-24T10:52:51Z",
+  "captured_at": "2026-10-24T15:53:29Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -46,7 +46,7 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1860,
+      "rating": 1832,
       "peak_rating": 1877,
       "tier": "Platinum 3",
       "is_clan_member": false,
