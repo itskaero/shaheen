@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-24T15:53:29Z",
+  "captured_at": "2026-10-24T20:43:51Z",
   "source": "/players",
   "data": [
     {
@@ -79,25 +79,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 113753082,
-      "slug": "arman0mobile-113753082",
-      "player_name": "arman0mobile",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1832,
-      "peak_rating": 1877,
-      "tier": "Platinum 3",
-      "main_legend": "isaiah",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 56008741,
       "slug": "arman-56008741",
       "player_name": "arman",
@@ -134,6 +115,25 @@
       "main_legend": "mordex",
       "city": "bahawalpur",
       "city_label": "Bahawalpur"
+    },
+    {
+      "brawlhalla_id": 113753082,
+      "slug": "arman0mobile-113753082",
+      "player_name": "arman0mobile",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1804,
+      "peak_rating": 1877,
+      "tier": "Platinum 2",
+      "main_legend": "isaiah",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8488940,
@@ -265,6 +265,25 @@
       "peak_rating": 1718,
       "tier": "Gold 4",
       "main_legend": "sidra",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "slug": "de-z4k-126888165",
+      "player_name": "DE_z4k",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1591,
+      "peak_rating": 1373,
+      "tier": "Gold 4",
+      "main_legend": "mirage",
       "city": null,
       "city_label": null
     },
@@ -683,25 +702,6 @@
       "peak_rating": null,
       "tier": null,
       "main_legend": "ulgrim",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "slug": "de-z4k-126888165",
-      "player_name": "DE_z4k",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "mirage",
       "city": null,
       "city_label": null
     },
