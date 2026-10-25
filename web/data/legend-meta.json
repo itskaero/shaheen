@@ -1,11 +1,11 @@
 {
-  "captured_at": "2026-10-25T04:35:34Z",
+  "captured_at": "2026-10-25T11:19:35Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
       "legend_name_key": "mordex",
       "player_count": 84,
-      "total_games": 80326,
+      "total_games": 80335,
       "win_rate": 53.2
     },
     {
@@ -29,7 +29,7 @@
     {
       "legend_name_key": "wu shang",
       "player_count": 83,
-      "total_games": 25124,
+      "total_games": 25140,
       "win_rate": 53.2
     },
     {
@@ -41,7 +41,7 @@
     {
       "legend_name_key": "teros",
       "player_count": 77,
-      "total_games": 23921,
+      "total_games": 23922,
       "win_rate": 57.5
     },
     {

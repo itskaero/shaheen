@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T04:35:34Z",
+  "captured_at": "2026-10-25T11:19:35Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -45,13 +45,13 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 240,
+        "points": 310,
         "scorers": [
           {
             "brawlhalla_id": 88497903,
             "player_name": "Santa",
             "slug": "santa-88497903",
-            "points": 160
+            "points": 230
           },
           {
             "brawlhalla_id": 1739958,
@@ -65,7 +65,7 @@
             "brawlhalla_id": 126888165,
             "player_name": "DE_z4k",
             "slug": "de-z4k-126888165",
-            "points": 10
+            "points": 30
           }
         ]
       },
@@ -167,7 +167,7 @@
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
         },
-        "points_a": 240,
+        "points_a": 310,
         "points_b": 624,
         "leader": "sigma-grinders"
       }

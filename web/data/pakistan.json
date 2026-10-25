@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T04:35:34Z",
+  "captured_at": "2026-10-25T11:19:35Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -11,6 +11,16 @@
       "tier": "Diamond",
       "is_clan_member": false,
       "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 84939075,
+      "player_name": "Pumpkin Man <3",
+      "region": "ME",
+      "rating": 1937,
+      "peak_rating": 1957,
+      "tier": "Platinum 5",
+      "is_clan_member": true,
+      "is_claimed": true
     },
     {
       "brawlhalla_id": 7854627,
@@ -31,16 +41,6 @@
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 84939075,
-      "player_name": "Pumpkin Man <3",
-      "region": "ME",
-      "rating": 1906,
-      "peak_rating": 1921,
-      "tier": "Platinum 4",
-      "is_clan_member": true,
-      "is_claimed": true
     },
     {
       "brawlhalla_id": 37628417,
@@ -103,6 +103,16 @@
       "is_claimed": true
     },
     {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1682,
+      "peak_rating": 1437,
+      "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 97035412,
       "player_name": "TrueNobita",
       "region": "ME",
@@ -116,9 +126,9 @@
       "brawlhalla_id": 88497903,
       "player_name": "Santa",
       "region": "ME",
-      "rating": 1636,
+      "rating": 1642,
       "peak_rating": 1723,
-      "tier": "Platinum 0",
+      "tier": "Gold 5",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -138,16 +148,6 @@
       "region": "ME",
       "rating": 1601,
       "peak_rating": 1718,
-      "tier": "Gold 4",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1591,
-      "peak_rating": 1373,
       "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false

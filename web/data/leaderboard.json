@@ -1,14 +1,14 @@
 {
-  "captured_at": "2026-10-25T04:35:34Z",
+  "captured_at": "2026-10-25T11:19:35Z",
   "source": "/leaderboard?limit=25",
   "data": [
     {
       "brawlhalla_id": 84939075,
       "player_name": "Pumpkin Man <3",
       "region": "ME",
-      "rating": 1906,
-      "peak_rating": 1921,
-      "tier": "Platinum 4"
+      "rating": 1937,
+      "peak_rating": 1957,
+      "tier": "Platinum 5"
     },
     {
       "brawlhalla_id": 37628417,
