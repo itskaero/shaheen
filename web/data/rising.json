@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T11:19:35Z",
+  "captured_at": "2026-10-25T16:10:36Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -7,13 +7,6 @@
       "player_name": "DE_z4k",
       "rating": 1682,
       "rating_gain": 91,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "player_name": "Santa",
-      "rating": 1642,
-      "rating_gain": 37,
       "is_claimed": false
     },
     {
