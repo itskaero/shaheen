@@ -1,12 +1,12 @@
 {
-  "captured_at": "2026-10-24T20:43:51Z",
+  "captured_at": "2026-10-25T04:35:34Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "region": "ME",
-      "rating": 2005,
+      "rating": 2036,
       "peak_rating": 2069,
       "tier": "Diamond",
       "is_clan_member": false,
@@ -23,16 +23,6 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 84939075,
-      "player_name": "Pumpkin Man <3",
-      "region": "ME",
-      "rating": 1921,
-      "peak_rating": 1921,
-      "tier": "Platinum 4",
-      "is_clan_member": true,
-      "is_claimed": true
-    },
-    {
       "brawlhalla_id": 60943018,
       "player_name": "Elephy",
       "region": "ME",
@@ -43,14 +33,14 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 56008741,
-      "player_name": "arman",
+      "brawlhalla_id": 84939075,
+      "player_name": "Pumpkin Man <3",
       "region": "ME",
-      "rating": 1827,
-      "peak_rating": 1917,
-      "tier": "Platinum 3",
-      "is_clan_member": false,
-      "is_claimed": false
+      "rating": 1906,
+      "peak_rating": 1921,
+      "tier": "Platinum 4",
+      "is_clan_member": true,
+      "is_claimed": true
     },
     {
       "brawlhalla_id": 37628417,
@@ -68,6 +58,16 @@
       "region": "ME",
       "rating": 1804,
       "peak_rating": 1877,
+      "tier": "Platinum 2",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 56008741,
+      "player_name": "arman",
+      "region": "ME",
+      "rating": 1802,
+      "peak_rating": 1917,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
