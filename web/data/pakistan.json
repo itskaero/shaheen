@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T20:47:03Z",
+  "captured_at": "2026-10-26T12:53:39Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -36,9 +36,9 @@
       "brawlhalla_id": 60943018,
       "player_name": "Elephy",
       "region": "ME",
-      "rating": 1918,
-      "peak_rating": 1654,
-      "tier": "Platinum 1",
+      "rating": 1836,
+      "peak_rating": 1836,
+      "tier": "Platinum 3",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -51,16 +51,6 @@
       "tier": "Platinum 3",
       "is_clan_member": true,
       "is_claimed": true
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1814,
-      "peak_rating": 1877,
-      "tier": "Platinum 3",
-      "is_clan_member": false,
-      "is_claimed": false
     },
     {
       "brawlhalla_id": 56008741,
@@ -88,6 +78,16 @@
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
+      "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
+      "region": "ME",
+      "rating": 1719,
+      "peak_rating": 1877,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -166,8 +166,8 @@
       "brawlhalla_id": 65526716,
       "player_name": "Orion",
       "region": "US-E",
-      "rating": 1582,
-      "peak_rating": 1603,
+      "rating": 1581,
+      "peak_rating": 1626,
       "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false

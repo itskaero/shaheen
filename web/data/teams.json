@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T20:47:03Z",
+  "captured_at": "2026-10-26T12:53:39Z",
   "source": "/teams",
   "data": [
     {
@@ -31,16 +31,16 @@
       "rank": 1,
       "brawlhalla_clan_id": 1389219,
       "members": 26,
-      "rating": 1918,
+      "rating": 1836,
       "best": {
         "brawlhalla_id": 60943018,
         "player_name": "Elephy",
         "slug": "elephy-60943018",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1918,
-        "peak_rating": 1654,
-        "tier": "Platinum 1",
+        "rating": 1836,
+        "peak_rating": 1836,
+        "tier": "Platinum 3",
         "main_legend": "mordex"
       }
     },
@@ -57,7 +57,7 @@
       "rank": 2,
       "brawlhalla_clan_id": 1777529,
       "members": 11,
-      "rating": 1846,
+      "rating": 1829,
       "best": {
         "brawlhalla_id": 7854627,
         "player_name": "hmmm",

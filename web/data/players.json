@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-25T20:47:03Z",
+  "captured_at": "2026-10-26T12:53:39Z",
   "source": "/players",
   "data": [
     {
@@ -71,9 +71,9 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1918,
-      "peak_rating": 1654,
-      "tier": "Platinum 1",
+      "rating": 1836,
+      "peak_rating": 1836,
+      "tier": "Platinum 3",
       "main_legend": "mordex",
       "city": null,
       "city_label": null
@@ -96,25 +96,6 @@
       "main_legend": "mordex",
       "city": "bahawalpur",
       "city_label": "Bahawalpur"
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "slug": "arman0mobile-113753082",
-      "player_name": "arman0mobile",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1814,
-      "peak_rating": 1877,
-      "tier": "Platinum 3",
-      "main_legend": "isaiah",
-      "city": null,
-      "city_label": null
     },
     {
       "brawlhalla_id": 56008741,
@@ -170,6 +151,25 @@
       "peak_rating": null,
       "tier": "Platinum 1",
       "main_legend": "hattori",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 113753082,
+      "slug": "arman0mobile-113753082",
+      "player_name": "arman0mobile",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1719,
+      "peak_rating": 1877,
+      "tier": "Platinum 1",
+      "main_legend": "isaiah",
       "city": null,
       "city_label": null
     },
@@ -307,25 +307,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 65526716,
-      "slug": "orion-65526716",
-      "player_name": "Orion",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "US-E",
-      "rating": 1582,
-      "peak_rating": 1603,
-      "tier": "Gold 4",
-      "main_legend": "tezca",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 102618812,
       "slug": "asta-102618812",
       "player_name": "ASTA",
@@ -340,6 +321,25 @@
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 65526716,
+      "slug": "orion-65526716",
+      "player_name": "Orion",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "US-E",
+      "rating": 1581,
+      "peak_rating": 1626,
+      "tier": "Gold 4",
       "main_legend": "tezca",
       "city": null,
       "city_label": null
