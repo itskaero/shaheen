@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-26T12:53:39Z",
+  "captured_at": "2026-10-26T22:37:16Z",
   "source": "/players",
   "data": [
     {
@@ -117,6 +117,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 5734378,
+      "slug": "kaero-5734378",
+      "player_name": "kaero.",
+      "country": "PK",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null,
+      "is_claimed": true,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1788,
+      "peak_rating": 1924,
+      "tier": "Platinum 2",
+      "main_legend": "koji",
+      "city": "bahawalpur",
+      "city_label": "Bahawalpur"
+    },
+    {
       "brawlhalla_id": 8488940,
       "slug": "yeetnt-8488940",
       "player_name": "Yeetnt",
@@ -174,23 +193,23 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 5734378,
-      "slug": "kaero-5734378",
-      "player_name": "kaero.",
+      "brawlhalla_id": 73881277,
+      "slug": "de-anonymous-73881277",
+      "player_name": "DE | Anonymous",
       "country": "PK",
-      "team": null,
-      "team_slug": null,
-      "team_tag": null,
-      "is_claimed": true,
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1708,
-      "peak_rating": 1924,
-      "tier": "Platinum 1",
-      "main_legend": "koji",
-      "city": "bahawalpur",
-      "city_label": "Bahawalpur"
+      "rating": 1687,
+      "peak_rating": 1520,
+      "tier": "Platinum 2",
+      "main_legend": "cassidy",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 97035412,
@@ -626,25 +645,6 @@
       "peak_rating": null,
       "tier": null,
       "main_legend": "scarlet",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 73881277,
-      "slug": "de-anonymous-73881277",
-      "player_name": "DE | Anonymous",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "cassidy",
       "city": null,
       "city_label": null
     },
