@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-27T12:04:51Z",
+  "captured_at": "2026-10-27T17:58:06Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -113,6 +113,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1665,
+      "peak_rating": 1682,
+      "tier": "Platinum 0",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 97035412,
       "player_name": "TrueNobita",
       "region": "ME",
@@ -148,16 +158,6 @@
       "region": "ME",
       "rating": 1601,
       "peak_rating": 1718,
-      "tier": "Gold 4",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1594,
-      "peak_rating": 1437,
       "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false

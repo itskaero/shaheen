@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-27T12:04:51Z",
+  "captured_at": "2026-10-27T17:58:06Z",
   "source": "/players",
   "data": [
     {
@@ -212,6 +212,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 126888165,
+      "slug": "de-z4k-126888165",
+      "player_name": "DE_z4k",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1665,
+      "peak_rating": 1682,
+      "tier": "Platinum 0",
+      "main_legend": "mirage",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 97035412,
       "slug": "truenobita-97035412",
       "player_name": "TrueNobita",
@@ -284,25 +303,6 @@
       "peak_rating": 1718,
       "tier": "Gold 4",
       "main_legend": "sidra",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "slug": "de-z4k-126888165",
-      "player_name": "DE_z4k",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1594,
-      "peak_rating": 1437,
-      "tier": "Gold 4",
-      "main_legend": "mirage",
       "city": null,
       "city_label": null
     },
