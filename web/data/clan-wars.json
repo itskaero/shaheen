@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-27T04:58:23Z",
+  "captured_at": "2026-10-27T12:04:51Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -9,12 +9,36 @@
     "top_n": 5,
     "standings": [
       {
+        "slug": "sigma-grinders",
+        "name": "Sigma Grinders",
+        "tag": "SG",
+        "logo": "sigma-grinders",
+        "accent": "#8b3dff",
+        "place": 1,
+        "points": 180,
+        "scorers": [
+          {
+            "brawlhalla_id": 8488940,
+            "player_name": "Yeetnt",
+            "slug": "yeetnt-8488940",
+            "points": 110
+          },
+          {
+            "brawlhalla_id": 113753082,
+            "player_name": "arman0mobile",
+            "slug": "arman0mobile-113753082",
+            "points": 70
+          }
+        ],
+        "ineligible": []
+      },
+      {
         "slug": "delight-esports",
         "name": "Delight Esports",
         "tag": "DE",
         "logo": "delight-esports",
         "accent": "#e9c46a",
-        "place": 1,
+        "place": 2,
         "points": 80,
         "scorers": [
           {
@@ -22,24 +46,6 @@
             "player_name": "Orion",
             "slug": "orion-65526716",
             "points": 80
-          }
-        ],
-        "ineligible": []
-      },
-      {
-        "slug": "sigma-grinders",
-        "name": "Sigma Grinders",
-        "tag": "SG",
-        "logo": "sigma-grinders",
-        "accent": "#8b3dff",
-        "place": 2,
-        "points": 70,
-        "scorers": [
-          {
-            "brawlhalla_id": 113753082,
-            "player_name": "arman0mobile",
-            "slug": "arman0mobile-113753082",
-            "points": 70
           }
         ],
         "ineligible": []
@@ -172,7 +178,7 @@
           "logo": "clan-monke",
           "accent": "#e8b923"
         },
-        "points_a": 70,
+        "points_a": 180,
         "points_b": 0,
         "leader": "sigma-grinders"
       },
@@ -191,13 +197,13 @@
       }
     ],
     "mvp": {
-      "brawlhalla_id": 65526716,
-      "player_name": "Orion",
-      "slug": "orion-65526716",
-      "points": 80,
-      "team_slug": "delight-esports",
-      "team_name": "Delight Esports",
-      "team_tag": "DE"
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "slug": "yeetnt-8488940",
+      "points": 110,
+      "team_slug": "sigma-grinders",
+      "team_name": "Sigma Grinders",
+      "team_tag": "SG"
     },
     "min_games": 10,
     "roster_locked": true
