@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-26T22:37:16Z",
+  "captured_at": "2026-10-27T04:58:23Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -41,14 +41,14 @@
     {
       "legend_name_key": "teros",
       "player_count": 77,
-      "total_games": 23933,
+      "total_games": 23934,
       "win_rate": 57.5
     },
     {
       "legend_name_key": "cassidy",
       "player_count": 81,
-      "total_games": 21901,
-      "win_rate": 55.1
+      "total_games": 21907,
+      "win_rate": 55.2
     },
     {
       "legend_name_key": "mirage",
