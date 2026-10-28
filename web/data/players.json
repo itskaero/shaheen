@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T12:45:36Z",
+  "captured_at": "2026-10-28T22:31:49Z",
   "source": "/players",
   "data": [
     {
@@ -98,6 +98,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 5734378,
+      "slug": "kaero-5734378",
+      "player_name": "kaero.",
+      "country": "PK",
+      "team": null,
+      "team_slug": null,
+      "team_tag": null,
+      "is_claimed": true,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1801,
+      "peak_rating": 1924,
+      "tier": "Platinum 2",
+      "main_legend": "koji",
+      "city": "bahawalpur",
+      "city_label": "Bahawalpur"
+    },
+    {
       "brawlhalla_id": 56008741,
       "slug": "arman-56008741",
       "player_name": "arman",
@@ -115,25 +134,6 @@
       "main_legend": "mordex",
       "city": null,
       "city_label": null
-    },
-    {
-      "brawlhalla_id": 5734378,
-      "slug": "kaero-5734378",
-      "player_name": "kaero.",
-      "country": "PK",
-      "team": null,
-      "team_slug": null,
-      "team_tag": null,
-      "is_claimed": true,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1788,
-      "peak_rating": 1924,
-      "tier": "Platinum 2",
-      "main_legend": "koji",
-      "city": "bahawalpur",
-      "city_label": "Bahawalpur"
     },
     {
       "brawlhalla_id": 8488940,
@@ -212,6 +212,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 126888165,
+      "slug": "de-z4k-126888165",
+      "player_name": "DE_z4k",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1651,
+      "peak_rating": 1682,
+      "tier": "Platinum 0",
+      "main_legend": "mirage",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 97035412,
       "slug": "truenobita-97035412",
       "player_name": "TrueNobita",
@@ -246,25 +265,6 @@
       "peak_rating": 1723,
       "tier": "Gold 5",
       "main_legend": "wu shang",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "slug": "de-z4k-126888165",
-      "player_name": "DE_z4k",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1627,
-      "peak_rating": 1682,
-      "tier": "Platinum 0",
-      "main_legend": "mirage",
       "city": null,
       "city_label": null
     },

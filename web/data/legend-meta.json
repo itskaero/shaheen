@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T12:45:36Z",
+  "captured_at": "2026-10-28T22:31:49Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -35,7 +35,7 @@
     {
       "legend_name_key": "artemis",
       "player_count": 83,
-      "total_games": 24410,
+      "total_games": 24414,
       "win_rate": 52.3
     },
     {
@@ -53,7 +53,7 @@
     {
       "legend_name_key": "mirage",
       "player_count": 83,
-      "total_games": 21726,
+      "total_games": 21728,
       "win_rate": 51.9
     },
     {

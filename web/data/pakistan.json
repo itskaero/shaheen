@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T12:45:36Z",
+  "captured_at": "2026-10-28T22:31:49Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -53,6 +53,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "region": "ME",
+      "rating": 1801,
+      "peak_rating": 1924,
+      "tier": "Platinum 2",
+      "is_clan_member": true,
+      "is_claimed": true
+    },
+    {
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
@@ -61,16 +71,6 @@
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
-      "region": "ME",
-      "rating": 1788,
-      "peak_rating": 1924,
-      "tier": "Platinum 2",
-      "is_clan_member": true,
-      "is_claimed": true
     },
     {
       "brawlhalla_id": 8488940,
@@ -113,6 +113,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1651,
+      "peak_rating": 1682,
+      "tier": "Platinum 0",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 97035412,
       "player_name": "TrueNobita",
       "region": "ME",
@@ -129,16 +139,6 @@
       "rating": 1642,
       "peak_rating": 1723,
       "tier": "Gold 5",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1627,
-      "peak_rating": 1682,
-      "tier": "Platinum 0",
       "is_clan_member": false,
       "is_claimed": false
     },
