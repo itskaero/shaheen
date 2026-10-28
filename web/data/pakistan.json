@@ -1,13 +1,13 @@
 {
-  "captured_at": "2026-10-27T22:09:30Z",
+  "captured_at": "2026-10-28T05:34:23Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "region": "ME",
-      "rating": 2036,
-      "peak_rating": 2069,
+      "rating": 2076,
+      "peak_rating": 2076,
       "tier": "Diamond",
       "is_clan_member": false,
       "is_claimed": false
@@ -33,16 +33,6 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 60943018,
-      "player_name": "Elephy",
-      "region": "ME",
-      "rating": 1836,
-      "peak_rating": 1836,
-      "tier": "Platinum 3",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
@@ -51,6 +41,16 @@
       "tier": "Platinum 3",
       "is_clan_member": true,
       "is_claimed": true
+    },
+    {
+      "brawlhalla_id": 60943018,
+      "player_name": "Elephy",
+      "region": "ME",
+      "rating": 1809,
+      "peak_rating": 1836,
+      "tier": "Platinum 3",
+      "is_clan_member": false,
+      "is_claimed": false
     },
     {
       "brawlhalla_id": 8488940,
@@ -66,7 +66,7 @@
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
-      "rating": 1802,
+      "rating": 1796,
       "peak_rating": 1917,
       "tier": "Platinum 2",
       "is_clan_member": false,

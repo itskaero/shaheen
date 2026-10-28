@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-27T22:09:30Z",
+  "captured_at": "2026-10-28T05:34:23Z",
   "source": "/players",
   "data": [
     {
@@ -14,8 +14,8 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 2036,
-      "peak_rating": 2069,
+      "rating": 2076,
+      "peak_rating": 2076,
       "tier": "Diamond",
       "main_legend": "caspian",
       "city": null,
@@ -60,25 +60,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 60943018,
-      "slug": "elephy-60943018",
-      "player_name": "Elephy",
-      "country": "PK",
-      "team": "Clan Monke",
-      "team_slug": "clan-monke",
-      "team_tag": "MONKE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1836,
-      "peak_rating": 1836,
-      "tier": "Platinum 3",
-      "main_legend": "mordex",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 37628417,
       "slug": "roykhan-37628417",
       "player_name": "Roykhan",
@@ -96,6 +77,25 @@
       "main_legend": "mordex",
       "city": "bahawalpur",
       "city_label": "Bahawalpur"
+    },
+    {
+      "brawlhalla_id": 60943018,
+      "slug": "elephy-60943018",
+      "player_name": "Elephy",
+      "country": "PK",
+      "team": "Clan Monke",
+      "team_slug": "clan-monke",
+      "team_tag": "MONKE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1809,
+      "peak_rating": 1836,
+      "tier": "Platinum 3",
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
     },
     {
       "brawlhalla_id": 8488940,
@@ -128,7 +128,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1802,
+      "rating": 1796,
       "peak_rating": 1917,
       "tier": "Platinum 2",
       "main_legend": "mordex",
