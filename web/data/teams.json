@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T22:31:49Z",
+  "captured_at": "2026-10-29T05:41:46Z",
   "source": "/teams",
   "data": [
     {
@@ -71,32 +71,6 @@
       }
     },
     {
-      "slug": "clan-monke",
-      "name": "Clan Monke",
-      "tag": "MONKE",
-      "country": "PK",
-      "logo": "clan-monke",
-      "description": null,
-      "is_founding": false,
-      "accent": "#e8b923",
-      "accent_secondary": "#2fbf4a",
-      "rank": 3,
-      "brawlhalla_clan_id": 1389219,
-      "members": 26,
-      "rating": 1809,
-      "best": {
-        "brawlhalla_id": 60943018,
-        "player_name": "Elephy",
-        "slug": "elephy-60943018",
-        "role": "player",
-        "clan_rank": "Officer",
-        "rating": 1809,
-        "peak_rating": 1836,
-        "tier": "Platinum 3",
-        "main_legend": "mordex"
-      }
-    },
-    {
       "slug": "revenant-wolf",
       "name": "Revenant Wolf",
       "tag": "RW",
@@ -106,7 +80,7 @@
       "is_founding": false,
       "accent": "#e3122d",
       "accent_secondary": "#c7cad6",
-      "rank": 4,
+      "rank": 3,
       "brawlhalla_clan_id": 2542774,
       "members": 22,
       "rating": 1612,
@@ -120,6 +94,32 @@
         "peak_rating": 1420,
         "tier": "Gold 5",
         "main_legend": "kaya"
+      }
+    },
+    {
+      "slug": "clan-monke",
+      "name": "Clan Monke",
+      "tag": "MONKE",
+      "country": "PK",
+      "logo": "clan-monke",
+      "description": null,
+      "is_founding": false,
+      "accent": "#e8b923",
+      "accent_secondary": "#2fbf4a",
+      "rank": 4,
+      "brawlhalla_clan_id": 1389219,
+      "members": 26,
+      "rating": 1426,
+      "best": {
+        "brawlhalla_id": 60943018,
+        "player_name": "Elephy",
+        "slug": "elephy-60943018",
+        "role": "player",
+        "clan_rank": "Officer",
+        "rating": 1809,
+        "peak_rating": 1836,
+        "tier": "Platinum 3",
+        "main_legend": "mordex"
       }
     }
   ]

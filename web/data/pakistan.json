@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T22:31:49Z",
+  "captured_at": "2026-10-29T05:41:46Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -96,8 +96,18 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1709,
+      "rating": 1729,
       "peak_rating": 1877,
+      "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "region": "ME",
+      "rating": 1687,
+      "peak_rating": 1723,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -129,16 +139,6 @@
       "rating": 1650,
       "peak_rating": 1696,
       "tier": "Platinum 0",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 88497903,
-      "player_name": "Santa",
-      "region": "ME",
-      "rating": 1642,
-      "peak_rating": 1723,
-      "tier": "Gold 5",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -189,6 +189,16 @@
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 120648946,
+      "player_name": "arrtemiss",
+      "region": "ME",
+      "rating": 1043,
+      "peak_rating": null,
+      "tier": "Bronze 5",
       "is_clan_member": false,
       "is_claimed": false
     }

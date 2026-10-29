@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-28T22:31:49Z",
+  "captured_at": "2026-10-29T05:41:46Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -217,7 +217,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": 37,
+        "trend": 59,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -258,18 +258,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1709,
+        "rating": 1729,
         "peak_rating": 1877,
         "tier": "Platinum 1",
-        "wins": 95,
-        "games": 184,
+        "wins": 99,
+        "games": 191,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": -131,
+        "trend": -111,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 242,
-      "win_rate": 63.2,
+      "games": 244,
+      "win_rate": 62.7,
       "players": 15
     },
     "tournaments": []
