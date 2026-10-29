@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-29T05:41:46Z",
+  "captured_at": "2026-10-29T12:54:36Z",
   "source": "/players",
   "data": [
     {
@@ -117,6 +117,25 @@
       "city_label": "Bahawalpur"
     },
     {
+      "brawlhalla_id": 8488940,
+      "slug": "yeetnt-8488940",
+      "player_name": "Yeetnt",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1801,
+      "peak_rating": 1837,
+      "tier": "Platinum 2",
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 56008741,
       "slug": "arman-56008741",
       "player_name": "arman",
@@ -130,25 +149,6 @@
       "region": "ME",
       "rating": 1796,
       "peak_rating": 1917,
-      "tier": "Platinum 2",
-      "main_legend": "mordex",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 8488940,
-      "slug": "yeetnt-8488940",
-      "player_name": "Yeetnt",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1772,
-      "peak_rating": 1837,
       "tier": "Platinum 2",
       "main_legend": "mordex",
       "city": null,

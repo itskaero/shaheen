@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-29T05:41:46Z",
+  "captured_at": "2026-10-29T12:54:36Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -53,6 +53,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "region": "ME",
+      "rating": 1801,
+      "peak_rating": 1837,
+      "tier": "Platinum 2",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 5734378,
       "player_name": "kaero.",
       "region": "ME",
@@ -68,16 +78,6 @@
       "region": "ME",
       "rating": 1796,
       "peak_rating": 1917,
-      "tier": "Platinum 2",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 8488940,
-      "player_name": "Yeetnt",
-      "region": "ME",
-      "rating": 1772,
-      "peak_rating": 1837,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false

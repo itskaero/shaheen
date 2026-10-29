@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-29T05:41:46Z",
+  "captured_at": "2026-10-29T12:54:36Z",
   "source": "/teams",
   "data": [
     {
@@ -19,6 +19,32 @@
       "best": null
     },
     {
+      "slug": "sigma-grinders",
+      "name": "Sigma Grinders",
+      "tag": "SG",
+      "country": "PK",
+      "logo": "sigma-grinders",
+      "description": null,
+      "is_founding": false,
+      "accent": "#8b3dff",
+      "accent_secondary": "#d9d4ff",
+      "rank": 1,
+      "brawlhalla_clan_id": 1777529,
+      "members": 11,
+      "rating": 1839,
+      "best": {
+        "brawlhalla_id": 7854627,
+        "player_name": "hmmm",
+        "slug": "hmmm-7854627",
+        "role": "player",
+        "clan_rank": "Officer",
+        "rating": 1921,
+        "peak_rating": 1921,
+        "tier": "Platinum 4",
+        "main_legend": "bodvar"
+      }
+    },
+    {
       "slug": "delight-esports",
       "name": "Delight Esports",
       "tag": "DE",
@@ -28,7 +54,7 @@
       "is_founding": false,
       "accent": "#e9c46a",
       "accent_secondary": "#1f6f8a",
-      "rank": 1,
+      "rank": 2,
       "brawlhalla_clan_id": 2042085,
       "members": 28,
       "rating": 1833,
@@ -42,32 +68,6 @@
         "peak_rating": 2076,
         "tier": "Diamond",
         "main_legend": "caspian"
-      }
-    },
-    {
-      "slug": "sigma-grinders",
-      "name": "Sigma Grinders",
-      "tag": "SG",
-      "country": "PK",
-      "logo": "sigma-grinders",
-      "description": null,
-      "is_founding": false,
-      "accent": "#8b3dff",
-      "accent_secondary": "#d9d4ff",
-      "rank": 2,
-      "brawlhalla_clan_id": 1777529,
-      "members": 11,
-      "rating": 1830,
-      "best": {
-        "brawlhalla_id": 7854627,
-        "player_name": "hmmm",
-        "slug": "hmmm-7854627",
-        "role": "player",
-        "clan_rank": "Officer",
-        "rating": 1921,
-        "peak_rating": 1921,
-        "tier": "Platinum 4",
-        "main_legend": "bodvar"
       }
     },
     {

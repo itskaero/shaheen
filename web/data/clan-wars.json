@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-29T05:41:46Z",
+  "captured_at": "2026-10-29T12:54:36Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,19 +15,19 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 268,
+        "points": 387,
         "scorers": [
+          {
+            "brawlhalla_id": 8488940,
+            "player_name": "Yeetnt",
+            "slug": "yeetnt-8488940",
+            "points": 217
+          },
           {
             "brawlhalla_id": 113753082,
             "player_name": "arman0mobile",
             "slug": "arman0mobile-113753082",
             "points": 150
-          },
-          {
-            "brawlhalla_id": 8488940,
-            "player_name": "Yeetnt",
-            "slug": "yeetnt-8488940",
-            "points": 98
           },
           {
             "brawlhalla_id": 56008741,
@@ -203,7 +203,7 @@
           "logo": "clan-monke",
           "accent": "#e8b923"
         },
-        "points_a": 268,
+        "points_a": 387,
         "points_b": 0,
         "leader": "sigma-grinders"
       },
@@ -222,10 +222,10 @@
       }
     ],
     "mvp": {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "slug": "arman0mobile-113753082",
-      "points": 150,
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "slug": "yeetnt-8488940",
+      "points": 217,
       "team_slug": "sigma-grinders",
       "team_name": "Sigma Grinders",
       "team_tag": "SG"

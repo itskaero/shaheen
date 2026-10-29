@@ -1,20 +1,27 @@
 {
-  "captured_at": "2026-10-29T05:41:46Z",
+  "captured_at": "2026-10-29T12:54:36Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
+    {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "rating": 1801,
+      "rating_gain": 134,
+      "is_claimed": true
+    },
+    {
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "rating": 1801,
+      "rating_gain": 88,
+      "is_claimed": false
+    },
     {
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "rating": 2076,
       "rating_gain": 71,
       "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
-      "rating": 1801,
-      "rating_gain": 64,
-      "is_claimed": true
     },
     {
       "brawlhalla_id": 126888165,
@@ -24,10 +31,10 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 8488940,
-      "player_name": "Yeetnt",
-      "rating": 1772,
-      "rating_gain": 59,
+      "brawlhalla_id": 88497903,
+      "player_name": "Santa",
+      "rating": 1687,
+      "rating_gain": 51,
       "is_claimed": false
     },
     {
