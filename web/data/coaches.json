@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-01T13:14:49Z",
+  "captured_at": "2026-11-01T21:58:44Z",
   "source": "/coaches",
   "data": [
     {
@@ -12,8 +12,8 @@
       "bio": null,
       "accepting": true,
       "sessions": 0,
-      "rating": 1937,
-      "tier": "Platinum 5",
+      "rating": 2013,
+      "tier": "Diamond",
       "team": null,
       "team_slug": null,
       "team_tag": null

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-01T13:14:49Z",
+  "captured_at": "2026-11-01T21:58:44Z",
   "source": "/achievements",
   "data": [
     {
@@ -130,11 +130,17 @@
       "name": "Diamond Shaheen",
       "description": "Reached Diamond tier or higher in ranked.",
       "category": "ranked",
-      "holder_count": 0,
+      "holder_count": 1,
       "total_members": 4,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed",
-      "holders": []
+      "completion_pct": 25.0,
+      "rarity": "Uncommon",
+      "holders": [
+        {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-11-01T19:25:08.880231Z"
+        }
+      ]
     },
     {
       "key": "games_1000",
@@ -329,11 +335,17 @@
       "name": "Above the Clouds",
       "description": "Hit a peak rating of 2000.",
       "category": "ranked",
-      "holder_count": 0,
+      "holder_count": 1,
       "total_members": 4,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed",
-      "holders": []
+      "completion_pct": 25.0,
+      "rarity": "Uncommon",
+      "holders": [
+        {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-11-01T19:25:08.865678Z"
+        }
+      ]
     },
     {
       "key": "global_top_1000",
