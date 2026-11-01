@@ -1,12 +1,12 @@
 {
-  "captured_at": "2026-10-29T12:54:36Z",
+  "captured_at": "2026-11-01T13:14:49Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "region": "ME",
-      "rating": 2076,
+      "rating": 2042,
       "peak_rating": 2076,
       "tier": "Diamond",
       "is_clan_member": false,
@@ -26,11 +26,31 @@
       "brawlhalla_id": 7854627,
       "player_name": "hmmm",
       "region": "EU",
-      "rating": 1921,
-      "peak_rating": 1921,
-      "tier": "Platinum 4",
+      "rating": 1867,
+      "peak_rating": 1935,
+      "tier": "Platinum 3",
       "is_clan_member": false,
       "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 56008741,
+      "player_name": "arman",
+      "region": "ME",
+      "rating": 1858,
+      "peak_rating": 1917,
+      "tier": "Platinum 3",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "region": "ME",
+      "rating": 1839,
+      "peak_rating": 1924,
+      "tier": "Platinum 3",
+      "is_clan_member": true,
+      "is_claimed": true
     },
     {
       "brawlhalla_id": 37628417,
@@ -63,22 +83,12 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1801,
-      "peak_rating": 1924,
-      "tier": "Platinum 2",
-      "is_clan_member": true,
-      "is_claimed": true
-    },
-    {
-      "brawlhalla_id": 56008741,
-      "player_name": "arman",
-      "region": "ME",
-      "rating": 1796,
-      "peak_rating": 1917,
-      "tier": "Platinum 2",
+      "rating": 1743,
+      "peak_rating": 1877,
+      "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -88,16 +98,6 @@
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
-      "tier": "Platinum 1",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1729,
-      "peak_rating": 1877,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -143,12 +143,32 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 79224070,
+      "player_name": "V I N E",
+      "region": "ME",
+      "rating": 1634,
+      "peak_rating": 1687,
+      "tier": "Platinum 0",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 101991193,
       "player_name": "bloom",
       "region": "EU",
       "rating": 1623,
       "peak_rating": 1420,
       "tier": "Gold 5",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 65526716,
+      "player_name": "Orion",
+      "region": "US-E",
+      "rating": 1601,
+      "peak_rating": 1626,
+      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -173,16 +193,6 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 65526716,
-      "player_name": "Orion",
-      "region": "US-E",
-      "rating": 1581,
-      "peak_rating": 1626,
-      "tier": "Gold 4",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 102618812,
       "player_name": "ASTA",
       "region": "ME",
@@ -196,8 +206,8 @@
       "brawlhalla_id": 120648946,
       "player_name": "arrtemiss",
       "region": "ME",
-      "rating": 1043,
-      "peak_rating": null,
+      "rating": 1031,
+      "peak_rating": 878,
       "tier": "Bronze 5",
       "is_clan_member": false,
       "is_claimed": false
