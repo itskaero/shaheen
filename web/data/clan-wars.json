@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-01T21:58:44Z",
+  "captured_at": "2026-11-05T19:53:53Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,13 +15,74 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 1,
-        "points": 140,
+        "points": 223,
         "scorers": [
           {
             "brawlhalla_id": 65526716,
             "player_name": "Orion",
             "slug": "orion-65526716",
-            "points": 140
+            "points": 123
+          },
+          {
+            "brawlhalla_id": 126888165,
+            "player_name": "DE_z4k",
+            "slug": "de-z4k-126888165",
+            "points": 100
+          }
+        ],
+        "ineligible": [
+          {
+            "brawlhalla_id": 73881277,
+            "player_name": "DE | Anonymous",
+            "slug": "de-anonymous-73881277",
+            "points": 20
+          },
+          {
+            "brawlhalla_id": 106237759,
+            "player_name": "DeviL",
+            "slug": "devil-106237759",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "slug": "sigma-grinders",
+        "name": "Sigma Grinders",
+        "tag": "SG",
+        "logo": "sigma-grinders",
+        "accent": "#8b3dff",
+        "place": 2,
+        "points": 220,
+        "scorers": [
+          {
+            "brawlhalla_id": 8488940,
+            "player_name": "Yeetnt",
+            "slug": "yeetnt-8488940",
+            "points": 150
+          },
+          {
+            "brawlhalla_id": 113753082,
+            "player_name": "arman0mobile",
+            "slug": "arman0mobile-113753082",
+            "points": 70
+          }
+        ],
+        "ineligible": []
+      },
+      {
+        "slug": "revenant-wolf",
+        "name": "Revenant Wolf",
+        "tag": "RW",
+        "logo": "revenant-wolf",
+        "accent": "#e3122d",
+        "place": 3,
+        "points": 10,
+        "scorers": [
+          {
+            "brawlhalla_id": 115697497,
+            "player_name": "Kirito",
+            "slug": "kirito-115697497",
+            "points": 10
           }
         ],
         "ineligible": []
@@ -32,18 +93,7 @@
         "tag": "MONKE",
         "logo": "clan-monke",
         "accent": "#e8b923",
-        "place": 2,
-        "points": 0,
-        "scorers": [],
-        "ineligible": []
-      },
-      {
-        "slug": "revenant-wolf",
-        "name": "Revenant Wolf",
-        "tag": "RW",
-        "logo": "revenant-wolf",
-        "accent": "#e3122d",
-        "place": 3,
+        "place": 4,
         "points": 0,
         "scorers": [],
         "ineligible": []
@@ -54,17 +104,6 @@
         "tag": "SHN",
         "logo": "shaheen",
         "accent": "#3df26e",
-        "place": 4,
-        "points": 0,
-        "scorers": [],
-        "ineligible": []
-      },
-      {
-        "slug": "sigma-grinders",
-        "name": "Sigma Grinders",
-        "tag": "SG",
-        "logo": "sigma-grinders",
-        "accent": "#8b3dff",
         "place": 5,
         "points": 0,
         "scorers": [],
@@ -147,8 +186,8 @@
           "accent": "#8b3dff"
         },
         "points_a": 0,
-        "points_b": 0,
-        "leader": null
+        "points_b": 220,
+        "leader": "sigma-grinders"
       },
       {
         "a": {
@@ -165,8 +204,8 @@
           "logo": "revenant-wolf",
           "accent": "#e3122d"
         },
-        "points_a": 140,
-        "points_b": 0,
+        "points_a": 223,
+        "points_b": 10,
         "leader": "delight-esports"
       },
       {
@@ -184,13 +223,13 @@
       }
     ],
     "mvp": {
-      "brawlhalla_id": 65526716,
-      "player_name": "Orion",
-      "slug": "orion-65526716",
-      "points": 140,
-      "team_slug": "delight-esports",
-      "team_name": "Delight Esports",
-      "team_tag": "DE"
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "slug": "yeetnt-8488940",
+      "points": 150,
+      "team_slug": "sigma-grinders",
+      "team_name": "Sigma Grinders",
+      "team_tag": "SG"
     },
     "min_games": 10,
     "roster_locked": true
