@@ -1,7 +1,14 @@
 {
-  "captured_at": "2026-11-05T19:53:53Z",
+  "captured_at": "2026-11-06T19:19:51Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
+    {
+      "brawlhalla_id": 120648946,
+      "player_name": "arrtemiss",
+      "rating": 1178,
+      "rating_gain": 147,
+      "is_claimed": false
+    },
     {
       "brawlhalla_id": 84939075,
       "player_name": "Pumpkin Man <3",

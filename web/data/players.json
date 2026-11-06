@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-05T19:53:53Z",
+  "captured_at": "2026-11-06T19:19:51Z",
   "source": "/players",
   "data": [
     {
@@ -155,6 +155,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 8488940,
+      "slug": "yeetnt-8488940",
+      "player_name": "Yeetnt",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1750,
+      "peak_rating": 1837,
+      "tier": "Platinum 2",
+      "main_legend": "mordex",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 10285200,
       "slug": "jun-10285200",
       "player_name": "JUN",
@@ -170,25 +189,6 @@
       "peak_rating": null,
       "tier": "Platinum 1",
       "main_legend": "hattori",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 8488940,
-      "slug": "yeetnt-8488940",
-      "player_name": "Yeetnt",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1731,
-      "peak_rating": 1837,
-      "tier": "Platinum 1",
-      "main_legend": "mordex",
       "city": null,
       "city_label": null
     },
@@ -413,9 +413,9 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1031,
-      "peak_rating": 878,
-      "tier": "Bronze 5",
+      "rating": 1178,
+      "peak_rating": 1178,
+      "tier": "Silver 1",
       "main_legend": "loki",
       "city": null,
       "city_label": null
