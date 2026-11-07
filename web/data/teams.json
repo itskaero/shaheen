@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-07T12:54:47Z",
+  "captured_at": "2026-11-07T21:45:35Z",
   "source": "/teams",
   "data": [
     {
@@ -31,7 +31,7 @@
       "rank": 1,
       "brawlhalla_clan_id": 1777529,
       "members": 12,
-      "rating": 1836,
+      "rating": 1832,
       "best": {
         "brawlhalla_id": 7854627,
         "player_name": "hmmm",
@@ -83,7 +83,7 @@
       "rank": 3,
       "brawlhalla_clan_id": 2542774,
       "members": 22,
-      "rating": 1556,
+      "rating": 1557,
       "best": {
         "brawlhalla_id": 101991193,
         "player_name": "bloom",
