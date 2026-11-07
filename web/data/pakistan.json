@@ -1,17 +1,7 @@
 {
-  "captured_at": "2026-11-06T19:19:51Z",
+  "captured_at": "2026-11-07T12:54:47Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
-    {
-      "brawlhalla_id": 1739958,
-      "player_name": "scoooot!!!",
-      "region": "ME",
-      "rating": 2042,
-      "peak_rating": 2076,
-      "tier": "Diamond",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
     {
       "brawlhalla_id": 84939075,
       "player_name": "Pumpkin Man <3",
@@ -21,6 +11,16 @@
       "tier": "Diamond",
       "is_clan_member": true,
       "is_claimed": true
+    },
+    {
+      "brawlhalla_id": 1739958,
+      "player_name": "scoooot!!!",
+      "region": "ME",
+      "rating": 2009,
+      "peak_rating": 2089,
+      "tier": "Diamond",
+      "is_clan_member": false,
+      "is_claimed": false
     },
     {
       "brawlhalla_id": 7854627,
@@ -76,7 +76,7 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1756,
+      "rating": 1782,
       "peak_rating": 1877,
       "tier": "Platinum 2",
       "is_clan_member": false,
@@ -86,7 +86,7 @@
       "brawlhalla_id": 8488940,
       "player_name": "Yeetnt",
       "region": "ME",
-      "rating": 1750,
+      "rating": 1771,
       "peak_rating": 1837,
       "tier": "Platinum 2",
       "is_clan_member": false,
@@ -189,6 +189,26 @@
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 88523853,
+      "player_name": "BotShadow",
+      "region": "ME",
+      "rating": 1571,
+      "peak_rating": 1158,
+      "tier": "Gold 3",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 62360025,
+      "player_name": "DC | Zaid",
+      "region": "ME",
+      "rating": 1569,
+      "peak_rating": 1654,
+      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     },
