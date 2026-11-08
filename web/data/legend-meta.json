@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-07T21:45:35Z",
+  "captured_at": "2026-11-08T05:55:32Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -17,25 +17,25 @@
     {
       "legend_name_key": "tezca",
       "player_count": 81,
-      "total_games": 38498,
+      "total_games": 38500,
       "win_rate": 52.0
     },
     {
       "legend_name_key": "orion",
       "player_count": 84,
-      "total_games": 30603,
+      "total_games": 30604,
       "win_rate": 52.5
     },
     {
       "legend_name_key": "wu shang",
       "player_count": 84,
-      "total_games": 25267,
-      "win_rate": 53.2
+      "total_games": 25273,
+      "win_rate": 53.3
     },
     {
       "legend_name_key": "teros",
       "player_count": 78,
-      "total_games": 24747,
+      "total_games": 24749,
       "win_rate": 57.3
     },
     {
@@ -47,7 +47,7 @@
     {
       "legend_name_key": "cassidy",
       "player_count": 82,
-      "total_games": 22050,
+      "total_games": 22053,
       "win_rate": 55.1
     },
     {
@@ -59,7 +59,7 @@
     {
       "legend_name_key": "koji",
       "player_count": 82,
-      "total_games": 21639,
+      "total_games": 21640,
       "win_rate": 50.2
     }
   ]

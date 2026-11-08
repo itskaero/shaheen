@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-07T21:45:35Z",
+  "captured_at": "2026-11-08T05:55:32Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -39,7 +39,7 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 406,
+        "points": 416,
         "scorers": [
           {
             "brawlhalla_id": 126888165,
@@ -57,7 +57,7 @@
             "brawlhalla_id": 1739958,
             "player_name": "scoooot!!!",
             "slug": "scoooot-1739958",
-            "points": 100
+            "points": 110
           }
         ],
         "ineligible": [
@@ -223,7 +223,7 @@
           "logo": "revenant-wolf",
           "accent": "#e3122d"
         },
-        "points_a": 406,
+        "points_a": 416,
         "points_b": 22,
         "leader": "delight-esports"
       },
