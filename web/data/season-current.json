@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-08T05:55:32Z",
+  "captured_at": "2026-11-08T21:59:14Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -61,7 +61,7 @@
         "peak_rating_2v2": 1442,
         "tier_2v2": "Gold 1",
         "partner_2v2": "Nemesis",
-        "trend": 76,
+        "trend": 0,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -139,7 +139,7 @@
         "peak_rating_2v2": 1073,
         "tier_2v2": "Bronze 4",
         "partner_2v2": "x11dave",
-        "trend": 17,
+        "trend": 20,
         "main_legend": "koji",
         "city": "bahawalpur",
         "city_label": "Bahawalpur"
@@ -206,18 +206,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1771,
+        "rating": 1808,
         "peak_rating": 1837,
-        "tier": "Platinum 2",
-        "wins": 196,
-        "games": 381,
+        "tier": "Platinum 3",
+        "wins": 211,
+        "games": 404,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": -30,
+        "trend": 77,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -243,7 +243,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 1,
+        "trend": -12,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 476,
-      "win_rate": 60.7,
+      "games": 490,
+      "win_rate": 60.4,
       "players": 22
     },
     "tournaments": []

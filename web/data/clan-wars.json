@@ -1,35 +1,22 @@
 {
-  "captured_at": "2026-11-08T05:55:32Z",
+  "captured_at": "2026-11-08T21:59:14Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
-    "week_start": "2026-11-02",
-    "ends_at": "2026-11-08T19:00:00Z",
+    "week_start": "2026-11-09",
+    "ends_at": "2026-11-15T19:00:00Z",
     "win_points": 10,
     "top_n": 5,
     "standings": [
       {
-        "slug": "sigma-grinders",
-        "name": "Sigma Grinders",
-        "tag": "SG",
-        "logo": "sigma-grinders",
-        "accent": "#8b3dff",
+        "slug": "clan-monke",
+        "name": "Clan Monke",
+        "tag": "MONKE",
+        "logo": "clan-monke",
+        "accent": "#e8b923",
         "place": 1,
-        "points": 538,
-        "scorers": [
-          {
-            "brawlhalla_id": 8488940,
-            "player_name": "Yeetnt",
-            "slug": "yeetnt-8488940",
-            "points": 390
-          },
-          {
-            "brawlhalla_id": 113753082,
-            "player_name": "arman0mobile",
-            "slug": "arman0mobile-113753082",
-            "points": 148
-          }
-        ],
+        "points": 0,
+        "scorers": [],
         "ineligible": []
       },
       {
@@ -39,47 +26,9 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 416,
-        "scorers": [
-          {
-            "brawlhalla_id": 126888165,
-            "player_name": "DE_z4k",
-            "slug": "de-z4k-126888165",
-            "points": 183
-          },
-          {
-            "brawlhalla_id": 65526716,
-            "player_name": "Orion",
-            "slug": "orion-65526716",
-            "points": 123
-          },
-          {
-            "brawlhalla_id": 1739958,
-            "player_name": "scoooot!!!",
-            "slug": "scoooot-1739958",
-            "points": 110
-          }
-        ],
-        "ineligible": [
-          {
-            "brawlhalla_id": 73881277,
-            "player_name": "DE | Anonymous",
-            "slug": "de-anonymous-73881277",
-            "points": 20
-          },
-          {
-            "brawlhalla_id": 88523853,
-            "player_name": "BotShadow",
-            "slug": "botshadow-88523853",
-            "points": 40
-          },
-          {
-            "brawlhalla_id": 106237759,
-            "player_name": "DeviL",
-            "slug": "devil-106237759",
-            "points": 10
-          }
-        ]
+        "points": 0,
+        "scorers": [],
+        "ineligible": []
       },
       {
         "slug": "revenant-wolf",
@@ -88,34 +37,9 @@
         "logo": "revenant-wolf",
         "accent": "#e3122d",
         "place": 3,
-        "points": 22,
-        "scorers": [
-          {
-            "brawlhalla_id": 115697497,
-            "player_name": "Kirito",
-            "slug": "kirito-115697497",
-            "points": 22
-          }
-        ],
-        "ineligible": []
-      },
-      {
-        "slug": "clan-monke",
-        "name": "Clan Monke",
-        "tag": "MONKE",
-        "logo": "clan-monke",
-        "accent": "#e8b923",
-        "place": 4,
         "points": 0,
         "scorers": [],
-        "ineligible": [
-          {
-            "brawlhalla_id": 120648946,
-            "player_name": "arrtemiss",
-            "slug": "arrtemiss-120648946",
-            "points": 187
-          }
-        ]
+        "ineligible": []
       },
       {
         "slug": "shaheen",
@@ -123,6 +47,17 @@
         "tag": "SHN",
         "logo": "shaheen",
         "accent": "#3df26e",
+        "place": 4,
+        "points": 0,
+        "scorers": [],
+        "ineligible": []
+      },
+      {
+        "slug": "sigma-grinders",
+        "name": "Sigma Grinders",
+        "tag": "SG",
+        "logo": "sigma-grinders",
+        "accent": "#8b3dff",
         "place": 5,
         "points": 0,
         "scorers": [],
@@ -136,10 +71,10 @@
         "tag": "SG",
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
-        "wins": 2,
-        "points": 1407,
-        "weeks": 2,
-        "duel_wins": 2,
+        "wins": 3,
+        "points": 2102,
+        "weeks": 3,
+        "duel_wins": 3,
         "duel_draws": 0,
         "duel_losses": 0
       },
@@ -150,9 +85,9 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "wins": 0,
-        "points": 630,
-        "weeks": 2,
-        "duel_wins": 0,
+        "points": 1063,
+        "weeks": 3,
+        "duel_wins": 1,
         "duel_draws": 0,
         "duel_losses": 1
       },
@@ -163,11 +98,11 @@
         "logo": "revenant-wolf",
         "accent": "#e3122d",
         "wins": 0,
-        "points": 86,
-        "weeks": 1,
+        "points": 108,
+        "weeks": 2,
         "duel_wins": 0,
         "duel_draws": 0,
-        "duel_losses": 0
+        "duel_losses": 1
       }
     ],
     "last_winner": {
@@ -176,13 +111,13 @@
       "tag": "SG",
       "logo": "sigma-grinders",
       "accent": "#8b3dff",
-      "points": 763,
-      "week_start": "2026-10-26",
+      "points": 695,
+      "week_start": "2026-11-02",
       "mvp": {
-        "brawlhalla_id": 113753082,
-        "player_name": "arman0mobile",
-        "slug": "arman0mobile-113753082",
-        "points": 340,
+        "brawlhalla_id": 8488940,
+        "player_name": "Yeetnt",
+        "slug": "yeetnt-8488940",
+        "points": 547,
         "team_slug": "sigma-grinders",
         "team_name": "Sigma Grinders",
         "team_tag": "SG"
@@ -198,58 +133,50 @@
           "accent": "#3df26e"
         },
         "b": {
-          "slug": "sigma-grinders",
-          "name": "Sigma Grinders",
-          "tag": "SG",
-          "logo": "sigma-grinders",
-          "accent": "#8b3dff"
-        },
-        "points_a": 0,
-        "points_b": 538,
-        "leader": "sigma-grinders"
-      },
-      {
-        "a": {
           "slug": "delight-esports",
           "name": "Delight Esports",
           "tag": "DE",
           "logo": "delight-esports",
           "accent": "#e9c46a"
         },
-        "b": {
+        "points_a": 0,
+        "points_b": 0,
+        "leader": null
+      },
+      {
+        "a": {
+          "slug": "sigma-grinders",
+          "name": "Sigma Grinders",
+          "tag": "SG",
+          "logo": "sigma-grinders",
+          "accent": "#8b3dff"
+        },
+        "b": null,
+        "points_a": 0,
+        "points_b": 0,
+        "leader": null
+      },
+      {
+        "a": {
           "slug": "revenant-wolf",
           "name": "Revenant Wolf",
           "tag": "RW",
           "logo": "revenant-wolf",
           "accent": "#e3122d"
         },
-        "points_a": 416,
-        "points_b": 22,
-        "leader": "delight-esports"
-      },
-      {
-        "a": {
+        "b": {
           "slug": "clan-monke",
           "name": "Clan Monke",
           "tag": "MONKE",
           "logo": "clan-monke",
           "accent": "#e8b923"
         },
-        "b": null,
         "points_a": 0,
         "points_b": 0,
         "leader": null
       }
     ],
-    "mvp": {
-      "brawlhalla_id": 8488940,
-      "player_name": "Yeetnt",
-      "slug": "yeetnt-8488940",
-      "points": 390,
-      "team_slug": "sigma-grinders",
-      "team_name": "Sigma Grinders",
-      "team_tag": "SG"
-    },
+    "mvp": null,
     "min_games": 10,
     "roster_locked": true
   }
