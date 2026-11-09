@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-09T06:17:10Z",
+  "captured_at": "2026-11-09T16:25:58Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -83,21 +83,21 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1741,
-      "peak_rating": 1877,
-      "tier": "Platinum 1",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 10285200,
       "player_name": "JUN",
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
+      "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
+      "region": "ME",
+      "rating": 1730,
+      "peak_rating": 1877,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-09T06:17:10Z",
+  "captured_at": "2026-11-09T16:25:58Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -223,32 +223,6 @@
         "city_label": null
       },
       {
-        "brawlhalla_id": 113753082,
-        "player_name": "arman0mobile",
-        "country": "PK",
-        "team": "Sigma Grinders",
-        "team_slug": "sigma-grinders",
-        "team_tag": "SG",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "ME",
-        "rating": 1741,
-        "peak_rating": 1877,
-        "tier": "Platinum 1",
-        "wins": 134,
-        "games": 257,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": 1535,
-        "peak_rating_2v2": 1592,
-        "tier_2v2": "Gold 3",
-        "partner_2v2": "Yeetnt",
-        "trend": -15,
-        "main_legend": "isaiah",
-        "city": null,
-        "city_label": null
-      },
-      {
         "brawlhalla_id": 10285200,
         "player_name": "JUN",
         "country": "PK",
@@ -273,6 +247,32 @@
         "main_legend": "hattori",
         "city": null,
         "city_label": null
+      },
+      {
+        "brawlhalla_id": 113753082,
+        "player_name": "arman0mobile",
+        "country": "PK",
+        "team": "Sigma Grinders",
+        "team_slug": "sigma-grinders",
+        "team_tag": "SG",
+        "is_claimed": false,
+        "is_verified": false,
+        "region": "ME",
+        "rating": 1730,
+        "peak_rating": 1877,
+        "tier": "Platinum 1",
+        "wins": 138,
+        "games": 265,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": 1535,
+        "peak_rating_2v2": 1592,
+        "tier_2v2": "Gold 3",
+        "partner_2v2": "Yeetnt",
+        "trend": -26,
+        "main_legend": "isaiah",
+        "city": null,
+        "city_label": null
       }
     ],
     "rising": {
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 493,
-      "win_rate": 60.4,
+      "games": 513,
+      "win_rate": 59.8,
       "players": 22
     },
     "tournaments": []
