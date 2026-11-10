@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-10T14:48:28Z",
+  "captured_at": "2026-11-10T23:15:16Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -83,21 +83,21 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
+      "region": "ME",
+      "rating": 1748,
+      "peak_rating": 1877,
+      "tier": "Platinum 2",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 10285200,
       "player_name": "JUN",
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
-      "tier": "Platinum 1",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1732,
-      "peak_rating": 1877,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -173,22 +173,22 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 115697497,
-      "player_name": "Kirito",
-      "region": "ME",
-      "rating": 1603,
-      "peak_rating": 1718,
-      "tier": "Gold 4",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 102618812,
       "player_name": "ASTA",
       "region": "ME",
       "rating": 1581,
       "peak_rating": 1449,
       "tier": "Gold 5",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 115697497,
+      "player_name": "Kirito",
+      "region": "ME",
+      "rating": 1580,
+      "peak_rating": 1718,
+      "tier": "Gold 4",
       "is_clan_member": false,
       "is_claimed": false
     },
