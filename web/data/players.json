@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-09T16:25:58Z",
+  "captured_at": "2026-11-10T01:29:16Z",
   "source": "/players",
   "data": [
     {
@@ -185,7 +185,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1730,
+      "rating": 1732,
       "peak_rating": 1877,
       "tier": "Platinum 1",
       "main_legend": "isaiah",
@@ -421,6 +421,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 45796042,
+      "slug": "base-45796042",
+      "player_name": "base",
+      "country": "PK",
+      "team": "Clan Monke",
+      "team_slug": "clan-monke",
+      "team_tag": "MONKE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1494,
+      "peak_rating": 1494,
+      "tier": "Gold 2",
+      "main_legend": "nix",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 125796936,
       "slug": "hanzalagaffar321-125796936",
       "player_name": "hanzalagaffar321",
@@ -550,25 +569,6 @@
       "peak_rating": null,
       "tier": null,
       "main_legend": "mordex",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 45796042,
-      "slug": "base-45796042",
-      "player_name": "base",
-      "country": "PK",
-      "team": "Clan Monke",
-      "team_slug": "clan-monke",
-      "team_tag": "MONKE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "none",
-      "rating": null,
-      "peak_rating": null,
-      "tier": null,
-      "main_legend": "nix",
       "city": null,
       "city_label": null
     },
