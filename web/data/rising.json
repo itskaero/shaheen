@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-10T01:29:16Z",
+  "captured_at": "2026-11-10T14:48:28Z",
   "source": "/pakistan/rising?days=7&limit=10",
   "data": [
     {
@@ -12,8 +12,8 @@
     {
       "brawlhalla_id": 8488940,
       "player_name": "Yeetnt",
-      "rating": 1807,
-      "rating_gain": 76,
+      "rating": 1835,
+      "rating_gain": 104,
       "is_claimed": false
     },
     {

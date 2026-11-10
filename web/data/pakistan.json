@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-10T01:29:16Z",
+  "captured_at": "2026-11-10T14:48:28Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -53,6 +53,16 @@
       "is_claimed": true
     },
     {
+      "brawlhalla_id": 8488940,
+      "player_name": "Yeetnt",
+      "region": "ME",
+      "rating": 1835,
+      "peak_rating": 1851,
+      "tier": "Platinum 3",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
@@ -69,16 +79,6 @@
       "rating": 1809,
       "peak_rating": 1836,
       "tier": "Platinum 3",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 8488940,
-      "player_name": "Yeetnt",
-      "region": "ME",
-      "rating": 1807,
-      "peak_rating": 1837,
-      "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
     },
