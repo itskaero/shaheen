@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-11T14:12:31Z",
+  "captured_at": "2026-11-12T00:37:30Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -197,6 +197,32 @@
         "city_label": null
       },
       {
+        "brawlhalla_id": 113753082,
+        "player_name": "arman0mobile",
+        "country": "PK",
+        "team": "Sigma Grinders",
+        "team_slug": "sigma-grinders",
+        "team_tag": "SG",
+        "is_claimed": false,
+        "is_verified": false,
+        "region": "ME",
+        "rating": 1809,
+        "peak_rating": 1877,
+        "tier": "Platinum 3",
+        "wins": 165,
+        "games": 311,
+        "global_rank": null,
+        "region_rank": null,
+        "rating_2v2": 1535,
+        "peak_rating_2v2": 1592,
+        "tier_2v2": "Gold 3",
+        "partner_2v2": "Yeetnt",
+        "trend": 53,
+        "main_legend": "isaiah",
+        "city": null,
+        "city_label": null
+      },
+      {
         "brawlhalla_id": 8488940,
         "player_name": "Yeetnt",
         "country": "PK",
@@ -219,32 +245,6 @@
         "partner_2v2": "Lelouche vi Britannia",
         "trend": 63,
         "main_legend": "mordex",
-        "city": null,
-        "city_label": null
-      },
-      {
-        "brawlhalla_id": 113753082,
-        "player_name": "arman0mobile",
-        "country": "PK",
-        "team": "Sigma Grinders",
-        "team_slug": "sigma-grinders",
-        "team_tag": "SG",
-        "is_claimed": false,
-        "is_verified": false,
-        "region": "ME",
-        "rating": 1746,
-        "peak_rating": 1877,
-        "tier": "Platinum 2",
-        "wins": 156,
-        "games": 297,
-        "global_rank": null,
-        "region_rank": null,
-        "rating_2v2": 1535,
-        "peak_rating_2v2": 1592,
-        "tier_2v2": "Gold 3",
-        "partner_2v2": "Yeetnt",
-        "trend": -10,
-        "main_legend": "isaiah",
         "city": null,
         "city_label": null
       },
@@ -283,7 +283,7 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 540,
+      "games": 542,
       "win_rate": 59.8,
       "players": 24
     },

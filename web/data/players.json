@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-11T14:12:31Z",
+  "captured_at": "2026-11-12T00:37:30Z",
   "source": "/players",
   "data": [
     {
@@ -117,6 +117,25 @@
       "city_label": "Bahawalpur"
     },
     {
+      "brawlhalla_id": 113753082,
+      "slug": "arman0mobile-113753082",
+      "player_name": "arman0mobile",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1809,
+      "peak_rating": 1877,
+      "tier": "Platinum 3",
+      "main_legend": "isaiah",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 60943018,
       "slug": "elephy-60943018",
       "player_name": "Elephy",
@@ -155,25 +174,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 113753082,
-      "slug": "arman0mobile-113753082",
-      "player_name": "arman0mobile",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1746,
-      "peak_rating": 1877,
-      "tier": "Platinum 2",
-      "main_legend": "isaiah",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 10285200,
       "slug": "jun-10285200",
       "player_name": "JUN",
@@ -193,25 +193,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 126888165,
-      "slug": "de-z4k-126888165",
-      "player_name": "DE_z4k",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1720,
-      "peak_rating": 1753,
-      "tier": "Platinum 1",
-      "main_legend": "mirage",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 88497903,
       "slug": "santa-88497903",
       "player_name": "Santa",
@@ -227,6 +208,25 @@
       "peak_rating": 1723,
       "tier": "Platinum 1",
       "main_legend": "wu shang",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "slug": "de-z4k-126888165",
+      "player_name": "DE_z4k",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1659,
+      "peak_rating": 1753,
+      "tier": "Platinum 0",
+      "main_legend": "mirage",
       "city": null,
       "city_label": null
     },

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-11T14:12:31Z",
+  "captured_at": "2026-11-12T00:37:30Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -73,21 +73,21 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 113753082,
+      "player_name": "arman0mobile",
+      "region": "ME",
+      "rating": 1809,
+      "peak_rating": 1877,
+      "tier": "Platinum 3",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 8488940,
       "player_name": "Yeetnt",
       "region": "EU",
       "rating": 1794,
       "peak_rating": 1851,
-      "tier": "Platinum 2",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "player_name": "arman0mobile",
-      "region": "ME",
-      "rating": 1746,
-      "peak_rating": 1877,
       "tier": "Platinum 2",
       "is_clan_member": false,
       "is_claimed": false
@@ -103,22 +103,22 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1720,
-      "peak_rating": 1753,
-      "tier": "Platinum 1",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 88497903,
       "player_name": "Santa",
       "region": "ME",
       "rating": 1687,
       "peak_rating": 1723,
       "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1659,
+      "peak_rating": 1753,
+      "tier": "Platinum 0",
       "is_clan_member": false,
       "is_claimed": false
     },

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-11T14:12:31Z",
+  "captured_at": "2026-11-12T00:37:30Z",
   "source": "/achievements",
   "data": [
     {
@@ -506,9 +506,9 @@
       "name": "One Moon",
       "description": "30 days with Shaheen.",
       "category": "tenure",
-      "holder_count": 2,
+      "holder_count": 3,
       "total_members": 4,
-      "completion_pct": 50.0,
+      "completion_pct": 75.0,
       "rarity": "Common",
       "holders": [
         {
@@ -520,6 +520,11 @@
           "brawlhalla_id": 84939075,
           "player_name": "Pumpkin Man <3",
           "earned_at": "2026-11-09T04:22:44.335777Z"
+        },
+        {
+          "brawlhalla_id": 37628417,
+          "player_name": "Roykhan",
+          "earned_at": "2026-11-11T19:47:32.491789Z"
         }
       ]
     },
