@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-12T15:05:51Z",
+  "captured_at": "2026-11-12T23:33:52Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,13 +15,13 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 540,
+        "points": 530,
         "scorers": [
           {
             "brawlhalla_id": 113753082,
             "player_name": "arman0mobile",
             "slug": "arman0mobile-113753082",
-            "points": 380
+            "points": 370
           },
           {
             "brawlhalla_id": 8488940,
@@ -45,13 +45,13 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 196,
+        "points": 338,
         "scorers": [
           {
             "brawlhalla_id": 126888165,
             "player_name": "DE_z4k",
             "slug": "de-z4k-126888165",
-            "points": 196
+            "points": 338
           }
         ],
         "ineligible": []
@@ -180,7 +180,7 @@
           "accent": "#e9c46a"
         },
         "points_a": 0,
-        "points_b": 196,
+        "points_b": 338,
         "leader": "delight-esports"
       },
       {
@@ -192,7 +192,7 @@
           "accent": "#8b3dff"
         },
         "b": null,
-        "points_a": 540,
+        "points_a": 530,
         "points_b": 0,
         "leader": null
       },
@@ -220,7 +220,7 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "slug": "arman0mobile-113753082",
-      "points": 380,
+      "points": 370,
       "team_slug": "sigma-grinders",
       "team_name": "Sigma Grinders",
       "team_tag": "SG"

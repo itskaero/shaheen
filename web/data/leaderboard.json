@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-12T15:05:51Z",
+  "captured_at": "2026-11-12T23:33:52Z",
   "source": "/leaderboard?limit=25",
   "data": [
     {
@@ -11,20 +11,20 @@
       "tier": "Diamond"
     },
     {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
-      "region": "ME",
-      "rating": 1836,
-      "peak_rating": 1924,
-      "tier": "Platinum 3"
-    },
-    {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
       "rating": 1830,
       "peak_rating": 1852,
       "tier": "Platinum 3"
+    },
+    {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "region": "ME",
+      "rating": 1801,
+      "peak_rating": 1924,
+      "tier": "Platinum 2"
     },
     {
       "brawlhalla_id": 104869463,
