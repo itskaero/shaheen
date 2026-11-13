@@ -1,17 +1,7 @@
 {
-  "captured_at": "2026-11-13T06:35:19Z",
+  "captured_at": "2026-11-13T19:37:40Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
-    {
-      "brawlhalla_id": 1739958,
-      "player_name": "scoooot!!!",
-      "region": "ME",
-      "rating": 2016,
-      "peak_rating": 2089,
-      "tier": "Diamond",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
     {
       "brawlhalla_id": 84939075,
       "player_name": "Pumpkin Man <3",
@@ -21,6 +11,16 @@
       "tier": "Diamond",
       "is_clan_member": true,
       "is_claimed": true
+    },
+    {
+      "brawlhalla_id": 1739958,
+      "player_name": "scoooot!!!",
+      "region": "ME",
+      "rating": 1998,
+      "peak_rating": 2089,
+      "tier": "Diamond",
+      "is_clan_member": false,
+      "is_claimed": false
     },
     {
       "brawlhalla_id": 7854627,
