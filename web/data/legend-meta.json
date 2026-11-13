@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-12T23:33:52Z",
+  "captured_at": "2026-11-13T06:35:19Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -53,7 +53,7 @@
     {
       "legend_name_key": "mirage",
       "player_count": 84,
-      "total_games": 21807,
+      "total_games": 21808,
       "win_rate": 51.8
     },
     {

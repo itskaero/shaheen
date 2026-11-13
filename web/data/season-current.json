@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-12T23:33:52Z",
+  "captured_at": "2026-11-13T06:35:19Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -209,8 +209,8 @@
         "rating": 1794,
         "peak_rating": 1851,
         "tier": "Platinum 2",
-        "wins": 220,
-        "games": 427,
+        "wins": 221,
+        "games": 428,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
