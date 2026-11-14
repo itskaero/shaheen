@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-14T13:32:43Z",
+  "captured_at": "2026-11-14T22:18:49Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -61,7 +61,7 @@
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": -11,
+        "trend": -18,
         "main_legend": "caspian",
         "city": null,
         "city_label": null
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 589,
-      "win_rate": 58.9,
+      "games": 590,
+      "win_rate": 58.8,
       "players": 24
     },
     "tournaments": []

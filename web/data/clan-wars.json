@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-14T13:32:43Z",
+  "captured_at": "2026-11-14T22:18:49Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -45,13 +45,13 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 2,
-        "points": 358,
+        "points": 356,
         "scorers": [
           {
             "brawlhalla_id": 126888165,
             "player_name": "DE_z4k",
             "slug": "de-z4k-126888165",
-            "points": 338
+            "points": 336
           },
           {
             "brawlhalla_id": 1739958,
@@ -186,7 +186,7 @@
           "accent": "#e9c46a"
         },
         "points_a": 0,
-        "points_b": 358,
+        "points_b": 356,
         "leader": "delight-esports"
       },
       {
