@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-14T06:12:58Z",
+  "captured_at": "2026-11-14T13:32:43Z",
   "source": "/players",
   "data": [
     {
@@ -155,6 +155,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 113753082,
+      "slug": "arman0mobile-113753082",
+      "player_name": "arman0mobile",
+      "country": "PK",
+      "team": "Sigma Grinders",
+      "team_slug": "sigma-grinders",
+      "team_tag": "SG",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1765,
+      "peak_rating": 1877,
+      "tier": "Platinum 2",
+      "main_legend": "isaiah",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 10285200,
       "slug": "jun-10285200",
       "player_name": "JUN",
@@ -170,25 +189,6 @@
       "peak_rating": null,
       "tier": "Platinum 1",
       "main_legend": "hattori",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 113753082,
-      "slug": "arman0mobile-113753082",
-      "player_name": "arman0mobile",
-      "country": "PK",
-      "team": "Sigma Grinders",
-      "team_slug": "sigma-grinders",
-      "team_tag": "SG",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1717,
-      "peak_rating": 1877,
-      "tier": "Platinum 1",
-      "main_legend": "isaiah",
       "city": null,
       "city_label": null
     },
