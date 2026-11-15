@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-14T22:18:49Z",
+  "captured_at": "2026-11-15T06:20:58Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,7 +15,7 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 1,
-        "points": 661,
+        "points": 681,
         "scorers": [
           {
             "brawlhalla_id": 113753082,
@@ -33,7 +33,7 @@
             "brawlhalla_id": 62360025,
             "player_name": "DC | Zaid",
             "slug": "dc-zaid-62360025",
-            "points": 70
+            "points": 90
           }
         ],
         "ineligible": []
@@ -198,7 +198,7 @@
           "accent": "#8b3dff"
         },
         "b": null,
-        "points_a": 661,
+        "points_a": 681,
         "points_b": 0,
         "leader": null
       },

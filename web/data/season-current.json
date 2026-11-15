@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-14T22:18:49Z",
+  "captured_at": "2026-11-15T06:20:58Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -217,7 +217,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": 23,
+        "trend": -14,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 590,
-      "win_rate": 58.8,
+      "games": 595,
+      "win_rate": 59.0,
       "players": 24
     },
     "tournaments": []
