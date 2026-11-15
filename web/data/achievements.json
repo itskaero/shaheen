@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-15T06:20:58Z",
+  "captured_at": "2026-11-15T18:47:41Z",
   "source": "/achievements",
   "data": [
     {
@@ -484,9 +484,9 @@
       "name": "MVP of the Week",
       "description": "Named MVP in a weekly digest.",
       "category": "community",
-      "holder_count": 2,
+      "holder_count": 3,
       "total_members": 4,
-      "completion_pct": 50.0,
+      "completion_pct": 75.0,
       "rarity": "Common",
       "holders": [
         {
@@ -498,6 +498,11 @@
           "brawlhalla_id": 5734378,
           "player_name": "kaero.",
           "earned_at": "2026-10-25T12:00:02.474901Z"
+        },
+        {
+          "brawlhalla_id": 37628417,
+          "player_name": "Roykhan",
+          "earned_at": "2026-11-15T12:00:13.482870Z"
         }
       ]
     },

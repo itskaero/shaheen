@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-15T06:20:58Z",
+  "captured_at": "2026-11-15T18:47:41Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -86,9 +86,19 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1765,
+      "rating": 1756,
       "peak_rating": 1877,
       "tier": "Platinum 2",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1739,
+      "peak_rating": 1753,
+      "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -109,16 +119,6 @@
       "rating": 1687,
       "peak_rating": 1723,
       "tier": "Platinum 1",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1668,
-      "peak_rating": 1753,
-      "tier": "Platinum 0",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -206,9 +206,9 @@
       "brawlhalla_id": 62360025,
       "player_name": "DC | Zaid",
       "region": "ME",
-      "rating": 1569,
+      "rating": 1554,
       "peak_rating": 1654,
-      "tier": "Gold 4",
+      "tier": "Gold 3",
       "is_clan_member": false,
       "is_claimed": false
     },
