@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-16T06:20:17Z",
+  "captured_at": "2026-11-16T21:57:52Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -26,9 +26,9 @@
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
-      "rating": 1912,
-      "peak_rating": 1917,
-      "tier": "Platinum 4",
+      "rating": 1942,
+      "peak_rating": 1942,
+      "tier": "Platinum 5",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -86,19 +86,9 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1748,
+      "rating": 1747,
       "peak_rating": 1877,
       "tier": "Platinum 2",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1739,
-      "peak_rating": 1753,
-      "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -108,6 +98,16 @@
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
+      "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1690,
+      "peak_rating": 1753,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -239,6 +239,16 @@
       "rating": 1445,
       "peak_rating": null,
       "tier": "Gold 3",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 129774056,
+      "player_name": "SmitenessV",
+      "region": "ME",
+      "rating": 1335,
+      "peak_rating": 893,
+      "tier": "Silver 4",
       "is_clan_member": false,
       "is_claimed": false
     },
