@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-16T21:57:52Z",
+  "captured_at": "2026-11-17T07:49:37Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -26,8 +26,8 @@
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
-      "rating": 1942,
-      "peak_rating": 1942,
+      "rating": 1958,
+      "peak_rating": 1958,
       "tier": "Platinum 5",
       "is_clan_member": false,
       "is_claimed": false

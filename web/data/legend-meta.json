@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-16T21:57:52Z",
+  "captured_at": "2026-11-17T07:49:37Z",
   "source": "/legends/meta?limit=10",
   "data": [
     {
@@ -23,7 +23,7 @@
     {
       "legend_name_key": "orion",
       "player_count": 84,
-      "total_games": 30623,
+      "total_games": 30624,
       "win_rate": 52.5
     },
     {
@@ -41,13 +41,13 @@
     {
       "legend_name_key": "artemis",
       "player_count": 84,
-      "total_games": 24613,
+      "total_games": 24614,
       "win_rate": 52.2
     },
     {
       "legend_name_key": "cassidy",
       "player_count": 82,
-      "total_games": 22089,
+      "total_games": 22091,
       "win_rate": 55.2
     },
     {

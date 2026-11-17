@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-16T21:57:52Z",
+  "captured_at": "2026-11-17T07:49:37Z",
   "source": "/players",
   "data": [
     {
@@ -52,8 +52,8 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1942,
-      "peak_rating": 1942,
+      "rating": 1958,
+      "peak_rating": 1958,
       "tier": "Platinum 5",
       "main_legend": "mordex",
       "city": null,
