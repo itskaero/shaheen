@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-16T21:57:52Z",
+  "captured_at": "2026-11-18T07:20:21Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -76,18 +76,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1942,
-        "peak_rating": 1942,
+        "rating": 1958,
+        "peak_rating": 1958,
         "tier": "Platinum 5",
-        "wins": 103,
-        "games": 191,
+        "wins": 106,
+        "games": 194,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1579,
         "peak_rating_2v2": 1607,
         "tier_2v2": "Gold 4",
         "partner_2v2": null,
-        "trend": 84,
+        "trend": 100,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -139,7 +139,7 @@
         "peak_rating_2v2": 1319,
         "tier_2v2": "Silver 4",
         "partner_2v2": "Ravix",
-        "trend": 15,
+        "trend": 0,
         "main_legend": "mordex",
         "city": "bahawalpur",
         "city_label": "Bahawalpur"
@@ -217,7 +217,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": -13,
+        "trend": 0,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -232,18 +232,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1747,
+        "rating": 1770,
         "peak_rating": 1877,
         "tier": "Platinum 2",
-        "wins": 183,
-        "games": 351,
+        "wins": 185,
+        "games": 353,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": 1535,
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 15,
+        "trend": 24,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -278,13 +278,13 @@
     "rising": {
       "brawlhalla_id": 56008741,
       "player_name": "arman",
-      "rating_gain": 140,
-      "rating": 1942
+      "rating_gain": 156,
+      "rating": 1958
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 608,
-      "win_rate": 58.4,
+      "games": 615,
+      "win_rate": 58.7,
       "players": 25
     },
     "tournaments": []

@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-17T20:50:48Z",
+  "captured_at": "2026-11-18T07:20:21Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -141,7 +141,7 @@
         "peak_rating_2v2": 1319,
         "tier_2v2": "Silver 4",
         "partner_2v2": "Ravix",
-        "trend": 15,
+        "trend": 0,
         "main_legend": "mordex",
         "city": "bahawalpur",
         "city_label": "Bahawalpur"
@@ -219,7 +219,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "arman0mobile",
-        "trend": -41,
+        "trend": 0,
         "main_legend": "mordex",
         "city": null,
         "city_label": null
@@ -245,7 +245,7 @@
         "peak_rating_2v2": 1592,
         "tier_2v2": "Gold 3",
         "partner_2v2": "Yeetnt",
-        "trend": 22,
+        "trend": 24,
         "main_legend": "isaiah",
         "city": null,
         "city_label": null
@@ -375,7 +375,7 @@
         "peak_rating_2v2": 998,
         "tier_2v2": "Bronze 3",
         "partner_2v2": "3zo~",
-        "trend": -14,
+        "trend": -70,
         "main_legend": "mirage",
         "city": null,
         "city_label": null
