@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-17T20:50:48Z",
+  "captured_at": "2026-11-18T20:26:51Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -16,7 +16,7 @@
       "brawlhalla_id": 1739958,
       "player_name": "scoooot!!!",
       "region": "ME",
-      "rating": 1998,
+      "rating": 1986,
       "peak_rating": 2089,
       "tier": "Diamond",
       "is_clan_member": false,
@@ -26,9 +26,9 @@
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
-      "rating": 1958,
-      "peak_rating": 1958,
-      "tier": "Platinum 5",
+      "rating": 1890,
+      "peak_rating": 1971,
+      "tier": "Platinum 4",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -86,7 +86,7 @@
       "brawlhalla_id": 113753082,
       "player_name": "arman0mobile",
       "region": "ME",
-      "rating": 1770,
+      "rating": 1754,
       "peak_rating": 1877,
       "tier": "Platinum 2",
       "is_clan_member": false,
@@ -98,6 +98,16 @@
       "region": "ME",
       "rating": 1736,
       "peak_rating": null,
+      "tier": "Platinum 1",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 126888165,
+      "player_name": "DE_z4k",
+      "region": "ME",
+      "rating": 1690,
+      "peak_rating": 1753,
       "tier": "Platinum 1",
       "is_clan_member": false,
       "is_claimed": false
@@ -133,16 +143,6 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 126888165,
-      "player_name": "DE_z4k",
-      "region": "ME",
-      "rating": 1650,
-      "peak_rating": 1753,
-      "tier": "Platinum 0",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 73881277,
       "player_name": "DE | Anonymous",
       "region": "ME",
@@ -163,16 +163,6 @@
       "is_claimed": false
     },
     {
-      "brawlhalla_id": 101991193,
-      "player_name": "bloom",
-      "region": "EU",
-      "rating": 1623,
-      "peak_rating": 1420,
-      "tier": "Gold 5",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
       "brawlhalla_id": 102618812,
       "player_name": "ASTA",
       "region": "ME",
@@ -189,6 +179,16 @@
       "rating": 1580,
       "peak_rating": 1718,
       "tier": "Gold 4",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
+      "brawlhalla_id": 101991193,
+      "player_name": "bloom",
+      "region": "EU",
+      "rating": 1580,
+      "peak_rating": 1420,
+      "tier": "Gold 5",
       "is_clan_member": false,
       "is_claimed": false
     },
