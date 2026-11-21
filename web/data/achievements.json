@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-18T20:26:51Z",
+  "captured_at": "2026-11-21T19:09:29Z",
   "source": "/achievements",
   "data": [
     {
@@ -363,11 +363,17 @@
       "name": "Sharpened",
       "description": "Held a 60% ranked win rate over 50+ ranked games.",
       "category": "ranked",
-      "holder_count": 0,
+      "holder_count": 1,
       "total_members": 4,
-      "completion_pct": 0.0,
-      "rarity": "Unclaimed",
-      "holders": []
+      "completion_pct": 25.0,
+      "rarity": "Uncommon",
+      "holders": [
+        {
+          "brawlhalla_id": 84939075,
+          "player_name": "Pumpkin Man <3",
+          "earned_at": "2026-11-21T15:35:02.169532Z"
+        }
+      ]
     },
     {
       "key": "first_win",
