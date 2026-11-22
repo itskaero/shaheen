@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-18T07:20:21Z",
+  "captured_at": "2026-11-22T19:31:43Z",
   "source": "/teams",
   "data": [
     {
@@ -31,16 +31,16 @@
       "rank": 1,
       "brawlhalla_clan_id": 1777529,
       "members": 12,
-      "rating": 1873,
+      "rating": 1864,
       "best": {
         "brawlhalla_id": 56008741,
         "player_name": "arman",
         "slug": "arman-56008741",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1958,
-        "peak_rating": 1958,
-        "tier": "Platinum 5",
+        "rating": 1930,
+        "peak_rating": 1971,
+        "tier": "Platinum 4",
         "main_legend": "mordex"
       }
     },
@@ -57,14 +57,14 @@
       "rank": 2,
       "brawlhalla_clan_id": 2042085,
       "members": 28,
-      "rating": 1807,
+      "rating": 1795,
       "best": {
         "brawlhalla_id": 1739958,
         "player_name": "scoooot!!!",
         "slug": "scoooot-1739958",
         "role": "player",
         "clan_rank": "Recruit",
-        "rating": 1998,
+        "rating": 1952,
         "peak_rating": 2089,
         "tier": "Diamond",
         "main_legend": "caspian"
@@ -83,14 +83,14 @@
       "rank": 3,
       "brawlhalla_clan_id": 2542774,
       "members": 22,
-      "rating": 1549,
+      "rating": 1535,
       "best": {
         "brawlhalla_id": 101991193,
         "player_name": "bloom",
         "slug": "bloom-101991193",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1623,
+        "rating": 1580,
         "peak_rating": 1420,
         "tier": "Gold 5",
         "main_legend": "kaya"

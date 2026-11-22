@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-22T06:39:32Z",
+  "captured_at": "2026-11-22T19:31:43Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -43,6 +43,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 5734378,
+      "player_name": "kaero.",
+      "region": "ME",
+      "rating": 1837,
+      "peak_rating": 1924,
+      "tier": "Platinum 3",
+      "is_clan_member": true,
+      "is_claimed": true
+    },
+    {
       "brawlhalla_id": 37628417,
       "player_name": "Roykhan",
       "region": "ME",
@@ -61,16 +71,6 @@
       "tier": "Platinum 3",
       "is_clan_member": false,
       "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 5734378,
-      "player_name": "kaero.",
-      "region": "ME",
-      "rating": 1801,
-      "peak_rating": 1924,
-      "tier": "Platinum 2",
-      "is_clan_member": true,
-      "is_claimed": true
     },
     {
       "brawlhalla_id": 8488940,
