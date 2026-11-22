@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-21T19:09:29Z",
+  "captured_at": "2026-11-22T06:39:32Z",
   "source": "/rankings/pakistan",
   "data": {
     "season": 42,
@@ -293,9 +293,9 @@
         "games": 209,
         "global_rank": null,
         "region_rank": null,
-        "rating_2v2": 1244,
+        "rating_2v2": 1231,
         "peak_rating_2v2": 1375,
-        "tier_2v2": "Silver 3",
+        "tier_2v2": "Silver 2",
         "partner_2v2": null,
         "trend": 44,
         "main_legend": "tezca",
@@ -323,7 +323,7 @@
         "peak_rating_2v2": 998,
         "tier_2v2": "Bronze 3",
         "partner_2v2": "ð.ðã",
-        "trend": 22,
+        "trend": 16,
         "main_legend": "mirage",
         "city": null,
         "city_label": null
@@ -683,8 +683,8 @@
         "games": 10,
         "global_rank": null,
         "region_rank": null,
-        "rating_2v2": 957,
-        "peak_rating_2v2": 957,
+        "rating_2v2": 982,
+        "peak_rating_2v2": 1014,
         "tier_2v2": "Bronze 2",
         "partner_2v2": "SirCumPherence",
         "trend": 0,
