@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-22T19:31:43Z",
+  "captured_at": "2026-11-23T07:28:16Z",
   "source": "/teams",
   "data": [
     {
@@ -31,14 +31,14 @@
       "rank": 1,
       "brawlhalla_clan_id": 1777529,
       "members": 12,
-      "rating": 1864,
+      "rating": 1859,
       "best": {
         "brawlhalla_id": 56008741,
         "player_name": "arman",
         "slug": "arman-56008741",
         "role": "player",
         "clan_rank": "Officer",
-        "rating": 1930,
+        "rating": 1915,
         "peak_rating": 1971,
         "tier": "Platinum 4",
         "main_legend": "mordex"

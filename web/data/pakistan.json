@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-22T19:31:43Z",
+  "captured_at": "2026-11-23T07:28:16Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -26,7 +26,7 @@
       "brawlhalla_id": 56008741,
       "player_name": "arman",
       "region": "ME",
-      "rating": 1930,
+      "rating": 1915,
       "peak_rating": 1971,
       "tier": "Platinum 4",
       "is_clan_member": false,
@@ -133,6 +133,16 @@
       "is_claimed": false
     },
     {
+      "brawlhalla_id": 102618812,
+      "player_name": "ASTA",
+      "region": "ME",
+      "rating": 1658,
+      "peak_rating": 1710,
+      "tier": "Platinum 0",
+      "is_clan_member": false,
+      "is_claimed": false
+    },
+    {
       "brawlhalla_id": 97035412,
       "player_name": "TrueNobita",
       "region": "ME",
@@ -149,16 +159,6 @@
       "rating": 1648,
       "peak_rating": 1592,
       "tier": "Platinum 2",
-      "is_clan_member": false,
-      "is_claimed": false
-    },
-    {
-      "brawlhalla_id": 102618812,
-      "player_name": "ASTA",
-      "region": "ME",
-      "rating": 1640,
-      "peak_rating": 1683,
-      "tier": "Platinum 0",
       "is_clan_member": false,
       "is_claimed": false
     },
@@ -206,7 +206,7 @@
       "brawlhalla_id": 62360025,
       "player_name": "DC | Zaid",
       "region": "ME",
-      "rating": 1535,
+      "rating": 1541,
       "peak_rating": 1654,
       "tier": "Gold 3",
       "is_clan_member": false,

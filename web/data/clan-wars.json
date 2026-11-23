@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-22T19:31:43Z",
+  "captured_at": "2026-11-23T07:28:16Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -9,12 +9,36 @@
     "top_n": 5,
     "standings": [
       {
+        "slug": "sigma-grinders",
+        "name": "Sigma Grinders",
+        "tag": "SG",
+        "logo": "sigma-grinders",
+        "accent": "#8b3dff",
+        "place": 1,
+        "points": 116,
+        "scorers": [
+          {
+            "brawlhalla_id": 56008741,
+            "player_name": "arman",
+            "slug": "arman-56008741",
+            "points": 70
+          },
+          {
+            "brawlhalla_id": 62360025,
+            "player_name": "DC | Zaid",
+            "slug": "dc-zaid-62360025",
+            "points": 46
+          }
+        ],
+        "ineligible": []
+      },
+      {
         "slug": "clan-monke",
         "name": "Clan Monke",
         "tag": "MONKE",
         "logo": "clan-monke",
         "accent": "#e8b923",
-        "place": 1,
+        "place": 2,
         "points": 0,
         "scorers": [],
         "ineligible": []
@@ -25,10 +49,17 @@
         "tag": "DE",
         "logo": "delight-esports",
         "accent": "#e9c46a",
-        "place": 2,
+        "place": 3,
         "points": 0,
         "scorers": [],
-        "ineligible": []
+        "ineligible": [
+          {
+            "brawlhalla_id": 102618812,
+            "player_name": "ASTA",
+            "slug": "asta-102618812",
+            "points": 58
+          }
+        ]
       },
       {
         "slug": "revenant-wolf",
@@ -36,7 +67,7 @@
         "tag": "RW",
         "logo": "revenant-wolf",
         "accent": "#e3122d",
-        "place": 3,
+        "place": 4,
         "points": 0,
         "scorers": [],
         "ineligible": []
@@ -47,17 +78,6 @@
         "tag": "SHN",
         "logo": "shaheen",
         "accent": "#3df26e",
-        "place": 4,
-        "points": 0,
-        "scorers": [],
-        "ineligible": []
-      },
-      {
-        "slug": "sigma-grinders",
-        "name": "Sigma Grinders",
-        "tag": "SG",
-        "logo": "sigma-grinders",
-        "accent": "#8b3dff",
         "place": 5,
         "points": 0,
         "scorers": [],
@@ -172,11 +192,19 @@
           "accent": "#8b3dff"
         },
         "points_a": 0,
-        "points_b": 0,
-        "leader": null
+        "points_b": 116,
+        "leader": "sigma-grinders"
       }
     ],
-    "mvp": null,
+    "mvp": {
+      "brawlhalla_id": 56008741,
+      "player_name": "arman",
+      "slug": "arman-56008741",
+      "points": 70,
+      "team_slug": "sigma-grinders",
+      "team_name": "Sigma Grinders",
+      "team_tag": "SG"
+    },
     "min_games": 10,
     "roster_locked": true
   }

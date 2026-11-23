@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-22T19:31:43Z",
+  "captured_at": "2026-11-23T07:28:16Z",
   "source": "/players",
   "data": [
     {
@@ -52,7 +52,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1930,
+      "rating": 1915,
       "peak_rating": 1971,
       "tier": "Platinum 4",
       "main_legend": "mordex",
@@ -250,6 +250,25 @@
       "city_label": null
     },
     {
+      "brawlhalla_id": 102618812,
+      "slug": "asta-102618812",
+      "player_name": "ASTA",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "ME",
+      "rating": 1658,
+      "peak_rating": 1710,
+      "tier": "Platinum 0",
+      "main_legend": "tezca",
+      "city": null,
+      "city_label": null
+    },
+    {
       "brawlhalla_id": 97035412,
       "slug": "truenobita-97035412",
       "player_name": "TrueNobita",
@@ -284,25 +303,6 @@
       "peak_rating": 1592,
       "tier": "Platinum 2",
       "main_legend": "cassidy",
-      "city": null,
-      "city_label": null
-    },
-    {
-      "brawlhalla_id": 102618812,
-      "slug": "asta-102618812",
-      "player_name": "ASTA",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "ME",
-      "rating": 1640,
-      "peak_rating": 1683,
-      "tier": "Platinum 0",
-      "main_legend": "tezca",
       "city": null,
       "city_label": null
     },
@@ -394,7 +394,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1535,
+      "rating": 1541,
       "peak_rating": 1654,
       "tier": "Gold 3",
       "main_legend": "orion",
