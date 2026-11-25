@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-23T23:48:52Z",
+  "captured_at": "2026-11-25T21:37:33Z",
   "source": "/players",
   "data": [
     {
@@ -52,7 +52,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1915,
+      "rating": 1891,
       "peak_rating": 1971,
       "tier": "Platinum 4",
       "main_legend": "mordex",
@@ -193,25 +193,6 @@
       "city_label": null
     },
     {
-      "brawlhalla_id": 65526716,
-      "slug": "orion-65526716",
-      "player_name": "Orion",
-      "country": "PK",
-      "team": "Delight Esports",
-      "team_slug": "delight-esports",
-      "team_tag": "DE",
-      "is_claimed": false,
-      "is_verified": false,
-      "on_pakistan_board": true,
-      "region": "US-E",
-      "rating": 1698,
-      "peak_rating": 1698,
-      "tier": "Platinum 1",
-      "main_legend": "tezca",
-      "city": null,
-      "city_label": null
-    },
-    {
       "brawlhalla_id": 126888165,
       "slug": "de-z4k-126888165",
       "player_name": "DE_z4k",
@@ -223,7 +204,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "ME",
-      "rating": 1690,
+      "rating": 1724,
       "peak_rating": 1753,
       "tier": "Platinum 1",
       "main_legend": "mirage",
@@ -322,6 +303,25 @@
       "peak_rating": 1687,
       "tier": "Platinum 0",
       "main_legend": "hattori",
+      "city": null,
+      "city_label": null
+    },
+    {
+      "brawlhalla_id": 65526716,
+      "slug": "orion-65526716",
+      "player_name": "Orion",
+      "country": "PK",
+      "team": "Delight Esports",
+      "team_slug": "delight-esports",
+      "team_tag": "DE",
+      "is_claimed": false,
+      "is_verified": false,
+      "on_pakistan_board": true,
+      "region": "US-E",
+      "rating": 1608,
+      "peak_rating": 1698,
+      "tier": "Gold 4",
+      "main_legend": "tezca",
       "city": null,
       "city_label": null
     },
@@ -1163,8 +1163,8 @@
     },
     {
       "brawlhalla_id": 92526835,
-      "slug": "king-of-the-loser-92526835",
-      "player_name": "king of the loser",
+      "slug": "king-of-frogs-92526835",
+      "player_name": "KING OF FROGS",
       "country": "PK",
       "team": "Revenant Wolf",
       "team_slug": "revenant-wolf",
