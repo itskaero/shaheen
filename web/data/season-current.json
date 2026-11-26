@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-26T08:08:49Z",
+  "captured_at": "2026-11-26T21:26:48Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 687,
-      "win_rate": 58.4,
+      "games": 697,
+      "win_rate": 58.0,
       "players": 25
     },
     "tournaments": []

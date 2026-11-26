@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-26T08:08:49Z",
+  "captured_at": "2026-11-26T21:26:48Z",
   "source": "/pakistan/leaderboard?limit=150",
   "data": [
     {
@@ -166,7 +166,7 @@
       "brawlhalla_id": 65526716,
       "player_name": "Orion",
       "region": "US-E",
-      "rating": 1608,
+      "rating": 1610,
       "peak_rating": 1698,
       "tier": "Gold 4",
       "is_clan_member": false,

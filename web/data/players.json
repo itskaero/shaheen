@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-26T08:08:49Z",
+  "captured_at": "2026-11-26T21:26:48Z",
   "source": "/players",
   "data": [
     {
@@ -318,7 +318,7 @@
       "is_verified": false,
       "on_pakistan_board": true,
       "region": "US-E",
-      "rating": 1608,
+      "rating": 1610,
       "peak_rating": 1698,
       "tier": "Gold 4",
       "main_legend": "tezca",
