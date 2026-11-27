@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-26T21:26:48Z",
+  "captured_at": "2026-11-27T08:19:31Z",
   "source": "/seasons/current",
   "data": {
     "season": {
@@ -50,18 +50,18 @@
         "is_claimed": false,
         "is_verified": false,
         "region": "ME",
-        "rating": 1958,
+        "rating": 1974,
         "peak_rating": 2089,
         "tier": "Diamond",
-        "wins": 111,
-        "games": 199,
+        "wins": 116,
+        "games": 208,
         "global_rank": null,
         "region_rank": null,
         "rating_2v2": null,
         "peak_rating_2v2": null,
         "tier_2v2": null,
         "partner_2v2": null,
-        "trend": 6,
+        "trend": 22,
         "main_legend": "caspian",
         "city": null,
         "city_label": null
@@ -283,8 +283,8 @@
     },
     "legend": {
       "legend_name_key": "mordex",
-      "games": 697,
-      "win_rate": 58.0,
+      "games": 702,
+      "win_rate": 58.1,
       "players": 25
     },
     "tournaments": []

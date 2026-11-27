@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-26T21:26:48Z",
+  "captured_at": "2026-11-27T08:19:31Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,7 +15,7 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 1,
-        "points": 190,
+        "points": 266,
         "scorers": [
           {
             "brawlhalla_id": 126888165,
@@ -24,16 +24,16 @@
             "points": 114
           },
           {
-            "brawlhalla_id": 65526716,
-            "player_name": "Orion",
-            "slug": "orion-65526716",
-            "points": 40
-          },
-          {
             "brawlhalla_id": 1739958,
             "player_name": "scoooot!!!",
             "slug": "scoooot-1739958",
-            "points": 36
+            "points": 102
+          },
+          {
+            "brawlhalla_id": 65526716,
+            "player_name": "Orion",
+            "slug": "orion-65526716",
+            "points": 50
           }
         ],
         "ineligible": [
@@ -210,7 +210,7 @@
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
         },
-        "points_a": 190,
+        "points_a": 266,
         "points_b": 180,
         "leader": "delight-esports"
       }
