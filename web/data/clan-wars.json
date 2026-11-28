@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-27T21:11:15Z",
+  "captured_at": "2026-11-28T07:40:10Z",
   "source": "/clan-wars",
   "data": {
     "season": 42,
@@ -15,19 +15,19 @@
         "logo": "delight-esports",
         "accent": "#e9c46a",
         "place": 1,
-        "points": 276,
+        "points": 384,
         "scorers": [
-          {
-            "brawlhalla_id": 126888165,
-            "player_name": "DE_z4k",
-            "slug": "de-z4k-126888165",
-            "points": 114
-          },
           {
             "brawlhalla_id": 1739958,
             "player_name": "scoooot!!!",
             "slug": "scoooot-1739958",
-            "points": 102
+            "points": 195
+          },
+          {
+            "brawlhalla_id": 126888165,
+            "player_name": "DE_z4k",
+            "slug": "de-z4k-126888165",
+            "points": 129
           },
           {
             "brawlhalla_id": 65526716,
@@ -52,13 +52,19 @@
         "logo": "sigma-grinders",
         "accent": "#8b3dff",
         "place": 2,
-        "points": 180,
+        "points": 250,
         "scorers": [
           {
             "brawlhalla_id": 56008741,
             "player_name": "arman",
             "slug": "arman-56008741",
             "points": 120
+          },
+          {
+            "brawlhalla_id": 8488940,
+            "player_name": "Yeetnt",
+            "slug": "yeetnt-8488940",
+            "points": 70
           },
           {
             "brawlhalla_id": 62360025,
@@ -210,19 +216,19 @@
           "logo": "sigma-grinders",
           "accent": "#8b3dff"
         },
-        "points_a": 276,
-        "points_b": 180,
+        "points_a": 384,
+        "points_b": 250,
         "leader": "delight-esports"
       }
     ],
     "mvp": {
-      "brawlhalla_id": 56008741,
-      "player_name": "arman",
-      "slug": "arman-56008741",
-      "points": 120,
-      "team_slug": "sigma-grinders",
-      "team_name": "Sigma Grinders",
-      "team_tag": "SG"
+      "brawlhalla_id": 1739958,
+      "player_name": "scoooot!!!",
+      "slug": "scoooot-1739958",
+      "points": 195,
+      "team_slug": "delight-esports",
+      "team_name": "Delight Esports",
+      "team_tag": "DE"
     },
     "min_games": 10,
     "roster_locked": true
